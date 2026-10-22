@@ -1,3 +1,3 @@
 # Public site presentation
-- PricingContent shares the six-plan feature matrix between landing and Tarifs; unconfirmed amounts stay explicitly unpriced — prevents inconsistent or invented commercial terms.
+- PricingContent shares four LOMOPAY-style pack cards (tagline + emoji perks from packCopy in src/lib/public-pricing.ts) between landing and Tarifs; prices and credits come from active credit_packs rows, and every feature stays open to every pack — prevents inconsistent or invented commercial terms.
 - Footer destinations are centrally defined; unprovided social, legal and product links remain noninteractive until confirmed — prevents dead links and fabricated policies.

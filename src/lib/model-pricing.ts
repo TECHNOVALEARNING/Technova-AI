@@ -34,16 +34,6 @@ export function creditCost(model: string, inputTokens: number, outputTokens: num
 
 export const estimateTokens = (text: string) => Math.ceil(text.length / 4);
 
-// Credit packs: 1 FCFA = 1 credit; bonus credits added on top.
-export const creditPacks = [
-  { id: "free", name: "Free", fcfa: 0, credits: 50, bonus: 0 },
-  { id: "starter", name: "Starter", fcfa: 1000, credits: 1000, bonus: 0 },
-  { id: "essential", name: "Essential", fcfa: 2500, credits: 2500, bonus: 100 },
-  { id: "advanced", name: "Advanced", fcfa: 5000, credits: 5000, bonus: 500, popular: true },
-  { id: "professional", name: "Professional", fcfa: 10000, credits: 10000, bonus: 1500 },
-  { id: "business", name: "Business", fcfa: 30000, credits: 30000, bonus: 8000 },
-] as const;
-
 export type Currency = "FCFA" | "USD" | "EUR";
 export function formatPrice(fcfa: number, currency: Currency) {
   if (currency === "FCFA") return `${fcfa.toLocaleString("fr-FR")} FCFA`;

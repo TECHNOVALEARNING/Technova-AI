@@ -65,18 +65,6 @@ export const content = {
       ],
     },
     tech: { tag: "Modèles", title: "Les meilleurs laboratoires d'IA", sub: "Connectés à TechNova, accessibles avec un seul compte." },
-    testi: {
-      tag: "Témoignages",
-      title: "Ce qu'ils en disent",
-      items: [
-        { n: "Awa K.", r: "Créatrice de contenu, Abidjan", q: "Je paie en Mobile Money et j'ai accès à GPT et Claude. Enfin une plateforme pensée pour nous." },
-        { n: "Koffi A.", r: "Développeur, Cotonou", q: "Une seule API pour tous les modèles, ça m'a fait gagner des semaines d'intégration." },
-        { n: "Fatou D.", r: "Fondatrice d'agence, Dakar", q: "Les crédits qui n'expirent pas, c'est parfait pour gérer le budget de mes clients." },
-        { n: "Yann M.", r: "Étudiant, Lomé", q: "La formule Starter à 1 000 FCFA m'a permis de tester sans risque. Je recommande." },
-        { n: "Ibrahim S.", r: "CTO, Niamey", q: "Le suivi en temps réel des coûts est très clair. On sait exactement ce qu'on dépense." },
-        { n: "Grâce T.", r: "Designer, Douala", q: "FLUX et Imagen 4 au même endroit, la qualité des images est bluffante." },
-      ],
-    },
     pricing: {
       tag: "Tarifs",
       title: "Simple. Transparent. Flexible.",
@@ -193,18 +181,6 @@ export const content = {
       ],
     },
     tech: { tag: "Models", title: "The world's leading AI labs", sub: "Connected to TechNova, available with one account." },
-    testi: {
-      tag: "Testimonials",
-      title: "What they're saying",
-      items: [
-        { n: "Awa K.", r: "Content creator, Abidjan", q: "I pay with Mobile Money and get GPT and Claude. Finally a platform built for us." },
-        { n: "Koffi A.", r: "Developer, Cotonou", q: "One API for every model saved me weeks of integration work." },
-        { n: "Fatou D.", r: "Agency founder, Dakar", q: "Credits that never expire are perfect for managing client budgets." },
-        { n: "Yann M.", r: "Student, Lomé", q: "The 1,000 FCFA Starter plan let me try it risk-free. Recommended." },
-        { n: "Ibrahim S.", r: "CTO, Niamey", q: "Real-time cost tracking is crystal clear. We know exactly what we spend." },
-        { n: "Grâce T.", r: "Designer, Douala", q: "FLUX and Imagen 4 in one place, the image quality is stunning." },
-      ],
-    },
     pricing: {
       tag: "Pricing",
       title: "Simple. Transparent. Flexible.",
@@ -258,14 +234,6 @@ export const content = {
     },
   },
 } as const;
-
-export const plans = [
-  { name: "Starter", price: 1000, credits: 1000, bonus: 0 },
-  { name: "Essential", price: 2500, credits: 2500, bonus: 100 },
-  { name: "Advanced", price: 5000, credits: 5000, bonus: 500, popular: true },
-  { name: "Professional", price: 10000, credits: 10000, bonus: 1500 },
-  { name: "Business", price: 30000, credits: 30000, bonus: 8000 },
-];
 
 export const labs = [
   { n: "OpenAI", s: "openai" },

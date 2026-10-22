@@ -54,7 +54,6 @@ function Index() {
       <How t={t} />
       <Ecosystem t={t} />
       <Tech t={t} />
-      <Testimonials t={t} />
       <PricingContent lang={lang} />
       <Faq t={t} />
       <Contact t={t} />
@@ -470,30 +469,6 @@ function Tech({ t }: { t: T }) {
           </div>
         </div>
       </R>
-    </section>
-  );
-}
-
-function Testimonials({ t }: { t: T }) {
-  return (
-    <section className="px-4 py-6 sm:py-8">
-      <Heading tag={t.testi.tag} title={t.testi.title} />
-      <div className="mx-auto max-w-6xl columns-1 gap-5 md:columns-3">
-        {t.testi.items.map((x, i) => (
-          <R key={x.n} delay={(i % 3) * 100} className="mb-5 break-inside-avoid">
-            <div className={`rounded-3xl p-6 shadow-soft ${i === 1 || i === 4 ? "bg-ink text-ink-foreground" : "bg-card"}`}>
-              <p className={`text-[15px] leading-relaxed ${i === 1 || i === 4 ? "text-ink-foreground/85" : ""}`}>“{x.q}”</p>
-              <div className="mt-6 flex items-center gap-3">
-                <div className="grid h-10 w-10 place-items-center rounded-full bg-iris font-display text-sm font-semibold text-ink">{x.n[0]}</div>
-                <div>
-                  <div className="text-sm font-semibold">{x.n}</div>
-                  <div className={`text-xs ${i === 1 || i === 4 ? "text-ink-foreground/60" : "text-muted-foreground"}`}>{x.r}</div>
-                </div>
-              </div>
-            </div>
-          </R>
-        ))}
-      </div>
     </section>
   );
 }

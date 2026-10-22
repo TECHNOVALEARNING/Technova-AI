@@ -134,6 +134,20 @@
       "when": 1792742400000,
       "tag": "0018_configure_app_url_lenient",
       "breakpoints": true
+    },
+    {
+      "idx": 19,
+      "version": "7",
+      "when": 1792828800000,
+      "tag": "0019_profiles_on_signup",
+      "breakpoints": true
+    },
+    {
+      "idx": 20,
+      "version": "7",
+      "when": 1792915200000,
+      "tag": "0020_retire_expert_business",
+      "breakpoints": true
     }
   ]
 }
