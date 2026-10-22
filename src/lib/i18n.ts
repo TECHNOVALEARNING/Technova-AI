@@ -27,7 +27,7 @@ export const content = {
       items: [
         { t: "Ultra rapide", d: "Réponses instantanées et routage intelligent vers le meilleur modèle." },
         { t: "Tous les modèles", d: "OpenAI, Anthropic, Google, Meta, Mistral, DeepSeek… au même endroit." },
-        { t: "Paiement local et sécurisé", d: "MTN, Moov, Orange Money, Wave, cartes et PayPal. Crédits activés en quelques secondes." },
+        { t: "Paiement local et sécurisé", d: "MTN, Moov, Orange Money, Wave et cartes bancaires. Crédits activés en quelques secondes." },
       ],
     },
     services: {
@@ -47,7 +47,7 @@ export const content = {
       sub: "De l'inscription à votre première création en moins de 2 minutes.",
       steps: [
         { t: "Créez votre compte", d: "Inscription gratuite, 50 crédits Technova offerts immédiatement." },
-        { t: "Rechargez en FCFA", d: "Mobile Money, carte ou PayPal. Vos crédits n'expirent jamais." },
+        { t: "Rechargez votre compte", d: "Mobile Money ou carte bancaire. Vos crédits n'expirent jamais." },
         { t: "Choisissez un modèle", d: "Chat, image, vidéo ou code : plus de 100 modèles disponibles." },
         { t: "Créez sans limites", d: "Utilisez l'interface ou intégrez l'API à vos produits." },
       ],
@@ -85,7 +85,7 @@ export const content = {
       items: [
         { q: "Qu'est-ce qu'un crédit TechNova ?", a: "C'est l'unité de paiement de la plateforme. Chaque requête consomme des crédits selon le modèle utilisé et la longueur de la réponse." },
         { q: "Mes crédits expirent-ils ?", a: "Non. Les crédits achetés restent sur votre compte à vie." },
-        { q: "Quels moyens de paiement acceptez-vous ?", a: "MTN, Moov, Orange Money, Wave, cartes Visa/Mastercard, PayPal, Stripe et virement bancaire." },
+        { q: "Quels moyens de paiement acceptez-vous ?", a: "MTN, Moov, Orange Money, Wave, cartes Visa/Mastercard, Stripe et virement bancaire." },
         { q: "Puis-je utiliser TechNova via une API ?", a: "Oui. Une seule clé API vous donne accès à tous les modèles disponibles sur la plateforme." },
         { q: "Y a-t-il un essai gratuit ?", a: "Oui, 50 crédits Technova sont offerts à l'inscription, sans carte bancaire." },
       ],
@@ -143,7 +143,7 @@ export const content = {
       items: [
         { t: "Lightning fast", d: "Instant answers and smart routing to the best model for the job." },
         { t: "Every model", d: "OpenAI, Anthropic, Google, Meta, Mistral, DeepSeek… in one place." },
-        { t: "Local & secure payments", d: "MTN, Moov, Orange Money, Wave, cards and PayPal. Credits activated in seconds." },
+        { t: "Local & secure payments", d: "MTN, Moov, Orange Money, Wave and bank cards. Credits activated in seconds." },
       ],
     },
     services: {
@@ -163,7 +163,7 @@ export const content = {
       sub: "From sign-up to your first creation in under 2 minutes.",
       steps: [
         { t: "Create your account", d: "Free sign-up, 50 Technova credits instantly." },
-        { t: "Top up your way", d: "Mobile Money, card or PayPal. Credits never expire." },
+        { t: "Top up your account", d: "Mobile Money or bank card. Credits never expire." },
         { t: "Pick a model", d: "Chat, image, video or code: 100+ models available." },
         { t: "Build without limits", d: "Use the app or plug the API into your products." },
       ],
@@ -201,7 +201,7 @@ export const content = {
       items: [
         { q: "What is a TechNova credit?", a: "It's the platform's payment unit. Each request uses credits depending on the model and response length." },
         { q: "Do my credits expire?", a: "No. Purchased credits stay on your account forever." },
-        { q: "Which payment methods do you accept?", a: "MTN, Moov, Orange Money, Wave, Visa/Mastercard, PayPal, Stripe and bank transfer." },
+        { q: "Which payment methods do you accept?", a: "MTN, Moov, Orange Money, Wave, Visa/Mastercard, Stripe and bank transfer." },
         { q: "Can I use TechNova through an API?", a: "Yes. A single API key gives you access to every model on the platform." },
         { q: "Is there a free trial?", a: "Yes, 50 Technova credits are offered on sign-up, no credit card required." },
       ],
