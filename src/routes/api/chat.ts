@@ -14,7 +14,7 @@ const bodySchema = z.object({
         role: z.enum(["user", "assistant"]),
         content: z.string().max(40000),
         files: z
-          .array(z.object({ mediaType: z.string().max(100), filename: z.string().max(200), url: z.string().max(30_000_000) }))
+          .array(z.object({ mediaType: z.string().max(100), filename: z.string().max(200), url: z.string().max(4_500_000) }))
           .max(4)
           .optional(),
       }),
@@ -94,8 +94,6 @@ export const Route = createFileRoute("/api/chat")({
         const { hitRateLimit, rateLimitMessage } = await import("@/lib/security.server");
         if (!(await hitRateLimit(userId, "chat"))) return new Response(rateLimitMessage(request.headers.get("accept-language")?.startsWith("en") ? "en" : "fr", "chat"), { status: 429 });
         const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-        const { data: ledger } = await supabaseAdmin.from("credit_transactions").select("amount").eq("owner_id", userId);
-        const balance = (ledger ?? []).reduce((sum, row) => sum + row.amount, 0);
         const parsed = bodySchema.safeParse(await request.json().catch(() => null));
         if (!parsed.success) return new Response("Invalid request", { status: 400 });
         const allFiles = parsed.data.messages.flatMap(m => m.files ?? []).filter(f => f.url.startsWith("data:"));
@@ -115,7 +113,6 @@ export const Route = createFileRoute("/api/chat")({
         if (!modelId) return new Response("Model not available for chat", { status: 400 });
         const apiKey = process.env["OPENROUTER_API_KEY"];
         if (!apiKey) return new Response("OpenRouter is not configured", { status: 500 });
-        if (balance <= 0 && creditCost(model, 1_000_000, 1_000_000) > 0) return new Response("Crédits insuffisants — rechargez votre solde dans Crédits. / Not enough credits.", { status: 402 });
         const startedAt = Date.now();
         const langRule = parsed.data.lang === "en"
           ? " IMPORTANT: always reply in English, whatever language the user writes in."
@@ -156,12 +153,28 @@ export const Route = createFileRoute("/api/chat")({
           : systemPrompts[parsed.data.mode] + langRule;
         const maxTokens = agent ? Math.min(4096, Math.max(128, agent.max_tokens)) : 1024;
         const inputTokens = estimateTokens(systemPrompt + parsed.data.messages.map(m => m.content).join(" ")) + allFiles.reduce((sum, f) => sum + (f.mediaType.startsWith("image/") ? 1000 : f.mediaType === "application/pdf" ? 3000 : 8000), 0);
-        if (agent) {
-          const worst = creditCost(model, inputTokens, maxTokens);
-          if (worst > agent.max_cost) return new Response(`Cette demande dépasse le budget de l’agent (${worst} > ${agent.max_cost} crédits Technova). / This request exceeds the agent budget.`, { status: 402 });
-          if (worst > balance && worst > 0) return new Response("Crédits insuffisants. / Not enough credits.", { status: 402 });
-        }
+        // Hold the worst-case cost before calling the provider; the real cost is charged at the end.
+        const worst = creditCost(model, inputTokens, maxTokens);
+        if (agent && worst > agent.max_cost) return new Response(`Cette demande dépasse le budget de l’agent (${worst} > ${agent.max_cost} crédits Technova). / This request exceeds the agent budget.`, { status: 402 });
+        const { reserveCredits, settleCredits, releaseCredits } = await import("@/lib/credits.server");
+        const reservation = worst > 0 ? await reserveCredits(userId, worst, model) : null;
+        if (worst > 0 && !reservation) return new Response("Crédits insuffisants — rechargez votre solde dans Crédits. / Not enough credits.", { status: 402 });
         let outputText = "";
+        let settled = false;
+        // Charges what was actually generated, once — at the end of the stream or when the client disconnects.
+        const settle = async () => {
+          if (settled) return;
+          settled = true;
+          const outputTokens = estimateTokens(outputText);
+          const credits = creditCost(model, inputTokens, outputTokens);
+          await supabaseAdmin.from("usage_logs").insert({ owner_id: userId, model: model, input_tokens: inputTokens, output_tokens: outputTokens, credits, latency_ms: Date.now() - startedAt });
+          if (reservation) await settleCredits(reservation, credits);
+        };
+        const abandon = async () => {
+          if (settled) return;
+          settled = true;
+          if (reservation) await releaseCredits(reservation);
+        };
 
         const upstream = await fetch("https://openrouter.ai/api/v1/chat/completions", {
           method: "POST",
@@ -178,8 +191,10 @@ export const Route = createFileRoute("/api/chat")({
             max_tokens: maxTokens,
             messages: [{ role: "system", content: systemPrompt }, ...parsed.data.messages.map(m => (m.files?.length && m.role === "user" ? { role: m.role, content: toParts(m.content, m.files) } : { role: m.role, content: m.content }))],
           }),
-        });
-        if (!upstream.ok || !upstream.body) {
+        }).catch(() => null);
+        if (!upstream?.ok || !upstream.body) {
+          await abandon();
+          if (!upstream) return new Response("Le modèle n'a pas pu répondre, réessayez. / The model could not answer.", { status: 502 });
           const detail = await upstream.text().catch(() => "");
           console.error("OpenRouter error", upstream.status, detail.slice(0, 500));
           const message =
@@ -190,6 +205,8 @@ export const Route = createFileRoute("/api/chat")({
                 : "Le modèle n'a pas pu répondre, réessayez. / The model could not answer.";
           return new Response(message, { status: upstream.status || 502 });
         }
+
+        request.signal.addEventListener("abort", () => { void (outputText ? settle() : abandon()); }, { once: true });
 
         // Convert OpenRouter SSE into a plain text stream of answer deltas.
         const decoder = new TextDecoder();
@@ -220,10 +237,7 @@ export const Route = createFileRoute("/api/chat")({
               }
             },
             async flush() {
-              const outputTokens = estimateTokens(outputText);
-              const credits = creditCost(model, inputTokens, outputTokens);
-              await supabaseAdmin.from("usage_logs").insert({ owner_id: userId, model: model, input_tokens: inputTokens, output_tokens: outputTokens, credits, latency_ms: Date.now() - startedAt });
-              if (credits > 0) await supabaseAdmin.from("credit_transactions").insert({ owner_id: userId, amount: -credits, kind: "usage", label: model });
+              await settle();
             },
           }),
         );

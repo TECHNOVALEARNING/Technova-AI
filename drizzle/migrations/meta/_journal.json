@@ -155,6 +155,20 @@
       "when": 1793001600000,
       "tag": "0021_pack_prices",
       "breakpoints": true
+    },
+    {
+      "idx": 22,
+      "version": "7",
+      "when": 1793088000000,
+      "tag": "0022_phase1_storage_reservations",
+      "breakpoints": true
+    },
+    {
+      "idx": 23,
+      "version": "7",
+      "when": 1793174400000,
+      "tag": "0023_phase2_video_access_admin_transfers",
+      "breakpoints": true
     }
   ]
 }

@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { BarChart3, Image as ImageIcon, ShieldAlert, Users, Wallet } from "lucide-react";
 import { useDashboard } from "./DashboardLayout";
 import { getAdminStats, listSecurityEvents } from "@/lib/admin.functions";
+import { CreditTransfer } from "./CreditTransfer";
 
 type Ev = { id: string; user_id: string | null; kind: string; severity: string; detail: unknown; created_at: string };
 type Stats = Exclude<Awaited<ReturnType<typeof getAdminStats>>, { admin: false }>;
@@ -43,6 +44,8 @@ export function AdminPage() {
           <tbody>{stats.models.length === 0 ? <tr><td colSpan={4} className="p-3 text-muted-foreground">{fr ? "Aucun usage." : "No usage."}</td></tr> : stats.models.map((m) => <tr key={m.model} className="border-t border-border"><td className="p-3">{m.model}</td><td className="p-3">{m.calls}</td><td className="p-3">{m.tokens.toLocaleString(fr ? "fr-FR" : "en-US")}</td><td className="p-3">{m.credits}</td></tr>)}</tbody></table>
       </div>
     </div>}
+
+    <CreditTransfer fr={fr} />
 
     <h2 className="mt-6 font-display text-lg font-semibold">{fr ? "Journal de sécurité" : "Security log"}</h2>
     <div className="mt-2 overflow-x-auto rounded-2xl border border-border bg-card/90">

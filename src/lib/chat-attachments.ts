@@ -3,8 +3,11 @@ export type ChatFilePart = { type: "file"; mediaType: string; filename: string; 
 
 export const ACCEPT = "image/*,application/pdf,audio/*,video/*";
 export const MAX_FILES = 4;
-const MAX_MEDIA_BYTES = 20 * 1024 * 1024; // audio / video
-const MAX_PDF_BYTES = 10 * 1024 * 1024;
+// Requests to the server are capped at 4.5 MB on Vercel and files travel as base64 (+33 %).
+const MAX_MEDIA_BYTES = 3 * 1024 * 1024; // audio / video
+const MAX_PDF_BYTES = 3 * 1024 * 1024;
+/** Total base64 size of the files sent with one /api/chat request. */
+export const MAX_REQUEST_FILE_CHARS = 4_000_000;
 const PERSIST_LIMIT = 2_500_000; // data URLs above this size are kept only in memory
 
 // Large media is not stored in the conversation; keep it in memory for the current session.
@@ -56,4 +59,21 @@ export function persistableParts(messageId: string, parts: Array<{ type: "text";
     pendingMedia.set(mediaKey(messageId, i), p.url);
     return { ...p, url: "" };
   });
+}
+
+type SentFile = { mediaType: string; filename: string; url: string };
+
+/**
+ * Keeps files only for the last `recentTurns` turns, newest first, until `budget` base64
+ * characters are used; older or overflowing files are dropped from the request.
+ */
+export function budgetFiles<T extends { files: SentFile[] }>(turns: T[], budget = MAX_REQUEST_FILE_CHARS, recentTurns = 6): Array<Omit<T, "files"> & { files?: SentFile[] }> {
+  let left = budget;
+  const out = turns.map((turn) => ({ ...turn }) as Omit<T, "files"> & { files?: SentFile[] });
+  for (let i = turns.length - 1; i >= 0; i--) {
+    const turn = turns[i]!;
+    const kept = i >= turns.length - recentTurns ? turn.files.filter((f) => (left -= f.url.length) >= 0) : [];
+    if (kept.length) out[i]!.files = kept; else delete out[i]!.files;
+  }
+  return out;
 }

@@ -420,6 +420,36 @@ export type Database = {
         }
         Relationships: []
       }
+      credit_transfers: {
+        Row: {
+          admin_id: string
+          amount: number
+          created_at: string
+          id: string
+          idempotency_key: string
+          reason: string
+          to_user_id: string
+        }
+        Insert: {
+          admin_id: string
+          amount: number
+          created_at?: string
+          id?: string
+          idempotency_key: string
+          reason?: string
+          to_user_id: string
+        }
+        Update: {
+          admin_id?: string
+          amount?: number
+          created_at?: string
+          id?: string
+          idempotency_key?: string
+          reason?: string
+          to_user_id?: string
+        }
+        Relationships: []
+      }
       credit_wallets: {
         Row: {
           balance: number
@@ -801,6 +831,7 @@ export type Database = {
           output: string
           owner_id: string
           plan: Json
+          reservation_id: string | null
           request: string
           status: string
           thread_id: string
@@ -819,6 +850,7 @@ export type Database = {
           output?: string
           owner_id: string
           plan: Json
+          reservation_id?: string | null
           request: string
           status?: string
           thread_id: string
@@ -837,6 +869,7 @@ export type Database = {
           output?: string
           owner_id?: string
           plan?: Json
+          reservation_id?: string | null
           request?: string
           status?: string
           thread_id?: string
@@ -992,6 +1025,14 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      admin_find_user: {
+        Args: { _email: string }
+        Returns: { balance: number; display_name: string; email: string; id: string }[]
+      }
+      admin_transfer_credits: {
+        Args: { _admin: string; _amount: number; _key: string; _reason: string; _to: string }
+        Returns: Json
+      }
       claim_welcome_bonus: { Args: never; Returns: number }
       confirm_credits: {
         Args: { _real_amount: number; _reservation: string }
@@ -1007,6 +1048,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      has_video_access: { Args: { _user: string }; Returns: boolean }
       hit_rate_limit: {
         Args: {
           _bucket: string

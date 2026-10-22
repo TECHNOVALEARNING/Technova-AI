@@ -8,6 +8,7 @@ export const RATE_LIMITS = {
   publish: { limit: 10, window: 600 },
   connect: { limit: 10, window: 600 },
   api: { limit: 60, window: 60 },
+  admin_transfer: { limit: 20, window: 60 },
 } as const;
 
 export type RateBucket = keyof typeof RATE_LIMITS;
@@ -34,6 +35,8 @@ export function rateLimitMessage(lang: string | undefined, bucket: RateBucket) {
 export async function logSecurityEvent(userId: string | null, kind: string, severity: "info" | "warning" | "critical" = "info", detail: Record<string, unknown> = {}) {
   try {
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    await supabaseAdmin.from("security_events").insert({ user_id: userId, kind, severity, detail: detail as never });
+    const { currentRequestId } = await import("@/lib/request-context.server");
+    const requestId = currentRequestId();
+    await supabaseAdmin.from("security_events").insert({ user_id: userId, kind, severity, detail: { ...detail, ...(requestId ? { request_id: requestId } : {}) } as never });
   } catch (e) { console.error("security log failed", e); }
 }

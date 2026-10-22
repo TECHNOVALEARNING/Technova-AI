@@ -18,8 +18,15 @@ Rules: always include a self-contained index.html runnable directly in a browser
 
 type Job = {
   id: string; owner_id: string; thread_id: string; message_id: string; request: string; answers: string;
-  plan: unknown; lang: string; output: string; attempts: number; charged: boolean;
+  plan: unknown; lang: string; output: string; attempts: number; charged: boolean; reservation_id: string | null;
 };
+
+/** Gives back the credits held for a build that will never finish. */
+async function releaseJobCredits(job: Job) {
+  if (!job.reservation_id) return;
+  const { releaseCredits } = await import("@/lib/credits.server");
+  await releaseCredits(job.reservation_id);
+}
 
 /** Keeps only fully closed tags so a resumed run continues from a clean boundary. */
 function trimToComplete(text: string) {
@@ -50,6 +57,7 @@ export async function runStudioJob(jobId: string) {
   if (!claimed) return;
   if (claimed.attempts >= MAX_ATTEMPTS) {
     await db.from("studio_jobs").update({ status: "failed", error: "attempts" }).eq("id", jobId);
+    await releaseJobCredits(claimed as Job);
     await writeMessage(claimed as Job, claimed.output, true, "failed", "attempts");
     return;
   }
@@ -87,7 +95,12 @@ export async function runStudioJob(jobId: string) {
       const { data: mark } = await db.from("studio_jobs").update({ charged: true }).eq("id", job.id).eq("charged", false).select("id").maybeSingle();
       if (mark) {
         await db.from("usage_logs").insert({ owner_id: job.owner_id, model: "TechNova Studio", input_tokens: Math.ceil(content.length / 4), output_tokens: Math.ceil(out.length / 4), credits: BUILD_COST, latency_ms: Date.now() - started });
-        await db.from("credit_transactions").insert({ owner_id: job.owner_id, amount: -BUILD_COST, kind: "usage", label: "TechNova Studio · build" });
+        if (job.reservation_id) {
+          const { settleCredits } = await import("@/lib/credits.server");
+          await settleCredits(job.reservation_id, BUILD_COST);
+        } else {
+          await db.from("credit_transactions").insert({ owner_id: job.owner_id, amount: -BUILD_COST, kind: "usage", label: "TechNova Studio · build" });
+        }
       }
     }
   } catch (e) {
@@ -96,6 +109,7 @@ export async function runStudioJob(jobId: string) {
     const msg = status === 402 ? "credits" : status === 403 ? "denied" : "interrupted";
     if (terminal) {
       await db.from("studio_jobs").update({ output: out, status: "failed", error: msg, lease_until: null }).eq("id", job.id);
+      await releaseJobCredits(job);
       await writeMessage(job, out, false, "failed", msg);
     } else {
       // Release the lease so the background worker resumes it on its next run.

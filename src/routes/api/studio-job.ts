@@ -38,14 +38,18 @@ export const Route = createFileRoute("/api/studio-job")({
         const { runStudioJob, BUILD_COST } = await import("@/lib/studio-job.server");
         const { data: thread } = await supabaseAdmin.from("chat_threads").select("id").eq("id", d.threadId).eq("owner_id", userId).maybeSingle();
         if (!thread) return new Response("Not found", { status: 404 });
-        const { data: ledger } = await supabaseAdmin.from("credit_transactions").select("amount").eq("owner_id", userId);
-        const balance = (ledger ?? []).reduce((s, r) => s + r.amount, 0);
-        if (balance < BUILD_COST) return new Response("Crédits insuffisants — rechargez votre solde dans Crédits. / Not enough credits.", { status: 402 });
+        // The build cost stays reserved until the job finishes (charged) or fails (released).
+        const { reserveCredits, releaseCredits } = await import("@/lib/credits.server");
+        const reservation = await reserveCredits(userId, BUILD_COST, "TechNova Studio · build");
+        if (!reservation) return new Response("Crédits insuffisants — rechargez votre solde dans Crédits. / Not enough credits.", { status: 402 });
         const { data: job, error } = await supabaseAdmin.from("studio_jobs").insert({
           owner_id: userId, thread_id: d.threadId, message_id: d.messageId, request: d.request,
-          answers: d.answers, plan: d.plan as never, lang: d.lang ?? "fr",
+          answers: d.answers, plan: d.plan as never, lang: d.lang ?? "fr", reservation_id: reservation,
         }).select("id").single();
-        if (error || !job) return new Response("Impossible de lancer la génération. / Could not start.", { status: 500 });
+        if (error || !job) {
+          await releaseCredits(reservation);
+          return new Response("Impossible de lancer la génération. / Could not start.", { status: 500 });
+        }
         const enc = new TextEncoder();
         const stream = new ReadableStream<Uint8Array>({
           async start(controller) {

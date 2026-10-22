@@ -78,11 +78,11 @@ export const Route = createFileRoute("/api/studio")({
         if (!(await hitRateLimit(userId, "studio"))) return new Response(rateLimitMessage((d as { lang?: string }).lang, "studio"), { status: 429 });
         const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
         const cost = COST[d.stage];
-        if (cost > 0) {
-          const { data: ledger } = await supabaseAdmin.from("credit_transactions").select("amount").eq("owner_id", userId);
-          const balance = (ledger ?? []).reduce((s, r) => s + r.amount, 0);
-          if (balance < cost) return new Response("Crédits insuffisants — rechargez votre solde dans Crédits. / Not enough credits.", { status: 402 });
-        }
+        const { reserveCredits, settleCredits, releaseCredits } = await import("@/lib/credits.server");
+        const reservation = cost > 0 ? await reserveCredits(userId, cost, `TechNova Studio · ${d.stage}`) : null;
+        if (cost > 0 && !reservation) return new Response("Crédits insuffisants — rechargez votre solde dans Crédits. / Not enough credits.", { status: 402 });
+        let settled = false;
+        const release = async () => { if (!settled && reservation) { settled = true; await releaseCredits(reservation); } };
         const { studioStream, parseJson } = await import("@/lib/studio-gateway.server");
         const langRule = d.lang === "en"
           ? "Always write everything (questions, plan, steps, code comments) in English."
@@ -93,9 +93,10 @@ export const Route = createFileRoute("/api/studio")({
         if (d.feedback) content += `\n\nChanges requested on the previous plan:\n${d.feedback}`;
         const startedAt = Date.now();
         const charge = async (out: string) => {
-          if (cost <= 0) return;
+          if (cost <= 0 || settled || !reservation) return;
+          settled = true;
           await supabaseAdmin.from("usage_logs").insert({ owner_id: userId, model: "TechNova Studio", input_tokens: Math.ceil(content.length / 4), output_tokens: Math.ceil(out.length / 4), credits: cost, latency_ms: Date.now() - startedAt });
-          await supabaseAdmin.from("credit_transactions").insert({ owner_id: userId, amount: -cost, kind: "usage", label: `TechNova Studio · ${d.stage}` });
+          await settleCredits(reservation, cost);
         };
         try {
           const result = studioStream(request, `${PROMPTS[d.stage]} ${langRule}`, [{ role: "user", content }]);
@@ -113,7 +114,7 @@ export const Route = createFileRoute("/api/studio")({
                 } catch (e) {
                   const s = (e as { statusCode?: number })?.statusCode;
                   controller.enqueue(enc.encode(JSON.stringify({ error: s === 402 ? "Crédits IA de l'espace épuisés. / AI credits exhausted." : s === 429 ? "Trop de requêtes, réessayez dans un instant. / Rate limited." : "Le studio n'a pas pu répondre, réessayez. / The studio could not answer." })));
-                } finally { clearInterval(ping); controller.close(); }
+                } finally { clearInterval(ping); await release(); controller.close(); }
               },
             });
             return new Response(stream, { headers: { "Content-Type": "application/json; charset=utf-8", "Cache-Control": "no-cache, no-transform" } });
@@ -131,11 +132,13 @@ export const Route = createFileRoute("/api/studio")({
               } catch {
                 controller.enqueue(encoder.encode('\n<step title="Erreur">La génération a été interrompue.</step>'));
               }
+              await release();
               controller.close();
             },
           });
           return new Response(stream, { headers: { "Content-Type": "text/plain; charset=utf-8", "Cache-Control": "no-cache, no-transform" } });
         } catch (e) {
+          await release();
           if ((e as Error)?.name === "AbortError") return new Response(null, { status: 499 });
           return gatewayError(e);
         }

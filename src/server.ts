@@ -2,6 +2,7 @@ import "./lib/error-capture";
 
 import { consumeLastCapturedError } from "./lib/error-capture";
 import { renderErrorPage } from "./lib/error-page";
+import { requestIdFor, withRequestId } from "./lib/request-context.server";
 
 type ServerEntry = {
   fetch: (request: Request, env: unknown, ctx: unknown) => Promise<Response> | Response;
@@ -52,7 +53,7 @@ const SECURITY_HEADERS: Record<string, string> = {
   "Permissions-Policy": "camera=(), geolocation=(), payment=(), usb=(), microphone=(self)",
 };
 
-function withSecurityHeaders(response: Response): Response {
+function withSecurityHeaders(response: Response, requestId: string): Response {
   // Responses from fetch() or Response.redirect() can have immutable headers.
   let res = response;
   try {
@@ -63,21 +64,25 @@ function withSecurityHeaders(response: Response): Response {
   for (const [key, value] of Object.entries(SECURITY_HEADERS)) {
     if (!res.headers.has(key)) res.headers.set(key, value);
   }
+  res.headers.set("X-Request-Id", requestId);
   return res;
 }
 
 export default {
   async fetch(request: Request, env: unknown, ctx: unknown) {
-    try {
-      const handler = await getServerEntry();
-      const response = await handler.fetch(request, env, ctx);
-      return withSecurityHeaders(await normalizeCatastrophicSsrResponse(response));
-    } catch (error) {
-      console.error(error);
-      return new Response(renderErrorPage(), {
-        status: 500,
-        headers: { "content-type": "text/html; charset=utf-8" },
-      });
-    }
+    const requestId = requestIdFor(request);
+    return withRequestId(requestId, async () => {
+      try {
+        const handler = await getServerEntry();
+        const response = await handler.fetch(request, env, ctx);
+        return withSecurityHeaders(await normalizeCatastrophicSsrResponse(response), requestId);
+      } catch (error) {
+        console.error(`[${requestId}]`, error);
+        return new Response(renderErrorPage(), {
+          status: 500,
+          headers: { "content-type": "text/html; charset=utf-8", "X-Request-Id": requestId },
+        });
+      }
+    });
   },
 };

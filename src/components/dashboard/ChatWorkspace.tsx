@@ -44,13 +44,14 @@ import {
 } from "@/components/ai-elements/prompt-input";
 import { useDashboard, type Thread } from "./dashboard-context";
 import { chatWorkspaceText } from "@/lib/i18n";
-import { ACCEPT, MAX_FILES, kindOf, mediaKey, pendingMedia, persistableParts, toFilePart, type ChatFilePart } from "@/lib/chat-attachments";
+import { ACCEPT, MAX_FILES, budgetFiles, kindOf, mediaKey, pendingMedia, persistableParts, toFilePart, type ChatFilePart } from "@/lib/chat-attachments";
 import { openRouterModelIds } from "@/lib/chat-models";
 import { cn } from "@/lib/utils";
 import { Shimmer } from "@/components/ai-elements/shimmer";
 import { ArtifactPanel, StudioPlan, StudioQuestions, StudioTimeline } from "./Studio";
 import { parseBuild, type StudioBuild, type StudioData, type StudioPlanData } from "@/lib/studio";
-import { createMediaGeneration, refreshMediaGeneration } from "@/lib/media-generation.functions";
+import { createMediaGeneration, getVideoAccess, refreshMediaGeneration, VIDEO_UPGRADE_REQUIRED } from "@/lib/media-generation.functions";
+import { PENDING_PACK_KEY } from "@/lib/public-pricing";
 import { defaultImageModel, defaultVideoModel, findMediaModel, mediaModels } from "@/lib/media-models";
 import { ChatMedia, type ChatMediaData } from "./ChatMedia";
 
@@ -405,7 +406,7 @@ function ChatComposer({
     for (const file of Array.from(list)) {
       if (next.length >= MAX_FILES) { setFileError(lang === "fr" ? `${MAX_FILES} fichiers maximum.` : `${MAX_FILES} files maximum.`); break; }
       try { next.push(await toFilePart(file)); }
-      catch (e) { setFileError(e instanceof Error && e.message === "too-large" ? (lang === "fr" ? `« ${file.name} » est trop lourd (20 Mo max pour l'audio/vidéo, 10 Mo pour les PDF).` : `"${file.name}" is too large (20 MB max for audio/video, 10 MB for PDFs).`) : (lang === "fr" ? `Format non pris en charge : ${file.name}` : `Unsupported format: ${file.name}`)); }
+      catch (e) { setFileError(e instanceof Error && e.message === "too-large" ? (lang === "fr" ? `« ${file.name} » est trop lourd (3 Mo maximum par fichier PDF, audio ou vidéo).` : `"${file.name}" is too large (3 MB max per PDF, audio or video file).`) : (lang === "fr" ? `Format non pris en charge : ${file.name}` : `Unsupported format: ${file.name}`)); }
     }
     setFiles(next); setReading(false);
     if (fileInput.current) fileInput.current.value = "";
@@ -591,6 +592,8 @@ export function ThreadPage({ threadId }: { threadId: string }) {
   const [thread, setThread] = useState<Thread | null>(null);
   const [messages, setMessages] = useState<UIMessage[]>([]);
   const createMedia = useServerFn(createMediaGeneration);
+  const videoAccess = useServerFn(getVideoAccess);
+  const [videoUpgrade, setVideoUpgrade] = useState<{ balance: number } | null>(null);
   const refreshMedia = useServerFn(refreshMediaGeneration);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -897,7 +900,13 @@ export function ThreadPage({ threadId }: { threadId: string }) {
         const id = await createMedia({ data: { threadId, kind, prompt: request, aspectRatio, model: kind === "image" ? choice.imageModel : choice.videoModel, ...(kind === "video" ? { duration } : {}) } });
         const media: ChatMediaData = { id, kind, model: findMediaModel(kind === "image" ? choice.imageModel : choice.videoModel)?.label ?? "", prompt: request, status: "waiting", progress: null, urls: [], error: null };
         setMessages((prev) => [...prev, { id, role: "assistant", parts: [{ type: "data-media", data: media }] as unknown as UIMessage["parts"] }]);
-      } catch (e) { setError(String((e as Error)?.message ?? e)); }
+      } catch (e) {
+        const message = String((e as Error)?.message ?? e);
+        if (message.includes(VIDEO_UPGRADE_REQUIRED)) {
+          const access = await videoAccess().catch(() => null);
+          setVideoUpgrade({ balance: access?.balance ?? 0 });
+        } else setError(message);
+      }
       finally { setThinking(false); }
       return;
     }
@@ -939,6 +948,19 @@ export function ThreadPage({ threadId }: { threadId: string }) {
         const rest = prev.filter((m) => m.id !== assistantId);
         return [...rest, { id: assistantId, role: "assistant", parts: [{ type: "text", text }] }];
       });
+    // Send media only for the latest few turns, newest first, within the request size budget.
+    const payload = budgetFiles(history.slice(-30).map((m) => ({
+      role: m.role,
+      content: textOf(m),
+      files: (m.parts as unknown as Array<{ type: string } & Partial<ChatFilePart>>).flatMap((p, i) =>
+        p.type === "file" ? [{ mediaType: p.mediaType ?? "", filename: p.filename ?? "file", url: p.url || pendingMedia.get(mediaKey(m.id, i)) || "" }] : []).filter((f) => f.url),
+    })));
+    const last = history[history.length - 1];
+    const lastSent = payload[payload.length - 1];
+    if (last?.role === "user" && last.parts.some((p) => p.type === "file") && !lastSent?.files?.length) {
+      setError(lang === "fr" ? "Vos fichiers dépassent la taille maximale d'envoi (environ 3 Mo au total). Retirez-en un ou réduisez leur taille." : "Your files exceed the maximum upload size (about 3 MB in total). Remove one or reduce their size.");
+      return;
+    }
     setThinking(true);
     let answer = "";
     try {
@@ -954,13 +976,7 @@ export function ThreadPage({ threadId }: { threadId: string }) {
           mode: choice.mode,
           lang,
           ...(agent ? { agentId: agent.id } : {}),
-          messages: history.slice(-30).map((m, idx, arr) => {
-            const files = (m.parts as unknown as Array<{ type: string } & Partial<ChatFilePart>>).flatMap((p, i) =>
-              p.type === "file" ? [{ mediaType: p.mediaType ?? "", filename: p.filename ?? "file", url: p.url || pendingMedia.get(mediaKey(m.id, i)) || "" }] : []);
-            // Send media only for the latest few user turns to keep requests small.
-            const recent = idx >= arr.length - 6;
-            return { role: m.role, content: textOf(m), ...(recent && files.some(f => f.url) ? { files: files.filter(f => f.url) } : {}) };
-          }),
+          messages: payload,
         }),
       });
       if (!res.ok || !res.body) {
@@ -1123,6 +1139,30 @@ export function ThreadPage({ threadId }: { threadId: string }) {
         >
           {error}
         </p>
+      )}
+      {videoUpgrade && (
+        <div role="alert" className="relative z-10 mx-auto mt-2 w-full max-w-3xl px-4">
+          <div className="rounded-2xl border border-border bg-card/95 p-4 text-sm shadow-sm backdrop-blur">
+            <p className="font-medium">
+              {lang === "en"
+                ? "🎬 Video generation is reserved for the Creator (4,999 F) and Pro (7,699 F) plans."
+                : "🎬 La génération vidéo est réservée aux forfaits Creator (4999 frs) et Pro (7699 frs)."}
+            </p>
+            <p className="mt-1 text-muted-foreground">
+              {lang === "en"
+                ? `Upgrade to unlock videos. You have ${videoUpgrade.balance.toLocaleString("en-US")} credits left.`
+                : `Passez à un forfait supérieur pour débloquer les vidéos. Il vous reste ${videoUpgrade.balance.toLocaleString("fr-FR")} crédits.`}
+            </p>
+            <div className="mt-3 flex flex-wrap gap-2">
+              {(["creator", "pro"] as const).map((slug) => (
+                <Button key={slug} size="sm" variant={slug === "pro" ? "default" : "outline"} onClick={() => { try { localStorage.setItem(PENDING_PACK_KEY, slug); } catch { /* storage blocked */ } void navigate({ to: "/dashboard/credits" }); }}>
+                  {lang === "en" ? `Upgrade to ${slug === "pro" ? "Pro" : "Creator"}` : `Passer à ${slug === "pro" ? "Pro" : "Creator"}`}
+                </Button>
+              ))}
+              <Button size="sm" variant="ghost" onClick={() => setVideoUpgrade(null)}>{lang === "en" ? "Close" : "Fermer"}</Button>
+            </div>
+          </div>
+        </div>
       )}
       <div className="relative z-10 flex min-h-0 flex-1 flex-col">
         <Conversation className="min-h-0 w-full">

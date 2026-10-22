@@ -27,6 +27,24 @@ async function kie(path: string, init?: RequestInit) {
   return payload.data ?? {};
 }
 
+/** Error code the chat turns into the upgrade message (video requires a Creator or Pro purchase). */
+export const VIDEO_UPGRADE_REQUIRED = "VIDEO_UPGRADE_REQUIRED";
+
+async function hasVideoAccess(userId: string) {
+  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+  const { data, error } = await supabaseAdmin.rpc("has_video_access", { _user: userId });
+  if (error) throw new Error("Vérification du forfait impossible. Réessayez. / Plan check failed.");
+  return data === true;
+}
+
+/** What the chat shows before a video request; the server re-checks on every creation. */
+export const getVideoAccess = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { data: ledger } = await context.supabase.from("credit_transactions").select("amount").eq("owner_id", context.userId);
+    return { allowed: await hasVideoAccess(context.userId), balance: (ledger ?? []).reduce((sum, row) => sum + row.amount, 0) };
+  });
+
 export const createMediaGeneration = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .validator((data) => createInput.parse(data))
@@ -38,6 +56,11 @@ export const createMediaGeneration = createServerFn({ method: "POST" })
     if (threadError || !thread) throw new Error("Conversation introuvable.");
     const spec = (data.model && findMediaModel(data.model)) || findMediaModel(data.kind === "image" ? defaultImageModel : defaultVideoModel)!;
     if (spec.kind !== data.kind) throw new Error("Ce modèle ne correspond pas au type demandé.");
+    if (spec.kind === "video" && !(await hasVideoAccess(context.userId))) {
+      const { logSecurityEvent } = await import("@/lib/security.server");
+      await logSecurityEvent(context.userId, "video_blocked_insufficient_plan", "info", { model: spec.id });
+      throw new Error(VIDEO_UPGRADE_REQUIRED);
+    }
     const model = spec.id;
     const built = buildMediaInput(spec, data.prompt, data.aspectRatio, Number(data.duration ?? "5"));
     const aspectRatio = built.ratio;

@@ -92,7 +92,7 @@ function CurrencySwitch({ currency, setCurrency }: ReturnType<typeof useCurrency
 
 function ActivityList({ rows }: { rows: Tx[] }) {
   const c = useCopy();
-  const label = (r: Tx) => r.kind === "welcome" ? c.welcome : r.kind === "purchase" ? c.purchase : `${c.usage} · ${r.label}`;
+  const label = (r: Tx) => r.kind === "welcome" ? c.welcome : r.kind === "purchase" ? c.purchase : r.kind === "admin_transfer" ? r.label : `${c.usage} · ${r.label}`;
   return <div className={card}><p className={eyebrow}>{c.activity.toUpperCase()}</p><div className="mt-3 divide-y divide-border">{rows.slice(0, 12).map(r => <div key={r.id} className="flex items-center justify-between py-3"><div><p className="text-[13px] font-medium">{label(r)}</p><p className="text-[11px] text-muted-foreground">{new Date(r.created_at).toLocaleString()}</p></div><span className={`font-mono text-[12px] ${r.amount > 0 ? "text-primary" : "text-muted-foreground"}`}>{r.amount > 0 ? "+" : ""}{r.amount.toLocaleString()}</span></div>)}{rows.length === 0 && <p className="py-6 text-center text-[12px] text-muted-foreground">{c.noActivity}</p>}</div></div>;
 }
 
