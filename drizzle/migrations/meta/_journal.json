@@ -148,6 +148,13 @@
       "when": 1792915200000,
       "tag": "0020_retire_expert_business",
       "breakpoints": true
+    },
+    {
+      "idx": 21,
+      "version": "7",
+      "when": 1793001600000,
+      "tag": "0021_pack_prices",
+      "breakpoints": true
     }
   ]
 }
