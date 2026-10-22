@@ -30,15 +30,17 @@ function createSupabaseFetch(supabaseKey: string): typeof fetch {
 function createSupabaseClient() {
   // Use import.meta.env for client-side (Vite build-time replacement)
   // Fall back to process.env for SSR (server-side rendering)
-  const SUPABASE_URL = import.meta.env['VITE_SUPABASE_URL'] || process.env['SUPABASE_URL'];
-  const SUPABASE_PUBLISHABLE_KEY = import.meta.env['VITE_SUPABASE_PUBLISHABLE_KEY'] || process.env['SUPABASE_PUBLISHABLE_KEY'];
+  const SUPABASE_URL = import.meta.env['VITE_SUPABASE_URL'] || (typeof process === 'undefined' ? undefined : process.env['SUPABASE_URL']);
+  const SUPABASE_PUBLISHABLE_KEY = import.meta.env['VITE_SUPABASE_PUBLISHABLE_KEY'] || (typeof process === 'undefined' ? undefined : process.env['SUPABASE_PUBLISHABLE_KEY']);
 
   if (!SUPABASE_URL || !SUPABASE_PUBLISHABLE_KEY) {
+    // In the browser only VITE_* variables exist, and only if they were set when the app was built.
+    const prefix = typeof window === 'undefined' ? '' : 'VITE_';
     const missing = [
-      ...(!SUPABASE_URL ? ['SUPABASE_URL'] : []),
-      ...(!SUPABASE_PUBLISHABLE_KEY ? ['SUPABASE_PUBLISHABLE_KEY'] : []),
+      ...(!SUPABASE_URL ? [`${prefix}SUPABASE_URL`] : []),
+      ...(!SUPABASE_PUBLISHABLE_KEY ? [`${prefix}SUPABASE_PUBLISHABLE_KEY`] : []),
     ];
-    const message = `Missing Supabase environment variable(s): ${missing.join(', ')}. Set them in your environment (see .env.example).`;
+    const message = `Missing Supabase environment variable(s): ${missing.join(', ')}. ${prefix ? 'Set them for this environment, then rebuild/redeploy.' : 'Set them in your environment (see .env.example).'}`;
     console.error(`[Supabase] ${message}`);
     throw new Error(message);
   }
