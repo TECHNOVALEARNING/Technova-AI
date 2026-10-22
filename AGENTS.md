@@ -1,0 +1,30 @@
+# Rules
+- Landing page texts live in src/lib/i18n.ts (FR/EN) — keeps both languages in sync in one place.
+- Scroll reveal uses the `.reveal` CSS class + IntersectionObserver in index.tsx — no animation library needed.
+- The hero/about videos, posters and dashboard wallpaper are static files in public/media referenced through src/lib/media.ts, with a poster fallback — keeps the opening screen usable without autoplay.
+- The About statement uses an in-flow, scroll-driven per-word color transition in both languages, with a reduced-motion fallback — keeps reading progress visible.
+- The Process line and step surfaces derive their fill from one scroll-progress value in index.tsx — keeps illumination synchronized with reading position.
+- The About video uses a 4K-upscaled MP4 plus compatible WebM and a separate poster, opened on demand in an accessible overlay — avoids preloading large media.
+- Prominent landing-page actions use the shared Button pill variant, semantic `.action-pill-*` surfaces, and `ActionText` for a stationary color-wash/rolling-label interaction — keeps destinations intact while honoring reduced-motion preferences.
+- Connection, registration, and password recovery share one bilingual auth component backed by Supabase Auth (Google via supabase.auth.signInWithOAuth); profiles hold display information under owner-only policies — keeps identity separate from profile data and the screens consistent.
+- The landing navigation keeps primary action visible on small screens and moves section links, sign-in, and language into a dismissible menu below the desktop breakpoint — keeps every destination accessible without crowding the header.
+- Dashboard uses separate content routes, local appearance preferences, viewport-fixed CDN wallpaper in both themes, and owner-scoped conversations — keeps backgrounds stable and history private.
+- The chat studio keeps mode and model choices browser-local; messages are owner-scoped — preserves private history.
+- Visuals use server-only kie.ai tasks in owner-scoped messages — keeps keys private.
+- The chat welcome derives its bilingual time-of-day phrase from the visitor's local browser time and uses the signed-in profile name when available — personalizes the greeting without weather permissions or SSR time-zone assumptions.
+- Public conversation sharing uses an unguessable per-thread share token read through a security-definer lookup function — lets signed-out visitors read one shared conversation without opening table access.
+- Public landing pages (Models, Blog, Docs, Developers) share header/footer/hero from src/components/site/SiteChrome with a browser-local language choice; their copy lives in src/lib/site-pages.ts — consistent branding.
+- Credit balance is the sum of a server-written credit ledger (welcome bonus via security-definer function, chat usage debited in /api/chat); API keys are stored hashed and shown once — users can never mint their own credits.
+- Créer mode runs the TechNova Studio pipeline (/api/studio: intent → questions → plan → build) on OpenRouter (STUDIO_MODEL), persisting each stage as a data-studio part in chat_messages; the chat shows one compact activity entry whose detail timeline expands in the artifact panel alongside generated files — keeps plan approval before code without cluttering the conversation and restores artifacts on reload.
+- Studio builds run as server-side jobs (studio_jobs + /api/studio-job), saving progress into the chat message; a per-minute pg_cron worker (/api/public/studio-worker, URL from studio_worker_config.app_url set by configure_app_url) armed on job insert and disarmed when idle resumes interrupted builds — generation survives page reloads and closed tabs.
+- Users link their own Supabase through an OAuth popup (startSupabaseConnect / completeSupabaseConnect + /api/public/supabase-oauth/callback); tokens live encrypted per owner in supabase_connections and are read only by server functions — keeps each user's database separate and never readable from the browser.
+- Studio SQL is generated for review/copy only; the connected Supabase project is selected in Settings, and no automatic database execution exists yet — avoids implying plan approval writes to an external database.
+- Studio clarification shows one persisted question set as a step-by-step client flow, and the plan is reviewed in a dialog before approval — preserves the existing approval boundary without changing the generation API.
+- The artifact workspace temporarily collapses dashboard navigation and gives the resizable artifact panel a majority split when generation begins; manual resizing and menu toggles remain available — maximizes working space without changing saved navigation preferences.
+
+- Model catalog uses a dated OpenRouter snapshot with search, filters and pagination; listing does not imply chat activation — preserves billing and key privacy.
+- Pricing/footer: src/components/site/AGENTS.md — scoped guidance.
+- Per-user accounts (GitHub, Google Drive, Notion) use direct OAuth with TechNova's own apps and HMAC-signed state; tokens are AES-GCM encrypted in app_user_connections; sites publish to /s/$slug; rate limits/security log in security.server.ts — secrets stay server-side.
+- Custom agents (owner-scoped, versioned by trigger) feed /api/chat via agentId; server enforces per-reply budget and tools stay deny-by-default — browser never decides cost.
+- Deployment targets Vercel through Nitro's vercel preset (vite.config.ts); security headers are added in src/server.ts and user-supplied URLs are fetched only through safe-fetch.server.ts — no platform-specific SDKs.
+- Credit/system SQL functions are executable by service_role only (migration 0017); the public API /api/ai/chat authenticates hashed tn_live_ keys — browsers can never mint credits.

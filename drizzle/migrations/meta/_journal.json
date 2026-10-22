@@ -1,0 +1,139 @@
+{
+  "version": "7",
+  "dialect": "postgresql",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "7",
+      "when": 1790974286834,
+      "tag": "0000_create_user_profiles",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1790975163944,
+      "tag": "0001_create_dashboard_chat_history",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1790982018885,
+      "tag": "0002_chat_share_pin",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1790984113825,
+      "tag": "0003_credits_api_keys_usage",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1791031644642,
+      "tag": "0004_studio_jobs",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1791031774297,
+      "tag": "0005_studio_worker_arm",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1791032888702,
+      "tag": "0006_create_supabase_connections",
+      "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1791036691083,
+      "tag": "0007_create_published_studio_previews",
+      "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1791047756314,
+      "tag": "0008_create_media_generations",
+      "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1791269102928,
+      "tag": "0009_media_credit_reservation",
+      "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1791417934391,
+      "tag": "0010_connections_publishing_security",
+      "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "7",
+      "when": 1791620706705,
+      "tag": "0011_create_agents",
+      "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "7",
+      "when": 1791735165035,
+      "tag": "0012_media_archive_14d",
+      "breakpoints": true
+    },
+    {
+      "idx": 13,
+      "version": "7",
+      "when": 1791887437782,
+      "tag": "0013_credit_engine_v4",
+      "breakpoints": true
+    },
+    {
+      "idx": 14,
+      "version": "7",
+      "when": 1791887774360,
+      "tag": "0014_migration",
+      "breakpoints": true
+    },
+    {
+      "idx": 15,
+      "version": "7",
+      "when": 1791972996474,
+      "tag": "0015_registry",
+      "breakpoints": true
+    },
+    {
+      "idx": 16,
+      "version": "7",
+      "when": 1792141935726,
+      "tag": "0016_pricing_v5_features_estimates",
+      "breakpoints": true
+    },
+    {
+      "idx": 17,
+      "version": "7",
+      "when": 1792656000000,
+      "tag": "0017_self_hosting_security",
+      "breakpoints": true
+    },
+    {
+      "idx": 18,
+      "version": "7",
+      "when": 1792742400000,
+      "tag": "0018_configure_app_url_lenient",
+      "breakpoints": true
+    }
+  ]
+}
