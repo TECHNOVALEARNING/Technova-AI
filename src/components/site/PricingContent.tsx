@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "@tanstack/react-router";
 import { ArrowUpRight } from "lucide-react";
+import "@/lib/fontawesome";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { fallbackPacks, packCopy, PENDING_PACK_KEY, type PublicPack } from "@/lib/public-pricing";
@@ -42,7 +44,10 @@ export function PricingContent({ lang }: { lang: Lang }) {
           <p className="mt-5 font-display text-3xl font-semibold">{p.price_xof.toLocaleString(loc)} <span className="text-sm font-normal opacity-70">FCFA</span></p>
           <p className="text-xs text-muted-foreground">{t.once}</p>
           <p className="mt-2 text-sm font-semibold">{p.credits.toLocaleString(loc)} {t.credits}</p>
-          {copy && <ul className="mt-5 flex-1 space-y-2.5 text-sm">{copy.perks.map((perk) => <li key={perk}>{perk}</li>)}</ul>}
+          {copy && <ul className="mt-5 flex-1 space-y-3 text-sm">{copy.perks.map((perk) => <li key={perk.text} className="flex items-start gap-3">
+            <FontAwesomeIcon icon={perk.icon} fixedWidth aria-hidden className={`mt-0.5 size-4 shrink-0 ${p.featured ? "text-supabase" : "text-chat-glow"}`} />
+            <span>{perk.text}</span>
+          </li>)}</ul>}
           <Button variant="pill" size="pill" onClick={() => void choose(p.slug)} aria-label={`${t.choose} ${p.name}`} className={`action-pill mt-6 w-full justify-center px-3 py-2.5 text-sm ${p.featured ? "action-pill-light" : "action-pill-dark"}`}>{t.choose} {p.name}<ArrowUpRight className="size-3.5" /></Button>
         </article>;
       })}</div>
