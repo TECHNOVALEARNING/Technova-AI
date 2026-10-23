@@ -69,6 +69,7 @@ function smartPick(text: string): string {
 }
 const visionModels = new Set(["GPT-4o", "GPT-4o Mini", "Claude Sonnet 5", "Claude Haiku 4.5", "Gemini 2.5 Flash", "Gemini 2.5 Pro", "Mistral Large", "Gemma 3 12B"]);
 const mediaModels = new Set(["Gemini 2.5 Flash", "Gemini 2.5 Pro"]);
+const reasoningModels = new Set(["DeepSeek R1"]);
 const audioFormats: Record<string, string> = { "audio/mpeg": "mp3", "audio/mp3": "mp3", "audio/wav": "wav", "audio/x-wav": "wav", "audio/webm": "webm", "audio/ogg": "ogg", "audio/mp4": "m4a", "audio/x-m4a": "m4a", "audio/aac": "aac", "audio/flac": "flac" };
 
 function toParts(text: string, files: InFile[]) {
@@ -151,7 +152,9 @@ export const Route = createFileRoute("/api/chat")({
         const systemPrompt = agent
           ? `You are "${agent.name}", a custom TechNova agent. Follow the owner's instructions below.${toolsRule}\n\nINSTRUCTIONS:\n${agent.instructions}${agent.memory ? `\n\nMEMORY (facts to remember):\n${agent.memory}` : ""}` + toolContext + langRule
           : systemPrompts[parsed.data.mode] + langRule;
-        const maxTokens = agent ? Math.min(4096, Math.max(128, agent.max_tokens)) : 1024;
+        // Reasoning models think before answering: cap the thinking so it cannot eat the whole reply.
+        const reasoning = reasoningModels.has(model);
+        const maxTokens = agent ? Math.min(4096, Math.max(128, agent.max_tokens)) : reasoning ? 2048 : 1024;
         const inputTokens = estimateTokens(systemPrompt + parsed.data.messages.map(m => m.content).join(" ")) + allFiles.reduce((sum, f) => sum + (f.mediaType.startsWith("image/") ? 1000 : f.mediaType === "application/pdf" ? 3000 : 8000), 0);
         // Hold the worst-case cost before calling the provider; the real cost is charged at the end.
         const worst = creditCost(model, inputTokens, maxTokens);
@@ -189,6 +192,7 @@ export const Route = createFileRoute("/api/chat")({
             model: modelId,
             stream: true,
             max_tokens: maxTokens,
+            ...(reasoning ? { reasoning: { max_tokens: Math.floor(maxTokens / 2) } } : {}),
             messages: [{ role: "system", content: systemPrompt }, ...parsed.data.messages.map(m => (m.files?.length && m.role === "user" ? { role: m.role, content: toParts(m.content, m.files) } : { role: m.role, content: m.content }))],
           }),
         }).catch(() => null);

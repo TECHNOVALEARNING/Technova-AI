@@ -9,7 +9,7 @@ export const siteModels: SiteModel[] = [
   { name: "GPT-4o", id: "openai/gpt-4o", provider: "OpenAI", caps: ["chat", "reasoning", "vision"], context: "128K", speed: "122" },
   { name: "GPT-4o Mini", id: "openai/gpt-4o-mini", provider: "OpenAI", caps: ["chat", "vision", "coding"], context: "128K", speed: "180" },
   { name: "Claude 3.5 Sonnet", id: "anthropic/claude-3.5-sonnet", provider: "Anthropic", icon: "anthropic/d97757", caps: ["chat", "reasoning", "coding"], context: "200K", speed: "96" },
-  { name: "DeepSeek R1", id: "deepseek/deepseek-r1", provider: "DeepSeek", icon: "deepseek/4d6bfe", caps: ["reasoning", "coding", "chat"], context: "131K", speed: "88" },
+  { name: "DeepSeek R1", id: "deepseek/deepseek-r1-0528", provider: "DeepSeek", icon: "deepseek/4d6bfe", caps: ["reasoning", "coding", "chat"], context: "131K", speed: "88" },
   { name: "Gemini 2.5 Flash", id: "google/gemini-2.5-flash", provider: "Google", icon: "googlegemini/4285f4", caps: ["chat", "vision", "reasoning"], context: "1M", speed: "165" },
   { name: "DeepSeek V3 Chat", id: "deepseek/deepseek-chat", provider: "DeepSeek", icon: "deepseek/4d6bfe", caps: ["chat", "coding"], context: "131K", speed: "120" },
   { name: "Gemini 2.5 Pro", id: "google/gemini-2.5-pro", provider: "Google", icon: "googlegemini/4285f4", caps: ["chat", "vision", "reasoning"], context: "2M", speed: "110" },
