@@ -176,6 +176,13 @@
       "when": 1793260800000,
       "tag": "0024_phase3_arena",
       "breakpoints": true
+    },
+    {
+      "idx": 25,
+      "version": "7",
+      "when": 1793347200000,
+      "tag": "0025_phase5_music",
+      "breakpoints": true
     }
   ]
 }

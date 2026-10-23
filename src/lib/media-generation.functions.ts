@@ -2,10 +2,10 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
-import { buildMediaInput, defaultImageModel, defaultVideoModel, findMediaModel, KIE_TO_TECHNOVA, mediaReserve } from "@/lib/media-models";
+import { buildMediaInput, defaultImageModel, defaultMusicModel, defaultVideoModel, findMediaModel, KIE_TO_TECHNOVA, mediaReserve } from "@/lib/media-models";
 
 const createInput = z.object({
-  kind: z.enum(["image", "video"]),
+  kind: z.enum(["image", "video", "music"]),
   prompt: z.string().trim().min(3).max(5000),
   aspectRatio: z.enum(["1:1", "16:9", "9:16", "4:3", "3:4"]),
   duration: z.enum(["5", "10"]).optional(),
@@ -54,7 +54,7 @@ export const createMediaGeneration = createServerFn({ method: "POST" })
     const { data: thread, error: threadError } = await context.supabase.from("chat_threads")
       .select("id").eq("id", data.threadId).eq("owner_id", context.userId).maybeSingle();
     if (threadError || !thread) throw new Error("Conversation introuvable.");
-    const spec = (data.model && findMediaModel(data.model)) || findMediaModel(data.kind === "image" ? defaultImageModel : defaultVideoModel)!;
+    const spec = (data.model && findMediaModel(data.model)) || findMediaModel(data.kind === "image" ? defaultImageModel : data.kind === "music" ? defaultMusicModel : defaultVideoModel)!;
     if (spec.kind !== data.kind) throw new Error("Ce modèle ne correspond pas au type demandé.");
     if (spec.kind === "video" && !(await hasVideoAccess(context.userId))) {
       const { logSecurityEvent } = await import("@/lib/security.server");
@@ -119,9 +119,10 @@ export const refreshMediaGeneration = createServerFn({ method: "POST" })
     let urls: string[] = [];
     if (state === "success" && typeof result["resultJson"] === "string") {
       try {
-        const parsed = JSON.parse(result["resultJson"]) as { resultUrls?: unknown };
-        if (Array.isArray(parsed.resultUrls)) urls = parsed.resultUrls.filter((url): url is string =>
-          typeof url === "string" && /^https:\/\//i.test(url));
+        // Images/videos: { resultUrls: [...] }; music (Suno): { data: [{ audio_url, ... }] }.
+        const parsed = JSON.parse(result["resultJson"]) as { resultUrls?: unknown; data?: { audio_url?: unknown }[] };
+        const found = Array.isArray(parsed.resultUrls) ? parsed.resultUrls : Array.isArray(parsed.data) ? parsed.data.map((track) => track?.audio_url) : [];
+        urls = found.filter((url): url is string => typeof url === "string" && /^https:\/\//i.test(url));
       } catch { /* no usable media returned */ }
     }
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");

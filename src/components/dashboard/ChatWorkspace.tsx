@@ -24,6 +24,7 @@ import {
   Film,
   Image as ImageIcon,
   Telescope,
+  Music,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -54,7 +55,7 @@ import { parseBuild, type StudioBuild, type StudioData, type StudioPlanData } fr
 import { createMediaGeneration, getVideoAccess, refreshMediaGeneration, VIDEO_UPGRADE_REQUIRED } from "@/lib/media-generation.functions";
 import { PENDING_PACK_KEY } from "@/lib/public-pricing";
 import { RESEARCH_MAX_CREDITS, splitResearchStream } from "@/lib/research";
-import { defaultImageModel, defaultVideoModel, findMediaModel, mediaModels } from "@/lib/media-models";
+import { defaultImageModel, defaultMusicModel, defaultVideoModel, findMediaModel, mediaModels, mediaReserve, type MediaKind } from "@/lib/media-models";
 import { ChatMedia, type ChatMediaData } from "./ChatMedia";
 
 type Mode = "chat" | "create";
@@ -146,7 +147,7 @@ function useWorkspaceChoice() {
     const spec = findMediaModel(value);
     if (!spec) return;
     if (spec.kind === "image") { setImageModel(value); localStorage.setItem("technova-image-model", value); }
-    else { setVideoModel(value); localStorage.setItem("technova-video-model", value); }
+    else if (spec.kind === "video") { setVideoModel(value); localStorage.setItem("technova-video-model", value); }
   }
   function toggleResearch() {
     setResearch((on) => {
@@ -154,7 +155,7 @@ function useWorkspaceChoice() {
       return !on;
     });
   }
-  return { mode, model: mode === "create" ? SMART_MODEL : model, imageModel, videoModel, research: mode === "chat" && research, toggleResearch, chooseMode, chooseModel, chooseMediaModel, copy };
+  return { mode, model: mode === "create" ? SMART_MODEL : model, imageModel, videoModel, musicModel: defaultMusicModel, research: mode === "chat" && research, toggleResearch, chooseMode, chooseModel, chooseMediaModel, copy };
 }
 
 function ChoiceControls({ choice }: { choice: ReturnType<typeof useWorkspaceChoice> }) {
@@ -306,13 +307,13 @@ function ChoiceControls({ choice }: { choice: ReturnType<typeof useWorkspaceChoi
                 </div>
               ) : null;
             })}
-            {(["image", "video"] as const).map((kind) => {
+            {(["image", "video", "music"] as const).map((kind) => {
               const matches = mediaModels.filter((m) => m.kind === kind && (m.label + " " + m.provider).toLowerCase().includes(q));
-              const selected = kind === "image" ? imageModel : videoModel;
+              const selected = kind === "image" ? imageModel : kind === "video" ? videoModel : defaultMusicModel;
               return matches.length ? (
                 <div key={kind} className="mb-2">
                   <p className="px-2.5 py-1.5 text-[10px] font-bold uppercase text-muted-foreground">
-                    {kind === "image" ? (fr ? "Génération d’images" : "Image generation") : (fr ? "Génération de vidéos" : "Video generation")}
+                    {kind === "image" ? (fr ? "Génération d’images" : "Image generation") : kind === "video" ? (fr ? "Génération de vidéos" : "Video generation") : (fr ? "Génération de musique" : "Music generation")}
                   </p>
                   {matches.map((m) => (
                     <Button
@@ -323,19 +324,23 @@ function ChoiceControls({ choice }: { choice: ReturnType<typeof useWorkspaceChoi
                       className="h-auto min-h-8 w-full justify-between gap-2 rounded-xl px-2.5 py-1.5 text-xs font-normal"
                     >
                       <span className="flex min-w-0 items-center gap-2">
-                        {kind === "image" ? <ImageIcon className="size-3.5 shrink-0 text-muted-foreground" /> : <Film className="size-3.5 shrink-0 text-muted-foreground" />}
+                        {kind === "image" ? <ImageIcon className="size-3.5 shrink-0 text-muted-foreground" /> : kind === "video" ? <Film className="size-3.5 shrink-0 text-muted-foreground" /> : <Music className="size-3.5 shrink-0 text-muted-foreground" />}
                         <span className="truncate">{m.label}</span>
                         <span className="truncate text-[10px] text-muted-foreground">{m.provider}</span>
                         {m.cheap && <span className="shrink-0 rounded-full bg-chat-glow/15 px-1.5 py-0.5 text-[9px] font-semibold text-chat-glow">{fr ? "Économique" : "Low cost"}</span>}
                       </span>
-                      {m.id === selected && <Check className="size-3.5 shrink-0 text-chat-glow" />}
+                      <span className="ml-auto flex shrink-0 items-center gap-1.5">
+                        {/* Price shown before generating: the full amount reserved (5 s for videos). */}
+                        <span className="text-[10px] tabular-nums text-muted-foreground">{mediaReserve(m, 5).toLocaleString(fr ? "fr-FR" : "en-US")} cr.{kind === "video" ? " / 5 s" : ""}</span>
+                        {m.id === selected && <Check className="size-3.5 shrink-0 text-chat-glow" />}
+                      </span>
                     </Button>
                   ))}
                 </div>
               ) : null;
             })}
             <p className="px-2.5 pb-1 text-[10px] leading-relaxed text-muted-foreground">
-              {fr ? "Demandez « génère-moi une image… » ou « une vidéo… » : le modèle coché est utilisé." : "Ask “generate an image…” or “a video…”: the checked model is used."}
+              {fr ? "Demandez « génère-moi une image… », « une vidéo… » ou « une chanson… » : le modèle coché est utilisé. Prix en crédits, réservés avant la création ; seul le coût réel est facturé." : "Ask “generate an image…”, “a video…” or “a song…”: the checked model is used. Prices in credits, reserved up front; only the real cost is charged."}
             </p>
             {!allModels.some((item) => item.toLowerCase().includes(q)) && !mediaModels.some((m) => (m.label + " " + m.provider).toLowerCase().includes(q)) && (
               <p className="px-3 py-5 text-center text-xs text-muted-foreground">{copy.noModels}</p>
@@ -969,15 +974,16 @@ export function ThreadPage({ threadId }: { threadId: string }) {
       }
       return;
     }
-    const mediaRequest = choice.mode === "chat" && /\b(?:g[ée]n[èe]re(?:z)?(?:-moi)?|cr[ée]e(?:z)?(?:-moi)?|fais(?:-moi)?|fabrique(?:-moi)?|generate|create|make)\b[\s\S]{0,110}\b(?:image|photo|illustration|visuel|picture|image|video|vid[ée]o|clip|animation)\b/i.test(request);
+    const mediaRequest = choice.mode === "chat" && /\b(?:g[ée]n[èe]re(?:z)?(?:-moi)?|cr[ée]e(?:z)?(?:-moi)?|fais(?:-moi)?|fabrique(?:-moi)?|generate|create|make)\b[\s\S]{0,110}\b(?:image|photo|illustration|visuel|picture|image|video|vid[ée]o|clip|animation|musique|chanson|morceau|jingle|beat|music|song|track)\b/i.test(request);
     if (last?.role === "user" && mediaRequest) {
-      const kind = /\b(?:vid[ée]o|video|clip|animation)\b/i.test(request) ? "video" : "image";
+      const kind: MediaKind = /\b(?:musique|chanson|morceau|jingle|beat|music|song|track)\b/i.test(request) ? "music" : /\b(?:vid[ée]o|video|clip|animation)\b/i.test(request) ? "video" : "image";
+      const mediaModel = kind === "image" ? choice.imageModel : kind === "video" ? choice.videoModel : choice.musicModel;
       const aspectRatio = /\b(?:9:16|portrait|vertical|story|reel)\b/i.test(request) ? "9:16" : /\b(?:1:1|carr[ée]|square)\b/i.test(request) ? "1:1" : "16:9";
       const duration = /\b(?:10\s*(?:s|sec|secondes?|seconds?))\b/i.test(request) ? "10" : "5";
       setThinking(true);
       try {
-        const id = await createMedia({ data: { threadId, kind, prompt: request, aspectRatio, model: kind === "image" ? choice.imageModel : choice.videoModel, ...(kind === "video" ? { duration } : {}) } });
-        const media: ChatMediaData = { id, kind, model: findMediaModel(kind === "image" ? choice.imageModel : choice.videoModel)?.label ?? "", prompt: request, status: "waiting", progress: null, urls: [], error: null };
+        const id = await createMedia({ data: { threadId, kind, prompt: request, aspectRatio, model: mediaModel, ...(kind === "video" ? { duration } : {}) } });
+        const media: ChatMediaData = { id, kind, model: findMediaModel(mediaModel)?.label ?? "", prompt: request, status: "waiting", progress: null, urls: [], error: null };
         setMessages((prev) => [...prev, { id, role: "assistant", parts: [{ type: "data-media", data: media }] as unknown as UIMessage["parts"] }]);
       } catch (e) {
         const message = String((e as Error)?.message ?? e);

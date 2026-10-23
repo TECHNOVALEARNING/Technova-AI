@@ -1,7 +1,8 @@
-// kie.ai text-to-image / text-to-video catalogue (Market jobs API), from docs.kie.ai.
+// kie.ai text-to-image / text-to-video / music catalogue (Market jobs API), from docs.kie.ai.
 // Client-safe: no secrets. The server builds the request input from these specs.
 
 export type MediaRatio = "1:1" | "16:9" | "9:16" | "4:3" | "3:4";
+export type MediaKind = "image" | "video" | "music";
 type SizeStyle = "aspect_ratio" | "image_size_named" | "image_size_ratio" | "none";
 type DurationStyle = "string" | "integer" | "none";
 
@@ -9,7 +10,7 @@ export type MediaModel = {
   id: string;
   label: string;
   provider: string;
-  kind: "image" | "video";
+  kind: MediaKind;
   size: SizeStyle;
   ratios: MediaRatio[];
   durationStyle?: DurationStyle;
@@ -73,10 +74,14 @@ export const mediaModels: MediaModel[] = [
   vid("wan/2-6-text-to-video", "Wan 2.6", "Alibaba", "none", [], "string", [5, 10, 15], { resolution: "720p" }),
   vid("wan/2-5-text-to-video", "Wan 2.5", "Alibaba", "aspect_ratio", tri, "string", [5, 10], { resolution: "720p" }),
   vid("wan/2-2-a14b-text-to-video-turbo", "Wan 2.2 Turbo", "Alibaba", "aspect_ratio", ["16:9", "9:16"], "none", [], { resolution: "480p" }, true),
+
+  // Suno via kie.ai (docs.kie.ai/suno-api/generate-music): usually two tracks per request.
+  { id: "ai-music-api/generate", label: "Suno V6", provider: "Suno", kind: "music", size: "none", ratios: [] },
 ];
 
 export const defaultImageModel = "nano-banana-2-lite";
 export const defaultVideoModel = "kling/v2-1-master-text-to-video";
+export const defaultMusicModel = "ai-music-api/generate";
 export const findMediaModel = (id: string) => mediaModels.find((m) => m.id === id);
 
 const named: Record<MediaRatio, string> = {
@@ -84,6 +89,11 @@ const named: Record<MediaRatio, string> = {
 };
 
 export function buildMediaInput(model: MediaModel, prompt: string, ratio: MediaRatio, seconds: number) {
+  if (model.kind === "music") {
+    // Simple mode: the description drives the song; kie.ai requires a style (or lyrics) alongside it.
+    const instrumental = /\b(instrumental|sans paroles|sans voix|no vocals|without vocals)\b/i.test(prompt);
+    return { input: { custom_mode: false, instrumental, model: "V6", prompt: prompt.slice(0, 3000), style: prompt.slice(0, 200) }, ratio: "auto", duration: null };
+  }
   const chosen = model.ratios.includes(ratio) ? ratio : (model.ratios.includes("16:9") ? "16:9" : model.ratios[0]);
   const input: Record<string, unknown> = { prompt, ...(model.extra ?? {}) };
   if (chosen && model.size === "aspect_ratio") input["aspect_ratio"] = chosen;
@@ -101,7 +111,7 @@ export function buildMediaInput(model: MediaModel, prompt: string, ratio: MediaR
 // One kie.ai credit costs $0.005, so 1 kie credit = 6 TechNova credits.
 export const KIE_TO_TECHNOVA = 0.005 * 1200;
 
-// kie.ai credits per image, or per second of video, for the settings sent by buildMediaInput.
+// kie.ai credits per image or song request, or per second of video, for the settings sent by buildMediaInput.
 // From kie.ai's public price list (api.kie.ai/client/v1/model-pricing/page) on 2026-10-23.
 // Used to reserve credits up front; the final charge uses what kie.ai reports as consumed.
 const kieCost: Record<string, number> = {
@@ -119,6 +129,7 @@ const kieCost: Record<string, number> = {
   "bytedance/seedance-2-5": 63, "bytedance/seedance-2": 41, "bytedance/seedance-2-fast": 11.7, "bytedance/seedance-2-mini": 3.8,
   "bytedance/v1-pro-text-to-video": 6, "bytedance/v1-lite-text-to-video": 4.5,
   "grok-imagine/text-to-video": 4.5, "grok-imagine-video-1-5-preview": 4.5, "hailuo/02-text-to-video-pro": 9.5, "hailuo/02-text-to-video-standard": 5,
+  "ai-music-api/generate": 12,
   "wan/2-7-text-to-video": 16, "wan/2-6-text-to-video": 14, "wan/2-5-text-to-video": 12, "wan/2-2-a14b-text-to-video-turbo": 8,
 };
 // Models missing from kie.ai's list (Seedance 1.5 Pro): conservative ceilings.
@@ -130,6 +141,6 @@ const defaultSeconds: Record<string, number> = { "hailuo/02-text-to-video-pro": 
 /** Credits held before a generation: the full kie.ai price for the chosen length, never an underestimate. */
 export function mediaReserve(model: MediaModel, seconds: number) {
   const length = model.durationStyle === "none" || !model.durations?.length ? (defaultSeconds[model.id] ?? 5) : seconds;
-  const kie = model.kind === "video" ? (kieCost[model.id] ?? UNKNOWN_VIDEO_PER_SECOND) * length : (kieCost[model.id] ?? UNKNOWN_IMAGE);
+  const kie = model.kind === "video" ? (kieCost[model.id] ?? UNKNOWN_VIDEO_PER_SECOND) * length : (kieCost[model.id] ?? UNKNOWN_IMAGE);  // image or music: per request
   return Math.ceil(kie * KIE_TO_TECHNOVA);
 }
