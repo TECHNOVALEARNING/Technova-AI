@@ -32,8 +32,12 @@
 ## Non testé
 Le parcours dans le chat connecté à ta base de production (création, attente, lecture, archivage, facturation).
 
-## Non réalisé : Design Library
-Le cahier des charges décrit une bibliothèque de « templates, composants UI, animations, polices, thèmes », sans en préciser le contenu. Plutôt que d'inventer un catalogue, je propose de la cadrer d'abord : quels modèles de sites, à quel public, intégrés au Studio ou en page séparée ?
+## Design Library (ajoutée)
+Nouvelle page **Design Library** dans le menu : **8 thèmes** originaux (palette + polices + style d'arrondis), **14 sections** (hero, avantages, étapes, produits, menu, galerie, tarifs, chiffres, équipe, avis réels uniquement, FAQ, bandeau d'action, contact, pied de page) et **16 polices Google Fonts** (licence OFL, usage commercial libre).
+- Aperçus visuels avec les vraies polices et des croquis de sections : aucune ressource tierce copiée.
+- L'utilisateur choisit un thème, ses sections dans l'ordre voulu et peut remplacer les polices, puis clique sur **Créer un site avec ce design** : le chat passe en mode Créer, avec un brief de design pré-rempli que le Studio applique.
+- Les ressources gratuites de Framer **n'ont pas été utilisées** : leurs licences interdisent la redistribution, même pour les modèles gratuits.
+- Tests : 7/7 (brief, ordre des sections, polices du catalogue, existence des 16 polices sur Google Fonts) + vérification visuelle dans le navigateur.
 
 ## Rollback
 Code : commit précédent. Base : en-tête de la migration 0025.

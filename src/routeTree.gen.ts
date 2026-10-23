@@ -36,6 +36,7 @@ import { Route as AuthenticatedDashboardArenaRouteImport } from './routes/_authe
 import { Route as AuthenticatedDashboardBillingRouteImport } from './routes/_authenticated/dashboard/billing'
 import { Route as AuthenticatedDashboardConnexionsRouteImport } from './routes/_authenticated/dashboard/connexions'
 import { Route as AuthenticatedDashboardCreditsRouteImport } from './routes/_authenticated/dashboard/credits'
+import { Route as AuthenticatedDashboardDesignRouteImport } from './routes/_authenticated/dashboard/design'
 import { Route as AuthenticatedDashboardDocsRouteImport } from './routes/_authenticated/dashboard/docs'
 import { Route as AuthenticatedDashboardModelsRouteImport } from './routes/_authenticated/dashboard/models'
 import { Route as AuthenticatedDashboardRegistryRouteImport } from './routes/_authenticated/dashboard/registry'
@@ -195,6 +196,12 @@ const AuthenticatedDashboardCreditsRoute =
     path: '/credits',
     getParentRoute: () => AuthenticatedDashboardRoute,
   } as any)
+const AuthenticatedDashboardDesignRoute =
+  AuthenticatedDashboardDesignRouteImport.update({
+    id: '/design',
+    path: '/design',
+    getParentRoute: () => AuthenticatedDashboardRoute,
+  } as any)
 const AuthenticatedDashboardDocsRoute =
   AuthenticatedDashboardDocsRouteImport.update({
     id: '/docs',
@@ -311,6 +318,7 @@ export interface FileRoutesByFullPath {
   '/dashboard/billing': typeof AuthenticatedDashboardBillingRoute
   '/dashboard/connexions': typeof AuthenticatedDashboardConnexionsRoute
   '/dashboard/credits': typeof AuthenticatedDashboardCreditsRoute
+  '/dashboard/design': typeof AuthenticatedDashboardDesignRoute
   '/dashboard/docs': typeof AuthenticatedDashboardDocsRoute
   '/dashboard/models': typeof AuthenticatedDashboardModelsRoute
   '/dashboard/registry': typeof AuthenticatedDashboardRegistryRoute
@@ -354,6 +362,7 @@ export interface FileRoutesByTo {
   '/dashboard/billing': typeof AuthenticatedDashboardBillingRoute
   '/dashboard/connexions': typeof AuthenticatedDashboardConnexionsRoute
   '/dashboard/credits': typeof AuthenticatedDashboardCreditsRoute
+  '/dashboard/design': typeof AuthenticatedDashboardDesignRoute
   '/dashboard/docs': typeof AuthenticatedDashboardDocsRoute
   '/dashboard/models': typeof AuthenticatedDashboardModelsRoute
   '/dashboard/registry': typeof AuthenticatedDashboardRegistryRoute
@@ -400,6 +409,7 @@ export interface FileRoutesById {
   '/_authenticated/dashboard/billing': typeof AuthenticatedDashboardBillingRoute
   '/_authenticated/dashboard/connexions': typeof AuthenticatedDashboardConnexionsRoute
   '/_authenticated/dashboard/credits': typeof AuthenticatedDashboardCreditsRoute
+  '/_authenticated/dashboard/design': typeof AuthenticatedDashboardDesignRoute
   '/_authenticated/dashboard/docs': typeof AuthenticatedDashboardDocsRoute
   '/_authenticated/dashboard/models': typeof AuthenticatedDashboardModelsRoute
   '/_authenticated/dashboard/registry': typeof AuthenticatedDashboardRegistryRoute
@@ -446,6 +456,7 @@ export interface FileRouteTypes {
     | '/dashboard/billing'
     | '/dashboard/connexions'
     | '/dashboard/credits'
+    | '/dashboard/design'
     | '/dashboard/docs'
     | '/dashboard/models'
     | '/dashboard/registry'
@@ -489,6 +500,7 @@ export interface FileRouteTypes {
     | '/dashboard/billing'
     | '/dashboard/connexions'
     | '/dashboard/credits'
+    | '/dashboard/design'
     | '/dashboard/docs'
     | '/dashboard/models'
     | '/dashboard/registry'
@@ -534,6 +546,7 @@ export interface FileRouteTypes {
     | '/_authenticated/dashboard/billing'
     | '/_authenticated/dashboard/connexions'
     | '/_authenticated/dashboard/credits'
+    | '/_authenticated/dashboard/design'
     | '/_authenticated/dashboard/docs'
     | '/_authenticated/dashboard/models'
     | '/_authenticated/dashboard/registry'
@@ -774,6 +787,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedDashboardCreditsRouteImport
       parentRoute: typeof AuthenticatedDashboardRoute
     }
+    '/_authenticated/dashboard/design': {
+      id: '/_authenticated/dashboard/design'
+      path: '/design'
+      fullPath: '/dashboard/design'
+      preLoaderRoute: typeof AuthenticatedDashboardDesignRouteImport
+      parentRoute: typeof AuthenticatedDashboardRoute
+    }
     '/_authenticated/dashboard/docs': {
       id: '/_authenticated/dashboard/docs'
       path: '/docs'
@@ -897,6 +917,7 @@ interface AuthenticatedDashboardRouteChildren {
   AuthenticatedDashboardBillingRoute: typeof AuthenticatedDashboardBillingRoute
   AuthenticatedDashboardConnexionsRoute: typeof AuthenticatedDashboardConnexionsRoute
   AuthenticatedDashboardCreditsRoute: typeof AuthenticatedDashboardCreditsRoute
+  AuthenticatedDashboardDesignRoute: typeof AuthenticatedDashboardDesignRoute
   AuthenticatedDashboardDocsRoute: typeof AuthenticatedDashboardDocsRoute
   AuthenticatedDashboardModelsRoute: typeof AuthenticatedDashboardModelsRoute
   AuthenticatedDashboardRegistryRoute: typeof AuthenticatedDashboardRegistryRoute
@@ -917,6 +938,7 @@ const AuthenticatedDashboardRouteChildren: AuthenticatedDashboardRouteChildren =
     AuthenticatedDashboardConnexionsRoute:
       AuthenticatedDashboardConnexionsRoute,
     AuthenticatedDashboardCreditsRoute: AuthenticatedDashboardCreditsRoute,
+    AuthenticatedDashboardDesignRoute: AuthenticatedDashboardDesignRoute,
     AuthenticatedDashboardDocsRoute: AuthenticatedDashboardDocsRoute,
     AuthenticatedDashboardModelsRoute: AuthenticatedDashboardModelsRoute,
     AuthenticatedDashboardRegistryRoute: AuthenticatedDashboardRegistryRoute,

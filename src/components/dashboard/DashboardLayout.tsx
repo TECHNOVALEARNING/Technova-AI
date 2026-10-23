@@ -1,6 +1,6 @@
 import { createContext, useCallback, useContext, useEffect, useState, type ReactNode } from "react";
 import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
-import { Bot, Library, Plug, Swords } from "lucide-react";
+import { Bot, Library, Palette, Plug, Swords } from "lucide-react";
 import { Activity, ArrowLeft, Bell, BookOpen, Boxes, ChevronDown, Code2, CreditCard, Diamond, Gift, Globe2, LayoutDashboard, LogOut, Menu, MessageCircle, Moon, PanelLeftClose, PanelLeftOpen, Search, Settings2, Sun, Wallet, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -17,6 +17,7 @@ const links = [
   { key: "overview", to: "/dashboard", icon: LayoutDashboard },
   { key: "chat", to: "/dashboard/chat", icon: MessageCircle },
   { key: "arena", to: "/dashboard/arena", icon: Swords },
+  { key: "design", to: "/dashboard/design", icon: Palette },
   { key: "agents", to: "/dashboard/agents", icon: Bot },
   { key: "registry", to: "/dashboard/registry", icon: Library },
   { key: "models", to: "/dashboard/models", icon: Boxes },

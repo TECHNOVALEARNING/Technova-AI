@@ -55,6 +55,7 @@ import { parseBuild, type StudioBuild, type StudioData, type StudioPlanData } fr
 import { createMediaGeneration, getVideoAccess, refreshMediaGeneration, VIDEO_UPGRADE_REQUIRED } from "@/lib/media-generation.functions";
 import { PENDING_PACK_KEY } from "@/lib/public-pricing";
 import { RESEARCH_MAX_CREDITS, splitResearchStream } from "@/lib/research";
+import { DESIGN_DRAFT_KEY } from "@/lib/design-library";
 import { defaultImageModel, defaultMusicModel, defaultVideoModel, findMediaModel, mediaModels, mediaReserve, type MediaKind } from "@/lib/media-models";
 import { ChatMedia, type ChatMediaData } from "./ChatMedia";
 
@@ -429,6 +430,21 @@ function ChatComposer({
 }) {
   const { copy, mode } = choice;
   const { lang } = useDashboard();
+  const ownRef = useRef<HTMLTextAreaElement>(null);
+  const textareaRef = inputRef ?? ownRef;
+  // A design picked in the Design Library arrives as a draft: switch to Créer and prefill the brief.
+  useEffect(() => {
+    let raw: string | null = null;
+    try { raw = sessionStorage.getItem(DESIGN_DRAFT_KEY); sessionStorage.removeItem(DESIGN_DRAFT_KEY); } catch { return; }
+    if (!raw) return;
+    try {
+      const draft = JSON.parse(raw) as { mode?: string; text?: string };
+      if (draft.mode === "create") choice.chooseMode("create");
+      const el = textareaRef.current;
+      if (el && typeof draft.text === "string") { setTextareaValue(el, draft.text); el.focus(); el.setSelectionRange(0, 0); }
+    } catch { /* malformed draft: ignore */ }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
   const [files, setFiles] = useState<ChatFilePart[]>([]);
   const [fileError, setFileError] = useState("");
   const [reading, setReading] = useState(false);
@@ -462,7 +478,7 @@ function ChatComposer({
           </div>
         )}
         <PromptInputTextarea
-          ref={inputRef}
+          ref={textareaRef}
           autoFocus
           disabled={disabled}
           placeholder={mode === "chat" ? copy.chatPlaceholder : copy.createPlaceholder}
@@ -489,7 +505,7 @@ function ChatComposer({
               className="grid size-8 place-items-center rounded-full border border-border text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground disabled:opacity-50">
               {reading ? <Loader2 className="size-4 animate-spin" /> : <Paperclip className="size-4" />}
             </button>
-            <VoiceButton inputRef={inputRef} />
+            <VoiceButton inputRef={textareaRef} />
             <PromptInputSubmit
               disabled={disabled || reading}
               aria-label={copy.saveIdea}
