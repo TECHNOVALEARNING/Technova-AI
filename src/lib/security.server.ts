@@ -13,6 +13,8 @@ export const RATE_LIMITS = {
   payment: { limit: 10, window: 600 },
   payment_check: { limit: 30, window: 60 },
   arena: { limit: 10, window: 300 },
+  site_report: { limit: 5, window: 3600 },
+  admin_moderation: { limit: 60, window: 60 },
 } as const;
 
 export type RateBucket = keyof typeof RATE_LIMITS;

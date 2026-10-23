@@ -678,6 +678,8 @@ export type Database = {
       published_sites: {
         Row: {
           created_at: string
+          disabled_at: string | null
+          disabled_reason: string | null
           files: Json
           id: string
           owner_id: string
@@ -687,6 +689,8 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          disabled_at?: string | null
+          disabled_reason?: string | null
           files: Json
           id?: string
           owner_id: string
@@ -696,6 +700,8 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          disabled_at?: string | null
+          disabled_reason?: string | null
           files?: Json
           id?: string
           owner_id?: string
@@ -851,6 +857,12 @@ export type Database = {
           severity?: string
           user_id?: string | null
         }
+        Relationships: []
+      }
+      site_reports: {
+        Row: { created_at: string; details: string; id: string; reason: string; reporter_hash: string; site_id: string }
+        Insert: { created_at?: string; details?: string; id?: string; reason: string; reporter_hash: string; site_id: string }
+        Update: { created_at?: string; details?: string; id?: string; reason?: string; reporter_hash?: string; site_id?: string }
         Relationships: []
       }
       studio_jobs: {
@@ -1076,6 +1088,8 @@ export type Database = {
         Args: { _admin: string; _amount: number; _key: string; _reason: string; _to: string }
         Returns: Json
       }
+      report_site: { Args: { _details: string; _reason: string; _reporter_hash: string; _slug: string }; Returns: string }
+      admin_set_site_suspension: { Args: { _admin: string; _reason: string; _slug: string; _suspend: boolean }; Returns: boolean }
       claim_welcome_bonus: { Args: never; Returns: number }
       confirm_credits: {
         Args: { _real_amount: number; _reservation: string }

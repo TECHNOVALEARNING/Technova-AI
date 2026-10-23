@@ -3,6 +3,7 @@ import { BarChart3, Image as ImageIcon, ShieldAlert, Users, Wallet } from "lucid
 import { useDashboard } from "./DashboardLayout";
 import { getAdminStats, listSecurityEvents } from "@/lib/admin.functions";
 import { CreditTransfer } from "./CreditTransfer";
+import { SiteModeration } from "./SiteModeration";
 
 type Ev = { id: string; user_id: string | null; kind: string; severity: string; detail: unknown; created_at: string };
 type Stats = Exclude<Awaited<ReturnType<typeof getAdminStats>>, { admin: false }>;
@@ -46,6 +47,8 @@ export function AdminPage() {
     </div>}
 
     <CreditTransfer fr={fr} />
+
+    <SiteModeration fr={fr} />
 
     <h2 className="mt-6 font-display text-lg font-semibold">{fr ? "Journal de sécurité" : "Security log"}</h2>
     <div className="mt-2 overflow-x-auto rounded-2xl border border-border bg-card/90">

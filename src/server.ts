@@ -3,6 +3,7 @@ import "./lib/error-capture";
 import { consumeLastCapturedError } from "./lib/error-capture";
 import { renderErrorPage } from "./lib/error-page";
 import { requestIdFor, withRequestId } from "./lib/request-context.server";
+import { serveSiteHost, siteSlugForHost } from "./lib/site-host.server";
 
 type ServerEntry = {
   fetch: (request: Request, env: unknown, ctx: unknown) => Promise<Response> | Response;
@@ -73,6 +74,9 @@ export default {
     const requestId = requestIdFor(request);
     return withRequestId(requestId, async () => {
       try {
+        // Published sites on their own sub-domain (SITES_BASE_DOMAIN) never reach the app.
+        const siteSlug = siteSlugForHost(request);
+        if (siteSlug !== null) return withSecurityHeaders(await serveSiteHost(request, siteSlug), requestId);
         const handler = await getServerEntry();
         const response = await handler.fetch(request, env, ctx);
         return withSecurityHeaders(await normalizeCatastrophicSsrResponse(response), requestId);

@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { zipSync, strToU8 } from "fflate";
 import { toast } from "sonner";
 import { findSecrets, redactSecrets } from "@/lib/secret-scan";
+import { findPhishing, phishingMessage } from "@/lib/phishing-scan";
 import {
   ArrowLeft, ArrowRight, Check, ChevronDown, ClipboardList, Code2, Copy, Database, Download, Eye, ExternalLink, FileCode2, Loader2, Monitor, Pencil, Search, ShieldCheck, Smartphone, Tablet, X,
 } from "lucide-react";
@@ -172,6 +173,10 @@ export function ArtifactPanel({ build, versions = [], onPickVersion, lang, title
     if (!auth.user) { setPreviewError(tx(lang, "Reconnectez-vous pour partager.", "Sign in to share.")); setSharing(false); return; }
     if (findSecrets(build.files).length) {
       setPreviewError(tx(lang, "Le code contient une clé secrète : retirez-la avant de partager un lien public.", "The code contains a secret key: remove it before sharing a public link."));
+      setSharing(false); return;
+    }
+    if (findPhishing(build.files).length) {
+      setPreviewError(phishingMessage(lang !== "en"));
       setSharing(false); return;
     }
     const { data, error } = await supabase.from("studio_previews").insert({ owner_id: auth.user.id, title, files: build.files as unknown as Json }).select("token").single();

@@ -1,4 +1,5 @@
 import { createServerFn } from "@tanstack/react-start";
+import { getRequest } from "@tanstack/react-start/server";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { SITE_SLUG_RE } from "@/lib/connectors";
@@ -9,7 +10,7 @@ const filesSchema = z.array(z.object({ path: z.string().min(1).max(200).refine((
 export const listMySites = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
-    const { data, error } = await context.supabase.from("published_sites").select("slug,title,updated_at").eq("owner_id", context.userId).order("updated_at", { ascending: false });
+    const { data, error } = await context.supabase.from("published_sites").select("slug,title,updated_at,disabled_at").eq("owner_id", context.userId).order("updated_at", { ascending: false });
     if (error) throw new Error(error.message);
     return data ?? [];
   });
@@ -30,6 +31,12 @@ export const publishSite = createServerFn({ method: "POST" })
       await logSecurityEvent(context.userId, "publish_blocked_secret", "warning", { slug: data.slug, kinds: [...new Set(leaks.map((l) => l.kind))] });
       return { ok: false as const, error: "secrets" };
     }
+    const { findPhishing } = await import("@/lib/phishing-scan");
+    const phishing = findPhishing(data.files);
+    if (phishing.length) {
+      await logSecurityEvent(context.userId, "publish_blocked_phishing", "warning", { slug: data.slug, reasons: [...new Set(phishing.map((p) => p.reason))] });
+      return { ok: false as const, error: "phishing" };
+    }
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data: existing } = await supabaseAdmin.from("published_sites").select("owner_id").eq("slug", data.slug).maybeSingle();
     if (existing && existing.owner_id !== context.userId) return { ok: false as const, error: "taken" };
@@ -39,7 +46,9 @@ export const publishSite = createServerFn({ method: "POST" })
       : await supabaseAdmin.from("published_sites").insert(row);
     if (error) return { ok: false as const, error: error.code === "23505" ? "taken" : "failed" };
     await logSecurityEvent(context.userId, "site_published", "info", { slug: data.slug });
-    return { ok: true as const, slug: data.slug };
+    const { publicSiteUrl } = await import("@/lib/site-host.server");
+    const origin = process.env["TECHNOVA_APP_URL"]?.trim() || new URL(getRequest().url).origin;
+    return { ok: true as const, slug: data.slug, url: publicSiteUrl(data.slug, origin) };
   });
 
 export const unpublishSite = createServerFn({ method: "POST" })

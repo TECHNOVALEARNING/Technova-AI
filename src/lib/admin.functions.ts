@@ -115,3 +115,36 @@ export const listCreditTransfers = createServerFn({ method: "GET" })
     if (error) throw new Error(error.message);
     return data ?? [];
   });
+
+/** Published sites with reports or a suspension, newest first, for moderation. */
+export const adminListSiteReports = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    await requireAdmin(context);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const [{ data: reports }, { data: suspended }] = await Promise.all([
+      supabaseAdmin.from("site_reports").select("site_id,reason,details,created_at").order("created_at", { ascending: false }).limit(300),
+      supabaseAdmin.from("published_sites").select("id").not("disabled_at", "is", null).limit(200),
+    ]);
+    const ids = [...new Set([...(reports ?? []).map((r) => r.site_id), ...(suspended ?? []).map((s) => s.id)])];
+    if (!ids.length) return [];
+    const { data: sites } = await supabaseAdmin.from("published_sites").select("id,slug,title,owner_id,disabled_at,disabled_reason,updated_at").in("id", ids);
+    return (sites ?? []).map((s) => {
+      const mine = (reports ?? []).filter((r) => r.site_id === s.id);
+      return { ...s, reports: mine.length, reasons: [...new Set(mine.map((r) => r.reason))], lastDetails: mine.find((r) => r.details)?.details ?? "", lastReport: mine[0]?.created_at ?? null };
+    }).sort((a, b) => (b.lastReport ?? "").localeCompare(a.lastReport ?? ""));
+  });
+
+export const adminSetSiteSuspension = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: { slug: string; suspend: boolean; reason: string }) => z.object({ slug: z.string().min(3).max(40), suspend: z.boolean(), reason: z.string().max(200) }).parse(input))
+  .handler(async ({ data, context }) => {
+    await requireAdmin(context);
+    const { hitRateLimit, logSecurityEvent } = await import("@/lib/security.server");
+    if (!(await hitRateLimit(context.userId, "admin_moderation"))) throw new Error("Trop d'actions. Patientez une minute.");
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { error } = await supabaseAdmin.rpc("admin_set_site_suspension", { _admin: context.userId, _slug: data.slug, _suspend: data.suspend, _reason: data.reason || "admin" });
+    if (error) throw new Error(error.message);
+    await logSecurityEvent(context.userId, data.suspend ? "site_suspended_by_admin" : "site_reinstated_by_admin", "info", { slug: data.slug });
+    return { ok: true };
+  });

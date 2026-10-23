@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { SITE_SLUG_RE, toSlug } from "@/lib/connectors";
 import { publishSite, pushSiteToGitHub } from "@/lib/publishing.functions";
 import type { StudioFile } from "@/lib/studio";
+import { phishingMessage } from "@/lib/phishing-scan";
 
 const tx = (lang: string, fr: string, en: string) => (lang === "en" ? en : fr);
 const ERR: Record<string, [string, string]> = {
@@ -15,6 +16,7 @@ const ERR: Record<string, [string, string]> = {
   size: ["Le site est trop volumineux.", "The site is too large."],
   not_connected: ["Connectez d’abord GitHub dans Connexions.", "Connect GitHub first in Connections."],
   reconnect: ["Votre accès GitHub doit être renouvelé dans Connexions.", "Your GitHub access needs to be renewed in Connections."],
+  phishing: [phishingMessage(true), phishingMessage(false)],
   secrets: ["Le code contient une clé secrète (API, mot de passe). Retirez-la avant de publier : elle serait visible par tous.", "The code contains a secret key (API, password). Remove it before publishing: it would be public."],
 };
 
@@ -32,7 +34,7 @@ export function PublishDialog({ open, onOpenChange, title, files, lang }: { open
     setBusy("site"); setError("");
     try {
       const r = await publishSite({ data: { slug, title, files: payload } });
-      if (r.ok) setUrl(`${window.location.origin}/s/${r.slug}`); else setError(msg(r.error));
+      if (r.ok) setUrl(r.url); else setError(msg(r.error));
     } catch { setError(msg("failed")); }
     setBusy(null);
   };

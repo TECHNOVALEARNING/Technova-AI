@@ -26,7 +26,7 @@ function waitForCode(popup: Window, connectorId: string) {
 export function ConnectionsPage() {
   const { lang } = useDashboard();
   const [status, setStatus] = useState<Status[]>([]);
-  const [sites, setSites] = useState<{ slug: string; title: string; updated_at: string }[]>([]);
+  const [sites, setSites] = useState<{ slug: string; title: string; updated_at: string; disabled_at: string | null }[]>([]);
   const [busy, setBusy] = useState<string | null>(null);
   const [notice, setNotice] = useState("");
   const load = useCallback(async () => {
@@ -71,7 +71,7 @@ export function ConnectionsPage() {
     </section>
     <section><h2 className="mb-3 font-display text-lg font-semibold">{tx(lang, "Mes sites publiés", "My published sites")}</h2>
       {sites.length === 0 ? <p className="text-sm text-muted-foreground">{tx(lang, "Publiez un site depuis le panneau Artefact du mode Créer.", "Publish a site from the Artifact panel in Create mode.")}</p>
-        : <ul className="divide-y divide-border rounded-2xl border border-border bg-card/90">{sites.map((s) => <li key={s.slug} className="flex items-center gap-3 p-3"><Globe2 className="size-4 text-muted-foreground" /><a href={`/s/${s.slug}`} target="_blank" rel="noopener noreferrer" className="min-w-0 flex-1 truncate text-sm font-medium hover:underline">/s/{s.slug}</a><Button size="sm" variant="ghost" disabled={busy === s.slug} onClick={() => void unpublish(s.slug)}>{tx(lang, "Dépublier", "Unpublish")}</Button></li>)}</ul>}
+        : <ul className="divide-y divide-border rounded-2xl border border-border bg-card/90">{sites.map((s) => <li key={s.slug} className="flex items-center gap-3 p-3"><Globe2 className="size-4 text-muted-foreground" /><a href={`/s/${s.slug}`} target="_blank" rel="noopener noreferrer" className="min-w-0 flex-1 truncate text-sm font-medium hover:underline">/s/{s.slug}</a>{s.disabled_at && <span title={tx(lang, "Signalé puis suspendu, en attente de vérification par TechNova.", "Reported and suspended, pending review by TechNova.")} className="shrink-0 rounded-full bg-destructive/15 px-2 py-0.5 text-[11px] text-destructive">{tx(lang, "Suspendu", "Suspended")}</span>}<Button size="sm" variant="ghost" disabled={busy === s.slug} onClick={() => void unpublish(s.slug)}>{tx(lang, "Dépublier", "Unpublish")}</Button></li>)}</ul>}
     </section>
   </div>;
 }

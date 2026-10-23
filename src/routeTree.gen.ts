@@ -44,6 +44,7 @@ import { Route as AuthenticatedDashboardUsageRouteImport } from './routes/_authe
 import { Route as ApiAiChatRouteImport } from './routes/api/ai/chat'
 import { Route as ApiPublicMediaPurgeRouteImport } from './routes/api/public/media-purge'
 import { Route as ApiPublicNyoleWebhookRouteImport } from './routes/api/public/nyole-webhook'
+import { Route as ApiPublicReportSiteRouteImport } from './routes/api/public/report-site'
 import { Route as ApiPublicStudioImageRouteImport } from './routes/api/public/studio-image'
 import { Route as ApiPublicStudioWorkerRouteImport } from './routes/api/public/studio-worker'
 import { Route as OauthConnectReturnRouteImport } from './routes/oauth.connect.return'
@@ -240,6 +241,11 @@ const ApiPublicNyoleWebhookRoute = ApiPublicNyoleWebhookRouteImport.update({
   path: '/api/public/nyole-webhook',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicReportSiteRoute = ApiPublicReportSiteRouteImport.update({
+  id: '/api/public/report-site',
+  path: '/api/public/report-site',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicStudioImageRoute = ApiPublicStudioImageRouteImport.update({
   id: '/api/public/studio-image',
   path: '/api/public/studio-image',
@@ -319,6 +325,7 @@ export interface FileRoutesByFullPath {
   '/api/ai/chat': typeof ApiAiChatRoute
   '/api/public/media-purge': typeof ApiPublicMediaPurgeRoute
   '/api/public/nyole-webhook': typeof ApiPublicNyoleWebhookRoute
+  '/api/public/report-site': typeof ApiPublicReportSiteRoute
   '/api/public/studio-image': typeof ApiPublicStudioImageRoute
   '/api/public/studio-worker': typeof ApiPublicStudioWorkerRoute
   '/oauth/connect/return': typeof OauthConnectReturnRoute
@@ -362,6 +369,7 @@ export interface FileRoutesByTo {
   '/api/ai/chat': typeof ApiAiChatRoute
   '/api/public/media-purge': typeof ApiPublicMediaPurgeRoute
   '/api/public/nyole-webhook': typeof ApiPublicNyoleWebhookRoute
+  '/api/public/report-site': typeof ApiPublicReportSiteRoute
   '/api/public/studio-image': typeof ApiPublicStudioImageRoute
   '/api/public/studio-worker': typeof ApiPublicStudioWorkerRoute
   '/oauth/connect/return': typeof OauthConnectReturnRoute
@@ -408,6 +416,7 @@ export interface FileRoutesById {
   '/api/ai/chat': typeof ApiAiChatRoute
   '/api/public/media-purge': typeof ApiPublicMediaPurgeRoute
   '/api/public/nyole-webhook': typeof ApiPublicNyoleWebhookRoute
+  '/api/public/report-site': typeof ApiPublicReportSiteRoute
   '/api/public/studio-image': typeof ApiPublicStudioImageRoute
   '/api/public/studio-worker': typeof ApiPublicStudioWorkerRoute
   '/oauth/connect/return': typeof OauthConnectReturnRoute
@@ -454,6 +463,7 @@ export interface FileRouteTypes {
     | '/api/ai/chat'
     | '/api/public/media-purge'
     | '/api/public/nyole-webhook'
+    | '/api/public/report-site'
     | '/api/public/studio-image'
     | '/api/public/studio-worker'
     | '/oauth/connect/return'
@@ -497,6 +507,7 @@ export interface FileRouteTypes {
     | '/api/ai/chat'
     | '/api/public/media-purge'
     | '/api/public/nyole-webhook'
+    | '/api/public/report-site'
     | '/api/public/studio-image'
     | '/api/public/studio-worker'
     | '/oauth/connect/return'
@@ -542,6 +553,7 @@ export interface FileRouteTypes {
     | '/api/ai/chat'
     | '/api/public/media-purge'
     | '/api/public/nyole-webhook'
+    | '/api/public/report-site'
     | '/api/public/studio-image'
     | '/api/public/studio-worker'
     | '/oauth/connect/return'
@@ -575,6 +587,7 @@ export interface RootRouteChildren {
   ApiAiChatRoute: typeof ApiAiChatRoute
   ApiPublicMediaPurgeRoute: typeof ApiPublicMediaPurgeRoute
   ApiPublicNyoleWebhookRoute: typeof ApiPublicNyoleWebhookRoute
+  ApiPublicReportSiteRoute: typeof ApiPublicReportSiteRoute
   ApiPublicStudioImageRoute: typeof ApiPublicStudioImageRoute
   ApiPublicStudioWorkerRoute: typeof ApiPublicStudioWorkerRoute
   OauthConnectReturnRoute: typeof OauthConnectReturnRoute
@@ -830,6 +843,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicNyoleWebhookRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/report-site': {
+      id: '/api/public/report-site'
+      path: '/api/public/report-site'
+      fullPath: '/api/public/report-site'
+      preLoaderRoute: typeof ApiPublicReportSiteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/studio-image': {
       id: '/api/public/studio-image'
       path: '/api/public/studio-image'
@@ -966,6 +986,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiAiChatRoute: ApiAiChatRoute,
   ApiPublicMediaPurgeRoute: ApiPublicMediaPurgeRoute,
   ApiPublicNyoleWebhookRoute: ApiPublicNyoleWebhookRoute,
+  ApiPublicReportSiteRoute: ApiPublicReportSiteRoute,
   ApiPublicStudioImageRoute: ApiPublicStudioImageRoute,
   ApiPublicStudioWorkerRoute: ApiPublicStudioWorkerRoute,
   OauthConnectReturnRoute: OauthConnectReturnRoute,
