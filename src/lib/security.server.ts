@@ -9,6 +9,8 @@ export const RATE_LIMITS = {
   connect: { limit: 10, window: 600 },
   api: { limit: 60, window: 60 },
   admin_transfer: { limit: 20, window: 60 },
+  research: { limit: 5, window: 600 },
+  arena: { limit: 10, window: 300 },
 } as const;
 
 export type RateBucket = keyof typeof RATE_LIMITS;

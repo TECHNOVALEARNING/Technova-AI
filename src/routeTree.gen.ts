@@ -23,6 +23,7 @@ import { Route as TarifsRouteImport } from './routes/tarifs'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as ApercuTokenRouteImport } from './routes/apercu.$token'
 import { Route as ApiChatRouteImport } from './routes/api/chat'
+import { Route as ApiResearchRouteImport } from './routes/api/research'
 import { Route as ApiStudioRouteImport } from './routes/api/studio'
 import { Route as ApiStudioJobRouteImport } from './routes/api/studio-job'
 import { Route as PartageTokenRouteImport } from './routes/partage.$token'
@@ -31,6 +32,7 @@ import { Route as AuthenticatedDashboardIndexRouteImport } from './routes/_authe
 import { Route as AuthenticatedDashboardAdminRouteImport } from './routes/_authenticated/dashboard/admin'
 import { Route as AuthenticatedDashboardAgentsRouteImport } from './routes/_authenticated/dashboard/agents'
 import { Route as AuthenticatedDashboardApiRouteImport } from './routes/_authenticated/dashboard/api'
+import { Route as AuthenticatedDashboardArenaRouteImport } from './routes/_authenticated/dashboard/arena'
 import { Route as AuthenticatedDashboardBillingRouteImport } from './routes/_authenticated/dashboard/billing'
 import { Route as AuthenticatedDashboardConnexionsRouteImport } from './routes/_authenticated/dashboard/connexions'
 import { Route as AuthenticatedDashboardCreditsRouteImport } from './routes/_authenticated/dashboard/credits'
@@ -120,6 +122,11 @@ const ApiChatRoute = ApiChatRouteImport.update({
   path: '/api/chat',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiResearchRoute = ApiResearchRouteImport.update({
+  id: '/api/research',
+  path: '/api/research',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiStudioRoute = ApiStudioRouteImport.update({
   id: '/api/studio',
   path: '/api/studio',
@@ -162,6 +169,12 @@ const AuthenticatedDashboardApiRoute =
   AuthenticatedDashboardApiRouteImport.update({
     id: '/api',
     path: '/api',
+    getParentRoute: () => AuthenticatedDashboardRoute,
+  } as any)
+const AuthenticatedDashboardArenaRoute =
+  AuthenticatedDashboardArenaRouteImport.update({
+    id: '/arena',
+    path: '/arena',
     getParentRoute: () => AuthenticatedDashboardRoute,
   } as any)
 const AuthenticatedDashboardBillingRoute =
@@ -286,6 +299,7 @@ export interface FileRoutesByFullPath {
   '/dashboard': typeof AuthenticatedDashboardRouteWithChildren
   '/apercu/$token': typeof ApercuTokenRoute
   '/api/chat': typeof ApiChatRoute
+  '/api/research': typeof ApiResearchRoute
   '/api/studio': typeof ApiStudioRoute
   '/api/studio-job': typeof ApiStudioJobRoute
   '/partage/$token': typeof PartageTokenRoute
@@ -293,6 +307,7 @@ export interface FileRoutesByFullPath {
   '/dashboard/admin': typeof AuthenticatedDashboardAdminRoute
   '/dashboard/agents': typeof AuthenticatedDashboardAgentsRoute
   '/dashboard/api': typeof AuthenticatedDashboardApiRoute
+  '/dashboard/arena': typeof AuthenticatedDashboardArenaRoute
   '/dashboard/billing': typeof AuthenticatedDashboardBillingRoute
   '/dashboard/connexions': typeof AuthenticatedDashboardConnexionsRoute
   '/dashboard/credits': typeof AuthenticatedDashboardCreditsRoute
@@ -327,6 +342,7 @@ export interface FileRoutesByTo {
   '/tarifs': typeof TarifsRoute
   '/apercu/$token': typeof ApercuTokenRoute
   '/api/chat': typeof ApiChatRoute
+  '/api/research': typeof ApiResearchRoute
   '/api/studio': typeof ApiStudioRoute
   '/api/studio-job': typeof ApiStudioJobRoute
   '/partage/$token': typeof PartageTokenRoute
@@ -334,6 +350,7 @@ export interface FileRoutesByTo {
   '/dashboard/admin': typeof AuthenticatedDashboardAdminRoute
   '/dashboard/agents': typeof AuthenticatedDashboardAgentsRoute
   '/dashboard/api': typeof AuthenticatedDashboardApiRoute
+  '/dashboard/arena': typeof AuthenticatedDashboardArenaRoute
   '/dashboard/billing': typeof AuthenticatedDashboardBillingRoute
   '/dashboard/connexions': typeof AuthenticatedDashboardConnexionsRoute
   '/dashboard/credits': typeof AuthenticatedDashboardCreditsRoute
@@ -371,6 +388,7 @@ export interface FileRoutesById {
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRouteWithChildren
   '/apercu/$token': typeof ApercuTokenRoute
   '/api/chat': typeof ApiChatRoute
+  '/api/research': typeof ApiResearchRoute
   '/api/studio': typeof ApiStudioRoute
   '/api/studio-job': typeof ApiStudioJobRoute
   '/partage/$token': typeof PartageTokenRoute
@@ -378,6 +396,7 @@ export interface FileRoutesById {
   '/_authenticated/dashboard/admin': typeof AuthenticatedDashboardAdminRoute
   '/_authenticated/dashboard/agents': typeof AuthenticatedDashboardAgentsRoute
   '/_authenticated/dashboard/api': typeof AuthenticatedDashboardApiRoute
+  '/_authenticated/dashboard/arena': typeof AuthenticatedDashboardArenaRoute
   '/_authenticated/dashboard/billing': typeof AuthenticatedDashboardBillingRoute
   '/_authenticated/dashboard/connexions': typeof AuthenticatedDashboardConnexionsRoute
   '/_authenticated/dashboard/credits': typeof AuthenticatedDashboardCreditsRoute
@@ -415,6 +434,7 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/apercu/$token'
     | '/api/chat'
+    | '/api/research'
     | '/api/studio'
     | '/api/studio-job'
     | '/partage/$token'
@@ -422,6 +442,7 @@ export interface FileRouteTypes {
     | '/dashboard/admin'
     | '/dashboard/agents'
     | '/dashboard/api'
+    | '/dashboard/arena'
     | '/dashboard/billing'
     | '/dashboard/connexions'
     | '/dashboard/credits'
@@ -456,6 +477,7 @@ export interface FileRouteTypes {
     | '/tarifs'
     | '/apercu/$token'
     | '/api/chat'
+    | '/api/research'
     | '/api/studio'
     | '/api/studio-job'
     | '/partage/$token'
@@ -463,6 +485,7 @@ export interface FileRouteTypes {
     | '/dashboard/admin'
     | '/dashboard/agents'
     | '/dashboard/api'
+    | '/dashboard/arena'
     | '/dashboard/billing'
     | '/dashboard/connexions'
     | '/dashboard/credits'
@@ -499,6 +522,7 @@ export interface FileRouteTypes {
     | '/_authenticated/dashboard'
     | '/apercu/$token'
     | '/api/chat'
+    | '/api/research'
     | '/api/studio'
     | '/api/studio-job'
     | '/partage/$token'
@@ -506,6 +530,7 @@ export interface FileRouteTypes {
     | '/_authenticated/dashboard/admin'
     | '/_authenticated/dashboard/agents'
     | '/_authenticated/dashboard/api'
+    | '/_authenticated/dashboard/arena'
     | '/_authenticated/dashboard/billing'
     | '/_authenticated/dashboard/connexions'
     | '/_authenticated/dashboard/credits'
@@ -542,6 +567,7 @@ export interface RootRouteChildren {
   TarifsRoute: typeof TarifsRoute
   ApercuTokenRoute: typeof ApercuTokenRoute
   ApiChatRoute: typeof ApiChatRoute
+  ApiResearchRoute: typeof ApiResearchRoute
   ApiStudioRoute: typeof ApiStudioRoute
   ApiStudioJobRoute: typeof ApiStudioJobRoute
   PartageTokenRoute: typeof PartageTokenRoute
@@ -657,6 +683,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiChatRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/research': {
+      id: '/api/research'
+      path: '/api/research'
+      fullPath: '/api/research'
+      preLoaderRoute: typeof ApiResearchRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/studio': {
       id: '/api/studio'
       path: '/api/studio'
@@ -711,6 +744,13 @@ declare module '@tanstack/react-router' {
       path: '/api'
       fullPath: '/dashboard/api'
       preLoaderRoute: typeof AuthenticatedDashboardApiRouteImport
+      parentRoute: typeof AuthenticatedDashboardRoute
+    }
+    '/_authenticated/dashboard/arena': {
+      id: '/_authenticated/dashboard/arena'
+      path: '/arena'
+      fullPath: '/dashboard/arena'
+      preLoaderRoute: typeof AuthenticatedDashboardArenaRouteImport
       parentRoute: typeof AuthenticatedDashboardRoute
     }
     '/_authenticated/dashboard/billing': {
@@ -853,6 +893,7 @@ interface AuthenticatedDashboardRouteChildren {
   AuthenticatedDashboardAdminRoute: typeof AuthenticatedDashboardAdminRoute
   AuthenticatedDashboardAgentsRoute: typeof AuthenticatedDashboardAgentsRoute
   AuthenticatedDashboardApiRoute: typeof AuthenticatedDashboardApiRoute
+  AuthenticatedDashboardArenaRoute: typeof AuthenticatedDashboardArenaRoute
   AuthenticatedDashboardBillingRoute: typeof AuthenticatedDashboardBillingRoute
   AuthenticatedDashboardConnexionsRoute: typeof AuthenticatedDashboardConnexionsRoute
   AuthenticatedDashboardCreditsRoute: typeof AuthenticatedDashboardCreditsRoute
@@ -871,6 +912,7 @@ const AuthenticatedDashboardRouteChildren: AuthenticatedDashboardRouteChildren =
     AuthenticatedDashboardAdminRoute: AuthenticatedDashboardAdminRoute,
     AuthenticatedDashboardAgentsRoute: AuthenticatedDashboardAgentsRoute,
     AuthenticatedDashboardApiRoute: AuthenticatedDashboardApiRoute,
+    AuthenticatedDashboardArenaRoute: AuthenticatedDashboardArenaRoute,
     AuthenticatedDashboardBillingRoute: AuthenticatedDashboardBillingRoute,
     AuthenticatedDashboardConnexionsRoute:
       AuthenticatedDashboardConnexionsRoute,
@@ -916,6 +958,7 @@ const rootRouteChildren: RootRouteChildren = {
   TarifsRoute: TarifsRoute,
   ApercuTokenRoute: ApercuTokenRoute,
   ApiChatRoute: ApiChatRoute,
+  ApiResearchRoute: ApiResearchRoute,
   ApiStudioRoute: ApiStudioRoute,
   ApiStudioJobRoute: ApiStudioJobRoute,
   PartageTokenRoute: PartageTokenRoute,

@@ -169,6 +169,13 @@
       "when": 1793174400000,
       "tag": "0023_phase2_video_access_admin_transfers",
       "breakpoints": true
+    },
+    {
+      "idx": 24,
+      "version": "7",
+      "when": 1793260800000,
+      "tag": "0024_phase3_arena",
+      "breakpoints": true
     }
   ]
 }

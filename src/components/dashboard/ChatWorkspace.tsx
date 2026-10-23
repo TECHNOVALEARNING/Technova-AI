@@ -23,6 +23,7 @@ import {
   Wand2,
   Film,
   Image as ImageIcon,
+  Telescope,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -52,6 +53,7 @@ import { ArtifactPanel, StudioPlan, StudioQuestions, StudioTimeline } from "./St
 import { parseBuild, type StudioBuild, type StudioData, type StudioPlanData } from "@/lib/studio";
 import { createMediaGeneration, getVideoAccess, refreshMediaGeneration, VIDEO_UPGRADE_REQUIRED } from "@/lib/media-generation.functions";
 import { PENDING_PACK_KEY } from "@/lib/public-pricing";
+import { RESEARCH_MAX_CREDITS, splitResearchStream } from "@/lib/research";
 import { defaultImageModel, defaultVideoModel, findMediaModel, mediaModels } from "@/lib/media-models";
 import { ChatMedia, type ChatMediaData } from "./ChatMedia";
 
@@ -115,10 +117,14 @@ function useWorkspaceChoice() {
   const { lang } = useDashboard();
   const copy = chatWorkspaceText[lang];
   const [mode, setMode] = useState<Mode>("chat");
-  const [model, setModel] = useState("GPT-4o");
+  // Auto (TechNova Smart) by default; a specific model is the Expert choice.
+  const [model, setModel] = useState(SMART_MODEL);
   const [imageModel, setImageModel] = useState(defaultImageModel);
   const [videoModel, setVideoModel] = useState(defaultVideoModel);
+  // Deep Research stays on for the browser session until switched off (it costs more than a reply).
+  const [research, setResearch] = useState(false);
   useEffect(() => {
+    try { setResearch(sessionStorage.getItem("technova-research") === "1"); } catch { /* storage blocked */ }
     const storedImage = localStorage.getItem("technova-image-model");
     const storedVideo = localStorage.getItem("technova-video-model");
     if (storedImage && findMediaModel(storedImage)?.kind === "image") setImageModel(storedImage);
@@ -126,7 +132,7 @@ function useWorkspaceChoice() {
     const storedMode = localStorage.getItem("technova-workspace-mode");
     const storedModel = localStorage.getItem("technova-workspace-model");
     if (storedMode === "chat" || storedMode === "create") setMode(storedMode);
-    if (storedModel && openRouterModelIds[storedModel]) setModel(storedModel);
+    if (storedModel && (storedModel === SMART_MODEL || openRouterModelIds[storedModel])) setModel(storedModel);
   }, []);
   function chooseMode(value: Mode) {
     setMode(value);
@@ -142,7 +148,13 @@ function useWorkspaceChoice() {
     if (spec.kind === "image") { setImageModel(value); localStorage.setItem("technova-image-model", value); }
     else { setVideoModel(value); localStorage.setItem("technova-video-model", value); }
   }
-  return { mode, model: mode === "create" ? SMART_MODEL : model, imageModel, videoModel, chooseMode, chooseModel, chooseMediaModel, copy };
+  function toggleResearch() {
+    setResearch((on) => {
+      try { sessionStorage.setItem("technova-research", on ? "0" : "1"); } catch { /* storage blocked */ }
+      return !on;
+    });
+  }
+  return { mode, model: mode === "create" ? SMART_MODEL : model, imageModel, videoModel, research: mode === "chat" && research, toggleResearch, chooseMode, chooseModel, chooseMediaModel, copy };
 }
 
 function ChoiceControls({ choice }: { choice: ReturnType<typeof useWorkspaceChoice> }) {
@@ -249,6 +261,23 @@ function ChoiceControls({ choice }: { choice: ReturnType<typeof useWorkspaceChoi
             </div>
           </div>
           <div className="max-h-[min(420px,55vh)] overflow-y-auto p-1.5">
+            {SMART_MODEL.toLowerCase().includes(q) && (
+              <Button
+                type="button"
+                variant="ghost"
+                onClick={() => { chooseModel(SMART_MODEL); setModelOpen(false); setFilter(""); }}
+                className="mb-1 h-auto w-full justify-between rounded-xl px-2.5 py-2 text-left text-xs font-normal"
+              >
+                <span className="flex min-w-0 items-center gap-2">
+                  <Wand2 className="size-3.5 shrink-0 text-chat-glow" />
+                  <span className="min-w-0">
+                    <strong className="block">{SMART_MODEL} · Auto</strong>
+                    <small className="block text-[10px] text-muted-foreground">{fr ? "Choisit le modèle adapté au meilleur prix" : "Picks the right model at the best price"}</small>
+                  </span>
+                </span>
+                {model === SMART_MODEL && <Check className="size-3.5 text-chat-glow" />}
+              </Button>
+            )}
             {modelGroups.map((group) => {
               const matches = group.models.filter((item) =>
                 item.toLowerCase().includes(filter.toLowerCase()),
@@ -438,6 +467,19 @@ function ChatComposer({
           <ChoiceControls choice={choice} />
           <div className="flex items-center gap-1.5">
             <input ref={fileInput} data-chat-attach type="file" accept={ACCEPT} multiple className="hidden" onChange={(e) => void pick(e.target.files)} />
+            {mode === "chat" && (
+              <button
+                type="button"
+                onClick={choice.toggleResearch}
+                aria-pressed={choice.research}
+                title={lang === "fr" ? `Recherche approfondie sur le web avec sources (jusqu'à ${RESEARCH_MAX_CREDITS} crédits, facturée au coût réel)` : `Deep web research with sources (up to ${RESEARCH_MAX_CREDITS} credits, billed at real cost)`}
+                className={cn("inline-flex h-8 items-center gap-1.5 rounded-full border px-2.5 text-xs transition-colors disabled:opacity-50", choice.research ? "border-chat-glow bg-chat-glow/10 text-foreground" : "border-border text-muted-foreground hover:bg-secondary hover:text-foreground")}
+                disabled={disabled}
+              >
+                <Telescope className="size-4" />
+                <span className="hidden sm:inline">{lang === "fr" ? "Recherche" : "Research"}</span>
+              </button>
+            )}
             <button type="button" onClick={() => fileInput.current?.click()} disabled={disabled || reading} aria-label={attachLabel} title={attachLabel}
               className="grid size-8 place-items-center rounded-full border border-border text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground disabled:opacity-50">
               {reading ? <Loader2 className="size-4 animate-spin" /> : <Paperclip className="size-4" />}
@@ -602,6 +644,7 @@ export function ThreadPage({ threadId }: { threadId: string }) {
   const [title, setTitle] = useState("");
   const [busy, setBusy] = useState(false);
   const [thinking, setThinking] = useState(false);
+  const [researchStatus, setResearchStatus] = useState("");
   const [artifact, setArtifact] = useState<StudioBuild | null>(null);
   const [activity, setActivity] = useState<StudioBuild | null>(null);
   const [activityView, setActivityView] = useState(0);
@@ -890,6 +933,42 @@ export function ThreadPage({ threadId }: { threadId: string }) {
   async function streamReply(history: UIMessage[]) {
     const last = history[history.length - 1];
     const request = last?.parts.map((p) => (p.type === "text" ? p.text : "")).join("").trim() ?? "";
+    if (last?.role === "user" && request && choice.research) {
+      const researchId = crypto.randomUUID();
+      const show = (text: string) => setMessages((prev) => [...prev.filter((m) => m.id !== researchId), { id: researchId, role: "assistant", parts: [{ type: "text", text }] }]);
+      setThinking(true);
+      setResearchStatus(lang === "fr" ? "Recherche approfondie en cours…" : "Deep research in progress…");
+      let raw = "";
+      let report = "";
+      try {
+        const { data: session } = await supabase.auth.getSession();
+        const res = await fetch("/api/research", {
+          method: "POST",
+          headers: { "Content-Type": "application/json", Authorization: `Bearer ${session.session?.access_token ?? ""}` },
+          body: JSON.stringify({ question: request, lang }),
+        });
+        if (!res.ok || !res.body) { setError((await res.text().catch(() => "")) || t.actionError); return; }
+        const reader = res.body.getReader();
+        const decoder = new TextDecoder();
+        for (;;) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          raw += decoder.decode(value, { stream: true });
+          const parts = splitResearchStream(raw);
+          if (parts.status) setResearchStatus(parts.status);
+          if (parts.report) { report = parts.report; setThinking(false); show(report); }
+        }
+        if (report) {
+          await supabase.from("chat_messages").insert({ thread_id: threadId, sdk_id: researchId, role: "assistant", parts: [{ type: "text", text: report }] as Json });
+        }
+      } catch {
+        setError(t.actionError);
+      } finally {
+        setThinking(false);
+        setResearchStatus("");
+      }
+      return;
+    }
     const mediaRequest = choice.mode === "chat" && /\b(?:g[ée]n[èe]re(?:z)?(?:-moi)?|cr[ée]e(?:z)?(?:-moi)?|fais(?:-moi)?|fabrique(?:-moi)?|generate|create|make)\b[\s\S]{0,110}\b(?:image|photo|illustration|visuel|picture|image|video|vid[ée]o|clip|animation)\b/i.test(request);
     if (last?.role === "user" && mediaRequest) {
       const kind = /\b(?:vid[ée]o|video|clip|animation)\b/i.test(request) ? "video" : "image";
@@ -1198,7 +1277,7 @@ export function ThreadPage({ threadId }: { threadId: string }) {
             {thinking && (
               <Message from="assistant">
                 <MessageContent className="bg-transparent px-0">
-                  {activity ? <StudioTimeline build={activity} lang={lang} onOpen={() => { setActivityView((v) => v + 1); setShowArtifact(true); }} /> : <Shimmer>{lang === "fr" ? "Réflexion en cours…" : "Thinking…"}</Shimmer>}
+                  {activity ? <StudioTimeline build={activity} lang={lang} onOpen={() => { setActivityView((v) => v + 1); setShowArtifact(true); }} /> : <Shimmer>{researchStatus || (lang === "fr" ? "Réflexion en cours…" : "Thinking…")}</Shimmer>}
                 </MessageContent>
               </Message>
             )}

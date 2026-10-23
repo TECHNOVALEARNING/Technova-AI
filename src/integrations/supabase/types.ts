@@ -70,6 +70,42 @@ export type Database = {
         }
         Relationships: []
       }
+      arena_battles: {
+        Row: {
+          blind: boolean
+          created_at: string
+          credits: number
+          id: string
+          model_a: string
+          model_b: string
+          owner_id: string
+          voted_at: string | null
+          winner: string | null
+        }
+        Insert: {
+          blind?: boolean
+          created_at?: string
+          credits?: number
+          id?: string
+          model_a: string
+          model_b: string
+          owner_id: string
+          voted_at?: string | null
+          winner?: string | null
+        }
+        Update: {
+          blind?: boolean
+          created_at?: string
+          credits?: number
+          id?: string
+          model_a?: string
+          model_b?: string
+          owner_id?: string
+          voted_at?: string | null
+          winner?: string | null
+        }
+        Relationships: []
+      }
       agents: {
         Row: {
           created_at: string
@@ -1025,6 +1061,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      arena_leaderboard: {
+        Args: never
+        Returns: { battles: number; model: string; ties: number; wins: number }[]
+      }
       admin_find_user: {
         Args: { _email: string }
         Returns: { balance: number; display_name: string; email: string; id: string }[]
