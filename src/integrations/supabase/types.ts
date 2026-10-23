@@ -924,6 +924,7 @@ export type Database = {
       studio_previews: {
         Row: {
           created_at: string
+          expires_at: string
           files: Json
           id: string
           owner_id: string
@@ -932,6 +933,7 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          expires_at?: string
           files: Json
           id?: string
           owner_id: string
@@ -940,6 +942,7 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          expires_at?: string
           files?: Json
           id?: string
           owner_id?: string

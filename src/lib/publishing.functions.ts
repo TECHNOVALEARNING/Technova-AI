@@ -23,6 +23,13 @@ export const publishSite = createServerFn({ method: "POST" })
     if (!(await hitRateLimit(context.userId, "publish"))) return { ok: false as const, error: "rate" };
     const total = data.files.reduce((n, f) => n + f.content.length, 0);
     if (total > 2_000_000) return { ok: false as const, error: "size" };
+    // A published site is public: never serve a credential left in the generated code.
+    const { findSecrets } = await import("@/lib/secret-scan");
+    const leaks = findSecrets(data.files);
+    if (leaks.length) {
+      await logSecurityEvent(context.userId, "publish_blocked_secret", "warning", { slug: data.slug, kinds: [...new Set(leaks.map((l) => l.kind))] });
+      return { ok: false as const, error: "secrets" };
+    }
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data: existing } = await supabaseAdmin.from("published_sites").select("owner_id").eq("slug", data.slug).maybeSingle();
     if (existing && existing.owner_id !== context.userId) return { ok: false as const, error: "taken" };
@@ -50,8 +57,14 @@ export const pushSiteToGitHub = createServerFn({ method: "POST" })
   .inputValidator((input: { repo: string; files: unknown }) => z.object({ repo: z.string().regex(/^[A-Za-z0-9._-]{1,90}$/), files: filesSchema }).parse(input))
   .handler(async ({ data, context }) => {
     const { getAccessToken, githubFetch } = await import("@/lib/connections.server");
-    const { hitRateLimit } = await import("@/lib/security.server");
+    const { hitRateLimit, logSecurityEvent } = await import("@/lib/security.server");
     if (!(await hitRateLimit(context.userId, "publish"))) return { ok: false as const, error: "rate" };
+    const { findSecrets } = await import("@/lib/secret-scan");
+    const leaks = findSecrets(data.files);
+    if (leaks.length) {
+      await logSecurityEvent(context.userId, "github_push_blocked_secret", "warning", { repo: data.repo, kinds: [...new Set(leaks.map((l) => l.kind))] });
+      return { ok: false as const, error: "secrets" };
+    }
     const key = await getAccessToken(context.userId, "github");
     if (!key) return { ok: false as const, error: "reconnect" };
     const gh = (path: string, init?: RequestInit) => githubFetch(key, path, { ...init, headers: { "Content-Type": "application/json" } });
@@ -61,7 +74,7 @@ export const pushSiteToGitHub = createServerFn({ method: "POST" })
     const login = ((await me.json()) as { login: string }).login;
     let repoRes = await gh(`/repos/${login}/${data.repo}`);
     if (repoRes.status === 404) {
-      repoRes = await gh("/user/repos", { method: "POST", body: JSON.stringify({ name: data.repo, private: false, auto_init: true, description: "Créé avec TechNova AI Hub" }) });
+      repoRes = await gh("/user/repos", { method: "POST", body: JSON.stringify({ name: data.repo, private: true, auto_init: true, description: "Créé avec TechNova AI Hub" }) });
       if (!repoRes.ok) return { ok: false as const, error: `github_${repoRes.status}` };
       await new Promise((r) => setTimeout(r, 1500));
     } else if (!repoRes.ok) return { ok: false as const, error: `github_${repoRes.status}` };

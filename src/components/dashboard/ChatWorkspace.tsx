@@ -676,6 +676,10 @@ export function ThreadPage({ threadId }: { threadId: string }) {
   const [activityView, setActivityView] = useState(0);
   const [showArtifact, setShowArtifact] = useState(false);
   const panelBuild = activity ?? artifact;
+  // Every finished site generation in this conversation is a version the user can reopen.
+  const versions = messages.flatMap((m) => (m.parts as unknown as { type: string; data?: StudioData }[])
+    .filter((p) => p.type === "data-studio" && p.data?.kind === "build" && p.data.build.done && p.data.build.files.length)
+    .map((p) => (p.data as Extract<StudioData, { kind: "build" }>).build));
   const artifactIsOpen = showArtifact && Boolean(panelBuild);
   useEffect(() => {
     setArtifactWorkspaceOpen(artifactIsOpen);
@@ -1351,7 +1355,7 @@ export function ThreadPage({ threadId }: { threadId: string }) {
         style={panelWidth ? { width: `${panelWidth}px`, flex: `0 0 ${panelWidth}px` } : undefined}
       >
         <div className="h-full w-full">
-          <ArtifactPanel build={panelBuild} lang={lang} title={thread?.title ?? "projet"} activityView={activityView} onClose={() => setShowArtifact(false)} />
+          <ArtifactPanel build={panelBuild} versions={activity ? [] : versions} onPickVersion={setArtifact} lang={lang} title={thread?.title ?? "projet"} activityView={activityView} onClose={() => setShowArtifact(false)} />
         </div>
       </div>
       </>

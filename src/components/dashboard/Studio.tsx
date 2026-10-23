@@ -2,6 +2,8 @@ import { Rocket } from "lucide-react";
 import { PublishDialog } from "./PublishDialog";
 import { useEffect, useMemo, useState } from "react";
 import { zipSync, strToU8 } from "fflate";
+import { toast } from "sonner";
+import { findSecrets, redactSecrets } from "@/lib/secret-scan";
 import {
   ArrowLeft, ArrowRight, Check, ChevronDown, ClipboardList, Code2, Copy, Database, Download, Eye, ExternalLink, FileCode2, Loader2, Monitor, Pencil, Search, ShieldCheck, Smartphone, Tablet, X,
 } from "lucide-react";
@@ -136,7 +138,10 @@ export function StudioTimeline({ build, lang, disabled, onOpen, onRetry }: { bui
   );
 }
 
-export function ArtifactPanel({ build, lang, title, activityView, onClose }: { build: StudioBuild; lang: Lang; title: string; activityView: number; onClose: () => void }) {
+export function ArtifactPanel({ build, versions = [], onPickVersion, lang, title, activityView, onClose }: {
+  build: StudioBuild; versions?: StudioBuild[]; onPickVersion?: (build: StudioBuild) => void; lang: Lang; title: string; activityView: number; onClose: () => void;
+}) {
+  const versionIndex = versions.indexOf(build);
   const [tab, setTab] = useState<"activity" | "preview" | "code" | "sql">("activity");
   useEffect(() => { setTab("activity"); }, [activityView]);
   const [selected, setSelected] = useState<string | null>(null);
@@ -165,6 +170,10 @@ export function ArtifactPanel({ build, lang, title, activityView, onClose }: { b
     setSharing(true); setPreviewError("");
     const { data: auth } = await supabase.auth.getUser();
     if (!auth.user) { setPreviewError(tx(lang, "Reconnectez-vous pour partager.", "Sign in to share.")); setSharing(false); return; }
+    if (findSecrets(build.files).length) {
+      setPreviewError(tx(lang, "Le code contient une clé secrète : retirez-la avant de partager un lien public.", "The code contains a secret key: remove it before sharing a public link."));
+      setSharing(false); return;
+    }
     const { data, error } = await supabase.from("studio_previews").insert({ owner_id: auth.user.id, title, files: build.files as unknown as Json }).select("token").single();
     if (error || !data) setPreviewError(tx(lang, "Impossible de créer le lien public.", "Could not create the public link."));
     else {
@@ -174,10 +183,25 @@ export function ArtifactPanel({ build, lang, title, activityView, onClose }: { b
     }
     setSharing(false);
   };
+  /** Deletes the shared preview: the link stops working immediately. */
+  const revokeShare = async () => {
+    const token = sharedUrl.split("/").pop() ?? "";
+    const { error } = await supabase.from("studio_previews").delete().eq("token", token);
+    if (error) { setPreviewError(tx(lang, "Impossible de désactiver le lien.", "Could not disable the link.")); return; }
+    setSharedUrl("");
+    toast.success(tx(lang, "Lien désactivé.", "Link disabled."));
+  };
   const current = build.files.find((f) => f.path === selected) ?? build.files[0];
   const download = () => {
     const entries: Record<string, Uint8Array> = {};
-    for (const f of build.files) entries[f.path.replace(/^\/+/, "")] = strToU8(f.content);
+    // The archive never carries a credential: detected secrets are replaced and explained.
+    const leaks = findSecrets(build.files);
+    const files = leaks.length ? redactSecrets(build.files) : build.files;
+    for (const f of files) entries[f.path.replace(/^\/+/, "")] = strToU8(f.content);
+    if (leaks.length) {
+      entries["SECRETS-RETIRES.txt"] = strToU8(`${tx(lang, "Des clés secrètes ont été retirées de ce projet et remplacées par REMPLACEZ_PAR_VOTRE_CLE. Stockez-les dans des variables d'environnement côté serveur, jamais dans le code.", "Secret keys were removed from this project and replaced with REMPLACEZ_PAR_VOTRE_CLE. Keep them in server-side environment variables, never in code.")}\n\n${leaks.map((l) => `- ${l.path} : ${l.kind}`).join("\n")}\n`);
+      toast.warning(tx(lang, `${leaks.length} clé(s) secrète(s) retirée(s) du ZIP (voir SECRETS-RETIRES.txt).`, `${leaks.length} secret key(s) removed from the ZIP (see SECRETS-RETIRES.txt).`));
+    }
     if (build.sql) entries["database.sql"] = strToU8(build.sql);
     const blob = new Blob([zipSync(entries)], { type: "application/zip" });
     const a = document.createElement("a");
@@ -203,6 +227,17 @@ export function ArtifactPanel({ build, lang, title, activityView, onClose }: { b
           </Button>
         ))}
         <div className="flex-1" />
+        {versions.length > 1 && onPickVersion && (
+          <select
+            aria-label={tx(lang, "Version du projet", "Project version")}
+            title={tx(lang, "Revenir à une version précédente : aperçu, téléchargement et publication utilisent la version choisie.", "Go back to an earlier version: preview, download and publish use the chosen version.")}
+            value={versionIndex < 0 ? versions.length - 1 : versionIndex}
+            onChange={(e) => { const v = versions[Number(e.target.value)]; if (v) { onPickVersion(v); setPage("index.html"); setSelected(null); setSharedUrl(""); } }}
+            className="h-8 max-w-[140px] rounded-full border border-border bg-background px-2 text-xs"
+          >
+            {versions.map((v, i) => <option key={i} value={i}>{tx(lang, "Version", "Version")} {i + 1}{i === versions.length - 1 ? tx(lang, " (dernière)", " (latest)") : ""} · {v.files.length} {tx(lang, "fichiers", "files")}</option>)}
+          </select>
+        )}
         <Button size="sm" variant="secondary" className="h-8 rounded-full" disabled={!build.done || !build.files.length} onClick={() => setPublishOpen(true)}><Rocket className="size-3.5" />{tx(lang, "Publier", "Publish")}</Button>
         <PublishDialog open={publishOpen} onOpenChange={setPublishOpen} title={title} files={build.files} lang={lang} />
         <Button size="icon-sm" variant="ghost" title={tx(lang, "Télécharger", "Download")} aria-label={tx(lang, "Télécharger", "Download")} disabled={!build.files.length} onClick={download}><Download /></Button>
@@ -229,7 +264,8 @@ export function ArtifactPanel({ build, lang, title, activityView, onClose }: { b
             <div className="flex items-center gap-0.5" role="group" aria-label={tx(lang,"Taille de l’aperçu","Preview size")}>{(["desktop","tablet","mobile"] as const).map((mode) => { const Icon = mode === "desktop" ? Monitor : mode === "tablet" ? Tablet : Smartphone; return <Button key={mode} size="icon-sm" variant={device === mode ? "secondary" : "ghost"} aria-label={mode === "desktop" ? "PC" : mode === "tablet" ? "Tablette" : "Mobile"} title={mode === "desktop" ? "PC" : mode === "tablet" ? "Tablette" : "Mobile"} aria-pressed={device === mode} onClick={() => setDevice(mode)}><Icon className="size-4" /></Button>; })}</div>
             <div className="flex items-center gap-0.5">{sharedUrl && <Button asChild size="icon-sm" variant="ghost"><a href={sharedUrl} target="_blank" rel="noopener noreferrer" title={tx(lang,"Ouvrir l’aperçu dans un nouvel onglet","Open preview in new tab")} aria-label={tx(lang,"Ouvrir l’aperçu dans un nouvel onglet","Open preview in new tab")}><ExternalLink className="size-4" /></a></Button>}<Button size="sm" variant="outline" disabled={sharing || Boolean(sharedUrl)} onClick={() => void sharePreview()}>{sharing ? <Loader2 className="size-4 animate-spin" /> : <ExternalLink className="size-4" />}{sharedUrl ? tx(lang,"Publié","Published") : tx(lang,"Publier l’aperçu","Publish preview")}</Button></div>
           </div>}
-          {sharedUrl && <div className="flex shrink-0 items-center gap-2 border-b border-border px-3 py-2"><input aria-label={tx(lang,"Lien public","Public link")} readOnly value={sharedUrl} onFocus={(e) => e.currentTarget.select()} className="min-w-0 flex-1 bg-transparent text-xs text-foreground outline-none" /><Button size="icon-sm" variant="ghost" aria-label={tx(lang,"Copier le lien","Copy link")} onClick={() => void navigator.clipboard.writeText(sharedUrl)}><Copy className="size-4" /></Button></div>}
+          {sharedUrl && <div className="flex shrink-0 items-center gap-2 border-b border-border px-3 py-2"><input aria-label={tx(lang,"Lien public","Public link")} readOnly value={sharedUrl} onFocus={(e) => e.currentTarget.select()} className="min-w-0 flex-1 bg-transparent text-xs text-foreground outline-none" /><Button size="icon-sm" variant="ghost" aria-label={tx(lang,"Copier le lien","Copy link")} onClick={() => void navigator.clipboard.writeText(sharedUrl)}><Copy className="size-4" /></Button><Button size="sm" variant="ghost" className="h-7 shrink-0 text-xs" onClick={() => void revokeShare()}>{tx(lang, "Désactiver", "Disable")}</Button></div>}
+          {sharedUrl && <p className="shrink-0 border-b border-border px-3 py-1.5 text-[11px] text-muted-foreground">{tx(lang, "Toute personne ayant ce lien peut voir l'aperçu pendant 30 jours. Désactivez-le à tout moment.", "Anyone with this link can view the preview for 30 days. Disable it at any time.")}</p>}
           {previewError && <p role="alert" className="shrink-0 border-b border-border px-3 py-2 text-xs text-destructive">{previewError}</p>}
           {doc ? (
              <div className="flex min-h-0 flex-1 justify-center overflow-auto"><iframe key={page} data-studio-preview title="preview" sandbox="allow-scripts allow-forms allow-modals allow-popups" srcDoc={doc} className={cn("h-full shrink-0 border-0 bg-background transition-[width]", device === "mobile" ? "w-[390px]" : device === "tablet" ? "w-[768px]" : "w-full")} /></div>

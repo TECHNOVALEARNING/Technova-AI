@@ -15,6 +15,7 @@ const ERR: Record<string, [string, string]> = {
   size: ["Le site est trop volumineux.", "The site is too large."],
   not_connected: ["Connectez d’abord GitHub dans Connexions.", "Connect GitHub first in Connections."],
   reconnect: ["Votre accès GitHub doit être renouvelé dans Connexions.", "Your GitHub access needs to be renewed in Connections."],
+  secrets: ["Le code contient une clé secrète (API, mot de passe). Retirez-la avant de publier : elle serait visible par tous.", "The code contains a secret key (API, password). Remove it before publishing: it would be public."],
 };
 
 export function PublishDialog({ open, onOpenChange, title, files, lang }: { open: boolean; onOpenChange: (o: boolean) => void; title: string; files: StudioFile[]; lang: string }) {
