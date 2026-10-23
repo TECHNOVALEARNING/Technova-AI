@@ -56,10 +56,9 @@ async function verifyUser(request: Request) {
   return data.claims.sub as string;
 }
 
-function gatewayError(e: unknown) {
-  const status = (e as { statusCode?: number })?.statusCode ?? 502;
+function gatewayError(status = 502) {
   const msg =
-    status === 402 ? "Crédits IA de l'espace épuisés. / AI credits exhausted." :
+    status === 402 ? "Le service IA est momentanément indisponible (solde du fournisseur épuisé). / The AI provider is out of balance." :
     status === 429 ? "Trop de requêtes, réessayez dans un instant. / Rate limited." :
     "Le studio n'a pas pu répondre. / The studio could not answer.";
   return new Response(msg, { status });
@@ -83,7 +82,7 @@ export const Route = createFileRoute("/api/studio")({
         if (cost > 0 && !reservation) return new Response("Crédits insuffisants — rechargez votre solde dans Crédits. / Not enough credits.", { status: 402 });
         let settled = false;
         const release = async () => { if (!settled && reservation) { settled = true; await releaseCredits(reservation); } };
-        const { studioStream, parseJson } = await import("@/lib/studio-gateway.server");
+        const { studioStream, studioErrorStatus, parseJson, STUDIO_MAX_TOKENS } = await import("@/lib/studio-gateway.server");
         const langRule = d.lang === "en"
           ? "Always write everything (questions, plan, steps, code comments) in English."
           : "Écris toujours tout (questions, plan, étapes, commentaires) en français.";
@@ -98,8 +97,10 @@ export const Route = createFileRoute("/api/studio")({
           await supabaseAdmin.from("usage_logs").insert({ owner_id: userId, model: "TechNova Studio", input_tokens: Math.ceil(content.length / 4), output_tokens: Math.ceil(out.length / 4), credits: cost, latency_ms: Date.now() - startedAt });
           await settleCredits(reservation, cost);
         };
+        let result: ReturnType<typeof studioStream> | null = null;
         try {
-          const result = studioStream(request, `${PROMPTS[d.stage]} ${langRule}`, [{ role: "user", content }]);
+          result = studioStream(request, `${PROMPTS[d.stage]} ${langRule}`, [{ role: "user", content }], STUDIO_MAX_TOKENS[d.stage]);
+          const run = result;
           if (d.stage !== "build") {
             // Stream keep-alive spaces while the model thinks so long plans never hit idle-connection timeouts.
             const enc = new TextEncoder();
@@ -107,13 +108,13 @@ export const Route = createFileRoute("/api/studio")({
               async start(controller) {
                 const ping = setInterval(() => { try { controller.enqueue(enc.encode(" ")); } catch { /* closed */ } }, 5000);
                 try {
-                  const text = await result.text;
+                  const text = await run.text;
                   const json = parseJson<Record<string, unknown>>(text);
                   if (!json) controller.enqueue(enc.encode(JSON.stringify({ error: "Réponse illisible, réessayez. / Unreadable answer." })));
                   else { await charge(text); controller.enqueue(enc.encode(JSON.stringify(json))); }
                 } catch (e) {
-                  const s = (e as { statusCode?: number })?.statusCode;
-                  controller.enqueue(enc.encode(JSON.stringify({ error: s === 402 ? "Crédits IA de l'espace épuisés. / AI credits exhausted." : s === 429 ? "Trop de requêtes, réessayez dans un instant. / Rate limited." : "Le studio n'a pas pu répondre, réessayez. / The studio could not answer." })));
+                  const s = studioErrorStatus(e, run.providerError());
+                  controller.enqueue(enc.encode(JSON.stringify({ error: s === 402 ? "Le service IA est momentanément indisponible (solde du fournisseur épuisé). / The AI provider is out of balance." : s === 429 ? "Trop de requêtes, réessayez dans un instant. / Rate limited." : "Le studio n'a pas pu répondre, réessayez. / The studio could not answer." })));
                 } finally { clearInterval(ping); await release(); controller.close(); }
               },
             });
@@ -124,7 +125,7 @@ export const Route = createFileRoute("/api/studio")({
           const stream = new ReadableStream<Uint8Array>({
             async start(controller) {
               try {
-                for await (const delta of result.textStream) {
+                for await (const delta of run.textStream) {
                   out += delta;
                   controller.enqueue(encoder.encode(delta));
                 }
@@ -140,7 +141,7 @@ export const Route = createFileRoute("/api/studio")({
         } catch (e) {
           await release();
           if ((e as Error)?.name === "AbortError") return new Response(null, { status: 499 });
-          return gatewayError(e);
+          return gatewayError(studioErrorStatus(e, result?.providerError()));
         }
       },
     },

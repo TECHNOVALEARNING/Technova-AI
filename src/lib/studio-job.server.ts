@@ -85,9 +85,10 @@ export async function runStudioJob(jobId: string) {
     await writeMessage(job, out, false, "running");
   };
   const started = Date.now();
+  const { studioStream, studioErrorStatus, STUDIO_MAX_TOKENS } = await import("@/lib/studio-gateway.server");
+  let result: ReturnType<typeof studioStream> | null = null;
   try {
-    const { studioStream } = await import("@/lib/studio-gateway.server");
-    const result = studioStream(null, `${BUILD_PROMPT} ${langRule}`, [{ role: "user", content }]);
+    result = studioStream(null, `${BUILD_PROMPT} ${langRule}`, [{ role: "user", content }], STUDIO_MAX_TOKENS.build);
     for await (const delta of result.textStream) { out += delta; await flush(); }
     await db.from("studio_jobs").update({ output: out, status: "done", lease_until: null, updated_at: new Date().toISOString() }).eq("id", job.id);
     await writeMessage(job, out, true, "done");
@@ -104,7 +105,7 @@ export async function runStudioJob(jobId: string) {
       }
     }
   } catch (e) {
-    const status = (e as { statusCode?: number })?.statusCode;
+    const status = studioErrorStatus(e, result?.providerError());
     const terminal = status === 400 || status === 401 || status === 402 || status === 403;
     const msg = status === 402 ? "credits" : status === 403 ? "denied" : "interrupted";
     if (terminal) {
