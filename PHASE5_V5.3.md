@@ -6,7 +6,7 @@
 
 | Fonction | Ce qui change | Fichiers |
 | --- | --- | --- |
-| **Musique (Suno V6 via kie.ai)** | Dans le chat : « Crée-moi une chanson… », « fais un jingle… », « make a song… ». Le morceau est généré en environ 1 min, **2 versions** sont proposées avec un lecteur audio, et il est archivé 14 jours comme les images et vidéos. Le mot « instrumental » (ou « sans paroles ») produit un morceau sans voix. Pas de restriction de forfait. | `media-models.ts`, `media-generation.functions.ts`, `ChatMedia.tsx`, `ChatWorkspace.tsx`, migration 0025 |
+| **Musique (Suno V6 via kie.ai)** | Dans le chat : « Crée-moi une chanson… », « fais un jingle… », « make a song… ». Le morceau est généré en environ 1 min et proposé en **une seule version** avec un lecteur audio (kie.ai en produit deux au même prix ; seule la première est conservée), et il est archivé 14 jours comme les images et vidéos. Le mot « instrumental » (ou « sans paroles ») produit un morceau sans voix. Pas de restriction de forfait. | `media-models.ts`, `media-generation.functions.ts`, `ChatMedia.tsx`, `ChatWorkspace.tsx`, migration 0025 |
 | **Prix affiché avant chaque création** | Le sélecteur de modèles affiche le prix de **chaque** modèle d'image, de vidéo (pour 5 s) et de musique, en crédits. Ce montant est réservé avant la création ; seul le coût réel annoncé par kie.ai est facturé, le reste est rendu. | `ChatWorkspace.tsx` |
 
 ## Contrat API (vérifié, pas inventé)
