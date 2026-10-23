@@ -33,6 +33,14 @@ export async function getCheckoutStatus(sessionId: string) {
 
 export function isLiveKey() { return key().startsWith("af_live_"); }
 
+/**
+ * Test-mode payments must never mint real credits in production. They are accepted only
+ * outside production, or when NYOLE_ALLOW_TEST_PAYMENTS=true is set on purpose for a test run.
+ */
+export function testPaymentsAllowed() {
+  return process.env["VERCEL_ENV"] !== "production" || process.env["NYOLE_ALLOW_TEST_PAYMENTS"] === "true";
+}
+
 async function hmacHex(secret: string, msg: string) {
   const k = await crypto.subtle.importKey("raw", new TextEncoder().encode(secret), { name: "HMAC", hash: "SHA-256" }, false, ["sign"]);
   const sig = await crypto.subtle.sign("HMAC", k, new TextEncoder().encode(msg));
@@ -44,7 +52,8 @@ export async function verifyWebhook(raw: string, tsHeader: string | null, sigHea
   const ts = tsHeader ?? (sigHeader ?? "").split(",").find(p => p.startsWith("t="))?.slice(2);
   if (!ts || !sig) return false;
   if (Math.abs(Date.now() / 1000 - Number(ts)) > 300) return false;
-  const expected = await hmacHex(key(), `${ts}.${raw}`);
+  // A dedicated webhook signing secret is used when configured, else the API secret key.
+  const expected = await hmacHex(process.env["NYOLE_WEBHOOK_SECRET"]?.trim() || key(), `${ts}.${raw}`);
   if (expected.length !== sig.length) return false;
   let diff = 0;
   for (let i = 0; i < sig.length; i++) diff |= expected.charCodeAt(i) ^ sig.charCodeAt(i);
@@ -60,9 +69,28 @@ export async function reconcilePayment(paymentId: string) {
   const s = await getCheckoutStatus(p.session_id);
   const status = s.status.toLowerCase();
   if (s.paid && status === "success" && s.amount === p.amount_xof && s.currency === "XOF") {
+    if (!p.livemode && !testPaymentsAllowed()) {
+      await supabaseAdmin.from("payments").update({ status: "test_blocked", updated_at: new Date().toISOString() }).eq("id", p.id);
+      const { logSecurityEvent } = await import("@/lib/security.server");
+      await logSecurityEvent(p.owner_id, "test_payment_blocked", "warning", { payment_id: p.id, amount: p.amount_xof });
+      return "test_blocked";
+    }
     await supabaseAdmin.rpc("settle_payment", { _payment: p.id });
     return "success";
   }
   if (status !== p.status) await supabaseAdmin.from("payments").update({ status, updated_at: new Date().toISOString() }).eq("id", p.id);
   return status;
+}
+
+/** Safety net for lost webhooks: re-checks recent unpaid checkouts with the provider. */
+export async function reconcilePendingPayments(maxAgeHours = 72, limit = 50) {
+  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+  const since = new Date(Date.now() - maxAgeHours * 3_600_000).toISOString();
+  const { data } = await supabaseAdmin.from("payments").select("id").eq("credited", false).not("session_id", "is", null)
+    .not("status", "in", "(failed,test_blocked,expired,cancelled,canceled)").gte("created_at", since).order("created_at").limit(limit);
+  let credited = 0;
+  for (const row of data ?? []) {
+    try { if ((await reconcilePayment(row.id)) === "success") credited++; } catch (e) { console.error("reconcile", row.id, e); }
+  }
+  return { checked: data?.length ?? 0, credited };
 }

@@ -18,7 +18,7 @@ import {
   startSupabaseConnect,
 } from "@/lib/supabase-oauth.functions";
 import { formatPrice, modelCatalog, type Currency } from "@/lib/model-pricing";
-import { checkPayment, startCheckout } from "@/lib/payments.functions";
+import { checkPayment, getPaymentMode, startCheckout } from "@/lib/payments.functions";
 import { useDashboard } from "./dashboard-context";
 import supabaseLogo from "@/assets/supabase-logo.svg";
 
@@ -26,7 +26,7 @@ const copy = {
   fr: {
     modelsTitle: "Modèles", modelsSub: "Prix affichés en crédits TechNova par million de tokens.", input: "Entrée", output: "Sortie", chat: "Discuter", soon: "Bientôt disponible", free: "Gratuit",
     creditsTitle: "Crédits", creditsSub: "Rechargez et suivez votre solde de crédits.", balance: "Solde", credits: "crédits Technova", remaining: "de votre solde restant", currency: "Devise", buy: "Acheter des crédits", popular: "Populaire", bonus: "bonus", activity: "Activité récente", noActivity: "Aucune activité pour le moment.", included: "Offert à l'inscription",
-    payNotice: "Paiement sécurisé par Technova PAY : Mobile Money (Orange, Wave, MTN, Moov) et carte bancaire. Mode test actif.",
+    payNotice: "Paiement sécurisé par Technova PAY : Mobile Money (Orange, Wave, MTN, Moov) et carte bancaire.", testMode: "Mode test actif : aucun paiement réel n'est encaissé.", testBlocked: "Paiement de test refusé : le site est en production. Aucun crédit n'a été ajouté.",
     redirecting: "Redirection…", paySuccess: "Paiement confirmé : vos crédits Technova sont ajoutés.", payPending: "Paiement en attente de confirmation. Vos crédits seront ajoutés dès validation.", payCancelled: "Paiement annulé.", payError: "Le paiement n'a pas pu démarrer. Réessayez.",
     apiTitle: "Clés API", apiSub: "Créez et gérez les clés utilisées pour appeler l'API TechNova.", keyName: "Nom de la clé", newKey: "Nouvelle clé", keysActive: "Vos clés sont actives : chaque appel API débite votre solde de crédits TechNova.", noKeys: "Aucune clé API pour l'instant.", created: "Créée le", revoke: "Révoquer", revokeConfirm: "Révoquer cette clé ? Les applications qui l'utilisent cesseront de fonctionner.", copyOnce: "Copiez cette clé maintenant : elle ne sera plus jamais affichée.", copied: "Copié", done: "J'ai copié la clé",
     usageTitle: "Utilisation & consommation", usageSub: "Suivez vos tokens, crédits et coûts par modèle.", tokens: "Tokens utilisés", requests: "requêtes IA", charged: "Crédits débités", chargedSub: "crédits TechNova utilisés", cost: "Coût équivalent", costSub: "valeur consommée", latency: "Latence moyenne", latencySub: "temps de réponse moyen", daily: "Activité quotidienne (tokens)", byModel: "Utilisation par modèle", log: "Journal détaillé des requêtes", noUsage: "Aucune consommation enregistrée.", model: "Modèle", date: "Date",
@@ -42,7 +42,7 @@ const copy = {
   en: {
     modelsTitle: "Models", modelsSub: "Prices shown in TechNova credits per million tokens.", input: "Input", output: "Output", chat: "Chat", soon: "Coming soon", free: "Free",
     creditsTitle: "Credits", creditsSub: "Top up and track your credit balance.", balance: "Balance", credits: "Technova credits", remaining: "of your credit balance remaining", currency: "Currency", buy: "Buy credits", popular: "Popular", bonus: "bonus", activity: "Recent activity", noActivity: "No activity yet.", included: "Included at sign-up",
-    payNotice: "Secure payment by Technova PAY: Mobile Money (Orange, Wave, MTN, Moov) and card. Test mode active.",
+    payNotice: "Secure payment by Technova PAY: Mobile Money (Orange, Wave, MTN, Moov) and card.", testMode: "Test mode: no real payment is collected.", testBlocked: "Test payment refused: the site is in production. No credits were added.",
     redirecting: "Redirecting…", paySuccess: "Payment confirmed: your Technova credits were added.", payPending: "Payment awaiting confirmation. Credits will be added once validated.", payCancelled: "Payment cancelled.", payError: "Payment could not start. Please try again.",
     apiTitle: "API Keys", apiSub: "Create and manage the keys used to call the TechNova API.", keyName: "Key name", newKey: "New key", keysActive: "Your keys are active: every API call debits your TechNova credit balance.", noKeys: "No API keys yet.", created: "Created", revoke: "Revoke", revokeConfirm: "Revoke this key? Apps using it will stop working.", copyOnce: "Copy this key now: it will never be shown again.", copied: "Copied", done: "I copied the key",
     usageTitle: "AI Usage & Consumption", usageSub: "Monitor your tokens, credits and costs per model.", tokens: "Total tokens used", requests: "AI requests", charged: "Credits charged", chargedSub: "TechNova credits used", cost: "Equivalent cost", costSub: "consumed value", latency: "Average latency", latencySub: "avg response time", daily: "Daily activity (tokens)", byModel: "Usage by AI model", log: "Detailed AI request log", noUsage: "No consumption logged yet.", model: "Model", date: "Date",
@@ -120,7 +120,7 @@ function Packs({ currency }: { currency: Currency }) {
     const q = new URLSearchParams(window.location.search); const id = q.get("payment"); if (!id) return;
     window.history.replaceState(null, "", window.location.pathname);
     if (q.get("cancelled")) { toast(c.payCancelled); return; }
-    void check({ data: { id } }).then(r => { if (r.status === "success") { toast.success(c.paySuccess); setTimeout(() => window.location.reload(), 1200); } else toast(c.payPending); }).catch(() => toast.error(c.payError));
+    void check({ data: { id } }).then(r => { if (r.status === "success") { toast.success(c.paySuccess); setTimeout(() => window.location.reload(), 1200); } else if (r.status === "test_blocked") toast.error(c.testBlocked); else toast(c.payPending); }).catch(() => toast.error(c.payError));
   }, [check, c]);
   const [pending, setPending] = useState<string | null>(null);
   useEffect(() => { const s = localStorage.getItem(PENDING_PACK_KEY); if (s) { localStorage.removeItem(PENDING_PACK_KEY); setPending(s); } }, []);
@@ -152,10 +152,12 @@ export function CreditsPage() {
 
 export function BillingPage() {
   const c = useCopy(); const { email } = useDashboard(); const cur = useCurrency(); const { rows, balance, totalIn } = useLedger();
+  const [live, setLive] = useState(true);
+  useEffect(() => { getPaymentMode().then((m) => setLive(m.live)).catch(() => setLive(true)); }, []);
   const methods = ["MTN MoMo", "Moov Money", "Orange Money", "Wave", "Visa", "Mastercard", "Apple Pay", "Google Pay", "Bank transfer"];
   return <div className="space-y-4"><PageHead title={c.billingTitle} sub={c.billingSub} />
     <div className="grid gap-4 lg:grid-cols-[2fr_1fr]"><BalanceCard balance={balance} totalIn={totalIn}><p className="mt-3 text-[12px] text-muted-foreground">{email}</p></BalanceCard><div className={card}><p className={eyebrow}>{c.currency.toUpperCase()}</p><div className="mt-4"><CurrencySwitch {...cur} /></div></div></div>
-    <div className={card}><p className={eyebrow}>{c.payWay.toUpperCase()}</p><div className="mt-4 flex flex-wrap gap-2">{methods.map(m => <span key={m} className="rounded-full border border-border px-3.5 py-1.5 text-[12px] text-muted-foreground">{m}</span>)}</div><p className="mt-4 text-[11.5px] text-muted-foreground">{c.payNotice}</p><Button asChild className="mt-4 h-9 rounded-full text-[12.5px]"><Link to="/dashboard/credits"><Plus className="size-4" />{c.buy}</Link></Button></div>
+    <div className={card}><p className={eyebrow}>{c.payWay.toUpperCase()}</p><div className="mt-4 flex flex-wrap gap-2">{methods.map(m => <span key={m} className="rounded-full border border-border px-3.5 py-1.5 text-[12px] text-muted-foreground">{m}</span>)}</div><p className="mt-4 text-[11.5px] text-muted-foreground">{c.payNotice}{!live && <strong className="block text-amber-600 dark:text-amber-400">{c.testMode}</strong>}</p><Button asChild className="mt-4 h-9 rounded-full text-[12.5px]"><Link to="/dashboard/credits"><Plus className="size-4" />{c.buy}</Link></Button></div>
     <ActivityList rows={rows} /></div>;
 }
 

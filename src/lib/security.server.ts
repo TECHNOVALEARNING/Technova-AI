@@ -10,6 +10,8 @@ export const RATE_LIMITS = {
   api: { limit: 60, window: 60 },
   admin_transfer: { limit: 20, window: 60 },
   research: { limit: 5, window: 600 },
+  payment: { limit: 10, window: 600 },
+  payment_check: { limit: 30, window: 60 },
   arena: { limit: 10, window: 300 },
 } as const;
 

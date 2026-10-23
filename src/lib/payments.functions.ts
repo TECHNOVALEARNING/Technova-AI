@@ -8,6 +8,8 @@ export const startCheckout = createServerFn({ method: "POST" })
   .inputValidator((d) => z.object({ slug: z.string().min(1).max(40) }).parse(d))
   .handler(async ({ data, context }) => {
     const { createCheckout, isLiveKey } = await import("./nyole.server");
+    const { hitRateLimit } = await import("@/lib/security.server");
+    if (!(await hitRateLimit(context.userId, "payment"))) throw new Error("Trop de tentatives de paiement. Patientez quelques minutes. / Too many payment attempts.");
     const { data: pack } = await context.supabase.from("credit_packs").select("slug,name,price_xof,credits").eq("slug", data.slug).eq("active", true).maybeSingle();
     if (!pack) throw new Error("Pack introuvable");
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
@@ -35,8 +37,18 @@ export const checkPayment = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d) => z.object({ id: z.string().uuid() }).parse(d))
   .handler(async ({ data, context }) => {
+    const { hitRateLimit } = await import("@/lib/security.server");
+    if (!(await hitRateLimit(context.userId, "payment_check"))) throw new Error("Trop de vérifications. Réessayez dans une minute.");
     const { data: p } = await context.supabase.from("payments").select("id").eq("id", data.id).maybeSingle();
     if (!p) throw new Error("Paiement introuvable");
     const { reconcilePayment } = await import("./nyole.server");
     return { status: (await reconcilePayment(p.id)) ?? "unknown" };
+  });
+
+/** Whether the billing page should show the "test mode" notice (no secret is exposed). */
+export const getPaymentMode = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async () => {
+    const { isLiveKey } = await import("./nyole.server");
+    try { return { live: isLiveKey() }; } catch { return { live: false }; }
   });

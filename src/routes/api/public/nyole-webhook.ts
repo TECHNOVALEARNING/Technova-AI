@@ -7,7 +7,11 @@ export const Route = createFileRoute("/api/public/nyole-webhook")({
       POST: async ({ request }) => {
         const raw = await request.text();
         const ok = await verifyWebhook(raw, request.headers.get("x-afriflow-timestamp"), request.headers.get("x-afriflow-signature"));
-        if (!ok) return new Response("invalid signature", { status: 400 });
+        if (!ok) {
+          const { logSecurityEvent } = await import("@/lib/security.server");
+          await logSecurityEvent(null, "payment_webhook_invalid_signature", "warning", {});
+          return new Response("invalid signature", { status: 400 });
+        }
         let evt: { data?: { metadata?: { payment_id?: string } } };
         try { evt = JSON.parse(raw); } catch { return new Response("bad json", { status: 400 }); }
         const id = evt.data?.metadata?.payment_id;
