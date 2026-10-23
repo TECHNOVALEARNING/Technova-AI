@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { z } from "zod";
+import { STUDIO_COST } from "@/lib/studio";
 
 const body = z.object({
   stage: z.enum(["intent", "questions", "plan", "build"]),
@@ -10,7 +11,7 @@ const body = z.object({
   feedback: z.string().max(5000).optional(),
 });
 
-const COST = { intent: 0, questions: 2, plan: 5, build: 30 } as const;
+const COST = STUDIO_COST;
 
 const PROMPTS = {
   intent:

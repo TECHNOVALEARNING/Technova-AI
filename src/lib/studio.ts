@@ -1,3 +1,6 @@
+/** TechNova Studio price per stage, in credits (fixed; the build covers a full multi-file site). */
+export const STUDIO_COST = { intent: 0, questions: 3, plan: 80, build: 250 } as const;
+
 export type StudioQuestion = { id: string; question: string; choices: string[] };
 export type StudioPlanData = {
   title: string;

@@ -1,7 +1,7 @@
-import { parseBuild, type StudioData, type StudioPlanData } from "@/lib/studio";
+import { parseBuild, STUDIO_COST, type StudioData, type StudioPlanData } from "@/lib/studio";
 import { findStudioImages } from "@/lib/studio-images.server";
 
-const BUILD_COST = 30;
+const BUILD_COST = STUDIO_COST.build;
 const LEASE_MS = 60_000;
 const MAX_ATTEMPTS = 4;
 
