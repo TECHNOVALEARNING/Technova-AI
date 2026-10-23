@@ -28,3 +28,4 @@
 - Custom agents (owner-scoped, versioned by trigger) feed /api/chat via agentId; server enforces per-reply budget and tools stay deny-by-default — browser never decides cost.
 - Deployment targets Vercel through Nitro's vercel preset (vite.config.ts); security headers are added in src/server.ts and user-supplied URLs are fetched only through safe-fetch.server.ts — no platform-specific SDKs.
 - Credit/system SQL functions are executable by service_role only (migration 0017); the public API /api/ai/chat authenticates hashed tn_live_ keys — browsers can never mint credits.
+- New accounts answer a 3-question onboarding (/bienvenue: account type, field, referral source) stored on their own profile; the dashboard route redirects until profiles.onboarded_at is set, and admins see only aggregated answers — keeps sign-up short and acquisition data private.

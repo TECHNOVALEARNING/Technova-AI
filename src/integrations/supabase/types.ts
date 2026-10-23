@@ -653,6 +653,13 @@ export type Database = {
       }
       profiles: {
         Row: {
+          account_type: string | null
+          organization_name: string | null
+          work_domain: string | null
+          work_domain_other: string | null
+          referral_source: string | null
+          referral_other: string | null
+          onboarded_at: string | null
           avatar_url: string | null
           created_at: string
           display_name: string
@@ -660,6 +667,13 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          account_type?: string | null
+          organization_name?: string | null
+          work_domain?: string | null
+          work_domain_other?: string | null
+          referral_source?: string | null
+          referral_other?: string | null
+          onboarded_at?: string | null
           avatar_url?: string | null
           created_at?: string
           display_name?: string
@@ -667,6 +681,13 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          account_type?: string | null
+          organization_name?: string | null
+          work_domain?: string | null
+          work_domain_other?: string | null
+          referral_source?: string | null
+          referral_other?: string | null
+          onboarded_at?: string | null
           avatar_url?: string | null
           created_at?: string
           display_name?: string
@@ -1090,6 +1111,7 @@ export type Database = {
       }
       report_site: { Args: { _details: string; _reason: string; _reporter_hash: string; _slug: string }; Returns: string }
       admin_set_site_suspension: { Args: { _admin: string; _reason: string; _slug: string; _suspend: boolean }; Returns: boolean }
+      admin_onboarding_stats: { Args: never; Returns: Json }
       claim_welcome_bonus: { Args: never; Returns: number }
       confirm_credits: {
         Args: { _real_amount: number; _reservation: string }

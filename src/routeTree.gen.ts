@@ -20,6 +20,7 @@ import { Route as ModelesRouteImport } from './routes/modeles'
 import { Route as MotDePasseOublieRouteImport } from './routes/mot-de-passe-oublie'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as TarifsRouteImport } from './routes/tarifs'
+import { Route as AuthenticatedBienvenueRouteImport } from './routes/_authenticated/bienvenue'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as ApercuTokenRouteImport } from './routes/apercu.$token'
 import { Route as ApiChatRouteImport } from './routes/api/chat'
@@ -107,6 +108,11 @@ const TarifsRoute = TarifsRouteImport.update({
   id: '/tarifs',
   path: '/tarifs',
   getParentRoute: () => rootRouteImport,
+} as any)
+const AuthenticatedBienvenueRoute = AuthenticatedBienvenueRouteImport.update({
+  id: '/bienvenue',
+  path: '/bienvenue',
+  getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedDashboardRoute = AuthenticatedDashboardRouteImport.update({
   id: '/dashboard',
@@ -302,6 +308,7 @@ export interface FileRoutesByFullPath {
   '/mot-de-passe-oublie': typeof MotDePasseOublieRoute
   '/reset-password': typeof ResetPasswordRoute
   '/tarifs': typeof TarifsRoute
+  '/bienvenue': typeof AuthenticatedBienvenueRoute
   '/dashboard': typeof AuthenticatedDashboardRouteWithChildren
   '/apercu/$token': typeof ApercuTokenRoute
   '/api/chat': typeof ApiChatRoute
@@ -347,6 +354,7 @@ export interface FileRoutesByTo {
   '/mot-de-passe-oublie': typeof MotDePasseOublieRoute
   '/reset-password': typeof ResetPasswordRoute
   '/tarifs': typeof TarifsRoute
+  '/bienvenue': typeof AuthenticatedBienvenueRoute
   '/apercu/$token': typeof ApercuTokenRoute
   '/api/chat': typeof ApiChatRoute
   '/api/research': typeof ApiResearchRoute
@@ -393,6 +401,7 @@ export interface FileRoutesById {
   '/mot-de-passe-oublie': typeof MotDePasseOublieRoute
   '/reset-password': typeof ResetPasswordRoute
   '/tarifs': typeof TarifsRoute
+  '/_authenticated/bienvenue': typeof AuthenticatedBienvenueRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRouteWithChildren
   '/apercu/$token': typeof ApercuTokenRoute
   '/api/chat': typeof ApiChatRoute
@@ -440,6 +449,7 @@ export interface FileRouteTypes {
     | '/mot-de-passe-oublie'
     | '/reset-password'
     | '/tarifs'
+    | '/bienvenue'
     | '/dashboard'
     | '/apercu/$token'
     | '/api/chat'
@@ -485,6 +495,7 @@ export interface FileRouteTypes {
     | '/mot-de-passe-oublie'
     | '/reset-password'
     | '/tarifs'
+    | '/bienvenue'
     | '/apercu/$token'
     | '/api/chat'
     | '/api/research'
@@ -530,6 +541,7 @@ export interface FileRouteTypes {
     | '/mot-de-passe-oublie'
     | '/reset-password'
     | '/tarifs'
+    | '/_authenticated/bienvenue'
     | '/_authenticated/dashboard'
     | '/apercu/$token'
     | '/api/chat'
@@ -674,6 +686,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/tarifs'
       preLoaderRoute: typeof TarifsRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/_authenticated/bienvenue': {
+      id: '/_authenticated/bienvenue'
+      path: '/bienvenue'
+      fullPath: '/bienvenue'
+      preLoaderRoute: typeof AuthenticatedBienvenueRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/dashboard': {
       id: '/_authenticated/dashboard'
@@ -954,10 +973,12 @@ const AuthenticatedDashboardRouteWithChildren =
   )
 
 interface AuthenticatedRouteRouteChildren {
+  AuthenticatedBienvenueRoute: typeof AuthenticatedBienvenueRoute
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRouteWithChildren
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
+  AuthenticatedBienvenueRoute: AuthenticatedBienvenueRoute,
   AuthenticatedDashboardRoute: AuthenticatedDashboardRouteWithChildren,
 }
 

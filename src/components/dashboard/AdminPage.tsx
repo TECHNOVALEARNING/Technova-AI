@@ -4,6 +4,7 @@ import { useDashboard } from "./DashboardLayout";
 import { getAdminStats, listSecurityEvents } from "@/lib/admin.functions";
 import { CreditTransfer } from "./CreditTransfer";
 import { SiteModeration } from "./SiteModeration";
+import { OnboardingStats } from "./OnboardingStats";
 
 type Ev = { id: string; user_id: string | null; kind: string; severity: string; detail: unknown; created_at: string };
 type Stats = Exclude<Awaited<ReturnType<typeof getAdminStats>>, { admin: false }>;
@@ -45,6 +46,8 @@ export function AdminPage() {
           <tbody>{stats.models.length === 0 ? <tr><td colSpan={4} className="p-3 text-muted-foreground">{fr ? "Aucun usage." : "No usage."}</td></tr> : stats.models.map((m) => <tr key={m.model} className="border-t border-border"><td className="p-3">{m.model}</td><td className="p-3">{m.calls}</td><td className="p-3">{m.tokens.toLocaleString(fr ? "fr-FR" : "en-US")}</td><td className="p-3">{m.credits}</td></tr>)}</tbody></table>
       </div>
     </div>}
+
+    <OnboardingStats fr={fr} />
 
     <CreditTransfer fr={fr} />
 

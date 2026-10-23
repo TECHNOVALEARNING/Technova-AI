@@ -148,3 +148,14 @@ export const adminSetSiteSuspension = createServerFn({ method: "POST" })
     await logSecurityEvent(context.userId, data.suspend ? "site_suspended_by_admin" : "site_reinstated_by_admin", "info", { slug: data.slug });
     return { ok: true };
   });
+
+/** Aggregated onboarding answers (counts only, no personal data). */
+export const adminOnboardingStats = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    await requireAdmin(context);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data, error } = await supabaseAdmin.rpc("admin_onboarding_stats");
+    if (error) throw new Error(error.message);
+    return (data ?? {}) as { account_type?: Record<string, number>; work_domain?: Record<string, number>; referral_source?: Record<string, number> };
+  });
