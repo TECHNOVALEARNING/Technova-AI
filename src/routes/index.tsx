@@ -82,8 +82,8 @@ function Hero({ t }: { t: T }) {
         </h1>
         <p className="mx-auto mt-4 max-w-xl text-base text-ink-foreground/80 md:mx-0 md:text-lg">{t.hero.sub}</p>
         <div className="mt-6 flex flex-wrap justify-center gap-3 md:justify-start">
-          <Button asChild variant="pill" size="pill" className="action-pill action-pill-light px-6 py-3 text-sm font-semibold"><a href="https://technovaaihub.vercel.app"><ActionText>{t.hero.primary}</ActionText><ArrowRight className="h-4 w-4" /></a></Button>
-          <Button asChild variant="pill" size="pill" className="action-pill action-pill-glass px-6 py-3 text-sm font-medium"><a href="https://technovaaihub.vercel.app/models"><ActionText>{t.hero.secondary}</ActionText></a></Button>
+          <Button asChild variant="pill" size="pill" className="action-pill action-pill-light px-6 py-3 text-sm font-semibold"><a href="/inscription"><ActionText>{t.hero.primary}</ActionText><ArrowRight className="h-4 w-4" /></a></Button>
+          <Button asChild variant="pill" size="pill" className="action-pill action-pill-glass px-6 py-3 text-sm font-medium"><a href="/modeles"><ActionText>{t.hero.secondary}</ActionText></a></Button>
         </div>
         <p className="mt-4 text-xs text-ink-foreground/50">{t.hero.note}</p>
       </div>
@@ -278,7 +278,7 @@ function Services({ t }: { t: T }) {
                 <p className="text-sm text-ink/70">{s.banner.d}</p>
               </div>
             </div>
-            <Button asChild variant="pill" size="pill" className="action-pill action-pill-dark px-6 py-3 text-sm font-semibold"><a href="https://technovaaihub.vercel.app"><ActionText>{s.banner.c}</ActionText><ArrowRight className="h-4 w-4" /></a></Button>
+            <Button asChild variant="pill" size="pill" className="action-pill action-pill-dark px-6 py-3 text-sm font-semibold"><a href="/inscription"><ActionText>{s.banner.c}</ActionText><ArrowRight className="h-4 w-4" /></a></Button>
           </div>
         </R>
       </div>
