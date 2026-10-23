@@ -75,7 +75,7 @@ export const mediaModels: MediaModel[] = [
   vid("wan/2-5-text-to-video", "Wan 2.5", "Alibaba", "aspect_ratio", tri, "string", [5, 10], { resolution: "720p" }),
   vid("wan/2-2-a14b-text-to-video-turbo", "Wan 2.2 Turbo", "Alibaba", "aspect_ratio", ["16:9", "9:16"], "none", [], { resolution: "480p" }, true),
 
-  // Suno via kie.ai (docs.kie.ai/suno-api/generate-music): usually two tracks per request.
+  // Suno via kie.ai (docs.kie.ai/suno-api/generate-music): kie.ai returns two takes per request; only the first is kept.
   { id: "ai-music-api/generate", label: "Suno V6", provider: "Suno", kind: "music", size: "none", ratios: [] },
 ];
 

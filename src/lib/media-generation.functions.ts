@@ -123,6 +123,8 @@ export const refreshMediaGeneration = createServerFn({ method: "POST" })
         const parsed = JSON.parse(result["resultJson"]) as { resultUrls?: unknown; data?: { audio_url?: unknown }[] };
         const found = Array.isArray(parsed.resultUrls) ? parsed.resultUrls : Array.isArray(parsed.data) ? parsed.data.map((track) => track?.audio_url) : [];
         urls = found.filter((url): url is string => typeof url === "string" && /^https:\/\//i.test(url));
+        // Suno always returns two takes for the price of one request; TechNova keeps a single song.
+        if (row.kind === "music") urls = urls.slice(0, 1);
       } catch { /* no usable media returned */ }
     }
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
