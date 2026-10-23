@@ -15,7 +15,6 @@ import serviceAnalytics from "@/assets/service-analytics-depth.png";
 import ecoSonorya from "@/assets/eco-sonorya.jpg";
 import ecoHumanizer from "@/assets/eco-humanizer.jpg";
 import ecoFlotte from "@/assets/eco-flotte.jpg";
-import ecoGames from "@/assets/eco-games.jpg";
 import ecoMobil from "@/assets/eco-mobil.jpg";
 import { content, labs, type Lang } from "@/lib/i18n";
 import { Nav, Footer, Heading, Tag, R, ActionText, useReveal, useSiteLang } from "@/components/site/SiteChrome";
@@ -348,7 +347,6 @@ const ECO = [
   { img: ecoSonorya, bg: "var(--eco-sonorya)" },
   { img: ecoHumanizer, bg: "var(--eco-humanizer)" },
   { img: ecoFlotte, bg: "var(--eco-flotte)" },
-  { img: ecoGames, bg: "var(--eco-games)" },
   { img: ecoMobil, bg: "var(--eco-mobil)" },
 ];
 
@@ -390,7 +388,8 @@ function Ecosystem({ t }: { t: T }) {
                     <li key={f} className="flex items-center gap-1.5 rounded-full bg-ink-foreground/10 px-3 py-1.5 text-xs"><Check className="h-3.5 w-3.5" />{f}</li>
                   ))}
                 </ul>
-                 <Button asChild variant="pill" size="pill" className="action-pill action-pill-light mt-5 px-5 py-2.5 text-sm font-semibold"><a href={it.url} target="_blank" rel="noreferrer"><ActionText>{it.n}</ActionText><ArrowUpRight className="h-4 w-4" /></a></Button>
+                 {/* Products without a public site (e.g. Technova Mobil) show no link. */}
+                 {"url" in it && it.url && <Button asChild variant="pill" size="pill" className="action-pill action-pill-light mt-5 px-5 py-2.5 text-sm font-semibold"><a href={it.url} target="_blank" rel="noreferrer"><ActionText>{it.n}</ActionText><ArrowUpRight className="h-4 w-4" /></a></Button>}
               </div>
               <div className="mt-6 flex items-center gap-4">
                 <span className="font-display text-sm tabular-nums text-ink-foreground/70">0{i + 1}<span className="opacity-50"> / 0{items.length}</span></span>
@@ -409,8 +408,8 @@ function Ecosystem({ t }: { t: T }) {
             </div>
 
             {/* Image grid: main + 4 thumbnails */}
-            <div className="grid grid-cols-4 gap-3 sm:gap-4">
-              <div className="relative col-span-4 aspect-[4/3] overflow-hidden rounded-[1.5rem] md:rounded-[2rem]">
+            <div className="grid gap-3 sm:gap-4" style={{ gridTemplateColumns: `repeat(${Math.max(1, others.length)}, minmax(0, 1fr))` }}>
+              <div className="relative col-span-full aspect-[4/3] overflow-hidden rounded-[1.5rem] md:rounded-[2rem]">
                 {ECO.map((e, j) => (
                   <img
                     key={j}

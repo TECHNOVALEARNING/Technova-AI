@@ -15,6 +15,6 @@ export const footerGroups = [
     { fr: "Conditions d’utilisation", en: "Terms of use" }, { fr: "Politique de confidentialité", en: "Privacy policy" }, { fr: "Politique de cookies", en: "Cookie policy" }, { fr: "Remboursements", en: "Refunds" }, { fr: "Mentions légales", en: "Legal notice" }, { fr: "RGPD", en: "GDPR" },
   ] },
   { fr: "TechNova écosystème", en: "TechNova ecosystem", links: [
-    { fr: "Technova Learning", en: "Technova Learning", href: "https://www.technovalearning.com/" }, { fr: "Technova Apps", en: "Technova Apps" }, { fr: "Technova Mobil", en: "Technova Mobil", href: "https://www.technovamobil.com/" }, { fr: "Technova Games", en: "Technova Games", href: "https://www.technovalearning.com/" }, { fr: "DolaPay", en: "DolaPay" },
+    { fr: "Technova Learning", en: "Technova Learning", href: "https://www.technovalearning.com/" }, { fr: "Technova Apps", en: "Technova Apps" }, { fr: "Technova Mobil", en: "Technova Mobil" }, { fr: "DolaPay", en: "DolaPay" },
   ] },
 ] satisfies { fr: string; en: string; links: { fr: string; en: string; href?: string }[] }[];

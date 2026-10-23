@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#14161a">
+  <title>Hors connexion | TechNova AI Hub</title>
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <style>
+    :root { color-scheme: light dark; }
+    html, body { height: 100%; margin: 0; }
+    body { display: grid; place-items: center; padding: 24px; background: #f4f4f5; color: #18181b; font: 15px/1.55 ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif; text-align: center; }
+    @media (prefers-color-scheme: dark) { body { background: #0b0b0d; color: #f4f4f5; } p { color: #a1a1aa !important; } }
+    .card { max-width: 380px; }
+    img { width: 64px; height: 64px; border-radius: 16px; }
+    h1 { margin: 18px 0 6px; font-size: 20px; }
+    p { margin: 0 0 20px; color: #52525b; }
+    button { padding: 10px 18px; border: 0; border-radius: 999px; background: #18181b; color: #fff; font: 600 14px system-ui, sans-serif; cursor: pointer; }
+    @media (prefers-color-scheme: dark) { button { background: #f4f4f5; color: #18181b; } }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <img src="/icons/icon-192.png" alt="TechNova">
+    <h1>Vous êtes hors connexion</h1>
+    <p>TechNova a besoin d'Internet pour discuter avec les IA et créer vos contenus. Vérifiez votre connexion, puis réessayez.</p>
+    <button type="button" onclick="location.reload()">Réessayer</button>
+  </div>
+  <script>window.addEventListener("online", function () { location.reload(); });</script>
+</body>
+</html>
