@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 import { useNavigate } from "@tanstack/react-router";
 import { Bot, Lock, MessageCircle, Pencil, Plus, Trash2, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Modal } from "./Modal";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { supabase } from "@/integrations/supabase/client";
@@ -74,8 +75,8 @@ export function AgentsPage() {
         <div className="flex gap-2"><Button size="sm" className="flex-1" onClick={() => chat(a)}><MessageCircle className="size-4" />{tx(lang, "Discuter", "Chat")}</Button><Button size="sm" variant="outline" aria-label={tx(lang, "Modifier", "Edit")} onClick={() => setForm({ id: a.id, name: a.name, description: a.description, instructions: a.instructions, memory: a.memory, model: a.model, max_tokens: a.max_tokens, max_cost: a.max_cost, tools: a.tools })}><Pencil className="size-4" /></Button><Button size="sm" variant="outline" aria-label={tx(lang, "Supprimer", "Delete")} onClick={() => void remove(a)}><Trash2 className="size-4" /></Button></div>
       </article>)}</section>}
 
-    {form && <div className="fixed inset-0 z-50 grid place-items-center bg-ink/50 p-4" role="dialog" aria-modal="true">
-      <div className="max-h-[90svh] w-full max-w-2xl space-y-4 overflow-y-auto rounded-2xl border border-border bg-card p-5 shadow-xl">
+    {form && <Modal label={form.id ? tx(lang, "Modifier l’agent", "Edit agent") : tx(lang, "Nouvel agent", "New agent")} onClose={() => setForm(null)} closeOnBackdrop={false} showClose={false}>
+      <div className="space-y-4">
         <div className="flex items-center justify-between"><h2 className="font-display text-lg font-semibold">{form.id ? tx(lang, "Modifier l’agent", "Edit agent") : tx(lang, "Nouvel agent", "New agent")}</h2><Button variant="ghost" size="icon-sm" onClick={() => setForm(null)} aria-label={tx(lang, "Fermer", "Close")}><X /></Button></div>
         <label className="block space-y-1 text-sm"><span>{tx(lang, "Nom", "Name")}</span><Input value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} placeholder={tx(lang, "Ex. Rédacteur marketing", "e.g. Marketing writer")} /></label>
         <label className="block space-y-1 text-sm"><span>{tx(lang, "Description", "Description")}</span><Input value={form.description} onChange={e => setForm({ ...form, description: e.target.value })} /></label>
@@ -92,6 +93,6 @@ export function AgentsPage() {
         </fieldset>
         <div className="flex justify-end gap-2"><Button variant="outline" onClick={() => setForm(null)}>{tx(lang, "Annuler", "Cancel")}</Button><Button onClick={() => void save()} disabled={saving}>{tx(lang, "Enregistrer", "Save")}</Button></div>
       </div>
-    </div>}
+    </Modal>}
   </div>;
 }

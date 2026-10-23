@@ -656,7 +656,12 @@ export function ThreadPage({ threadId }: { threadId: string }) {
   const [messages, setMessages] = useState<UIMessage[]>([]);
   const createMedia = useServerFn(createMediaGeneration);
   const videoAccess = useServerFn(getVideoAccess);
-  const [videoUpgrade, setVideoUpgrade] = useState<{ balance: number } | null>(null);
+  const [upgrade, setUpgrade] = useState<{ feature: "video" | "site"; balance: number } | null>(null);
+  // Shows the plan upgrade card; the balance comes from the server, which also decides access.
+  async function showUpgrade(feature: "video" | "site") {
+    const access = await videoAccess().catch(() => null);
+    setUpgrade({ feature, balance: access?.balance ?? 0 });
+  }
   const refreshMedia = useServerFn(refreshMediaGeneration);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -844,7 +849,10 @@ export function ThreadPage({ threadId }: { threadId: string }) {
     try {
       const res = await studioCall({ stage, ...payload });
       const raw = (await res.text().catch(() => "")).trim();
-      if (!res.ok) { setError(raw || t.actionError); return null; }
+      if (!res.ok) {
+        if (raw.includes("STUDIO_UPGRADE_REQUIRED")) await showUpgrade("site"); else setError(raw || t.actionError);
+        return null;
+      }
       const json = JSON.parse(raw) as Record<string, unknown>;
       if (typeof json["error"] === "string") { setError(json["error"]); return null; }
       return json;
@@ -944,7 +952,7 @@ export function ThreadPage({ threadId }: { threadId: string }) {
     if (!res?.ok) {
       const msg = res ? await res.text().catch(() => "") : "";
       await saveStudio(id, { kind: "build", request, answers, plan, build, jobStatus: "failed" }, true);
-      setError(msg || t.actionError);
+      if (msg.includes("STUDIO_UPGRADE_REQUIRED")) await showUpgrade("site"); else setError(msg || t.actionError);
       return;
     }
     // Keep the connection open while the page is here; the server keeps going if it drops.
@@ -1004,8 +1012,7 @@ export function ThreadPage({ threadId }: { threadId: string }) {
       } catch (e) {
         const message = String((e as Error)?.message ?? e);
         if (message.includes(VIDEO_UPGRADE_REQUIRED)) {
-          const access = await videoAccess().catch(() => null);
-          setVideoUpgrade({ balance: access?.balance ?? 0 });
+          await showUpgrade("video");
         } else setError(message);
       }
       finally { setThinking(false); }
@@ -1241,30 +1248,34 @@ export function ThreadPage({ threadId }: { threadId: string }) {
           {error}
         </p>
       )}
-      {videoUpgrade && (
-        <div role="alert" className="relative z-10 mx-auto mt-2 w-full max-w-3xl px-4">
+      {upgrade && (() => {
+        const fr = lang !== "en";
+        const site = upgrade.feature === "site";
+        const packs = site ? (["essential", "creator", "pro"] as const) : (["creator", "pro"] as const);
+        const names = { essential: "Essential", creator: "Creator", pro: "Pro" } as const;
+        return <div role="alert" className="relative z-10 mx-auto mt-2 w-full max-w-3xl px-4">
           <div className="rounded-2xl border border-border bg-card/95 p-4 text-sm shadow-sm backdrop-blur">
             <p className="font-medium">
-              {lang === "en"
-                ? "🎬 Video generation is reserved for the Creator (4,999 F) and Pro (7,699 F) plans."
-                : "🎬 La génération vidéo est réservée aux forfaits Creator (4999 frs) et Pro (7699 frs)."}
+              {site
+                ? (fr ? "🌐 La création de sites web est réservée aux forfaits Essential (2499 frs), Creator (4999 frs) et Pro (7699 frs)." : "🌐 Website creation is reserved for the Essential (2,499 F), Creator (4,999 F) and Pro (7,699 F) plans.")
+                : (fr ? "🎬 La génération vidéo est réservée aux forfaits Creator (4999 frs) et Pro (7699 frs)." : "🎬 Video generation is reserved for the Creator (4,999 F) and Pro (7,699 F) plans.")}
             </p>
             <p className="mt-1 text-muted-foreground">
-              {lang === "en"
-                ? `Upgrade to unlock videos. You have ${videoUpgrade.balance.toLocaleString("en-US")} credits left.`
-                : `Passez à un forfait supérieur pour débloquer les vidéos. Il vous reste ${videoUpgrade.balance.toLocaleString("fr-FR")} crédits.`}
+              {fr
+                ? `Passez à un forfait supérieur pour débloquer ${site ? "les sites web" : "les vidéos"}. Il vous reste ${upgrade.balance.toLocaleString("fr-FR")} crédits.`
+                : `Upgrade to unlock ${site ? "websites" : "videos"}. You have ${upgrade.balance.toLocaleString("en-US")} credits left.`}
             </p>
             <div className="mt-3 flex flex-wrap gap-2">
-              {(["creator", "pro"] as const).map((slug) => (
+              {packs.map((slug) => (
                 <Button key={slug} size="sm" variant={slug === "pro" ? "default" : "outline"} onClick={() => { try { localStorage.setItem(PENDING_PACK_KEY, slug); } catch { /* storage blocked */ } void navigate({ to: "/dashboard/credits" }); }}>
-                  {lang === "en" ? `Upgrade to ${slug === "pro" ? "Pro" : "Creator"}` : `Passer à ${slug === "pro" ? "Pro" : "Creator"}`}
+                  {fr ? `Passer à ${names[slug]}` : `Upgrade to ${names[slug]}`}
                 </Button>
               ))}
-              <Button size="sm" variant="ghost" onClick={() => setVideoUpgrade(null)}>{lang === "en" ? "Close" : "Fermer"}</Button>
+              <Button size="sm" variant="ghost" onClick={() => setUpgrade(null)}>{fr ? "Fermer" : "Close"}</Button>
             </div>
           </div>
-        </div>
-      )}
+        </div>;
+      })()}
       <div className="relative z-10 flex min-h-0 flex-1 flex-col">
         <Conversation className="min-h-0 w-full">
           <ConversationContent className="mx-auto w-full max-w-3xl gap-6 px-4 py-6">

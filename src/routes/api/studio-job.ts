@@ -34,6 +34,8 @@ export const Route = createFileRoute("/api/studio-job")({
         const parsed = body.safeParse(await request.json().catch(() => null));
         if (!parsed.success) return new Response("Invalid request", { status: 400 });
         const d = parsed.data;
+        const { hasSiteAccess, studioUpgradeResponse } = await import("@/lib/access.server");
+        if (!(await hasSiteAccess(userId))) return studioUpgradeResponse(userId, "build");
         const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
         const { runStudioJob, BUILD_COST } = await import("@/lib/studio-job.server");
         const { data: thread } = await supabaseAdmin.from("chat_threads").select("id").eq("id", d.threadId).eq("owner_id", userId).maybeSingle();

@@ -14,7 +14,7 @@ export const PENDING_PACK_KEY = "tn-pending-pack";
 
 type Copy = { tagline: string; perks: { icon: IconDefinition; text: string }[] };
 
-/** Card copy per pack. Every feature is open to every pack; packs differ by credit volume. */
+/** Card copy per pack. Websites need Essential+, videos need Creator+ (enforced server-side). */
 export const packCopy: Record<string, { fr: Copy; en: Copy }> = {
   starter: {
     fr: { tagline: "Pour découvrir l'IA sans engagement", perks: [{ icon: faComments, text: "Chat avec GPT, Claude, Gemini, DeepSeek et plus" }, { icon: faBrain, text: "TechNova Smart choisit le modèle adapté le moins cher" }, { icon: faPaperclip, text: "Analyse de fichiers : images, PDF, audio" }, { icon: faImage, text: "Génération d'images IA" }, { icon: faInfinity, text: "Crédits sans date d'expiration" }] },

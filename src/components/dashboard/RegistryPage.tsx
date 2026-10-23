@@ -3,6 +3,8 @@ import { useNavigate } from "@tanstack/react-router";
 import { Copy, Download, GitFork, Heart, Plus, Search, Share2, Trash2, Wand2, X } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
+import { Modal } from "./Modal";
+import { DesignLibraryPage } from "./DesignLibraryPage";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { supabase } from "@/integrations/supabase/client";
@@ -107,11 +109,11 @@ export function RegistryPage() {
       <div><h1 className="font-display text-[26px] font-semibold leading-tight">{c.title}</h1><p className="mt-1 max-w-2xl text-[13px] text-muted-foreground">{c.sub}</p></div>
       <Button className="h-9 rounded-full" onClick={() => setCreating(true)}><Plus className="size-4" />{c.add}</Button>
     </div>
-    <div className="relative"><Search className="absolute left-4 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" /><Input value={q} onChange={e => setQ(e.target.value)} placeholder={c.search} aria-label={c.search} className="h-11 rounded-full bg-background pl-11" /></div>
+    {tab !== "design" && <div className="relative"><Search className="absolute left-4 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" /><Input value={q} onChange={e => setQ(e.target.value)} placeholder={c.search} aria-label={c.search} className="h-11 rounded-full bg-background pl-11" /></div>}
     <div className="flex gap-2 overflow-x-auto pb-1">
-      {["all", "favs", "mine", ...CATS].map(k => <button key={k} type="button" onClick={() => setTab(k)} className={chip(tab === k)}>{k === "all" ? c.all : k === "favs" ? c.favs : k === "mine" ? c.mine : c.cats[k as keyof typeof c.cats]}</button>)}
+      {["all", "favs", "mine", "design", ...CATS].map(k => <button key={k} type="button" onClick={() => setTab(k)} className={chip(tab === k)}>{k === "all" ? c.all : k === "favs" ? c.favs : k === "mine" ? c.mine : k === "design" ? "Design Library" : c.cats[k as keyof typeof c.cats]}</button>)}
     </div>
-    {shown.length === 0 ? <p className="py-16 text-center text-[13px] text-muted-foreground">{c.empty}</p> :
+    {tab === "design" ? <DesignLibraryPage /> : shown.length === 0 ? <p className="py-16 text-center text-[13px] text-muted-foreground">{c.empty}</p> :
     <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">{shown.map(i => <div key={i.id} className={`${card} flex flex-col`}>
       <div className="flex items-start gap-2">
         <div className="min-w-0 flex-1"><p className="text-[10.5px] font-semibold uppercase tracking-[0.14em] text-primary">{c.cats[i.category as keyof typeof c.cats]}</p><button type="button" onClick={() => setOpen(i)} className="mt-1 text-left text-[14.5px] font-semibold hover:underline">{i.title}</button></div>
@@ -154,13 +156,7 @@ export function RegistryPage() {
 }
 
 function Overlay({ children, onClose }: { children: React.ReactNode; onClose: () => void }) {
-  useEffect(() => { const k = (e: KeyboardEvent) => e.key === "Escape" && onClose(); window.addEventListener("keydown", k); return () => window.removeEventListener("keydown", k); }, [onClose]);
-  return <div className="fixed inset-0 z-50 grid place-items-center bg-background/70 p-4 backdrop-blur-sm" onClick={onClose} role="dialog" aria-modal="true">
-    <div className="relative max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-2xl border border-border bg-card p-6 shadow-xl" onClick={e => e.stopPropagation()}>
-      <button type="button" onClick={onClose} aria-label="Fermer" className="absolute right-4 top-4 grid size-8 place-items-center rounded-full hover:bg-secondary"><X className="size-4" /></button>
-      {children}
-    </div>
-  </div>;
+  return <Modal label="Registry" onClose={onClose}>{children}</Modal>;
 }
 
 function CreateForm({ c, uid, onDone }: { c: (typeof T)["fr"]; uid: string; onDone: () => Promise<void> }) {

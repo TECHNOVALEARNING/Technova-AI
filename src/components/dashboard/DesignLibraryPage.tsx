@@ -57,6 +57,7 @@ function SectionSketch({ id }: { id: string }) {
   return <div className="h-16 overflow-hidden rounded-lg border border-border bg-background p-2">{body[id]}</div>;
 }
 
+/** Rendered as the "Design Library" tab of the Registry. */
 export function DesignLibraryPage() {
   const { lang } = useDashboard();
   const fr = lang !== "en";
@@ -100,9 +101,9 @@ export function DesignLibraryPage() {
     { id: "fonts", label: fr ? `Polices (${designFonts.length})` : `Fonts (${designFonts.length})` },
   ];
 
-  return <div className="mx-auto w-full max-w-6xl space-y-5 p-4 pb-32 sm:p-8 sm:pb-32">
+  return <div className="space-y-5">
     <header>
-      <h1 className="flex items-center gap-2 font-display text-2xl font-semibold"><Palette className="size-5" />Design Library</h1>
+      <h2 className="flex items-center gap-2 font-display text-lg font-semibold"><Palette className="size-4" />Design Library</h2>
       <p className="mt-1 text-sm text-muted-foreground">{fr
         ? "Choisissez un thème, vos sections et vos polices, puis lancez le Studio : votre site sera généré avec ce design. Contenus originaux TechNova et polices Google Fonts libres (licence OFL), utilisables commercialement."
         : "Pick a theme, sections and fonts, then launch the Studio: your site is generated with this design. Original TechNova content and free Google Fonts (OFL), usable commercially."}</p>
@@ -151,8 +152,8 @@ export function DesignLibraryPage() {
       </div>
     </div>}
 
-    <div className="fixed inset-x-0 bottom-0 z-20 border-t border-border bg-background/95 backdrop-blur lg:left-[224px]">
-      <div className="mx-auto flex max-w-6xl flex-wrap items-center gap-2 px-4 py-3 sm:px-8">
+    <div className="sticky bottom-3 z-20 rounded-2xl border border-border bg-background/95 shadow-lg backdrop-blur">
+      <div className="flex flex-wrap items-center gap-2 px-4 py-3">
         <div className="min-w-0 flex-1 text-xs">
           <p className="font-medium">{theme.name} · {headingFont} / {bodyFont}</p>
           <p className="flex flex-wrap items-center gap-1 text-muted-foreground">

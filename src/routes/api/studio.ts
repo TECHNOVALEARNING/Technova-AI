@@ -74,6 +74,11 @@ export const Route = createFileRoute("/api/studio")({
         const parsed = body.safeParse(await request.json().catch(() => null));
         if (!parsed.success) return new Response("Invalid request", { status: 400 });
         const d = parsed.data;
+        // Website generation needs an Essential, Creator or Pro purchase; "intent" (free) only classifies the request.
+        if (d.stage !== "intent") {
+          const { hasSiteAccess, studioUpgradeResponse } = await import("@/lib/access.server");
+          if (!(await hasSiteAccess(userId))) return studioUpgradeResponse(userId, d.stage);
+        }
         const { hitRateLimit, rateLimitMessage } = await import("@/lib/security.server");
         if (!(await hitRateLimit(userId, "studio"))) return new Response(rateLimitMessage((d as { lang?: string }).lang, "studio"), { status: 429 });
         const { supabaseAdmin } = await import("@/integrations/supabase/client.server");

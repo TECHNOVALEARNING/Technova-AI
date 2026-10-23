@@ -1089,6 +1089,7 @@ export type Database = {
         Returns: boolean
       }
       has_video_access: { Args: { _user: string }; Returns: boolean }
+      has_site_access: { Args: { _user: string }; Returns: boolean }
       hit_rate_limit: {
         Args: {
           _bucket: string
