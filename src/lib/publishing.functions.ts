@@ -96,3 +96,28 @@ export const pushSiteToGitHub = createServerFn({ method: "POST" })
     }
     return { ok: true as const, url: `https://github.com/${login}/${data.repo}` };
   });
+
+const MAX_PREVIEW_CHARS = 2_000_000;
+
+/** Creates a 30-day shared preview link; refused when the files contain a secret or phishing content. */
+export const createPreviewLink = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: { title: string; files: unknown }) => z.object({ title: z.string().max(120), files: filesSchema }).parse(input))
+  .handler(async ({ data, context }) => {
+    const { hitRateLimit, logSecurityEvent } = await import("@/lib/security.server");
+    if (!(await hitRateLimit(context.userId, "publish"))) return { ok: false as const, error: "rate" };
+    if (data.files.reduce((n, f) => n + f.content.length, 0) > MAX_PREVIEW_CHARS) return { ok: false as const, error: "size" };
+    const { findSecrets } = await import("@/lib/secret-scan");
+    if (findSecrets(data.files).length) return { ok: false as const, error: "secrets" };
+    const { findPhishing } = await import("@/lib/phishing-scan");
+    const phishing = findPhishing(data.files);
+    if (phishing.length) {
+      await logSecurityEvent(context.userId, "preview_blocked_phishing", "warning", { reasons: [...new Set(phishing.map((p) => p.reason))] });
+      return { ok: false as const, error: "phishing" };
+    }
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: row, error } = await supabaseAdmin.from("studio_previews")
+      .insert({ owner_id: context.userId, title: data.title || "Aperçu", files: data.files as never }).select("token").single();
+    if (error || !row) return { ok: false as const, error: "failed" };
+    return { ok: true as const, token: row.token };
+  });

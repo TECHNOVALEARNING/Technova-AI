@@ -1,5 +1,6 @@
 import { Rocket } from "lucide-react";
 import { PublishDialog } from "./PublishDialog";
+import { createPreviewLink } from "@/lib/publishing.functions";
 import { useEffect, useMemo, useState } from "react";
 import { zipSync, strToU8 } from "fflate";
 import { toast } from "sonner";
@@ -179,10 +180,11 @@ export function ArtifactPanel({ build, versions = [], onPickVersion, lang, title
       setPreviewError(phishingMessage(lang !== "en"));
       setSharing(false); return;
     }
-    const { data, error } = await supabase.from("studio_previews").insert({ owner_id: auth.user.id, title, files: build.files as unknown as Json }).select("token").single();
-    if (error || !data) setPreviewError(tx(lang, "Impossible de créer le lien public.", "Could not create the public link."));
+    // The server re-checks secrets and phishing before any public link exists.
+    const res = await createPreviewLink({ data: { title, files: build.files.map((f) => ({ path: f.path, content: f.content })) } }).catch(() => null);
+    if (!res?.ok) setPreviewError(res?.error === "phishing" ? phishingMessage(lang !== "en") : tx(lang, "Impossible de créer le lien public.", "Could not create the public link."));
     else {
-      const url = `${window.location.origin}/apercu/${data.token}`;
+      const url = `${window.location.origin}/apercu/${res.token}`;
       setSharedUrl(url);
       try { await navigator.clipboard.writeText(url); } catch { /* link remains selectable */ }
     }
