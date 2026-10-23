@@ -18,6 +18,7 @@ import ecoFlotte from "@/assets/eco-flotte.jpg";
 import ecoMobil from "@/assets/eco-mobil.jpg";
 import { content, labs, type Lang } from "@/lib/i18n";
 import { Nav, Footer, Heading, Tag, R, ActionText, useReveal, useSiteLang } from "@/components/site/SiteChrome";
+import { InstallAppPrompt } from "@/components/site/InstallAppPrompt";
 
 import { PricingContent } from "@/components/site/PricingContent";
 
@@ -57,6 +58,7 @@ function Index() {
       <Faq t={t} />
       <Contact t={t} />
       <Footer lang={lang} />
+      <InstallAppPrompt lang={lang} />
     </div>
   );
 }

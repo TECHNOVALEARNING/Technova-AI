@@ -10,7 +10,6 @@ import type { Tables } from "@/integrations/supabase/types";
 import { media } from "@/lib/media";
 
 import { ThreadItem } from "./ThreadItem";
-import { InstallAppButton } from "./InstallAppButton";
 import { DashboardContext, type Thread } from "./dashboard-context";
 export { useDashboard, type Thread } from "./dashboard-context";
 
@@ -119,7 +118,6 @@ export function DashboardLayout({ children }: { children: ReactNode }) {
           </div>
         </div>
         <div className="shrink-0 border-t border-border p-2">
-          <div className={`mb-1.5 ${mini ? "lg:hidden" : ""}`}><InstallAppButton fr={lang !== "en"} /></div>
           <div className={`flex items-center gap-2.5 rounded-lg px-2 py-1.5 ${mini ? "lg:hidden" : ""}`}>
             <span className="grid size-7 shrink-0 place-items-center rounded-full bg-secondary text-[11px] font-semibold text-foreground">{initials}</span>
             <span className="min-w-0 flex-1"><span className="block truncate text-[12px] font-medium">{name || t.accountName}</span>{email && <span className="block truncate text-[10.5px] text-muted-foreground">{email}</span>}</span>

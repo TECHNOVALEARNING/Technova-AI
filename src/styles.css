@@ -607,3 +607,8 @@ html, body, * { scrollbar-width: none; }
   .media-generation-video-scan { display: none; }
   .media-generation-track-indeterminate > span { width: 32%; transform: none; }
 }
+
+/* Landing install invitation: slides up once, static for reduced-motion users. */
+@keyframes install-in { from { opacity: 0; transform: translateY(16px) scale(0.98); } to { opacity: 1; transform: none; } }
+.install-prompt { animation: install-in 0.45s cubic-bezier(0.2, 0.8, 0.2, 1) both; }
+@media (prefers-reduced-motion: reduce) { .install-prompt { animation: none; } }
