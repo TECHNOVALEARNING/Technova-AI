@@ -1,22 +1,24 @@
-// TechNova credit prices per million tokens (input / output), from the client's original catalogue.
+// TechNova credit prices per million tokens (input / output).
 export type ModelInfo = { name: string; provider: string; input: number; output: number; kind: "chat" | "visual" };
 
+// Chat prices in TechNova credits per million tokens = OpenRouter USD price × 1 200
+// (CREDITS_PER_USD). Recalculated from live OpenRouter prices on 2026-10-23.
 export const modelCatalog: ModelInfo[] = [
   { name: "GPT-4o", provider: "OpenAI", input: 3000, output: 12000, kind: "chat" },
   { name: "GPT-4o Mini", provider: "OpenAI", input: 180, output: 720, kind: "chat" },
-  { name: "Claude Sonnet 5", provider: "Anthropic", input: 3600, output: 18000, kind: "chat" },
-  { name: "Claude Haiku 4.5", provider: "Anthropic", input: 960, output: 4800, kind: "chat" },
-  { name: "DeepSeek R1", provider: "DeepSeek", input: 660, output: 2628, kind: "chat" },
-  { name: "DeepSeek V3", provider: "DeepSeek", input: 168, output: 336, kind: "chat" },
-  { name: "Gemini 2.5 Flash", provider: "Google", input: 180, output: 720, kind: "chat" },
+  { name: "Claude Sonnet 5", provider: "Anthropic", input: 2400, output: 12000, kind: "chat" },
+  { name: "Claude Haiku 4.5", provider: "Anthropic", input: 1200, output: 6000, kind: "chat" },
+  { name: "DeepSeek R1", provider: "DeepSeek", input: 600, output: 2581, kind: "chat" },
+  { name: "DeepSeek V3", provider: "DeepSeek", input: 309, output: 1235, kind: "chat" },
+  { name: "Gemini 2.5 Flash", provider: "Google", input: 360, output: 3000, kind: "chat" },
   { name: "Gemini 2.5 Pro", provider: "Google", input: 1500, output: 12000, kind: "chat" },
-  { name: "Llama 3.3 70B", provider: "Meta", input: 468, output: 468, kind: "chat" },
-  { name: "Llama 3.1 8B", provider: "Meta", input: 0, output: 0, kind: "chat" },
+  { name: "Llama 3.3 70B", provider: "Meta", input: 120, output: 384, kind: "chat" },
+  { name: "Llama 3.1 8B", provider: "Meta", input: 60, output: 96, kind: "chat" },
   { name: "Mistral Large", provider: "Mistral AI", input: 2400, output: 7200, kind: "chat" },
-  { name: "Qwen 2.5 72B", provider: "Alibaba", input: 432, output: 432, kind: "chat" },
-  { name: "Qwen 2.5 Coder 32B", provider: "Alibaba", input: 216, output: 216, kind: "chat" },
-  { name: "Hermes 3 405B", provider: "NousResearch", input: 2400, output: 2400, kind: "chat" },
-  { name: "Gemma 3 12B", provider: "Google", input: 0, output: 0, kind: "chat" },
+  { name: "Qwen 2.5 72B", provider: "Alibaba", input: 432, output: 480, kind: "chat" },
+  { name: "Qwen 2.5 Coder 32B", provider: "Alibaba", input: 792, output: 1200, kind: "chat" },
+  { name: "Hermes 3 405B", provider: "NousResearch", input: 1200, output: 1200, kind: "chat" },
+  { name: "Gemma 3 12B", provider: "Google", input: 60, output: 180, kind: "chat" },
   { name: "FLUX 1.1 Pro", provider: "Black Forest Labs", input: 0, output: 0, kind: "visual" },
   { name: "FLUX Schnell", provider: "Black Forest Labs", input: 0, output: 0, kind: "visual" },
   { name: "Google Imagen 4", provider: "KIE.ai", input: 0, output: 0, kind: "visual" },

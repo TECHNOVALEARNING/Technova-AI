@@ -97,12 +97,39 @@ export function buildMediaInput(model: MediaModel, prompt: string, ratio: MediaR
   return { input, ratio: chosen ?? "auto", duration };
 }
 
-// TechNova pricing: kie.ai cost × 3 margin. 1 kie credit ≈ $0.005 ≈ 3 FCFA = 3 TechNova credits.
-export const KIE_TO_TECHNOVA = 3 * 3;
-// Known kie.ai costs (kie credits per image, or per 5 s of video). Others use a conservative ceiling.
-const knownKieCost: Record<string, number> = { "nano-banana-2-lite": 4 };
+// TechNova pricing follows the chat rule: provider USD cost × 1 200 credits per dollar.
+// One kie.ai credit costs $0.005, so 1 kie credit = 6 TechNova credits.
+export const KIE_TO_TECHNOVA = 0.005 * 1200;
+
+// kie.ai credits per image, or per second of video, for the settings sent by buildMediaInput.
+// From kie.ai's public price list (api.kie.ai/client/v1/model-pricing/page) on 2026-10-23.
+// Used to reserve credits up front; the final charge uses what kie.ai reports as consumed.
+const kieCost: Record<string, number> = {
+  "nano-banana-2-lite": 4, "nano-banana-2": 8, "google/nano-banana": 4,
+  "google/imagen4-fast": 4, "google/imagen4": 8, "google/imagen4-ultra": 12,
+  "gpt-image-2-5-flare-text-to-image": 6, "gpt-image-2-5-sunburst-text-to-image": 6, "gpt-image-2-text-to-image": 6, "gpt-image/1.5-text-to-image": 4,
+  "seedream/5-flash-text-to-image": 3.24, "seedream/5-lite-text-to-image": 5.5, "seedream/5-pro-text-to-image": 14, "seedream/4.5-text-to-image": 6.5,
+  "bytedance/seedream-v4-text-to-image": 5, "bytedance/seedream": 3.5,
+  "flux-2/pro-text-to-image": 5, "flux-2/flex-text-to-image": 14,
+  "grok-imagine-image-2-0/text-to-image": 4, "grok-imagine/text-to-image": 5, "ideogram/v3-text-to-image": 10,
+  "qwen3/pro-text-to-image": 6.4, "qwen3/text-to-image": 4.8, "qwen2-1/text-to-image": 4, "qwen/text-to-image": 8, "z-image": 0.8,
+  // videos: per second
+  "kling-3.0-omni/text-to-video": 18, "kling/v3-turbo-text-to-video": 18, "kling-2.6/text-to-video": 11,
+  "kling/v2-5-turbo-text-to-video-pro": 8.4, "kling/v2-1-master-text-to-video": 32,
+  "bytedance/seedance-2-5": 63, "bytedance/seedance-2": 41, "bytedance/seedance-2-fast": 11.7, "bytedance/seedance-2-mini": 3.8,
+  "bytedance/v1-pro-text-to-video": 6, "bytedance/v1-lite-text-to-video": 4.5,
+  "grok-imagine/text-to-video": 4.5, "grok-imagine-video-1-5-preview": 4.5, "hailuo/02-text-to-video-pro": 9.5, "hailuo/02-text-to-video-standard": 5,
+  "wan/2-7-text-to-video": 16, "wan/2-6-text-to-video": 14, "wan/2-5-text-to-video": 12, "wan/2-2-a14b-text-to-video-turbo": 8,
+};
+// Models missing from kie.ai's list (Seedance 1.5 Pro): conservative ceilings.
+const UNKNOWN_IMAGE = 20;
+const UNKNOWN_VIDEO_PER_SECOND = 40;
+// Length used when a model takes no duration parameter (Hailuo 02 Pro: 6 s, others: 5 s).
+const defaultSeconds: Record<string, number> = { "hailuo/02-text-to-video-pro": 6 };
+
+/** Credits held before a generation: the full kie.ai price for the chosen length, never an underestimate. */
 export function mediaReserve(model: MediaModel, seconds: number) {
-  const base = knownKieCost[model.id] ?? (model.kind === "image" ? 20 : 100);
-  const kie = model.kind === "video" ? base * Math.max(1, seconds / 5) : base;
+  const length = model.durationStyle === "none" || !model.durations?.length ? (defaultSeconds[model.id] ?? 5) : seconds;
+  const kie = model.kind === "video" ? (kieCost[model.id] ?? UNKNOWN_VIDEO_PER_SECOND) * length : (kieCost[model.id] ?? UNKNOWN_IMAGE);
   return Math.ceil(kie * KIE_TO_TECHNOVA);
 }
