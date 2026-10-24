@@ -25,6 +25,8 @@ import {
   Image as ImageIcon,
   Telescope,
   Music,
+  Library,
+  AlertCircle,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -46,7 +48,9 @@ import {
 } from "@/components/ai-elements/prompt-input";
 import { useDashboard, type Thread } from "./dashboard-context";
 import { chatWorkspaceText } from "@/lib/i18n";
-import { ACCEPT, MAX_FILES, budgetFiles, kindOf, mediaKey, pendingMedia, persistableParts, toFilePart, type ChatFilePart } from "@/lib/chat-attachments";
+import { ACCEPT, INDEXED_FILE_TYPE, MAX_FILES, budgetFiles, indexedFileId, indexedFileUrl, isDirectAttachment, kindOf, mediaKey, pendingMedia, persistableParts, toFilePart, type ChatFilePart } from "@/lib/chat-attachments";
+import { ALL_ACCEPT, MAX_CHAT_DOCUMENTS, checkFile, formatsLabel } from "@/lib/file-types";
+import { fileErrorText, uploadAndIndex, type UploadPhase } from "@/lib/file-upload";
 import { openRouterModelIds } from "@/lib/chat-models";
 import { cn } from "@/lib/utils";
 import { Shimmer } from "@/components/ai-elements/shimmer";
@@ -125,8 +129,10 @@ function useWorkspaceChoice() {
   const [videoModel, setVideoModel] = useState(defaultVideoModel);
   // Deep Research stays on for the browser session until switched off (it costs more than a reply).
   const [research, setResearch] = useState(false);
+  const [kbIds, setKbIds] = useState<string[]>([]);
   useEffect(() => {
     try { setResearch(sessionStorage.getItem("technova-research") === "1"); } catch { /* storage blocked */ }
+    try { const kb = JSON.parse(localStorage.getItem("technova-chat-kbs") ?? "[]"); if (Array.isArray(kb)) setKbIds(kb.filter((x): x is string => typeof x === "string").slice(0, 5)); } catch { /* storage blocked */ }
     const storedImage = localStorage.getItem("technova-image-model");
     const storedVideo = localStorage.getItem("technova-video-model");
     if (storedImage && findMediaModel(storedImage)?.kind === "image") setImageModel(storedImage);
@@ -150,13 +156,18 @@ function useWorkspaceChoice() {
     if (spec.kind === "image") { setImageModel(value); localStorage.setItem("technova-image-model", value); }
     else if (spec.kind === "video") { setVideoModel(value); localStorage.setItem("technova-video-model", value); }
   }
+  function chooseKnowledgeBases(ids: string[]) {
+    const next = ids.slice(0, 5);
+    setKbIds(next);
+    try { localStorage.setItem("technova-chat-kbs", JSON.stringify(next)); } catch { /* storage blocked */ }
+  }
   function toggleResearch() {
     setResearch((on) => {
       try { sessionStorage.setItem("technova-research", on ? "0" : "1"); } catch { /* storage blocked */ }
       return !on;
     });
   }
-  return { mode, model: mode === "create" ? SMART_MODEL : model, imageModel, videoModel, musicModel: defaultMusicModel, research: mode === "chat" && research, toggleResearch, chooseMode, chooseModel, chooseMediaModel, copy };
+  return { mode, model: mode === "create" ? SMART_MODEL : model, imageModel, videoModel, musicModel: defaultMusicModel, research: mode === "chat" && research, toggleResearch, kbIds, chooseKnowledgeBases, chooseMode, chooseModel, chooseMediaModel, copy };
 }
 
 function ChoiceControls({ choice }: { choice: ReturnType<typeof useWorkspaceChoice> }) {
@@ -446,35 +457,52 @@ function ChatComposer({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
   const [files, setFiles] = useState<ChatFilePart[]>([]);
+  const [docs, setDocs] = useState<ComposerDoc[]>([]);
   const [fileError, setFileError] = useState("");
   const [reading, setReading] = useState(false);
   const fileInput = useRef<HTMLInputElement>(null);
+  const updateDoc = (key: string, patch: Partial<ComposerDoc>) => setDocs((all) => all.map((d) => (d.key === key ? { ...d, ...patch } : d)));
   async function pick(list: FileList | null) {
     if (!list?.length) return;
     setFileError(""); setReading(true);
     const next = [...files];
+    let docCount = docs.length;
     for (const file of Array.from(list)) {
-      if (next.length >= MAX_FILES) { setFileError(lang === "fr" ? `${MAX_FILES} fichiers maximum.` : `${MAX_FILES} files maximum.`); break; }
-      try { next.push(await toFilePart(file)); }
-      catch (e) { setFileError(e instanceof Error && e.message === "too-large" ? (lang === "fr" ? `« ${file.name} » est trop lourd (3 Mo maximum par fichier PDF, audio ou vidéo).` : `"${file.name}" is too large (3 MB max per PDF, audio or video file).`) : (lang === "fr" ? `Format non pris en charge : ${file.name}` : `Unsupported format: ${file.name}`)); }
+      // Small images, PDF, audio and video go straight to the model; every other file is indexed.
+      if (isDirectAttachment(file)) {
+        if (next.length >= MAX_FILES) { setFileError(lang === "fr" ? `${MAX_FILES} images ou médias maximum par message.` : `${MAX_FILES} images or media max per message.`); continue; }
+        try { next.push(await toFilePart(file)); } catch { setFileError(lang === "fr" ? `Format non pris en charge : ${file.name}` : `Unsupported format: ${file.name}`); }
+        continue;
+      }
+      const check = checkFile(file.name, file.size);
+      if (!check.ok) { setFileError(`${file.name} : ${fileErrorText(`file_${check.reason}`, lang)}`); continue; }
+      if (docCount >= MAX_CHAT_DOCUMENTS) { setFileError(lang === "fr" ? `${MAX_CHAT_DOCUMENTS} documents maximum par message.` : `${MAX_CHAT_DOCUMENTS} documents max per message.`); break; }
+      docCount++;
+      const key = crypto.randomUUID();
+      setDocs((all) => [...all, { key, filename: file.name, phase: "uploading", fileId: null, error: null }]);
+      void uploadAndIndex(file, "chat", (phase) => updateDoc(key, { phase })).then((r) => updateDoc(key, { phase: r.status, fileId: r.fileId, error: r.error }));
     }
     setFiles(next); setReading(false);
     if (fileInput.current) fileInput.current.value = "";
   }
-  const attachLabel = lang === "fr" ? "Joindre une image, un PDF, un audio ou une vidéo" : "Attach an image, PDF, audio or video";
+  const docsBusy = docs.some((d) => d.phase === "uploading" || d.phase === "processing");
+  const attachLabel = lang === "fr" ? `Joindre des fichiers (${formatsLabel}, code)` : `Attach files (${formatsLabel}, code)`;
   return (
     <div className="w-full">
       <PromptInput
         onSubmit={async ({ text }) => {
-          if (!text.trim() && !files.length) return;
-          const sent = files; setFiles([]); setFileError("");
+          const readyDocs = docs.filter((d) => d.phase === "ready" && d.fileId);
+          if (docsBusy || (!text.trim() && !files.length && !readyDocs.length)) return;
+          const sent = [...files, ...readyDocs.map((d): ChatFilePart => ({ type: "file", mediaType: INDEXED_FILE_TYPE, filename: d.filename, url: indexedFileUrl(d.fileId!) }))];
+          setFiles([]); setDocs([]); setFileError("");
           await onSubmit(text, sent);
         }}
         className="chat-composer rounded-[26px] border border-border bg-card"
       >
-        {files.length > 0 && (
+        {(files.length > 0 || docs.length > 0) && (
           <div className="flex w-full flex-wrap gap-2 px-3 pt-3">
             {files.map((f, i) => <AttachmentChip key={i} file={f} onRemove={() => setFiles(files.filter((_, j) => j !== i))} />)}
+            {docs.map((d) => <AttachmentChip key={d.key} file={{ type: "file", mediaType: INDEXED_FILE_TYPE, filename: d.filename, url: "" }} phase={d.phase} error={d.error ? fileErrorText(d.error, lang) : null} onRemove={() => setDocs((all) => all.filter((x) => x.key !== d.key))} />)}
           </div>
         )}
         <PromptInputTextarea
@@ -487,7 +515,8 @@ function ChatComposer({
         <PromptInputFooter className="min-h-12 flex-wrap justify-between gap-2 px-2 pb-2">
           <ChoiceControls choice={choice} />
           <div className="flex items-center gap-1.5">
-            <input ref={fileInput} data-chat-attach type="file" accept={ACCEPT} multiple className="hidden" onChange={(e) => void pick(e.target.files)} />
+            <input ref={fileInput} data-chat-attach type="file" accept={`${ACCEPT},${ALL_ACCEPT}`} multiple className="hidden" onChange={(e) => void pick(e.target.files)} />
+            {mode === "chat" && <KnowledgePicker choice={choice} />}
             {mode === "chat" && (
               <button
                 type="button"
@@ -507,7 +536,7 @@ function ChatComposer({
             </button>
             <VoiceButton inputRef={textareaRef} />
             <PromptInputSubmit
-              disabled={disabled || reading}
+              disabled={disabled || reading || docsBusy}
               aria-label={copy.saveIdea}
               className="size-8 shrink-0 rounded-full bg-foreground text-background hover:bg-foreground/85"
             />
@@ -519,13 +548,63 @@ function ChatComposer({
   );
 }
 
-function AttachmentChip({ file, onRemove }: { file: ChatFilePart; onRemove?: () => void }) {
+/** Knowledge bases the chat answers from (browser-local choice, like mode and model). */
+function KnowledgePicker({ choice }: { choice: ReturnType<typeof useWorkspaceChoice> }) {
+  const { lang } = useDashboard();
+  const fr = lang === "fr";
+  const [open, setOpen] = useState(false);
+  const [bases, setBases] = useState<{ id: string; name: string }[] | null>(null);
+  useEffect(() => {
+    if (!open || bases) return;
+    void supabase.from("knowledge_bases").select("id, name").order("created_at", { ascending: false }).then(({ data }) => {
+      setBases(data ?? []);
+      // Forget bases that were deleted since they were chosen.
+      if (data) { const valid = choice.kbIds.filter((id) => data.some((b) => b.id === id)); if (valid.length !== choice.kbIds.length) choice.chooseKnowledgeBases(valid); }
+    });
+  }, [open, bases, choice]);
+  const count = choice.kbIds.length;
+  const label = fr ? "Bases de connaissances" : "Knowledge bases";
+  return (
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger asChild>
+        <button type="button" aria-label={label} title={label}
+          className={cn("inline-flex h-8 items-center gap-1.5 rounded-full border px-2.5 text-xs transition-colors", count ? "border-chat-glow bg-chat-glow/10 text-foreground" : "border-border text-muted-foreground hover:bg-secondary hover:text-foreground")}>
+          <Library className="size-4" />{count > 0 && <span className="font-semibold">{count}</span>}
+        </button>
+      </PopoverTrigger>
+      <PopoverContent align="end" className="w-72 p-2">
+        <p className="px-2 pb-1.5 pt-1 text-xs font-semibold">{label}</p>
+        <p className="px-2 pb-2 text-[11px] text-muted-foreground">{fr ? "Le chat répond en s'appuyant sur les bases choisies (5 maximum)." : "The chat answers from the chosen bases (5 max)."}</p>
+        {bases === null ? <div className="grid place-items-center py-4"><Loader2 className="size-4 animate-spin text-muted-foreground" /></div>
+          : bases.length === 0 ? <p className="px-2 py-3 text-xs text-muted-foreground">{fr ? "Aucune base pour le moment." : "No knowledge base yet."}</p>
+          : <ul className="max-h-60 space-y-0.5 overflow-y-auto">{bases.map((b) => {
+            const on = choice.kbIds.includes(b.id);
+            return <li key={b.id}><button type="button" disabled={!on && count >= 5} onClick={() => choice.chooseKnowledgeBases(on ? choice.kbIds.filter((x) => x !== b.id) : [...choice.kbIds, b.id])}
+              className="flex w-full items-center gap-2 rounded-lg px-2 py-1.5 text-left text-[13px] hover:bg-secondary disabled:opacity-40">
+              <span className={cn("grid size-4 shrink-0 place-items-center rounded border", on ? "border-foreground bg-foreground text-background" : "border-border")}>{on && <Check className="size-3" />}</span>
+              <span className="min-w-0 flex-1 truncate">{b.name}</span>
+            </button></li>;
+          })}</ul>}
+        <Link to="/dashboard/knowledge" onClick={() => setOpen(false)} className="mt-1 flex items-center justify-between rounded-lg px-2 py-1.5 text-xs font-medium text-muted-foreground hover:bg-secondary hover:text-foreground">
+          {fr ? "Gérer les bases" : "Manage bases"}<ArrowRight className="size-3.5" />
+        </Link>
+      </PopoverContent>
+    </Popover>
+  );
+}
+
+type ComposerDoc = { key: string; filename: string; phase: UploadPhase; fileId: string | null; error: string | null };
+
+function AttachmentChip({ file, onRemove, phase, error }: { file: ChatFilePart; onRemove?: () => void; phase?: UploadPhase; error?: string | null }) {
+  const { lang } = useDashboard();
   const kind = kindOf(file.mediaType);
   const Icon = kind === "audio" ? FileAudio : kind === "video" ? FileVideo : FileText;
+  const busy = phase === "uploading" || phase === "processing";
+  const status = phase === "uploading" ? (lang === "fr" ? "Envoi…" : "Uploading…") : phase === "processing" ? (lang === "fr" ? "Analyse…" : "Analysing…") : phase === "failed" ? error : file.mediaType === INDEXED_FILE_TYPE ? (lang === "fr" ? "Document indexé" : "Indexed document") : null;
   return (
-    <div className="relative flex items-center gap-2 rounded-xl border border-border bg-background p-1.5 pr-3 text-[12px]">
-      {kind === "image" && file.url ? <img src={file.url} alt={file.filename} className="size-10 rounded-lg object-cover" /> : <span className="grid size-10 place-items-center rounded-lg bg-secondary"><Icon className="size-4 text-muted-foreground" /></span>}
-      <span className="max-w-[140px] truncate">{file.filename}</span>
+    <div title={error ?? undefined} className={cn("relative flex items-center gap-2 rounded-xl border bg-background p-1.5 pr-3 text-[12px]", phase === "failed" ? "border-destructive/50" : "border-border")}>
+      {kind === "image" && file.url ? <img src={file.url} alt={file.filename} className="size-10 rounded-lg object-cover" /> : <span className="grid size-10 place-items-center rounded-lg bg-secondary">{busy ? <Loader2 className="size-4 animate-spin text-muted-foreground" /> : phase === "failed" ? <AlertCircle className="size-4 text-destructive" /> : <Icon className="size-4 text-muted-foreground" />}</span>}
+      <span className="min-w-0"><span className="block max-w-[160px] truncate">{file.filename}</span>{status && <span className={cn("block max-w-[160px] truncate text-[10.5px]", phase === "failed" ? "text-destructive" : "text-muted-foreground")}>{status}</span>}</span>
       {onRemove && <button type="button" onClick={onRemove} aria-label="Retirer" className="absolute -right-1.5 -top-1.5 grid size-5 place-items-center rounded-full bg-foreground text-background"><X className="size-3" /></button>}
     </div>
   );
@@ -1065,11 +1144,12 @@ export function ThreadPage({ threadId }: { threadId: string }) {
       role: m.role,
       content: textOf(m),
       files: (m.parts as unknown as Array<{ type: string } & Partial<ChatFilePart>>).flatMap((p, i) =>
-        p.type === "file" ? [{ mediaType: p.mediaType ?? "", filename: p.filename ?? "file", url: p.url || pendingMedia.get(mediaKey(m.id, i)) || "" }] : []).filter((f) => f.url),
+        p.type === "file" && !indexedFileId(p.url) ? [{ mediaType: p.mediaType ?? "", filename: p.filename ?? "file", url: p.url || pendingMedia.get(mediaKey(m.id, i)) || "" }] : []).filter((f) => f.url),
     })));
+    const fileIds = [...new Set(history.slice(-30).flatMap((m) => (m.parts as unknown as Array<{ type: string; url?: string }>).map((p) => (p.type === "file" ? indexedFileId(p.url) : null)).filter((id): id is string => !!id)))].slice(-10);
     const last = history[history.length - 1];
     const lastSent = payload[payload.length - 1];
-    if (last?.role === "user" && last.parts.some((p) => p.type === "file") && !lastSent?.files?.length) {
+    if (last?.role === "user" && last.parts.some((p) => p.type === "file" && !indexedFileId((p as { url?: string }).url)) && !lastSent?.files?.length) {
       setError(lang === "fr" ? "Vos fichiers dépassent la taille maximale d'envoi (environ 3 Mo au total). Retirez-en un ou réduisez leur taille." : "Your files exceed the maximum upload size (about 3 MB in total). Remove one or reduce their size.");
       return;
     }
@@ -1088,6 +1168,8 @@ export function ThreadPage({ threadId }: { threadId: string }) {
           mode: choice.mode,
           lang,
           ...(agent ? { agentId: agent.id } : {}),
+          ...(fileIds.length ? { fileIds } : {}),
+          ...(choice.kbIds.length && choice.mode === "chat" ? { knowledgeBaseIds: choice.kbIds } : {}),
           messages: payload,
         }),
       });

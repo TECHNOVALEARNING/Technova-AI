@@ -14,6 +14,20 @@ const PERSIST_LIMIT = 2_500_000; // data URLs above this size are kept only in m
 export const pendingMedia = new Map<string, string>();
 export const mediaKey = (messageId: string, index: number) => `${messageId}:${index}`;
 
+// Documents indexed by the file pipeline travel as references, never as bytes.
+export const INDEXED_FILE_TYPE = "application/x-technova-file";
+export const indexedFileUrl = (fileId: string) => `tnfile:${fileId}`;
+export const indexedFileId = (url: string | undefined) => (url?.startsWith("tnfile:") ? url.slice(7) : null);
+
+/** Sent directly to the model as bytes (small images, PDF, audio, video); anything else goes through the pipeline. */
+export function isDirectAttachment(file: File) {
+  const kind = kindOf(file.type);
+  if (kind === "image") return /^image\/(png|jpe?g|webp)$/.test(file.type);
+  if (kind === "pdf") return file.size <= MAX_PDF_BYTES;
+  if (kind === "audio" || kind === "video") return file.size <= MAX_MEDIA_BYTES;
+  return false;
+}
+
 export function kindOf(mediaType: string) {
   if (mediaType.startsWith("image/")) return "image";
   if (mediaType.startsWith("audio/")) return "audio";

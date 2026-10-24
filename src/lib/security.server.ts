@@ -15,6 +15,8 @@ export const RATE_LIMITS = {
   arena: { limit: 10, window: 300 },
   site_report: { limit: 5, window: 3600 },
   admin_moderation: { limit: 60, window: 60 },
+  files: { limit: 40, window: 600 },
+  knowledge: { limit: 60, window: 60 },
 } as const;
 
 export type RateBucket = keyof typeof RATE_LIMITS;

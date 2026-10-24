@@ -112,6 +112,7 @@ export type Database = {
           description: string
           id: string
           instructions: string
+          knowledge_base_ids: string[]
           max_cost: number
           max_tokens: number
           memory: string
@@ -127,6 +128,7 @@ export type Database = {
           description?: string
           id?: string
           instructions?: string
+          knowledge_base_ids?: string[]
           max_cost?: number
           max_tokens?: number
           memory?: string
@@ -142,6 +144,7 @@ export type Database = {
           description?: string
           id?: string
           instructions?: string
+          knowledge_base_ids?: string[]
           max_cost?: number
           max_tokens?: number
           memory?: string
@@ -151,6 +154,285 @@ export type Database = {
           tools?: string[]
           updated_at?: string
           version?: number
+        }
+        Relationships: []
+      }
+      files: {
+        Row: {
+          char_count: number
+          chunk_count: number
+          created_at: string
+          credits: number
+          error: string | null
+          ext: string
+          filename: string
+          id: string
+          kind: string
+          mime: string
+          origin: string
+          owner_id: string
+          size_bytes: number
+          status: string
+          storage_path: string
+          updated_at: string
+        }
+        Insert: {
+          char_count?: number
+          chunk_count?: number
+          created_at?: string
+          credits?: number
+          error?: string | null
+          ext: string
+          filename: string
+          id?: string
+          kind: string
+          mime?: string
+          origin?: string
+          owner_id: string
+          size_bytes: number
+          status?: string
+          storage_path: string
+          updated_at?: string
+        }
+        Update: {
+          char_count?: number
+          chunk_count?: number
+          created_at?: string
+          credits?: number
+          error?: string | null
+          ext?: string
+          filename?: string
+          id?: string
+          kind?: string
+          mime?: string
+          origin?: string
+          owner_id?: string
+          size_bytes?: number
+          status?: string
+          storage_path?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      file_processing_jobs: {
+        Row: {
+          attempts: number
+          created_at: string
+          error: string | null
+          file_id: string
+          finished_at: string | null
+          id: string
+          owner_id: string
+          stage: string
+          started_at: string | null
+          status: string
+        }
+        Insert: {
+          attempts?: number
+          created_at?: string
+          error?: string | null
+          file_id: string
+          finished_at?: string | null
+          id?: string
+          owner_id: string
+          stage?: string
+          started_at?: string | null
+          status?: string
+        }
+        Update: {
+          attempts?: number
+          created_at?: string
+          error?: string | null
+          file_id?: string
+          finished_at?: string | null
+          id?: string
+          owner_id?: string
+          stage?: string
+          started_at?: string | null
+          status?: string
+        }
+        Relationships: []
+      }
+      file_metadata: {
+        Row: {
+          created_at: string
+          detected_type: string | null
+          entries: number | null
+          extracted_text: string | null
+          extractor: string | null
+          file_id: string
+          owner_id: string
+          pages: number | null
+          sha256: string | null
+          token_estimate: number | null
+          warnings: string[]
+        }
+        Insert: {
+          created_at?: string
+          detected_type?: string | null
+          entries?: number | null
+          extracted_text?: string | null
+          extractor?: string | null
+          file_id: string
+          owner_id: string
+          pages?: number | null
+          sha256?: string | null
+          token_estimate?: number | null
+          warnings?: string[]
+        }
+        Update: {
+          created_at?: string
+          detected_type?: string | null
+          entries?: number | null
+          extracted_text?: string | null
+          extractor?: string | null
+          file_id?: string
+          owner_id?: string
+          pages?: number | null
+          sha256?: string | null
+          token_estimate?: number | null
+          warnings?: string[]
+        }
+        Relationships: []
+      }
+      knowledge_bases: {
+        Row: {
+          created_at: string
+          description: string
+          id: string
+          name: string
+          owner_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string
+          id?: string
+          name: string
+          owner_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string
+          id?: string
+          name?: string
+          owner_id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      knowledge_sources: {
+        Row: {
+          created_at: string
+          file_id: string
+          id: string
+          knowledge_base_id: string
+          owner_id: string
+        }
+        Insert: {
+          created_at?: string
+          file_id: string
+          id?: string
+          knowledge_base_id: string
+          owner_id: string
+        }
+        Update: {
+          created_at?: string
+          file_id?: string
+          id?: string
+          knowledge_base_id?: string
+          owner_id?: string
+        }
+        Relationships: []
+      }
+      document_chunks: {
+        Row: {
+          chunk_index: number
+          content: string
+          created_at: string
+          file_id: string
+          id: string
+          owner_id: string
+          token_count: number
+        }
+        Insert: {
+          chunk_index: number
+          content: string
+          created_at?: string
+          file_id: string
+          id?: string
+          owner_id: string
+          token_count?: number
+        }
+        Update: {
+          chunk_index?: number
+          content?: string
+          created_at?: string
+          file_id?: string
+          id?: string
+          owner_id?: string
+          token_count?: number
+        }
+        Relationships: []
+      }
+      document_embeddings: {
+        Row: {
+          chunk_id: string
+          created_at: string
+          embedding: string
+          file_id: string
+          model: string
+          owner_id: string
+        }
+        Insert: {
+          chunk_id: string
+          created_at?: string
+          embedding: string
+          file_id: string
+          model: string
+          owner_id: string
+        }
+        Update: {
+          chunk_id?: string
+          created_at?: string
+          embedding?: string
+          file_id?: string
+          model?: string
+          owner_id?: string
+        }
+        Relationships: []
+      }
+      retrieval_logs: {
+        Row: {
+          context: string
+          created_at: string
+          file_ids: string[]
+          id: string
+          knowledge_base_ids: string[]
+          owner_id: string
+          query: string
+          results: Json
+        }
+        Insert: {
+          context: string
+          created_at?: string
+          file_ids?: string[]
+          id?: string
+          knowledge_base_ids?: string[]
+          owner_id: string
+          query: string
+          results?: Json
+        }
+        Update: {
+          context?: string
+          created_at?: string
+          file_ids?: string[]
+          id?: string
+          knowledge_base_ids?: string[]
+          owner_id?: string
+          query?: string
+          results?: Json
         }
         Relationships: []
       }
@@ -1097,6 +1379,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      match_document_chunks: {
+        Args: { _embedding: string; _file_ids: string[]; _k?: number; _kb_ids: string[]; _min_score?: number; _owner: string }
+        Returns: { chunk_id: string; chunk_index: number; content: string; file_id: string; filename: string; score: number }[]
+      }
       arena_leaderboard: {
         Args: never
         Returns: { battles: number; model: string; ties: number; wins: number }[]

@@ -8,6 +8,9 @@ const bodySchema = z.object({
   mode: z.enum(["chat", "create"]),
   lang: z.enum(["fr", "en"]).optional(),
   agentId: z.string().uuid().optional(),
+  // Indexed files attached in this conversation and knowledge bases chosen in the composer.
+  fileIds: z.array(z.string().uuid()).max(10).optional(),
+  knowledgeBaseIds: z.array(z.string().uuid()).max(5).optional(),
   messages: z
     .array(
       z.object({
@@ -101,9 +104,9 @@ export const Route = createFileRoute("/api/chat")({
         const needsMedia = allFiles.some(f => f.mediaType.startsWith("audio/") || f.mediaType.startsWith("video/"));
         const needsVision = allFiles.length > 0;
         const lastUser = [...parsed.data.messages].reverse().find((m) => m.role === "user")?.content ?? "";
-        let agent: { name: string; instructions: string; memory: string; model: string; max_tokens: number; max_cost: number; tools: string[] } | null = null;
+        let agent: { name: string; instructions: string; memory: string; model: string; max_tokens: number; max_cost: number; tools: string[]; knowledge_base_ids: string[] } | null = null;
         if (parsed.data.agentId) {
-          const { data: a } = await supabaseAdmin.from("agents").select("name, instructions, memory, model, max_tokens, max_cost, tools").eq("id", parsed.data.agentId).eq("owner_id", userId).maybeSingle();
+          const { data: a } = await supabaseAdmin.from("agents").select("name, instructions, memory, model, max_tokens, max_cost, tools, knowledge_base_ids").eq("id", parsed.data.agentId).eq("owner_id", userId).maybeSingle();
           if (!a) return new Response("Agent introuvable / Agent not found", { status: 404 });
           agent = a;
         }
@@ -144,14 +147,22 @@ export const Route = createFileRoute("/api/chat")({
             }
           } catch { /* search unavailable: answer without it */ }
         }
+        // RAG: chat files and knowledge bases (the agent's own bases included), ownership checked server-side.
+        const kbIds = [...(parsed.data.knowledgeBaseIds ?? []), ...(agent?.knowledge_base_ids ?? [])];
+        if ((parsed.data.fileIds?.length || kbIds.length) && lastUser.trim()) {
+          try {
+            const { buildFileContext } = await import("@/lib/files.server");
+            toolContext += await buildFileContext({ ownerId: userId, query: lastUser, fileIds: parsed.data.fileIds ?? [], kbIds, context: agent ? "agent" : "chat" });
+          } catch (e) { console.error("file context", e instanceof Error ? e.message : e); }
+        }
         const toolsRule = agent
           ? toolContext
-            ? "\n\nYou have the tools: web search and/or page reading. Their fresh results are provided below — use them and cite sources. Never claim other abilities (code execution, emails, payments, database writes)."
+            ? "\n\nFresh results from your enabled tools and/or the user's documents are provided below — use them and cite sources. Never claim other abilities (code execution, emails, payments, database writes)."
             : `\n\nEnabled tools: ${[...agentTools].join(", ") || "none"}. No live tool result was needed or available for this message. Never claim abilities beyond your enabled tools.`
           : "";
         const systemPrompt = agent
           ? `You are "${agent.name}", a custom TechNova agent. Follow the owner's instructions below.${toolsRule}\n\nINSTRUCTIONS:\n${agent.instructions}${agent.memory ? `\n\nMEMORY (facts to remember):\n${agent.memory}` : ""}` + toolContext + langRule
-          : systemPrompts[parsed.data.mode] + langRule;
+          : systemPrompts[parsed.data.mode] + toolContext + langRule;
         // Reasoning models think before answering: cap the thinking so it cannot eat the whole reply.
         const reasoning = reasoningModels.has(model);
         const maxTokens = agent ? Math.min(4096, Math.max(128, agent.max_tokens)) : reasoning ? 2048 : 1024;

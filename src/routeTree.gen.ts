@@ -38,6 +38,7 @@ import { Route as AuthenticatedDashboardBillingRouteImport } from './routes/_aut
 import { Route as AuthenticatedDashboardConnexionsRouteImport } from './routes/_authenticated/dashboard/connexions'
 import { Route as AuthenticatedDashboardCreditsRouteImport } from './routes/_authenticated/dashboard/credits'
 import { Route as AuthenticatedDashboardDocsRouteImport } from './routes/_authenticated/dashboard/docs'
+import { Route as AuthenticatedDashboardKnowledgeRouteImport } from './routes/_authenticated/dashboard/knowledge'
 import { Route as AuthenticatedDashboardModelsRouteImport } from './routes/_authenticated/dashboard/models'
 import { Route as AuthenticatedDashboardRegistryRouteImport } from './routes/_authenticated/dashboard/registry'
 import { Route as AuthenticatedDashboardSettingsRouteImport } from './routes/_authenticated/dashboard/settings'
@@ -209,6 +210,12 @@ const AuthenticatedDashboardDocsRoute =
     path: '/docs',
     getParentRoute: () => AuthenticatedDashboardRoute,
   } as any)
+const AuthenticatedDashboardKnowledgeRoute =
+  AuthenticatedDashboardKnowledgeRouteImport.update({
+    id: '/knowledge',
+    path: '/knowledge',
+    getParentRoute: () => AuthenticatedDashboardRoute,
+  } as any)
 const AuthenticatedDashboardModelsRoute =
   AuthenticatedDashboardModelsRouteImport.update({
     id: '/models',
@@ -331,6 +338,7 @@ export interface FileRoutesByFullPath {
   '/dashboard/connexions': typeof AuthenticatedDashboardConnexionsRoute
   '/dashboard/credits': typeof AuthenticatedDashboardCreditsRoute
   '/dashboard/docs': typeof AuthenticatedDashboardDocsRoute
+  '/dashboard/knowledge': typeof AuthenticatedDashboardKnowledgeRoute
   '/dashboard/models': typeof AuthenticatedDashboardModelsRoute
   '/dashboard/registry': typeof AuthenticatedDashboardRegistryRoute
   '/dashboard/settings': typeof AuthenticatedDashboardSettingsRoute
@@ -377,6 +385,7 @@ export interface FileRoutesByTo {
   '/dashboard/connexions': typeof AuthenticatedDashboardConnexionsRoute
   '/dashboard/credits': typeof AuthenticatedDashboardCreditsRoute
   '/dashboard/docs': typeof AuthenticatedDashboardDocsRoute
+  '/dashboard/knowledge': typeof AuthenticatedDashboardKnowledgeRoute
   '/dashboard/models': typeof AuthenticatedDashboardModelsRoute
   '/dashboard/registry': typeof AuthenticatedDashboardRegistryRoute
   '/dashboard/settings': typeof AuthenticatedDashboardSettingsRoute
@@ -426,6 +435,7 @@ export interface FileRoutesById {
   '/_authenticated/dashboard/connexions': typeof AuthenticatedDashboardConnexionsRoute
   '/_authenticated/dashboard/credits': typeof AuthenticatedDashboardCreditsRoute
   '/_authenticated/dashboard/docs': typeof AuthenticatedDashboardDocsRoute
+  '/_authenticated/dashboard/knowledge': typeof AuthenticatedDashboardKnowledgeRoute
   '/_authenticated/dashboard/models': typeof AuthenticatedDashboardModelsRoute
   '/_authenticated/dashboard/registry': typeof AuthenticatedDashboardRegistryRoute
   '/_authenticated/dashboard/settings': typeof AuthenticatedDashboardSettingsRoute
@@ -475,6 +485,7 @@ export interface FileRouteTypes {
     | '/dashboard/connexions'
     | '/dashboard/credits'
     | '/dashboard/docs'
+    | '/dashboard/knowledge'
     | '/dashboard/models'
     | '/dashboard/registry'
     | '/dashboard/settings'
@@ -521,6 +532,7 @@ export interface FileRouteTypes {
     | '/dashboard/connexions'
     | '/dashboard/credits'
     | '/dashboard/docs'
+    | '/dashboard/knowledge'
     | '/dashboard/models'
     | '/dashboard/registry'
     | '/dashboard/settings'
@@ -569,6 +581,7 @@ export interface FileRouteTypes {
     | '/_authenticated/dashboard/connexions'
     | '/_authenticated/dashboard/credits'
     | '/_authenticated/dashboard/docs'
+    | '/_authenticated/dashboard/knowledge'
     | '/_authenticated/dashboard/models'
     | '/_authenticated/dashboard/registry'
     | '/_authenticated/dashboard/settings'
@@ -826,6 +839,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedDashboardDocsRouteImport
       parentRoute: typeof AuthenticatedDashboardRoute
     }
+    '/_authenticated/dashboard/knowledge': {
+      id: '/_authenticated/dashboard/knowledge'
+      path: '/knowledge'
+      fullPath: '/dashboard/knowledge'
+      preLoaderRoute: typeof AuthenticatedDashboardKnowledgeRouteImport
+      parentRoute: typeof AuthenticatedDashboardRoute
+    }
     '/_authenticated/dashboard/models': {
       id: '/_authenticated/dashboard/models'
       path: '/models'
@@ -957,6 +977,7 @@ interface AuthenticatedDashboardRouteChildren {
   AuthenticatedDashboardConnexionsRoute: typeof AuthenticatedDashboardConnexionsRoute
   AuthenticatedDashboardCreditsRoute: typeof AuthenticatedDashboardCreditsRoute
   AuthenticatedDashboardDocsRoute: typeof AuthenticatedDashboardDocsRoute
+  AuthenticatedDashboardKnowledgeRoute: typeof AuthenticatedDashboardKnowledgeRoute
   AuthenticatedDashboardModelsRoute: typeof AuthenticatedDashboardModelsRoute
   AuthenticatedDashboardRegistryRoute: typeof AuthenticatedDashboardRegistryRoute
   AuthenticatedDashboardSettingsRoute: typeof AuthenticatedDashboardSettingsRoute
@@ -977,6 +998,7 @@ const AuthenticatedDashboardRouteChildren: AuthenticatedDashboardRouteChildren =
       AuthenticatedDashboardConnexionsRoute,
     AuthenticatedDashboardCreditsRoute: AuthenticatedDashboardCreditsRoute,
     AuthenticatedDashboardDocsRoute: AuthenticatedDashboardDocsRoute,
+    AuthenticatedDashboardKnowledgeRoute: AuthenticatedDashboardKnowledgeRoute,
     AuthenticatedDashboardModelsRoute: AuthenticatedDashboardModelsRoute,
     AuthenticatedDashboardRegistryRoute: AuthenticatedDashboardRegistryRoute,
     AuthenticatedDashboardSettingsRoute: AuthenticatedDashboardSettingsRoute,

@@ -25,7 +25,7 @@ const TOOLS = [
   { id: "payment", fr: "Paiements", en: "Payments", locked: true },
 ] as const;
 
-const empty = { name: "", description: "", instructions: "", memory: "", model: "TechNova Smart", max_tokens: 1024, max_cost: 20, tools: [] as string[] };
+const empty = { name: "", description: "", instructions: "", memory: "", model: "TechNova Smart", max_tokens: 1024, max_cost: 20, tools: [] as string[], knowledge_base_ids: [] as string[] };
 const models = ["TechNova Smart", ...Object.keys(openRouterModelIds)];
 
 export function AgentsPage() {
@@ -35,6 +35,8 @@ export function AgentsPage() {
   const [form, setForm] = useState<typeof empty & { id?: string } | null>(null);
   const [notice, setNotice] = useState("");
   const [saving, setSaving] = useState(false);
+  const [bases, setBases] = useState<{ id: string; name: string }[]>([]);
+  useEffect(() => { void supabase.from("knowledge_bases").select("id, name").order("name").then(({ data }) => setBases(data ?? [])); }, []);
 
   const load = useCallback(async () => {
     const { data, error } = await supabase.from("agents").select("*").order("updated_at", { ascending: false });
@@ -46,7 +48,7 @@ export function AgentsPage() {
     if (!form || !form.name.trim() || !form.instructions.trim()) { setNotice(tx(lang, "Nom et instructions sont obligatoires.", "Name and instructions are required.")); return; }
     setSaving(true); setNotice("");
     const { data: u } = await supabase.auth.getUser();
-    const row = { name: form.name.trim().slice(0, 80), description: form.description.slice(0, 300), instructions: form.instructions.slice(0, 8000), memory: form.memory.slice(0, 4000), model: form.model, max_tokens: form.max_tokens, max_cost: form.max_cost, tools: form.tools };
+    const row = { name: form.name.trim().slice(0, 80), description: form.description.slice(0, 300), instructions: form.instructions.slice(0, 8000), memory: form.memory.slice(0, 4000), model: form.model, max_tokens: form.max_tokens, max_cost: form.max_cost, tools: form.tools, knowledge_base_ids: form.knowledge_base_ids.slice(0, 5)};
     const { error } = form.id
       ? await supabase.from("agents").update(row).eq("id", form.id)
       : await supabase.from("agents").insert({ ...row, owner_id: u.user?.id ?? "" });
@@ -72,7 +74,7 @@ export function AgentsPage() {
         <div className="flex items-center gap-3"><span className="grid size-10 place-items-center rounded-xl bg-primary/15 text-primary"><Bot className="size-5" /></span><div className="min-w-0"><h2 className="truncate font-medium">{a.name}</h2><p className="truncate text-xs text-muted-foreground">{a.model} · v{a.version}</p></div></div>
         <p className="line-clamp-3 flex-1 text-sm text-muted-foreground">{a.description || a.instructions}</p>
         <p className="text-xs text-muted-foreground">{tx(lang, "Budget", "Budget")} : {a.max_cost} {tx(lang, "crédits Technova / réponse", "Technova credits / reply")}</p>
-        <div className="flex gap-2"><Button size="sm" className="flex-1" onClick={() => chat(a)}><MessageCircle className="size-4" />{tx(lang, "Discuter", "Chat")}</Button><Button size="sm" variant="outline" aria-label={tx(lang, "Modifier", "Edit")} onClick={() => setForm({ id: a.id, name: a.name, description: a.description, instructions: a.instructions, memory: a.memory, model: a.model, max_tokens: a.max_tokens, max_cost: a.max_cost, tools: a.tools })}><Pencil className="size-4" /></Button><Button size="sm" variant="outline" aria-label={tx(lang, "Supprimer", "Delete")} onClick={() => void remove(a)}><Trash2 className="size-4" /></Button></div>
+        <div className="flex gap-2"><Button size="sm" className="flex-1" onClick={() => chat(a)}><MessageCircle className="size-4" />{tx(lang, "Discuter", "Chat")}</Button><Button size="sm" variant="outline" aria-label={tx(lang, "Modifier", "Edit")} onClick={() => setForm({ id: a.id, name: a.name, description: a.description, instructions: a.instructions, memory: a.memory, model: a.model, max_tokens: a.max_tokens, max_cost: a.max_cost, tools: a.tools, knowledge_base_ids: a.knowledge_base_ids ?? [] })}><Pencil className="size-4" /></Button><Button size="sm" variant="outline" aria-label={tx(lang, "Supprimer", "Delete")} onClick={() => void remove(a)}><Trash2 className="size-4" /></Button></div>
       </article>)}</section>}
 
     {form && <Modal label={form.id ? tx(lang, "Modifier l’agent", "Edit agent") : tx(lang, "Nouvel agent", "New agent")} onClose={() => setForm(null)} closeOnBackdrop={false} showClose={false}>
@@ -90,6 +92,11 @@ export function AgentsPage() {
         <fieldset className="space-y-2"><legend className="text-sm">{tx(lang, "Outils (désactivés par défaut)", "Tools (off by default)")}</legend>
           <p className="text-xs text-muted-foreground">{tx(lang, "Les autorisations sont enregistrées ; l’exécution des outils arrive dans une prochaine étape. Pour l’instant l’agent répond uniquement par écrit.", "Permissions are saved; tool execution comes in a later step. For now the agent replies in text only.")}</p>
           <div className="grid gap-2 sm:grid-cols-2">{TOOLS.map(tool => { const locked = "locked" in tool; const on = form.tools.includes(tool.id); return <label key={tool.id} className={`flex items-center gap-2 rounded-lg border border-border px-3 py-2 text-sm ${locked ? "opacity-60" : ""}`}><input type="checkbox" disabled={locked} checked={on} onChange={() => setForm({ ...form, tools: on ? form.tools.filter(x => x !== tool.id) : [...form.tools, tool.id] })} />{tx(lang, tool.fr, tool.en)}{locked && <Lock className="ml-auto size-3.5" />}</label>; })}</div>
+        </fieldset>
+        <fieldset className="space-y-2"><legend className="text-sm">{tx(lang, "Bases de connaissances (5 maximum)", "Knowledge bases (5 max)")}</legend>
+          {bases.length === 0
+            ? <p className="text-xs text-muted-foreground">{tx(lang, "Créez une base dans « Connaissances » pour que l'agent réponde à partir de vos documents.", "Create a base in “Knowledge” so the agent answers from your documents.")}</p>
+            : <div className="grid gap-2 sm:grid-cols-2">{bases.map(b => { const on = form.knowledge_base_ids.includes(b.id); return <label key={b.id} className="flex items-center gap-2 rounded-lg border border-border px-3 py-2 text-sm"><input type="checkbox" checked={on} disabled={!on && form.knowledge_base_ids.length >= 5} onChange={() => setForm({ ...form, knowledge_base_ids: on ? form.knowledge_base_ids.filter(x => x !== b.id) : [...form.knowledge_base_ids, b.id] })} /><span className="truncate">{b.name}</span></label>; })}</div>}
         </fieldset>
         <div className="flex justify-end gap-2"><Button variant="outline" onClick={() => setForm(null)}>{tx(lang, "Annuler", "Cancel")}</Button><Button onClick={() => void save()} disabled={saving}>{tx(lang, "Enregistrer", "Save")}</Button></div>
       </div>
