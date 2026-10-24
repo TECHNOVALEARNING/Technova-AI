@@ -176,34 +176,6 @@ export function ApiKeysPage() {
   </div>;
 }
 
-export function UsagePage() {
-  const c = useCopy(); const cur = useCurrency(); const [logs, setLogs] = useState<Tables<"usage_logs">[]>([]);
-  useEffect(() => { void supabase.from("usage_logs").select("*").order("created_at", { ascending: false }).limit(500).then(({ data }) => setLogs(data ?? [])); }, []);
-  const stats = useMemo(() => {
-    const tokens = logs.reduce((s, l) => s + l.input_tokens + l.output_tokens, 0);
-    const credits = logs.reduce((s, l) => s + l.credits, 0);
-    const latency = logs.length ? Math.round(logs.reduce((s, l) => s + l.latency_ms, 0) / logs.length) : 0;
-    const days = Array.from({ length: 14 }, (_, i) => { const d = new Date(); d.setDate(d.getDate() - (13 - i)); const key = d.toDateString(); return { label: d.toLocaleDateString(undefined, { day: "2-digit", month: "2-digit" }), value: logs.filter(l => new Date(l.created_at).toDateString() === key).reduce((s, l) => s + l.input_tokens + l.output_tokens, 0) }; });
-    const byModel = Object.entries(logs.reduce<Record<string, number>>((acc, l) => { acc[l.model] = (acc[l.model] ?? 0) + l.input_tokens + l.output_tokens; return acc; }, {})).sort((a, b) => b[1] - a[1]);
-    return { tokens, credits, latency, days, byModel };
-  }, [logs]);
-  const max = Math.max(1, ...stats.days.map(d => d.value)); const maxModel = Math.max(1, ...stats.byModel.map(m => m[1]));
-  const tiles = [
-    { label: c.tokens, value: stats.tokens.toLocaleString(), sub: `${logs.length} ${c.requests}`, icon: Zap },
-    { label: c.charged, value: stats.credits.toLocaleString(), sub: c.chargedSub, icon: Coins },
-    { label: c.cost, value: formatPrice(stats.credits, cur.currency), sub: c.costSub, icon: Gauge },
-    { label: c.latency, value: stats.latency ? `${(stats.latency / 1000).toFixed(1)} s` : "—", sub: c.latencySub, icon: Activity },
-  ];
-  return <div className="space-y-4"><PageHead title={c.usageTitle} sub={c.usageSub} />
-    <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">{tiles.map(t => <div key={t.label} className={card}><div className="flex items-center justify-between"><p className="text-[12.5px] font-medium">{t.label}</p><span className="grid size-8 place-items-center rounded-full bg-secondary"><t.icon className="size-4 text-primary" /></span></div><p className="mt-3 font-display text-[24px] font-semibold">{t.value}</p><p className="text-[11px] text-muted-foreground">{t.sub}</p></div>)}</div>
-    <div className="grid gap-4 lg:grid-cols-[3fr_2fr]">
-      <div className={card}><p className={eyebrow}>{c.daily.toUpperCase()}</p>{logs.length ? <div className="mt-5 flex h-40 items-end gap-1.5">{stats.days.map(d => <div key={d.label} className="flex flex-1 flex-col items-center gap-1.5"><div className="w-full rounded-t-md bg-primary/80 transition-[height] duration-700" style={{ height: `${Math.max(2, (d.value / max) * 130)}px` }} title={`${d.value} tokens`} /><span className="text-[9px] text-muted-foreground">{d.label}</span></div>)}</div> : <p className="py-14 text-center text-[12.5px] text-muted-foreground">{c.noUsage}</p>}</div>
-      <div className={card}><p className={eyebrow}>{c.byModel.toUpperCase()}</p>{stats.byModel.length ? <div className="mt-4 space-y-3">{stats.byModel.slice(0, 6).map(([m, v]) => <div key={m}><div className="flex justify-between text-[12px]"><span>{m}</span><span className="text-muted-foreground">{v.toLocaleString()}</span></div><div className="mt-1 h-1.5 rounded-full bg-secondary"><div className="h-full rounded-full bg-primary" style={{ width: `${(v / maxModel) * 100}%` }} /></div></div>)}</div> : <p className="py-14 text-center text-[12.5px] text-muted-foreground">{c.noUsage}</p>}</div>
-    </div>
-    <div className={card}><p className={eyebrow}>{c.log.toUpperCase()}</p>{logs.length ? <div className="mt-3 overflow-x-auto"><table className="w-full text-left text-[12px]"><thead className="text-muted-foreground"><tr><th className="py-2 font-medium">{c.date}</th><th className="font-medium">{c.model}</th><th className="font-medium">{c.input}</th><th className="font-medium">{c.output}</th><th className="font-medium">{c.charged}</th><th className="font-medium">{c.latency}</th></tr></thead><tbody className="divide-y divide-border">{logs.slice(0, 50).map(l => <tr key={l.id}><td className="py-2.5">{new Date(l.created_at).toLocaleString()}</td><td>{l.model}</td><td>{l.input_tokens}</td><td>{l.output_tokens}</td><td>{l.credits}</td><td>{(l.latency_ms / 1000).toFixed(1)} s</td></tr>)}</tbody></table></div> : <p className="py-10 text-center text-[12.5px] text-muted-foreground">{c.noUsage}</p>}</div>
-  </div>;
-}
-
 type SupaProject = { ref: string; name: string };
 
 function SupabaseCard() {
