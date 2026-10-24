@@ -148,8 +148,6 @@ function PrivacyPage() {
             ["Base de données, authentification et fichiers", "Supabase"],
             ["Modèles d'IA", "Les fournisseurs des modèles que vous utilisez (par exemple OpenAI, Anthropic, Google, Meta, Mistral, DeepSeek, Alibaba), via notre infrastructure d'accès ; ils reçoivent uniquement le contenu nécessaire à chaque demande"],
             ["Paiement", "Nyole / Feexpay — aucun numéro de carte n'est stocké par Technova"],
-            ["E-mails du service", "Resend"],
-            ["Nom de domaine", "Namecheap"],
           ]} />
           <p>La liste détaillée et à jour de nos prestataires est disponible sur simple demande à {mail(DPO)}.</p>
         </Section>
@@ -215,7 +213,7 @@ function PrivacyPage() {
         </Section>
 
         <Section id="transferts" n={12} title="Transferts internationaux">
-          <p>Certains de nos prestataires (hébergement, base de données, modèles d'IA, e-mails, paiement) peuvent traiter des données hors du Bénin, notamment aux États-Unis et dans l'Union européenne. Nous veillons à ce que ces transferts soient encadrés par des garanties appropriées : engagements contractuels, mesures de sécurité et limitation stricte aux finalités décrites ici. Aucun transfert n'a lieu pour revendre des données.</p>
+          <p>Certains de nos prestataires (hébergement, base de données, modèles d'IA, paiement) peuvent traiter des données hors du Bénin, notamment aux États-Unis et dans l'Union européenne. Nous veillons à ce que ces transferts soient encadrés par des garanties appropriées : engagements contractuels, mesures de sécurité et limitation stricte aux finalités décrites ici. Aucun transfert n'a lieu pour revendre des données.</p>
         </Section>
 
         <Section id="modifications" n={13} title="Modifications et contact">
