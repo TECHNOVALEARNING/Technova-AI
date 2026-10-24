@@ -27,6 +27,12 @@ import {
   Music,
   Library,
   AlertCircle,
+  LayoutTemplate,
+  ShoppingBag,
+  BarChart3,
+  Gamepad2,
+  ScanEye,
+  FileSearch,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -610,9 +616,49 @@ function AttachmentChip({ file, onRemove, phase, error }: { file: ChatFilePart; 
   );
 }
 
+type StarterIdea = { icon: typeof LayoutTemplate; mode: Mode; attach?: boolean; fr: [string, string, string]; en: [string, string, string] };
+
+// One-click starting points: [title, hint, prefilled prompt]. Brackets mark what the user completes.
+const starterIdeas: StarterIdea[] = [
+  { icon: LayoutTemplate, mode: "create", fr: ["Landing page", "Une page moderne et épurée", "Crée une landing page moderne et épurée pour [mon activité] : héros percutant, trois avantages, témoignages, tarifs et appel à l'action."], en: ["Landing page", "A modern, clean page", "Build a modern, clean landing page for [my business]: strong hero, three benefits, testimonials, pricing and a call to action."] },
+  { icon: ShoppingBag, mode: "create", fr: ["Boutique en ligne", "Catalogue, fiche produit, panier", "Crée une boutique en ligne élégante pour vendre [mes produits] : catalogue avec filtres, fiche produit détaillée et panier."], en: ["Online store", "Catalog, product page, cart", "Build an elegant online store to sell [my products]: filterable catalog, detailed product page and cart."] },
+  { icon: BarChart3, mode: "create", fr: ["Tableau de bord", "Données en graphiques interactifs", "Crée un tableau de bord interactif pour suivre [mes ventes / mes indicateurs] : chiffres clés, graphiques et filtres par période."], en: ["Dashboard", "Data as interactive charts", "Build an interactive dashboard to track [my sales / my metrics]: key figures, charts and period filters."] },
+  { icon: Gamepad2, mode: "create", fr: ["Jeu web", "Jouable dans le navigateur", "Crée un petit jeu jouable dans le navigateur : [idée de jeu], avec score, niveaux et bouton rejouer."], en: ["Web game", "Playable in the browser", "Build a small browser game: [game idea], with score, levels and a replay button."] },
+  { icon: ScanEye, mode: "chat", attach: true, fr: ["Design vers code", "Une capture devient une page", "Reproduis fidèlement le design de l'image jointe en une page HTML/CSS responsive, dans un seul fichier."], en: ["Design to code", "A screenshot becomes a page", "Faithfully recreate the design in the attached image as a responsive HTML/CSS page, in a single file."] },
+  { icon: FileSearch, mode: "chat", attach: true, fr: ["Analyser un document", "PDF, Word, Excel, PowerPoint…", "Résume le document joint en 5 points clés, puis liste les décisions et les actions à mener."], en: ["Analyse a document", "PDF, Word, Excel, PowerPoint…", "Summarise the attached document in 5 key points, then list the decisions and actions to take."] },
+];
+
+function StarterIdeas({ choice, inputRef }: { choice: ReturnType<typeof useWorkspaceChoice>; inputRef: React.RefObject<HTMLTextAreaElement | null> }) {
+  const { lang } = useDashboard();
+  function pick(idea: StarterIdea) {
+    choice.chooseMode(idea.mode);
+    const [, , prompt] = idea[lang === "en" ? "en" : "fr"];
+    // Let the composer re-render in the chosen mode, then prefill and select the part to complete.
+    window.setTimeout(() => {
+      const el = inputRef.current; if (!el) return;
+      setTextareaValue(el, prompt); el.focus();
+      const start = prompt.indexOf("["), end = prompt.indexOf("]");
+      if (start >= 0 && end > start) el.setSelectionRange(start, end + 1);
+      if (idea.attach) document.querySelector<HTMLInputElement>("input[data-chat-attach]")?.click();
+    }, 0);
+  }
+  return <div className="grid w-full grid-cols-2 gap-2 sm:grid-cols-3">
+    {starterIdeas.map((idea) => {
+      const [title, hint] = idea[lang === "en" ? "en" : "fr"];
+      const Icon = idea.icon;
+      return <button key={title} type="button" onClick={() => pick(idea)}
+        className="group flex items-start gap-3 rounded-2xl border border-border/80 bg-card/80 p-3 text-left backdrop-blur transition hover:-translate-y-0.5 hover:border-foreground/20 hover:bg-card hover:shadow-sm">
+        <span className="grid size-8 shrink-0 place-items-center rounded-lg bg-secondary text-muted-foreground transition group-hover:bg-foreground group-hover:text-background"><Icon className="size-4" /></span>
+        <span className="min-w-0"><span className="block truncate text-[13px] font-medium">{title}</span><span className="block truncate text-[11.5px] text-muted-foreground">{hint}</span></span>
+      </button>;
+    })}
+  </div>;
+}
+
 export function ChatListPage() {
   const { threads, reload, t } = useDashboard();
   const choice = useWorkspaceChoice();
+  const composerRef = useRef<HTMLTextAreaElement>(null);
   const navigate = useNavigate();
   const [query, setQuery] = useState("");
   const [busy, setBusy] = useState(false);
@@ -661,12 +707,13 @@ export function ChatListPage() {
             </h1>
           </div>
           <div className="w-full max-w-[660px]">
-            <ChatComposer choice={choice} disabled={busy} onSubmit={start} />
+            <ChatComposer choice={choice} disabled={busy} onSubmit={start} inputRef={composerRef} />
             {error && (
               <p role="alert" className="mt-3 text-center text-xs text-destructive">
                 {error}
               </p>
             )}
+            <div className="mt-5"><StarterIdeas choice={choice} inputRef={composerRef} /></div>
           </div>
         </section>
         <section className="chat-library relative w-full rounded-2xl border border-border/70 bg-card/85 p-4 shadow-soft backdrop-blur-xl sm:p-6">
