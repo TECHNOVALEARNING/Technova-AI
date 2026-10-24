@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { Link } from "@tanstack/react-router";
-import { ArrowUpRight, Globe, LogIn, Menu, X, Facebook, Instagram, Linkedin, Youtube, Music2 } from "lucide-react";
+import { ArrowUpRight, Globe, LogIn, Menu, X, Facebook, Instagram, Linkedin, Youtube } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { content, isSiteLang, siteLangs, tr, type SiteLang } from "@/lib/i18n";
 import { supabase } from "@/integrations/supabase/client";
@@ -175,18 +175,29 @@ export function Nav({ lang, setLang }: { lang: SiteLang; setLang: (l: SiteLang) 
   );
 }
 
+/** TikTok mark (Simple Icons, CC0): lucide has no TikTok icon. */
+function TikTokIcon({ className = "" }: { className?: string }) {
+  return <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" className={className}><path d="M12.525.02c1.31-.02 2.61-.01 3.91-.02.08 1.53.63 3.09 1.75 4.17 1.12 1.11 2.7 1.62 4.24 1.79v4.03c-1.44-.05-2.89-.35-4.2-.97-.57-.26-1.1-.59-1.62-.93-.01 2.92.01 5.84-.02 8.75-.08 1.4-.54 2.79-1.35 3.94-1.31 1.92-3.58 3.17-5.91 3.21-1.43.08-2.86-.31-4.08-1.03-2.02-1.19-3.44-3.37-3.65-5.71-.02-.5-.03-1-.01-1.49.18-1.9 1.12-3.72 2.58-4.96 1.66-1.44 3.98-2.13 6.15-1.72.02 1.48-.04 2.96-.04 4.44-.99-.32-2.15-.23-3.02.37-.63.41-1.11 1.04-1.36 1.75-.21.51-.15 1.07-.14 1.61.24 1.64 1.82 3.02 3.5 2.87 1.12-.01 2.19-.66 2.77-1.61.19-.33.4-.67.41-1.06.1-1.79.06-3.57.07-5.36.01-4.03-.01-8.05.02-12.07z" /></svg>;
+}
+
 export function Footer({ lang }: { lang: SiteLang }) {
   const t = content[lang];
   const [cookiesOpen, setCookiesOpen] = useState(false);
   const soon = tr(lang, { fr: "Lien à confirmer", en: "Link to be confirmed", es: "Enlace por confirmar", pt: "Link a confirmar" });
-  const social = [["Facebook", Facebook], ["Instagram", Instagram], ["LinkedIn", Linkedin], ["YouTube", Youtube], ["X", X], ["TikTok", Music2]] as const;
+  const social = [
+    ["Facebook", Facebook, "https://www.facebook.com/share/18GYGMg9o8/"],
+    ["Instagram", Instagram, "https://www.instagram.com/technova.learning"],
+    ["LinkedIn", Linkedin, "https://www.linkedin.com/company/130533963"],
+    ["YouTube", Youtube, "https://www.youtube.com/@Technova_learning"],
+    ["TikTok", TikTokIcon, "https://www.tiktok.com/@technova.learning"],
+  ] as const;
   return (
     <footer className="border-t border-border bg-background px-5 pb-8 pt-14 text-foreground sm:pt-20">
       <div className="mx-auto grid max-w-6xl gap-12 lg:grid-cols-[1fr_2.4fr]">
         <div><Logo className="text-xl" /><p className="mt-1 text-xs text-chat-glow">AI HUB</p><p className="mt-3 text-[10px] uppercase text-muted-foreground">By Tenulysse</p>
           <p className="mt-6 max-w-xs text-sm leading-7 text-muted-foreground">{tr(lang, { fr: "L’infrastructure IA unifiée pour les créateurs, développeurs et entreprises.", en: "Unified AI infrastructure for creators, developers and businesses.", es: "La infraestructura de IA unificada para creadores, desarrolladores y empresas.", pt: "A infraestrutura de IA unificada para criadores, desenvolvedores e empresas." })}</p>
           <StoreBadges lang={lang} className="mt-6" />
-          <div className="mt-6 flex gap-2">{social.map(([name, Icon]) => <Button key={name} variant="outline" size="icon" disabled aria-label={name} title={`${name} · ${soon}`} className="size-9 rounded-full"><Icon className="size-4" /></Button>)}</div>
+          <div className="mt-6 flex gap-2">{social.map(([name, Icon, href]) => <Button key={name} asChild variant="outline" size="icon" className="size-9 rounded-full transition-colors hover:border-foreground/30 hover:bg-foreground hover:text-background"><a href={href} target="_blank" rel="noopener noreferrer" aria-label={`TechNova · ${name}`} title={name}><Icon className="size-4" /></a></Button>)}</div>
         </div>
         <div className="grid gap-x-8 gap-y-10 sm:grid-cols-3">{footerGroups.map((group) => <div key={group.en}><h3 className="mb-5 text-xs font-semibold uppercase">{group[lang]}</h3><ul className="space-y-3.5 text-sm text-muted-foreground">{group.links.map((link) => <li key={link.en}>{"href" in link ? <a href={link.href} className="break-words transition-colors hover:text-foreground" {...(link.href.startsWith("https:") ? { target: "_blank", rel: "noreferrer" } : {})}>{link[lang]}</a> : <span title={soon} aria-label={`${link[lang]} · ${soon}`} className="opacity-60">{link[lang]}</span>}</li>)}</ul></div>)}</div>
       </div>
