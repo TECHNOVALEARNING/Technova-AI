@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as BlogRouteImport } from './routes/blog'
+import { Route as ClassementRouteImport } from './routes/classement'
 import { Route as ConnexionRouteImport } from './routes/connexion'
 import { Route as DeveloppeursRouteImport } from './routes/developpeurs'
 import { Route as DocumentationRouteImport } from './routes/documentation'
@@ -69,6 +70,11 @@ const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
 const BlogRoute = BlogRouteImport.update({
   id: '/blog',
   path: '/blog',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ClassementRoute = ClassementRouteImport.update({
+  id: '/classement',
+  path: '/classement',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ConnexionRoute = ConnexionRouteImport.update({
@@ -313,6 +319,7 @@ const ApiPublicSupabaseOauthCallbackRoute =
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/blog': typeof BlogRoute
+  '/classement': typeof ClassementRoute
   '/connexion': typeof ConnexionRoute
   '/developpeurs': typeof DeveloppeursRoute
   '/documentation': typeof DocumentationRoute
@@ -361,6 +368,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/blog': typeof BlogRoute
+  '/classement': typeof ClassementRoute
   '/connexion': typeof ConnexionRoute
   '/developpeurs': typeof DeveloppeursRoute
   '/documentation': typeof DocumentationRoute
@@ -410,6 +418,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/blog': typeof BlogRoute
+  '/classement': typeof ClassementRoute
   '/connexion': typeof ConnexionRoute
   '/developpeurs': typeof DeveloppeursRoute
   '/documentation': typeof DocumentationRoute
@@ -460,6 +469,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/blog'
+    | '/classement'
     | '/connexion'
     | '/developpeurs'
     | '/documentation'
@@ -508,6 +518,7 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/blog'
+    | '/classement'
     | '/connexion'
     | '/developpeurs'
     | '/documentation'
@@ -556,6 +567,7 @@ export interface FileRouteTypes {
     | '/'
     | '/_authenticated'
     | '/blog'
+    | '/classement'
     | '/connexion'
     | '/developpeurs'
     | '/documentation'
@@ -606,6 +618,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   BlogRoute: typeof BlogRoute
+  ClassementRoute: typeof ClassementRoute
   ConnexionRoute: typeof ConnexionRoute
   DeveloppeursRoute: typeof DeveloppeursRoute
   DocumentationRoute: typeof DocumentationRoute
@@ -655,6 +668,13 @@ declare module '@tanstack/react-router' {
       path: '/blog'
       fullPath: '/blog'
       preLoaderRoute: typeof BlogRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/classement': {
+      id: '/classement'
+      path: '/classement'
+      fullPath: '/classement'
+      preLoaderRoute: typeof ClassementRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/connexion': {
@@ -1031,6 +1051,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   BlogRoute: BlogRoute,
+  ClassementRoute: ClassementRoute,
   ConnexionRoute: ConnexionRoute,
   DeveloppeursRoute: DeveloppeursRoute,
   DocumentationRoute: DocumentationRoute,

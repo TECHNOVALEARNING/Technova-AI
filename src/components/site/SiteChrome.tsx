@@ -100,7 +100,7 @@ export function ActionText({ children }: { children: string }) {
   return <span className="action-pill-label"><span>{children}</span><span aria-hidden="true">{children}</span></span>;
 }
 
-type NavPath = "/modeles" | "/blog" | "/tarifs" | "/documentation" | "/developpeurs";
+type NavPath = "/modeles" | "/classement" | "/blog" | "/tarifs" | "/documentation" | "/developpeurs";
 
 export function Nav({ lang, setLang }: { lang: SiteLang; setLang: (l: SiteLang) => void }) {
   const t = content[lang];
@@ -108,7 +108,7 @@ export function Nav({ lang, setLang }: { lang: SiteLang; setLang: (l: SiteLang) 
   const [signedIn, setSignedIn] = useState(false);
   const navRef = useRef<HTMLElement>(null);
   const triggerRef = useRef<HTMLButtonElement>(null);
-  const links: [NavPath, string][] = [["/modeles", t.nav.models], ["/blog", t.nav.blog], ["/tarifs", t.nav.pricing], ["/documentation", t.nav.docs], ["/developpeurs", t.nav.developers]];
+  const links: [NavPath, string][] = [["/modeles", t.nav.models], ["/classement", t.nav.ranking], ["/blog", t.nav.blog], ["/tarifs", t.nav.pricing], ["/documentation", t.nav.docs], ["/developpeurs", t.nav.developers]];
 
   useEffect(() => {
     let alive = true;
