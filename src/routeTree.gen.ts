@@ -13,6 +13,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as BlogRouteImport } from './routes/blog'
 import { Route as ClassementRouteImport } from './routes/classement'
+import { Route as ConfidentialiteRouteImport } from './routes/confidentialite'
 import { Route as ConnexionRouteImport } from './routes/connexion'
 import { Route as DeveloppeursRouteImport } from './routes/developpeurs'
 import { Route as DocumentationRouteImport } from './routes/documentation'
@@ -75,6 +76,11 @@ const BlogRoute = BlogRouteImport.update({
 const ClassementRoute = ClassementRouteImport.update({
   id: '/classement',
   path: '/classement',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ConfidentialiteRoute = ConfidentialiteRouteImport.update({
+  id: '/confidentialite',
+  path: '/confidentialite',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ConnexionRoute = ConnexionRouteImport.update({
@@ -320,6 +326,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/blog': typeof BlogRoute
   '/classement': typeof ClassementRoute
+  '/confidentialite': typeof ConfidentialiteRoute
   '/connexion': typeof ConnexionRoute
   '/developpeurs': typeof DeveloppeursRoute
   '/documentation': typeof DocumentationRoute
@@ -369,6 +376,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/blog': typeof BlogRoute
   '/classement': typeof ClassementRoute
+  '/confidentialite': typeof ConfidentialiteRoute
   '/connexion': typeof ConnexionRoute
   '/developpeurs': typeof DeveloppeursRoute
   '/documentation': typeof DocumentationRoute
@@ -419,6 +427,7 @@ export interface FileRoutesById {
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/blog': typeof BlogRoute
   '/classement': typeof ClassementRoute
+  '/confidentialite': typeof ConfidentialiteRoute
   '/connexion': typeof ConnexionRoute
   '/developpeurs': typeof DeveloppeursRoute
   '/documentation': typeof DocumentationRoute
@@ -470,6 +479,7 @@ export interface FileRouteTypes {
     | '/'
     | '/blog'
     | '/classement'
+    | '/confidentialite'
     | '/connexion'
     | '/developpeurs'
     | '/documentation'
@@ -519,6 +529,7 @@ export interface FileRouteTypes {
     | '/'
     | '/blog'
     | '/classement'
+    | '/confidentialite'
     | '/connexion'
     | '/developpeurs'
     | '/documentation'
@@ -568,6 +579,7 @@ export interface FileRouteTypes {
     | '/_authenticated'
     | '/blog'
     | '/classement'
+    | '/confidentialite'
     | '/connexion'
     | '/developpeurs'
     | '/documentation'
@@ -619,6 +631,7 @@ export interface RootRouteChildren {
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   BlogRoute: typeof BlogRoute
   ClassementRoute: typeof ClassementRoute
+  ConfidentialiteRoute: typeof ConfidentialiteRoute
   ConnexionRoute: typeof ConnexionRoute
   DeveloppeursRoute: typeof DeveloppeursRoute
   DocumentationRoute: typeof DocumentationRoute
@@ -675,6 +688,13 @@ declare module '@tanstack/react-router' {
       path: '/classement'
       fullPath: '/classement'
       preLoaderRoute: typeof ClassementRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/confidentialite': {
+      id: '/confidentialite'
+      path: '/confidentialite'
+      fullPath: '/confidentialite'
+      preLoaderRoute: typeof ConfidentialiteRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/connexion': {
@@ -1052,6 +1072,7 @@ const rootRouteChildren: RootRouteChildren = {
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   BlogRoute: BlogRoute,
   ClassementRoute: ClassementRoute,
+  ConfidentialiteRoute: ConfidentialiteRoute,
   ConnexionRoute: ConnexionRoute,
   DeveloppeursRoute: DeveloppeursRoute,
   DocumentationRoute: DocumentationRoute,
