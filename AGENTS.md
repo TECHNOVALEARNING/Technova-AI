@@ -22,7 +22,7 @@
 - Studio clarification shows one persisted question set as a step-by-step client flow, and the plan is reviewed in a dialog before approval — preserves the existing approval boundary without changing the generation API.
 - The artifact workspace temporarily collapses dashboard navigation and gives the resizable artifact panel a majority split when generation begins; manual resizing and menu toggles remain available — maximizes working space without changing saved navigation preferences.
 
-- Model catalog uses a dated OpenRouter snapshot with search, filters and pagination; listing does not imply chat activation — preserves billing and key privacy.
+- The public Models page lists only models usable in TechNova (src/lib/public-models.ts, built from chat-models, model-pricing and media-models) with prices in Technova credits, and never names or links the upstream provider — what is shown is what is sold.
 - Pricing/footer: src/components/site/AGENTS.md — scoped guidance.
 - Per-user accounts (GitHub, Google Drive, Notion) use direct OAuth with TechNova's own apps and HMAC-signed state; tokens are AES-GCM encrypted in app_user_connections; sites publish to /s/$slug; rate limits/security log in security.server.ts — secrets stay server-side.
 - Custom agents (owner-scoped, versioned by trigger) feed /api/chat via agentId; server enforces per-reply budget and tools stay deny-by-default — browser never decides cost.

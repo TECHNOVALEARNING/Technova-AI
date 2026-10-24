@@ -1,28 +1,6 @@
 // Content for the public Models, Blog, Docs and Developers pages (FR/EN/ES/PT).
 // Source: the client's existing site (technovaaihub.vercel.app).
 
-export type Cap = "chat" | "reasoning" | "coding" | "vision" | "image";
-
-export type SiteModel = { name: string; id: string; provider: string; icon?: string; caps: Cap[]; context: string; speed: string; free?: boolean };
-
-export const siteModels: SiteModel[] = [
-  { name: "GPT-4o", id: "openai/gpt-4o", provider: "OpenAI", caps: ["chat", "reasoning", "vision"], context: "128K", speed: "122" },
-  { name: "GPT-4o Mini", id: "openai/gpt-4o-mini", provider: "OpenAI", caps: ["chat", "vision", "coding"], context: "128K", speed: "180" },
-  { name: "Claude 3.5 Sonnet", id: "anthropic/claude-3.5-sonnet", provider: "Anthropic", icon: "anthropic/d97757", caps: ["chat", "reasoning", "coding"], context: "200K", speed: "96" },
-  { name: "DeepSeek R1", id: "deepseek/deepseek-r1-0528", provider: "DeepSeek", icon: "deepseek/4d6bfe", caps: ["reasoning", "coding", "chat"], context: "131K", speed: "88" },
-  { name: "Gemini 2.5 Flash", id: "google/gemini-2.5-flash", provider: "Google", icon: "googlegemini/4285f4", caps: ["chat", "vision", "reasoning"], context: "1M", speed: "165" },
-  { name: "DeepSeek V3 Chat", id: "deepseek/deepseek-chat", provider: "DeepSeek", icon: "deepseek/4d6bfe", caps: ["chat", "coding"], context: "131K", speed: "120" },
-  { name: "Gemini 2.5 Pro", id: "google/gemini-2.5-pro", provider: "Google", icon: "googlegemini/4285f4", caps: ["chat", "vision", "reasoning"], context: "2M", speed: "110" },
-  { name: "Claude 3.5 Haiku", id: "anthropic/claude-3.5-haiku", provider: "Anthropic", icon: "anthropic/d97757", caps: ["chat", "coding"], context: "200K", speed: "190" },
-  { name: "Llama 3.3 70B", id: "meta-llama/llama-3.3-70b", provider: "Meta", icon: "meta/0866ff", caps: ["chat", "coding", "vision"], context: "128K", speed: "210" },
-  { name: "Qwen 2.5 Coder 32B", id: "qwen/qwen-2.5-coder", provider: "Alibaba", icon: "alibabacloud/615ced", caps: ["chat", "coding"], context: "131K", speed: "160" },
-  { name: "Llama 3.1 8B", id: "meta-llama/llama-3.1-8b:free", provider: "Meta", icon: "meta/0866ff", caps: ["chat"], context: "128K", speed: "190", free: true },
-  { name: "Mistral Large 2411", id: "mistralai/mistral-large", provider: "Mistral AI", icon: "mistralai/ff7000", caps: ["chat", "coding", "reasoning"], context: "128K", speed: "175" },
-  { name: "Gemma 2 9B", id: "google/gemma-2-9b:free", provider: "Google", icon: "googlegemini/4285f4", caps: ["chat"], context: "8K", speed: "180", free: true },
-  { name: "FLUX 1.1 Pro", id: "black-forest-labs/flux-1.1-pro", provider: "Black Forest Labs", caps: ["image"], context: "—", speed: "—" },
-  { name: "FLUX Schnell", id: "black-forest-labs/flux-schnell", provider: "Black Forest Labs", caps: ["image"], context: "—", speed: "—" },
-];
-
 type L = { fr: string; en: string; es: string; pt: string };
 export type Post = { cat: "compare" | "guides" | "models" | "marketing" | "law"; title: L; excerpt: L; url: string };
 
