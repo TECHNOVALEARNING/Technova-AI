@@ -43,6 +43,7 @@ import { Route as AuthenticatedDashboardRegistryRouteImport } from './routes/_au
 import { Route as AuthenticatedDashboardSettingsRouteImport } from './routes/_authenticated/dashboard/settings'
 import { Route as AuthenticatedDashboardUsageRouteImport } from './routes/_authenticated/dashboard/usage'
 import { Route as ApiAiChatRouteImport } from './routes/api/ai/chat'
+import { Route as ApiPublicGeoPriceRouteImport } from './routes/api/public/geo-price'
 import { Route as ApiPublicMediaPurgeRouteImport } from './routes/api/public/media-purge'
 import { Route as ApiPublicNyoleWebhookRouteImport } from './routes/api/public/nyole-webhook'
 import { Route as ApiPublicReportSiteRouteImport } from './routes/api/public/report-site'
@@ -237,6 +238,11 @@ const ApiAiChatRoute = ApiAiChatRouteImport.update({
   path: '/api/ai/chat',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicGeoPriceRoute = ApiPublicGeoPriceRouteImport.update({
+  id: '/api/public/geo-price',
+  path: '/api/public/geo-price',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicMediaPurgeRoute = ApiPublicMediaPurgeRouteImport.update({
   id: '/api/public/media-purge',
   path: '/api/public/media-purge',
@@ -330,6 +336,7 @@ export interface FileRoutesByFullPath {
   '/dashboard/settings': typeof AuthenticatedDashboardSettingsRoute
   '/dashboard/usage': typeof AuthenticatedDashboardUsageRoute
   '/api/ai/chat': typeof ApiAiChatRoute
+  '/api/public/geo-price': typeof ApiPublicGeoPriceRoute
   '/api/public/media-purge': typeof ApiPublicMediaPurgeRoute
   '/api/public/nyole-webhook': typeof ApiPublicNyoleWebhookRoute
   '/api/public/report-site': typeof ApiPublicReportSiteRoute
@@ -375,6 +382,7 @@ export interface FileRoutesByTo {
   '/dashboard/settings': typeof AuthenticatedDashboardSettingsRoute
   '/dashboard/usage': typeof AuthenticatedDashboardUsageRoute
   '/api/ai/chat': typeof ApiAiChatRoute
+  '/api/public/geo-price': typeof ApiPublicGeoPriceRoute
   '/api/public/media-purge': typeof ApiPublicMediaPurgeRoute
   '/api/public/nyole-webhook': typeof ApiPublicNyoleWebhookRoute
   '/api/public/report-site': typeof ApiPublicReportSiteRoute
@@ -423,6 +431,7 @@ export interface FileRoutesById {
   '/_authenticated/dashboard/settings': typeof AuthenticatedDashboardSettingsRoute
   '/_authenticated/dashboard/usage': typeof AuthenticatedDashboardUsageRoute
   '/api/ai/chat': typeof ApiAiChatRoute
+  '/api/public/geo-price': typeof ApiPublicGeoPriceRoute
   '/api/public/media-purge': typeof ApiPublicMediaPurgeRoute
   '/api/public/nyole-webhook': typeof ApiPublicNyoleWebhookRoute
   '/api/public/report-site': typeof ApiPublicReportSiteRoute
@@ -471,6 +480,7 @@ export interface FileRouteTypes {
     | '/dashboard/settings'
     | '/dashboard/usage'
     | '/api/ai/chat'
+    | '/api/public/geo-price'
     | '/api/public/media-purge'
     | '/api/public/nyole-webhook'
     | '/api/public/report-site'
@@ -516,6 +526,7 @@ export interface FileRouteTypes {
     | '/dashboard/settings'
     | '/dashboard/usage'
     | '/api/ai/chat'
+    | '/api/public/geo-price'
     | '/api/public/media-purge'
     | '/api/public/nyole-webhook'
     | '/api/public/report-site'
@@ -563,6 +574,7 @@ export interface FileRouteTypes {
     | '/_authenticated/dashboard/settings'
     | '/_authenticated/dashboard/usage'
     | '/api/ai/chat'
+    | '/api/public/geo-price'
     | '/api/public/media-purge'
     | '/api/public/nyole-webhook'
     | '/api/public/report-site'
@@ -597,6 +609,7 @@ export interface RootRouteChildren {
   PartageTokenRoute: typeof PartageTokenRoute
   SSlugRoute: typeof SSlugRoute
   ApiAiChatRoute: typeof ApiAiChatRoute
+  ApiPublicGeoPriceRoute: typeof ApiPublicGeoPriceRoute
   ApiPublicMediaPurgeRoute: typeof ApiPublicMediaPurgeRoute
   ApiPublicNyoleWebhookRoute: typeof ApiPublicNyoleWebhookRoute
   ApiPublicReportSiteRoute: typeof ApiPublicReportSiteRoute
@@ -848,6 +861,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiAiChatRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/geo-price': {
+      id: '/api/public/geo-price'
+      path: '/api/public/geo-price'
+      fullPath: '/api/public/geo-price'
+      preLoaderRoute: typeof ApiPublicGeoPriceRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/media-purge': {
       id: '/api/public/media-purge'
       path: '/api/public/media-purge'
@@ -1005,6 +1025,7 @@ const rootRouteChildren: RootRouteChildren = {
   PartageTokenRoute: PartageTokenRoute,
   SSlugRoute: SSlugRoute,
   ApiAiChatRoute: ApiAiChatRoute,
+  ApiPublicGeoPriceRoute: ApiPublicGeoPriceRoute,
   ApiPublicMediaPurgeRoute: ApiPublicMediaPurgeRoute,
   ApiPublicNyoleWebhookRoute: ApiPublicNyoleWebhookRoute,
   ApiPublicReportSiteRoute: ApiPublicReportSiteRoute,

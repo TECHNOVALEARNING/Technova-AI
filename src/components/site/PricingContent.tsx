@@ -6,15 +6,27 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { fallbackPacks, packCopy, PENDING_PACK_KEY, type PublicPack } from "@/lib/public-pricing";
-import type { Lang } from "@/lib/i18n";
+import type { SiteLang } from "@/lib/i18n";
+import { CFA_PRICE, formatLocalPrice, isCfa, type GeoPrice } from "@/lib/geo-pricing";
 
 const text = {
   fr: { title: "Des forfaits simples et flexibles", sub: "Quatre packs de crédits Technova prépayés, payables en Mobile Money ou par carte.", once: "Paiement unique", terms: "Paiement unique • crédits prépayés • aucun renouvellement automatique", choose: "Choisir", popular: "LE PLUS POPULAIRE", credits: "crédits Technova", allFeatures: "Création de sites web (TechNova Studio) : à partir du pack Essential. Génération vidéo : packs Creator et Pro. Le chat, les images, la musique et la recherche sont inclus dans tous les packs.", validity: "Validité des crédits : vos crédits Technova n'expirent pas.", refund: "Échec de génération : si une génération échoue pour une raison technique, les crédits réservés sont restitués sur votre solde. Il ne s'agit pas d'un remboursement en argent." },
   en: { title: "Simple, flexible plans", sub: "Four prepaid Technova credit packs, payable by Mobile Money or card.", once: "One-time payment", terms: "One-time payment • prepaid credits • no automatic renewal", choose: "Choose", popular: "MOST POPULAR", credits: "Technova credits", allFeatures: "Website creation (TechNova Studio): from the Essential pack. Video generation: Creator and Pro packs. Chat, images, music and research are included in every pack.", validity: "Credit validity: your Technova credits do not expire.", refund: "Failed generation: if a generation fails for a technical reason, reserved credits are returned to your balance. This is not a cash refund." },
+  es: { title: "Planes sencillos y flexibles", sub: "Cuatro packs de créditos Technova prepagados, pagaderos con Mobile Money o tarjeta.", once: "Pago único", terms: "Pago único • créditos prepagados • sin renovación automática", choose: "Elegir", popular: "EL MÁS POPULAR", credits: "créditos Technova", allFeatures: "Creación de sitios web (TechNova Studio): desde el pack Essential. Generación de vídeo: packs Creator y Pro. El chat, las imágenes, la música y la búsqueda están incluidos en todos los packs.", validity: "Validez de los créditos: tus créditos Technova no caducan.", refund: "Generación fallida: si una generación falla por un motivo técnico, los créditos reservados se devuelven a tu saldo. No se trata de un reembolso en dinero." },
+  pt: { title: "Planos simples e flexíveis", sub: "Quatro pacotes de créditos Technova pré-pagos, pagáveis com Mobile Money ou cartão.", once: "Pagamento único", terms: "Pagamento único • créditos pré-pagos • sem renovação automática", choose: "Escolher", popular: "O MAIS POPULAR", credits: "créditos Technova", allFeatures: "Criação de sites (TechNova Studio): a partir do pacote Essential. Geração de vídeo: pacotes Creator e Pro. Chat, imagens, música e pesquisa estão incluídos em todos os pacotes.", validity: "Validade dos créditos: seus créditos Technova não expiram.", refund: "Falha na geração: se uma geração falhar por motivo técnico, os créditos reservados voltam ao seu saldo. Não se trata de um reembolso em dinheiro." },
 };
 
-export function PricingContent({ lang }: { lang: Lang }) {
-  const t = text[lang]; const loc = lang === "fr" ? "fr-FR" : "en-US"; const navigate = useNavigate();
+const geoText = {
+  fr: { billed: "Facturé", approx: "Conversion indicative, taux du jour", rates: "Taux de change : ExchangeRate-API" },
+  en: { billed: "Billed", approx: "Indicative conversion, today's rate", rates: "Exchange rates: ExchangeRate-API" },
+  es: { billed: "Se factura", approx: "Conversión indicativa, tipo del día", rates: "Tipos de cambio: ExchangeRate-API" },
+  pt: { billed: "Cobrado", approx: "Conversão indicativa, câmbio do dia", rates: "Câmbio: ExchangeRate-API" },
+} satisfies Record<SiteLang, unknown>;
+const locales: Record<SiteLang, string> = { fr: "fr-FR", en: "en-US", es: "es-ES", pt: "pt-BR" };
+
+export function PricingContent({ lang }: { lang: SiteLang }) {
+  const t = text[lang]; const g = geoText[lang]; const loc = locales[lang]; const navigate = useNavigate();
+  const [geo, setGeo] = useState<GeoPrice>(CFA_PRICE);
   const [packs, setPacks] = useState<PublicPack[]>(fallbackPacks);
   useEffect(() => {
     void supabase.from("credit_packs").select("slug,name,price_xof,credits,featured").eq("active", true).order("display_order").then(({ data }) => {
@@ -22,7 +34,13 @@ export function PricingContent({ lang }: { lang: Lang }) {
       const sold = (data ?? []).filter((p) => packCopy[p.slug]);
       if (sold.length) setPacks(sold);
     });
+    // "?country=XX" previews another country's display (indicative only, billing stays FCFA).
+    const preview = new URLSearchParams(window.location.search).get("country");
+    void fetch(`/api/public/geo-price${preview ? `?country=${encodeURIComponent(preview)}` : ""}`).then((r) => (r.ok ? r.json() : null)).then((data: GeoPrice | null) => {
+      if (data && typeof data.perXof === "number" && data.perXof > 0) setGeo(data);
+    }).catch(() => { /* keep FCFA */ });
   }, []);
+  const local = !isCfa(geo.currency);
   async function choose(slug: string) {
     localStorage.setItem(PENDING_PACK_KEY, slug);
     const { data } = await supabase.auth.getSession();
@@ -41,8 +59,15 @@ export function PricingContent({ lang }: { lang: Lang }) {
           <span aria-hidden={!p.featured} className={`mb-3 self-start rounded-full bg-supabase px-2.5 py-1 text-[10px] font-bold tracking-wide text-white ${p.featured ? "" : "invisible"}`}>{t.popular}</span>
           <h3 className="font-display text-xl font-semibold">{p.name}</h3>
           {copy && <p className="mt-1 text-sm text-muted-foreground">{copy.tagline}</p>}
-          <p className="mt-5 font-display text-3xl font-semibold">{p.price_xof.toLocaleString(loc)} <span className="text-sm font-normal opacity-70">FCFA</span></p>
-          <p className="text-xs text-muted-foreground">{t.once}</p>
+          {local
+            ? <>
+              <p className="mt-5 font-display text-3xl font-semibold">{geo.approx && <span className="mr-1 text-lg font-normal opacity-60">≈</span>}{formatLocalPrice(p.price_xof, geo, loc)}</p>
+              <p className="text-xs text-muted-foreground">{t.once} · {g.billed} {p.price_xof.toLocaleString(loc)} FCFA</p>
+            </>
+            : <>
+              <p className="mt-5 font-display text-3xl font-semibold">{p.price_xof.toLocaleString(loc)} <span className="text-sm font-normal opacity-70">FCFA</span></p>
+              <p className="text-xs text-muted-foreground">{t.once}</p>
+            </>}
           <p className="mt-2 text-sm font-semibold">{p.credits.toLocaleString(loc)} {t.credits}</p>
           {copy && <ul className="mt-5 flex-1 space-y-3 text-sm">{copy.perks.map((perk) => <li key={perk.text} className="flex items-start gap-3">
             <FontAwesomeIcon icon={perk.icon} fixedWidth aria-hidden className={`mt-0.5 size-4 shrink-0 ${p.featured ? "text-supabase" : "text-chat-glow"}`} />
@@ -52,7 +77,7 @@ export function PricingContent({ lang }: { lang: Lang }) {
         </article>;
       })}</div>
 
-      <div className="mt-6 space-y-2 text-xs text-muted-foreground"><p>{t.allFeatures}</p><p>{t.validity}</p><p>{t.refund}</p></div>
+      <div className="mt-6 space-y-2 text-xs text-muted-foreground"><p>{t.allFeatures}</p><p>{t.validity}</p><p>{t.refund}</p>{local && geo.approx && <p>{g.approx}. <a href="https://www.exchangerate-api.com" target="_blank" rel="noopener noreferrer" className="underline-offset-2 hover:underline">{g.rates}</a></p>}</div>
     </div>
   </section>;
 }

@@ -16,7 +16,7 @@ import ecoSonorya from "@/assets/eco-sonorya.jpg";
 import ecoHumanizer from "@/assets/eco-humanizer.jpg";
 import ecoFlotte from "@/assets/eco-flotte.jpg";
 import ecoMobil from "@/assets/eco-mobil.jpg";
-import { content, labs, type Lang } from "@/lib/i18n";
+import { content, labs, type SiteLang } from "@/lib/i18n";
 import { Nav, Footer, Heading, Tag, R, ActionText, useReveal, useSiteLang } from "@/components/site/SiteChrome";
 import { InstallAppPrompt } from "@/components/site/InstallAppPrompt";
 
@@ -63,7 +63,7 @@ function Index() {
   );
 }
 
-type T = (typeof content)[Lang];
+type T = (typeof content)[SiteLang];
 
 
 function Hero({ t }: { t: T }) {

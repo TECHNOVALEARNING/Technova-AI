@@ -1,20 +1,23 @@
-export const footerGroups = [
-  { fr: "Produit", en: "Product", links: [
-    { fr: "Modèles IA", en: "AI models", href: "/modeles" }, { fr: "Crédits Technova", en: "Technova credits", href: "/dashboard/credits" }, { fr: "API", en: "API", href: "/developpeurs" }, { fr: "Tarifs", en: "Pricing", href: "/tarifs" }, { fr: "Intégrations", en: "Integrations", href: "/dashboard/settings" },
+type Item = { fr: string; en: string; es: string; pt: string; href?: string };
+const same = (label: string, href?: string): Item => ({ fr: label, en: label, es: label, pt: label, ...(href ? { href } : {}) });
+
+export const footerGroups: (Omit<Item, "href"> & { links: Item[] })[] = [
+  { fr: "Produit", en: "Product", es: "Producto", pt: "Produto", links: [
+    { fr: "Modèles IA", en: "AI models", es: "Modelos de IA", pt: "Modelos de IA", href: "/modeles" }, { fr: "Crédits Technova", en: "Technova credits", es: "Créditos Technova", pt: "Créditos Technova", href: "/dashboard/credits" }, same("API", "/developpeurs"), { fr: "Tarifs", en: "Pricing", es: "Precios", pt: "Preços", href: "/tarifs" }, { fr: "Intégrations", en: "Integrations", es: "Integraciones", pt: "Integrações", href: "/dashboard/settings" },
   ] },
-  { fr: "Développeurs", en: "Developers", links: [
-    { fr: "Documentation API", en: "API documentation", href: "/documentation" }, { fr: "Référence API", en: "API reference", href: "/developpeurs" }, { fr: "Exemples", en: "Examples", href: "/developpeurs" },
+  { fr: "Développeurs", en: "Developers", es: "Desarrolladores", pt: "Desenvolvedores", links: [
+    { fr: "Documentation API", en: "API documentation", es: "Documentación de la API", pt: "Documentação da API", href: "/documentation" }, { fr: "Référence API", en: "API reference", es: "Referencia de la API", pt: "Referência da API", href: "/developpeurs" }, { fr: "Exemples", en: "Examples", es: "Ejemplos", pt: "Exemplos", href: "/developpeurs" },
   ] },
-  { fr: "Entreprise", en: "Company", links: [
-    { fr: "À propos", en: "About", href: "/#about" }, { fr: "Blog", en: "Blog", href: "/blog" }, { fr: "support@technovalearning.com", en: "support@technovalearning.com", href: "mailto:support@technovalearning.com" },
+  { fr: "Entreprise", en: "Company", es: "Empresa", pt: "Empresa", links: [
+    { fr: "À propos", en: "About", es: "Acerca de", pt: "Sobre", href: "/#about" }, same("Blog", "/blog"), same("support@technovalearning.com", "mailto:support@technovalearning.com"),
   ] },
-  { fr: "Ressources", en: "Resources", links: [
-    { fr: "Centre d’aide", en: "Help Center", href: "mailto:support@technovalearning.com" }, { fr: "Documentation", en: "Documentation", href: "/documentation" }, { fr: "FAQ", en: "FAQ", href: "/#faq" },
+  { fr: "Ressources", en: "Resources", es: "Recursos", pt: "Recursos", links: [
+    { fr: "Centre d’aide", en: "Help Center", es: "Centro de ayuda", pt: "Central de ajuda", href: "mailto:support@technovalearning.com" }, { fr: "Documentation", en: "Documentation", es: "Documentación", pt: "Documentação", href: "/documentation" }, same("FAQ", "/#faq"),
   ] },
-  { fr: "Légal", en: "Legal", links: [
-    { fr: "Conditions d’utilisation", en: "Terms of use" }, { fr: "Politique de confidentialité", en: "Privacy policy" }, { fr: "Politique de cookies", en: "Cookie policy" }, { fr: "Mentions légales", en: "Legal notice" }, { fr: "RGPD", en: "GDPR" },
+  { fr: "Légal", en: "Legal", es: "Legal", pt: "Legal", links: [
+    { fr: "Conditions d’utilisation", en: "Terms of use", es: "Condiciones de uso", pt: "Termos de uso" }, { fr: "Politique de confidentialité", en: "Privacy policy", es: "Política de privacidad", pt: "Política de privacidade" }, { fr: "Politique de cookies", en: "Cookie policy", es: "Política de cookies", pt: "Política de cookies" }, { fr: "Mentions légales", en: "Legal notice", es: "Aviso legal", pt: "Aviso legal" }, { fr: "RGPD", en: "GDPR", es: "RGPD", pt: "RGPD", href: "https://www.edpb.europa.eu/topics/key-gdpr-concepts/data-subject-rights_en" },
   ] },
-  { fr: "TechNova écosystème", en: "TechNova ecosystem", links: [
-    { fr: "Technova Learning", en: "Technova Learning", href: "https://www.technovalearning.com/" }, { fr: "Technova Apps", en: "Technova Apps" }, { fr: "Technova Connect", en: "Technova Connect" },
+  { fr: "TechNova écosystème", en: "TechNova ecosystem", es: "Ecosistema TechNova", pt: "Ecossistema TechNova", links: [
+    same("Technova Learning", "https://www.technovalearning.com/"), same("Technova Apps"), same("Technova Connect"),
   ] },
-] satisfies { fr: string; en: string; links: { fr: string; en: string; href?: string }[] }[];
+];

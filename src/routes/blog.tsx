@@ -22,6 +22,8 @@ export const Route = createFileRoute("/blog")({
 const txt = {
   fr: { tag: "Blog", title: "Comprendre l'IA, puis l'utiliser.", sub: "Comparatifs de modèles, guides pratiques, cadre réglementaire et retours d'expérience — en français.", featured: "À la une", read: "Lire l'article", all: "Tous", list: "Tous les articles", source: "Articles publiés sur blog-ia.com, le média IA de l'écosystème Tenulysse." },
   en: { tag: "Blog", title: "Understand AI, then use it.", sub: "Model comparisons, practical guides, regulation and field notes.", featured: "Featured", read: "Read article", all: "All", list: "All articles", source: "Articles published on blog-ia.com, the AI media of the Tenulysse ecosystem (in French)." },
+  es: { tag: "Blog", title: "Entender la IA, y luego usarla.", sub: "Comparativas de modelos, guías prácticas, marco regulatorio y experiencias.", featured: "Destacado", read: "Leer el artículo", all: "Todos", list: "Todos los artículos", source: "Artículos publicados en blog-ia.com, el medio de IA del ecosistema Tenulysse (en francés)." },
+  pt: { tag: "Blog", title: "Entender a IA e depois usá-la.", sub: "Comparativos de modelos, guias práticos, regulamentação e experiências.", featured: "Destaque", read: "Ler o artigo", all: "Todos", list: "Todos os artigos", source: "Artigos publicados no blog-ia.com, a mídia de IA do ecossistema Tenulysse (em francês)." },
 };
 
 

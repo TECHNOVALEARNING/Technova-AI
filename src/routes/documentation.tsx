@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { Nav, Footer, PageHero, useReveal, useSiteLang } from "@/components/site/SiteChrome";
 import { CodeBlock } from "@/components/site/CodeBlock";
+import type { SiteLang } from "@/lib/i18n";
 
 export const Route = createFileRoute("/documentation")({
   head: () => ({
@@ -18,7 +19,7 @@ export const Route = createFileRoute("/documentation")({
 
 type Sec = { id: string; title: string; body: string[]; code?: string; list?: string[] };
 
-const docs: Record<"fr" | "en", { tag: string; title: string; sub: string; toc: string; sections: Sec[] }> = {
+const docs: Record<SiteLang, { tag: string; title: string; sub: string; toc: string; sections: Sec[] }> = {
   fr: {
     tag: "Documentation", title: "Documentation TechNova AI", sub: "Tout ce qu'il faut pour brancher l'IA à votre produit : de la première requête à la mise en production.", toc: "Sur cette page",
     sections: [
@@ -43,6 +44,32 @@ const docs: Record<"fr" | "en", { tag: string; title: string; sub: string; toc: 
       { id: "erreurs", title: "Error codes", body: ["All errors are structured and machine-readable. Handle them explicitly."], list: ["INSUFFICIENT_CREDITS — balance too low, offer a top-up.", "MODEL_NOT_AVAILABLE — unknown or disabled model.", "RATE_LIMITED — too many requests, retry after a pause.", "UPSTREAM_ERROR — provider unavailable, no credits lost.", "TIMEOUT — processing expired, credits refunded."] },
       { id: "limites", title: "Rate limits", body: ["By default, 30 requests per minute per account with a short burst allowance. Need higher limits? Contact us."] },
       { id: "paiements", title: "Mobile Money payments", body: ["Top-ups use Mobile Money (MTN MoMo, Moov Money, Wave, Orange Money). The wallet is never credited from the browser: only the provider's signed confirmation, received on our webhook, triggers the credit."], code: "POST /api/public/payment-webhook\nx-signature: <HMAC-SHA256 of body>" },
+    ],
+  },
+  es: {
+    tag: "Documentación", title: "Documentación de TechNova AI", sub: "Todo lo necesario para conectar la IA a tu producto, de la primera solicitud a la producción.", toc: "En esta página",
+    sections: [
+      { id: "demarrage", title: "Inicio rápido", body: ["Crea una cuenta, recarga tu monedero de TechNova Credits, genera una clave API desde el panel y envía tu primera solicitud. No se necesita tarjeta bancaria: las recargas se hacen en francos CFA."], code: `curl https://api.technova.ai/api/ai/chat \\\n  -H "Authorization: Bearer $TECHNOVA_API_KEY" \\\n  -H "Content-Type: application/json" \\\n  -d '{\n    "model": "google/gemini-2.5-flash",\n    "messages": [{ "role": "user", "content": "Hola Technova" }],\n    "idempotency_key": "0f2a1c6e-...-9b17"\n  }'` },
+      { id: "auth", title: "Autenticación", body: ["Cada llamada usa un token portador. Una clave pertenece a una sola cuenta y consume el monedero de esa cuenta. No la expongas nunca en un navegador o una app móvil: llama a la API desde tu servidor.", "Si una clave se filtra, revócala desde el panel: la revocación es inmediata."], code: "Authorization: Bearer tnv_live_xxxxxxxxxxxxxxxx" },
+      { id: "chat", title: "Chat completions", body: ["Un único punto de entrada para todos los modelos de texto. El campo model acepta el identificador que aparece en la página Modelos. El modo streaming devuelve los tokens a medida que llegan (Server-Sent Events).", "La respuesta contiene el texto generado, los tokens consumidos y los créditos exactos cobrados. Repetir la misma idempotency_key devuelve la respuesta original sin volver a cobrar."], code: `POST /api/ai/chat\n{\n  "model": "anthropic/claude-sonnet-4.5",\n  "messages": [\n    { "role": "system", "content": "Eres un asistente comercial." },\n    { "role": "user", "content": "Redacta un recordatorio al cliente." }\n  ],\n  "temperature": 0.7,\n  "max_tokens": 800,\n  "stream": false,\n  "idempotency_key": "<uuid>"\n}` },
+      { id: "modeles", title: "Modelos disponibles", body: ["El catálogo se administra en el servidor: cada modelo indica su proveedor, su ventana de contexto y su precio orientativo en créditos. Un modelo desactivado devuelve MODEL_NOT_AVAILABLE en lugar de fallar en silencio."] },
+      { id: "credits", title: "Créditos y facturación", body: ["La unidad de facturación es el crédito TechNova. Antes de cada llamada se reserva una estimación y después se ajusta al consumo real. Una solicitud fallida no cuesta nada."], list: ["1 crédito ≈ 1 FCFA de valor de uso.", "Los créditos no caducan y se comparten entre chat, imagen, vídeo y audio.", "El historial completo se consulta en el panel y nunca se puede modificar."] },
+      { id: "erreurs", title: "Códigos de error", body: ["Todos los errores están estructurados y son legibles por máquina. Trátalos de forma explícita."], list: ["INSUFFICIENT_CREDITS — saldo insuficiente, propón una recarga.", "MODEL_NOT_AVAILABLE — modelo desconocido o desactivado.", "RATE_LIMITED — demasiadas solicitudes, reintenta tras una pausa.", "UPSTREAM_ERROR — proveedor no disponible, no se pierden créditos.", "TIMEOUT — procesamiento caducado, créditos devueltos."] },
+      { id: "limites", title: "Límites de velocidad", body: ["Por defecto, 30 solicitudes por minuto y por cuenta, con una breve tolerancia de ráfaga. ¿Necesitas límites más altos? Escríbenos."] },
+      { id: "paiements", title: "Pagos con Mobile Money", body: ["Las recargas se hacen con Mobile Money (MTN MoMo, Moov Money, Wave, Orange Money). El monedero nunca se acredita desde el navegador: solo la confirmación firmada del proveedor, recibida en nuestro webhook, activa el crédito."], code: "POST /api/public/payment-webhook\nx-signature: <HMAC-SHA256 del cuerpo>" },
+    ],
+  },
+  pt: {
+    tag: "Documentação", title: "Documentação da TechNova AI", sub: "Tudo o que é preciso para ligar a IA ao seu produto, da primeira solicitação à produção.", toc: "Nesta página",
+    sections: [
+      { id: "demarrage", title: "Início rápido", body: ["Crie uma conta, recarregue sua carteira de TechNova Credits, gere uma chave de API no painel e envie sua primeira solicitação. Não é preciso cartão bancário: as recargas são feitas em francos CFA."], code: `curl https://api.technova.ai/api/ai/chat \\\n  -H "Authorization: Bearer $TECHNOVA_API_KEY" \\\n  -H "Content-Type: application/json" \\\n  -d '{\n    "model": "google/gemini-2.5-flash",\n    "messages": [{ "role": "user", "content": "Olá Technova" }],\n    "idempotency_key": "0f2a1c6e-...-9b17"\n  }'` },
+      { id: "auth", title: "Autenticação", body: ["Cada chamada usa um token de portador. Uma chave pertence a uma única conta e consome a carteira dessa conta. Nunca a exponha num navegador ou app móvel: chame a API a partir do seu servidor.", "Em caso de vazamento, revogue a chave no painel: a revogação é imediata."], code: "Authorization: Bearer tnv_live_xxxxxxxxxxxxxxxx" },
+      { id: "chat", title: "Chat completions", body: ["Um único ponto de entrada para todos os modelos de texto. O campo model aceita o identificador exibido na página Modelos. O modo streaming devolve os tokens à medida que chegam (Server-Sent Events).", "A resposta contém o texto gerado, os tokens consumidos e os créditos exatos cobrados. Repetir a mesma idempotency_key devolve a resposta original sem cobrar de novo."], code: `POST /api/ai/chat\n{\n  "model": "anthropic/claude-sonnet-4.5",\n  "messages": [\n    { "role": "system", "content": "Você é um assistente comercial." },\n    { "role": "user", "content": "Escreva um lembrete ao cliente." }\n  ],\n  "temperature": 0.7,\n  "max_tokens": 800,\n  "stream": false,\n  "idempotency_key": "<uuid>"\n}` },
+      { id: "modeles", title: "Modelos disponíveis", body: ["O catálogo é administrado no servidor: cada modelo indica seu fornecedor, sua janela de contexto e seu preço indicativo em créditos. Um modelo desativado devolve MODEL_NOT_AVAILABLE em vez de falhar em silêncio."] },
+      { id: "credits", title: "Créditos e faturamento", body: ["A unidade de faturamento é o crédito TechNova. Antes de cada chamada, uma estimativa é reservada e depois ajustada ao consumo real. Uma solicitação que falha não custa nada."], list: ["1 crédito ≈ 1 FCFA de valor de uso.", "Os créditos não expiram e são compartilhados entre chat, imagem, vídeo e áudio.", "O histórico completo pode ser consultado no painel e nunca pode ser alterado."] },
+      { id: "erreurs", title: "Códigos de erro", body: ["Todos os erros são estruturados e legíveis por máquina. Trate-os explicitamente."], list: ["INSUFFICIENT_CREDITS — saldo insuficiente, proponha uma recarga.", "MODEL_NOT_AVAILABLE — modelo desconhecido ou desativado.", "RATE_LIMITED — solicitações demais, tente de novo após uma pausa.", "UPSTREAM_ERROR — fornecedor indisponível, nenhum crédito perdido.", "TIMEOUT — processamento expirado, créditos devolvidos."] },
+      { id: "limites", title: "Limites de taxa", body: ["Por padrão, 30 solicitações por minuto por conta, com uma curta tolerância de pico. Precisa de limites maiores? Fale conosco."] },
+      { id: "paiements", title: "Pagamentos com Mobile Money", body: ["As recargas são feitas com Mobile Money (MTN MoMo, Moov Money, Wave, Orange Money). A carteira nunca é creditada pelo navegador: só a confirmação assinada do fornecedor, recebida no nosso webhook, aciona o crédito."], code: "POST /api/public/payment-webhook\nx-signature: <HMAC-SHA256 do corpo>" },
     ],
   },
 };

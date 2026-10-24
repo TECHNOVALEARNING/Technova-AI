@@ -1,5 +1,5 @@
 # Rules
-- Landing page texts live in src/lib/i18n.ts (FR/EN) — keeps both languages in sync in one place.
+- Landing page texts live in src/lib/i18n.ts (FR/EN/ES/PT as `SiteLang`; dashboard and auth stay FR/EN as `Lang`, falling back to English via appLang) — keeps the public languages in sync in one place.
 - Scroll reveal uses the `.reveal` CSS class + IntersectionObserver in index.tsx — no animation library needed.
 - The hero/about videos, posters and dashboard wallpaper are static files in public/media referenced through src/lib/media.ts, with a poster fallback — keeps the opening screen usable without autoplay.
 - The About statement uses an in-flow, scroll-driven per-word color transition in both languages, with a reduced-motion fallback — keeps reading progress visible.
@@ -30,3 +30,5 @@
 - Credit/system SQL functions are executable by service_role only (migration 0017); the public API /api/ai/chat authenticates hashed tn_live_ keys — browsers can never mint credits.
 - New accounts answer a 3-question onboarding (/bienvenue: account type, field, referral source) stored on their own profile; the dashboard route redirects until profiles.onboarded_at is set, and admins see only aggregated answers — keeps sign-up short and acquisition data private.
 - The app is an installable PWA: public/manifest.webmanifest, public/sw.js (network-first pages with offline.html fallback, cache-first static assets, never API/auth/payments) registered in production from src/lib/pwa.ts, plus a dismissible install card on the landing page (InstallAppPrompt, shown after the hero, snoozed 14 days) — bump VERSION in sw.js when precached files change.
+- Pack prices are billed in FCFA; /api/public/geo-price maps the visitor country (x-vercel-ip-country) to a currency, exact for EUR/CFA pegs and "≈" daily ExchangeRate-API rates otherwise, falling back to FCFA — shows local prices without changing what is charged.
+- Footer trust badges link to the official EU data-protection and EDPB rights pages; App Store/Google Play badges are non-interactive "coming soon" marks until the native apps exist (src/components/site/Badges.tsx).

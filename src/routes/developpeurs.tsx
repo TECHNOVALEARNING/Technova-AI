@@ -47,6 +47,32 @@ const txt = {
     stTitle: "Platform status.", status: [["API", "Operational"], ["Dashboard", "Operational"], ["Payments", "Operational"]],
     ctaT: "Build the future with AI.", ctaS: "One account. Hundreds of models. One powerful API.", cta: "Start for free",
   },
+  es: {
+    tag: "Desarrolladores", title: "Una API. Posibilidades infinitas.", sub: "Arquitectura de doble motor: OpenRouter para el texto y los LLM, KIE.ai para las imágenes y vídeos de estudio, detrás de una sola clave TechNova.", docs: "Leer la documentación", models: "Ver los modelos",
+    stats: ["99,99 % de disponibilidad", "Baja latencia", "API unificada", "Claves seguras"],
+    exTag: "Ejemplos", exTitle: "Tu primera solicitud.",
+    feTag: "Experiencia del desarrollador", feTitle: "Pensada para desarrolladores.",
+    features: [["Una sola API", "Una API para cientos de modelos."], ["Enrutamiento inteligente", "El mejor modelo para cada tarea."], ["Analítica de uso", "Tokens, costes y rendimiento en tiempo real."], ["Infraestructura segura", "Claves de alcance limitado y controles de acceso precisos."]],
+    reTag: "Casos de uso", reTitle: "Recetas listas para copiar.",
+    recipes: [["Asistente de clientes en WhatsApp", "Conecta tu webhook de WhatsApp a /api/ai/chat y guarda el historial en el servidor."], ["Resumen de documentos", "Divide el texto en bloques de 4.000 tokens, resume cada bloque y luego fusiona los resúmenes."], ["Generación de código", "Usa un modelo especializado con temperature 0.2 para obtener salidas deterministas."], ["Traducción local", "Francés, inglés, fon, yoruba, wolof: indica el idioma de destino en el mensaje de sistema."]],
+    bpTitle: "Revisa esto antes de pasar a producción.",
+    bp: ["Llama a la API desde tu servidor, nunca desde el navegador.", "Envía una idempotency_key por solicitud para no pagar nunca dos veces.", "Gestiona INSUFFICIENT_CREDITS proponiendo una recarga con Mobile Money.", "Prevé un modelo más ligero de respaldo en caso de indisponibilidad.", "Supervisa tu consumo desde el panel."],
+    stTitle: "Disponibilidad de la plataforma.", status: [["API", "Operativo"], ["Panel", "Operativo"], ["Pagos", "Operativo"]],
+    ctaT: "Construye el futuro con IA.", ctaS: "Una cuenta. Cientos de modelos. Una API potente.", cta: "Empezar gratis",
+  },
+  pt: {
+    tag: "Desenvolvedores", title: "Uma API. Possibilidades infinitas.", sub: "Arquitetura de motor duplo: OpenRouter para texto e LLMs, KIE.ai para imagens e vídeos de estúdio, por trás de uma única chave TechNova.", docs: "Ler a documentação", models: "Ver os modelos",
+    stats: ["99,99% de disponibilidade", "Baixa latência", "API unificada", "Chaves seguras"],
+    exTag: "Exemplos", exTitle: "Sua primeira solicitação.",
+    feTag: "Experiência do desenvolvedor", feTitle: "Pensada para desenvolvedores.",
+    features: [["Uma única API", "Uma API para centenas de modelos."], ["Roteamento inteligente", "O melhor modelo para cada tarefa."], ["Análise de uso", "Tokens, custos e desempenho em tempo real."], ["Infraestrutura segura", "Chaves com escopo limitado e controles de acesso detalhados."]],
+    reTag: "Casos de uso", reTitle: "Receitas prontas para copiar.",
+    recipes: [["Assistente de clientes no WhatsApp", "Ligue o seu webhook do WhatsApp a /api/ai/chat e mantenha o histórico no servidor."], ["Resumo de documentos", "Divida o texto em blocos de 4.000 tokens, resuma cada bloco e depois junte os resumos."], ["Geração de código", "Use um modelo especializado com temperature 0.2 para saídas determinísticas."], ["Tradução local", "Francês, inglês, fon, iorubá, wolof: indique o idioma de destino na mensagem de sistema."]],
+    bpTitle: "Verifique antes de ir para produção.",
+    bp: ["Chame a API a partir do seu servidor, nunca do navegador.", "Envie uma idempotency_key por solicitação para nunca pagar duas vezes.", "Trate INSUFFICIENT_CREDITS propondo uma recarga com Mobile Money.", "Preveja um modelo mais leve como alternativa em caso de indisponibilidade.", "Acompanhe o seu consumo no painel."],
+    stTitle: "Disponibilidade da plataforma.", status: [["API", "Operacional"], ["Painel", "Operacional"], ["Pagamentos", "Operacional"]],
+    ctaT: "Construa o futuro com IA.", ctaS: "Uma conta. Centenas de modelos. Uma API poderosa.", cta: "Começar grátis",
+  },
 };
 
 const featureIcons = [Boxes, RouteIcon, BarChart3, ShieldCheck];

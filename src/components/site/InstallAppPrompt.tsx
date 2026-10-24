@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Download, Share, SquarePlus, X, Zap, Maximize2, BellRing } from "lucide-react";
 import { useInstallApp } from "@/lib/pwa";
-import type { Lang } from "@/lib/i18n";
+import type { SiteLang as Lang } from "@/lib/i18n";
 
 // Landing-page invitation to install the PWA: appears once the visitor has scrolled past the hero,
 // never blocks the page, and stays hidden for two weeks after "Plus tard".
@@ -24,6 +24,22 @@ const copy = {
     install: "Install the app", later: "Not now", close: "Close",
     ios: ["Tap", "Share", "in Safari", "then “Add to Home Screen”"],
     free: "Free · mobile and desktop",
+  },
+  es: {
+    title: "Instala TechNova",
+    sub: "Todas tus IA a un toque, directamente desde tu pantalla de inicio.",
+    perks: ["Apertura instantánea", "Pantalla completa, sin pestañas", "Acceso rápido al chat y a los créditos"],
+    install: "Instalar la aplicación", later: "Más tarde", close: "Cerrar",
+    ios: ["Toca", "Compartir", "en Safari", "y luego «Añadir a pantalla de inicio»"],
+    free: "Gratis · móvil y ordenador",
+  },
+  pt: {
+    title: "Instale a TechNova",
+    sub: "Todas as suas IAs a um toque, direto da tela inicial.",
+    perks: ["Abertura instantânea", "Tela cheia, sem abas", "Acesso rápido ao chat e aos créditos"],
+    install: "Instalar o aplicativo", later: "Mais tarde", close: "Fechar",
+    ios: ["Toque em", "Compartilhar", "no Safari", "e depois em “Adicionar à Tela de Início”"],
+    free: "Grátis · celular e computador",
   },
 } as const;
 
