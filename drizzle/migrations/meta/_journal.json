@@ -225,6 +225,13 @@
       "when": 1793865600000,
       "tag": "0031_files_rag",
       "breakpoints": true
+    },
+    {
+      "idx": 32,
+      "version": "7",
+      "when": 1793952000000,
+      "tag": "0032_registry_official_items",
+      "breakpoints": true
     }
   ]
 }

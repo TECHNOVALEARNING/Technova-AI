@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Section — Grille bento de fonctionnalités</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  /* Section autonome : copiez le <section> et le bloc .bento-* dans votre page. */
+  :root { --bg: #f7f7f8; --card: #fff; --ink: #0b0b0f; --muted: #6e6e78; --line: #e8e8ec; --accent: #0ea5e9; }
+  * { box-sizing: border-box; margin: 0; }
+  body { background: var(--bg); color: var(--ink); font: 400 16px/1.6 "Inter", system-ui, sans-serif; -webkit-font-smoothing: antialiased; }
+  .bento-section { padding: 96px 20px; }
+  .bento-head { max-width: 620px; margin: 0 auto; text-align: center; }
+  .bento-head small { font-size: 13px; font-weight: 500; color: var(--accent); }
+  .bento-head h2 { margin-top: 10px; font-size: clamp(32px, 4.6vw, 50px); line-height: 1.05; letter-spacing: -.04em; font-weight: 600; }
+  .bento-head p { margin-top: 14px; color: var(--muted); font-size: 17px; }
+  .bento { width: min(1100px, 100%); margin: 56px auto 0; display: grid; grid-template-columns: repeat(3, 1fr); grid-auto-rows: 240px; gap: 14px; }
+  .tile { position: relative; overflow: hidden; border-radius: 22px; background: var(--card); border: 1px solid var(--line); padding: 26px; display: flex; flex-direction: column; transition: border-color .3s, box-shadow .3s; }
+  .tile:hover { border-color: #d6d6dc; box-shadow: 0 24px 48px -32px rgba(11,11,15,.35); }
+  .tile h3 { font-size: 18px; letter-spacing: -.02em; font-weight: 600; }
+  .tile p { margin-top: 6px; color: var(--muted); font-size: 15px; max-width: 34ch; }
+  .span-2 { grid-column: span 2; } .span-3 { grid-column: 1 / -1; } .tall { grid-row: span 2; }
+  .dark { background: var(--ink); color: #fff; border-color: var(--ink); } .dark p { color: #a1a1aa; }
+
+  /* Visuels en CSS pur */
+  .v-search { margin-top: auto; border: 1px solid var(--line); border-radius: 14px; padding: 12px 14px; display: flex; align-items: center; gap: 10px; color: var(--muted); font-size: 14px; background: #fcfcfd; }
+  .v-search kbd { margin-left: auto; font: 500 11px "Inter"; padding: 3px 7px; border-radius: 6px; border: 1px solid var(--line); background: #fff; }
+  .v-orbit { position: absolute; right: -60px; bottom: -60px; width: 260px; height: 260px; border-radius: 50%; border: 1px dashed #3f3f46; }
+  .v-orbit::before, .v-orbit::after { content: ""; position: absolute; border-radius: 50%; }
+  .v-orbit::before { inset: 50px; border: 1px dashed #52525b; }
+  .v-orbit::after { width: 14px; height: 14px; top: 34px; left: 40px; background: var(--accent); box-shadow: 0 0 24px var(--accent); }
+  .v-bars { margin-top: auto; display: flex; align-items: flex-end; gap: 6px; height: 92px; }
+  .v-bars i { flex: 1; border-radius: 6px; background: #e0f2fe; }
+  .v-bars i:nth-child(4n) { background: var(--accent); }
+  .v-stack { margin-top: auto; display: grid; gap: 8px; }
+  .v-stack span { display: flex; justify-content: space-between; padding: 10px 12px; border-radius: 12px; background: #f4f4f6; font-size: 13px; }
+  .v-stack b { font-weight: 500; color: #16a34a; }
+  .v-avatars { margin-top: auto; display: flex; }
+  .v-avatars i { width: 40px; height: 40px; border-radius: 50%; border: 3px solid var(--card); margin-left: -10px; }
+  .v-avatars i:first-child { margin-left: 0; background: #fecdd3; } .v-avatars i:nth-child(2) { background: #bae6fd; } .v-avatars i:nth-child(3) { background: #bbf7d0; } .v-avatars i:nth-child(4) { background: #fde68a; }
+  .v-avatars em { margin-left: 8px; align-self: center; font-style: normal; font-size: 13px; color: var(--muted); }
+
+  @media (max-width: 860px) { .bento { grid-template-columns: 1fr; grid-auto-rows: auto; } .span-2, .span-3, .tall { grid-column: auto; grid-row: auto; } .tile { min-height: 220px; } }
+</style>
+</head>
+<body>
+  <section class="bento-section">
+    <div class="bento-head">
+      <small>Fonctionnalités</small>
+      <h2>Un outil, toutes les étapes.</h2>
+      <p>Chaque bloc présente une capacité clé, avec un visuel qui la rend évidente en un coup d'œil.</p>
+    </div>
+    <div class="bento">
+      <article class="tile span-2"><h3>Recherche universelle</h3><p>Retrouvez un fichier, un client ou une conversation en moins d'une seconde.</p><div class="v-search">⌕ Rechercher « facture mars »<kbd>⌘ K</kbd></div></article>
+      <article class="tile dark tall"><h3>Automatisations</h3><p>Déclenchez des actions à chaque événement, sans écrire une ligne de code.</p><div class="v-orbit"></div></article>
+      <article class="tile"><h3>Analyses</h3><p>Des tendances lisibles, jour après jour.</p><div class="v-bars"><i style="height:40%"></i><i style="height:62%"></i><i style="height:48%"></i><i style="height:86%"></i><i style="height:55%"></i><i style="height:70%"></i><i style="height:58%"></i><i style="height:94%"></i></div></article>
+      <article class="tile"><h3>Paiements suivis</h3><p>Chaque encaissement rapproché automatiquement.</p><div class="v-stack"><span>Commande #2041 <b>Payée</b></span><span>Commande #2042 <b>Payée</b></span></div></article>
+      <article class="tile span-3"><h3>Collaboration en temps réel</h3><p>Toute l'équipe travaille sur le même document, chacun avec ses droits.</p><div class="v-avatars"><i></i><i></i><i></i><i></i><em>+12 membres</em></div></article>
+    </div>
+  </section>
+</body>
+</html>

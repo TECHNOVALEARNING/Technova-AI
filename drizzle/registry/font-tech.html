@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Duo typographique — Space Grotesk × IBM Plex Mono</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  /* À copier dans votre projet :
+     @import url("https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap");
+     :root { --font-sans: "Space Grotesk", system-ui, sans-serif; --font-mono: "IBM Plex Mono", ui-monospace, monospace; }
+     h1, h2, h3 { font-family: var(--font-sans); font-weight: 600; letter-spacing: -0.04em; }
+     code, .label, .data { font-family: var(--font-mono); }
+     Licence : SIL Open Font License 1.1 (usage commercial autorisé). */
+  :root { --sans: "Space Grotesk", system-ui, sans-serif; --mono: "IBM Plex Mono", ui-monospace, monospace; --bg: #0b0d0c; --ink: #e8efe9; --muted: #7d8a81; --line: #1f2622; --lime: #b6f36a; }
+  * { box-sizing: border-box; margin: 0; }
+  body { background: var(--bg); color: var(--ink); font: 400 16px/1.6 var(--sans); -webkit-font-smoothing: antialiased; padding: 56px 24px; }
+  .spec { width: min(1040px, 100%); margin: 0 auto; }
+  .mono { font-family: var(--mono); font-size: 12px; color: var(--muted); }
+  .top { display: flex; justify-content: space-between; padding-bottom: 16px; border-bottom: 1px dashed var(--line); }
+  .hero { font-size: clamp(56px, 11vw, 156px); font-weight: 700; letter-spacing: -.06em; line-height: .88; margin: 48px 0 20px; }
+  .hero span { color: var(--lime); }
+  .grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1px; background: var(--line); border: 1px solid var(--line); margin-top: 48px; }
+  .grid div { background: var(--bg); padding: 22px; }
+  .grid b { display: block; font-size: 34px; font-weight: 600; letter-spacing: -.04em; }
+  .term { margin-top: 48px; border: 1px solid var(--line); border-radius: 14px; overflow: hidden; }
+  .term header { display: flex; gap: 6px; padding: 12px 14px; border-bottom: 1px solid var(--line); }
+  .term header i { width: 10px; height: 10px; border-radius: 50%; background: #2a332e; }
+  .term pre { margin: 0; padding: 20px; font: 400 14px/1.8 var(--mono); color: #b9c6bd; overflow-x: auto; }
+  .term .k { color: var(--lime); } .term .s { color: #f5d67b; } .term .c { color: #56625a; }
+  .pair { display: grid; grid-template-columns: 1fr 1fr; gap: 48px; margin-top: 56px; }
+  .pair h2 { font-size: 40px; font-weight: 600; letter-spacing: -.045em; line-height: 1.05; }
+  .pair p { color: #a9b5ad; margin-top: 12px; }
+  .alpha { margin-top: 18px; font-size: 18px; color: var(--muted); word-break: break-all; }
+  @media (max-width: 760px) { .grid { grid-template-columns: 1fr 1fr; } .pair { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+  <article class="spec">
+    <div class="top mono"><span>// duo typographique · technique</span><span>space_grotesk × ibm_plex_mono</span></div>
+    <p class="hero">Build<br>things <span>fast.</span></p>
+    <p style="max-width:520px;color:#a9b5ad">Une grotesque géométrique au caractère affirmé, accompagnée d'une monospace rigoureuse pour les données, le code et les libellés.</p>
+    <div class="grid">
+      <div><span class="mono">latence</span><b>38 ms</b></div>
+      <div><span class="mono">uptime</span><b>99,99 %</b></div>
+      <div><span class="mono">requêtes/s</span><b>12 400</b></div>
+      <div><span class="mono">régions</span><b>14</b></div>
+    </div>
+    <div class="term"><header><i></i><i></i><i></i></header>
+<pre><span class="c"># Installer et déployer en deux commandes</span>
+<span class="k">$</span> npm install <span class="s">@acme/cli</span>
+<span class="k">$</span> acme deploy --region <span class="s">eu-west</span>
+✓ Build terminé en 4,2 s
+✓ En ligne sur https://acme.app</pre>
+    </div>
+    <div class="pair">
+      <div><h2>Space Grotesk</h2><p>Titres, chiffres clés et interfaces. Ses formes géométriques donnent une énergie moderne.</p><p class="alpha">Aa Bb Cc Gg Qq Rr 0123456789 ↗ → ✦</p></div>
+      <div><h2 style="font-family:var(--mono);font-weight:500;letter-spacing:-.02em;font-size:32px">IBM Plex Mono</h2><p>Code, métriques et étiquettes. Chaque caractère a la même largeur : parfait pour aligner des données.</p><p class="alpha" style="font-family:var(--mono)">Aa Bb Cc {} [] () =&gt; 0O 1lI</p></div>
+    </div>
+  </article>
+</body>
+</html>

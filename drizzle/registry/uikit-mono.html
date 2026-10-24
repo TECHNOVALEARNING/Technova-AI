@@ -1,0 +1,152 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Kit UI Monochrome</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  /* Kit Monochrome — tokens, puis composants. Tout repose sur les variables : changez-les pour décliner le kit. */
+  :root {
+    --bg: #ffffff; --subtle: #f5f5f5; --line: #e5e5e5; --line-strong: #d4d4d4; --text: #0a0a0a; --muted: #737373;
+    --primary: #0a0a0a; --on-primary: #ffffff; --danger: #dc2626; --success: #16a34a; --warning: #d97706;
+    --r-sm: 8px; --r-md: 10px; --r-lg: 14px; --ring: 0 0 0 3px rgba(10,10,10,.12);
+    --font: "Inter", system-ui, sans-serif;
+  }
+  * { box-sizing: border-box; margin: 0; }
+  body { background: var(--subtle); color: var(--text); font: 400 14px/1.55 var(--font); -webkit-font-smoothing: antialiased; padding: 48px 20px; }
+  .sheet { width: min(980px, 100%); margin: 0 auto; background: var(--bg); border: 1px solid var(--line); border-radius: 20px; padding: 40px; display: grid; gap: 40px; }
+  .sheet > header h1 { font-size: 26px; letter-spacing: -.03em; font-weight: 600; }
+  .sheet > header p { color: var(--muted); margin-top: 4px; }
+  h2 { font-size: 12px; text-transform: uppercase; letter-spacing: .12em; color: var(--muted); font-weight: 500; margin-bottom: 14px; }
+  .row { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+
+  /* Boutons */
+  .btn { --h: 38px; height: var(--h); padding: 0 16px; border-radius: var(--r-md); border: 1px solid transparent; font: 500 14px var(--font); display: inline-flex; align-items: center; gap: 8px; cursor: pointer; transition: background .15s, border-color .15s, box-shadow .15s, transform .1s; }
+  .btn:active { transform: translateY(1px); }
+  .btn:focus-visible { outline: 0; box-shadow: var(--ring); }
+  .btn-primary { background: var(--primary); color: var(--on-primary); }
+  .btn-primary:hover { background: #262626; }
+  .btn-secondary { background: var(--bg); border-color: var(--line-strong); color: var(--text); }
+  .btn-secondary:hover { background: var(--subtle); }
+  .btn-ghost { background: none; color: var(--text); } .btn-ghost:hover { background: var(--subtle); }
+  .btn-danger { background: var(--danger); color: #fff; } .btn-danger:hover { background: #b91c1c; }
+  .btn-sm { --h: 32px; padding: 0 12px; font-size: 13px; } .btn-lg { --h: 46px; padding: 0 22px; font-size: 15px; }
+  .btn[disabled] { opacity: .45; pointer-events: none; }
+  .spin { width: 14px; height: 14px; border: 2px solid rgba(255,255,255,.35); border-top-color: #fff; border-radius: 50%; animation: spin .8s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* Champs */
+  .field { display: grid; gap: 6px; }
+  .field label { font-weight: 500; font-size: 13px; }
+  .field small { color: var(--muted); font-size: 12px; }
+  .input, .select { height: 40px; width: 100%; padding: 0 12px; border-radius: var(--r-md); border: 1px solid var(--line-strong); background: var(--bg); font: 400 14px var(--font); color: var(--text); transition: border-color .15s, box-shadow .15s; }
+  .input:hover, .select:hover { border-color: #a3a3a3; }
+  .input:focus, .select:focus { outline: 0; border-color: var(--text); box-shadow: var(--ring); }
+  .input.err { border-color: var(--danger); } .err-msg { color: var(--danger); font-size: 12px; }
+  .select { appearance: none; background: var(--bg) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='%23737373'%3E%3Cpath d='M5.5 7.5 10 12l4.5-4.5'/%3E%3C/svg%3E") right 10px center/16px no-repeat; }
+
+  /* Interrupteur, case, radio */
+  .switch { position: relative; width: 40px; height: 22px; display: inline-block; }
+  .switch input { opacity: 0; width: 0; height: 0; }
+  .switch span { position: absolute; inset: 0; border-radius: 999px; background: var(--line-strong); transition: background .2s; cursor: pointer; }
+  .switch span::after { content: ""; position: absolute; top: 3px; left: 3px; width: 16px; height: 16px; border-radius: 50%; background: #fff; box-shadow: 0 1px 2px rgba(0,0,0,.2); transition: transform .2s; }
+  .switch input:checked + span { background: var(--primary); }
+  .switch input:checked + span::after { transform: translateX(18px); }
+  .switch input:focus-visible + span { box-shadow: var(--ring); }
+  .check { display: inline-flex; align-items: center; gap: 8px; cursor: pointer; }
+  .check input { appearance: none; width: 18px; height: 18px; border: 1px solid var(--line-strong); border-radius: 5px; display: grid; place-items: center; cursor: pointer; transition: background .15s; }
+  .check input:checked { background: var(--primary); border-color: var(--primary); }
+  .check input:checked::after { content: ""; width: 9px; height: 5px; border: 2px solid #fff; border-top: 0; border-right: 0; transform: rotate(-45deg) translate(1px, -1px); }
+  .check input[type=radio] { border-radius: 50%; }
+  .check input[type=radio]:checked::after { width: 6px; height: 6px; border: 0; border-radius: 50%; background: #fff; transform: none; }
+
+  /* Badges, onglets, avatars */
+  .badge { display: inline-flex; align-items: center; gap: 6px; height: 24px; padding: 0 9px; border-radius: 999px; font-size: 12px; font-weight: 500; border: 1px solid var(--line); }
+  .badge i { width: 6px; height: 6px; border-radius: 50%; }
+  .b-success i { background: var(--success); } .b-warn i { background: var(--warning); } .b-danger i { background: var(--danger); }
+  .b-solid { background: var(--primary); color: var(--on-primary); border-color: var(--primary); }
+  .tabs { display: inline-flex; padding: 4px; background: var(--subtle); border-radius: var(--r-md); gap: 2px; }
+  .tabs button { border: 0; background: none; font: 500 13px var(--font); padding: 7px 14px; border-radius: var(--r-sm); color: var(--muted); cursor: pointer; }
+  .tabs button[aria-selected="true"] { background: var(--bg); color: var(--text); box-shadow: 0 1px 3px rgba(0,0,0,.08); }
+  .avatars { display: flex; } .avatars span { width: 34px; height: 34px; border-radius: 50%; border: 2px solid var(--bg); margin-left: -8px; display: grid; place-items: center; font-size: 12px; font-weight: 600; background: var(--subtle); }
+  .avatars span:first-child { margin-left: 0; }
+
+  /* Carte, alerte, tableau */
+  .card { border: 1px solid var(--line); border-radius: var(--r-lg); overflow: hidden; }
+  .card-body { padding: 20px; } .card-body h3 { font-size: 16px; font-weight: 600; } .card-body p { color: var(--muted); margin-top: 4px; }
+  .card-foot { padding: 12px 20px; border-top: 1px solid var(--line); background: var(--subtle); display: flex; justify-content: flex-end; gap: 8px; }
+  .alert { display: flex; gap: 12px; padding: 14px 16px; border-radius: var(--r-md); border: 1px solid var(--line); }
+  .alert b { display: block; font-weight: 600; } .alert span { color: var(--muted); }
+  .alert::before { content: "i"; flex: none; width: 20px; height: 20px; border-radius: 50%; display: grid; place-items: center; font-size: 12px; font-weight: 700; background: var(--text); color: var(--bg); }
+  .alert.danger { border-color: #fecaca; background: #fef2f2; } .alert.danger::before { content: "!"; background: var(--danger); }
+  table { width: 100%; border-collapse: collapse; }
+  th { text-align: left; font-weight: 500; color: var(--muted); font-size: 12px; padding: 10px 12px; border-bottom: 1px solid var(--line); }
+  td { padding: 12px; border-bottom: 1px solid var(--line); }
+  tr:last-child td { border-bottom: 0; }
+  tbody tr:hover { background: var(--subtle); }
+  @media (max-width: 720px) { .grid2 { grid-template-columns: 1fr; } .sheet { padding: 24px; } }
+</style>
+</head>
+<body>
+  <main class="sheet">
+    <header><h1>Kit UI Monochrome</h1><p>Composants sobres et accessibles, pilotés par des variables CSS.</p></header>
+
+    <section><h2>Boutons</h2>
+      <div class="row">
+        <button class="btn btn-primary">Enregistrer</button><button class="btn btn-secondary">Annuler</button><button class="btn btn-ghost">Plus d'options</button><button class="btn btn-danger">Supprimer</button>
+        <button class="btn btn-primary btn-sm">Petit</button><button class="btn btn-primary btn-lg">Grand bouton</button>
+        <button class="btn btn-primary"><span class="spin"></span>Envoi…</button><button class="btn btn-secondary" disabled>Désactivé</button>
+      </div>
+    </section>
+
+    <section class="grid2"><div>
+      <h2>Champs</h2>
+      <div style="display:grid;gap:14px">
+        <div class="field"><label for="n">Nom complet</label><input id="n" class="input" placeholder="Awa Diallo"><small>Tel qu'il apparaîtra sur vos factures.</small></div>
+        <div class="field"><label for="e">E-mail</label><input id="e" class="input err" value="awa@exemple"><span class="err-msg">Saisissez une adresse e-mail valide.</span></div>
+        <div class="field"><label for="p">Pays</label><select id="p" class="select"><option>Bénin</option><option>Côte d'Ivoire</option><option>Sénégal</option></select></div>
+      </div>
+    </div><div>
+      <h2>Sélection</h2>
+      <div style="display:grid;gap:14px">
+        <label class="row"><span class="switch"><input type="checkbox" checked><span></span></span>Notifications par e-mail</label>
+        <label class="row"><span class="switch"><input type="checkbox"><span></span></span>Mode sombre</label>
+        <label class="check"><input type="checkbox" checked>J'accepte les conditions</label>
+        <label class="check"><input type="radio" name="plan" checked>Mensuel</label>
+        <label class="check"><input type="radio" name="plan">Annuel</label>
+      </div>
+    </div></section>
+
+    <section><h2>Badges, onglets &amp; avatars</h2>
+      <div class="row">
+        <span class="badge b-success"><i></i>Actif</span><span class="badge b-warn"><i></i>En attente</span><span class="badge b-danger"><i></i>Échec</span><span class="badge b-solid">Nouveau</span>
+        <div class="tabs" role="tablist"><button role="tab" aria-selected="true">Aperçu</button><button role="tab" aria-selected="false">Activité</button><button role="tab" aria-selected="false">Réglages</button></div>
+        <div class="avatars"><span>AD</span><span>KM</span><span>YB</span><span>+4</span></div>
+      </div>
+    </section>
+
+    <section class="grid2">
+      <div class="card"><div class="card-body"><h3>Inviter l'équipe</h3><p>Ajoutez vos collègues pour collaborer sur ce projet.</p></div><div class="card-foot"><button class="btn btn-ghost btn-sm">Plus tard</button><button class="btn btn-primary btn-sm">Inviter</button></div></div>
+      <div style="display:grid;gap:12px">
+        <div class="alert"><div><b>Mise à jour disponible</b><span>La version 2.4 apporte l'export PDF.</span></div></div>
+        <div class="alert danger"><div><b>Paiement refusé</b><span>Vérifiez les informations de votre carte.</span></div></div>
+      </div>
+    </section>
+
+    <section><h2>Tableau</h2>
+      <div class="card"><table>
+        <thead><tr><th>Client</th><th>Statut</th><th>Montant</th></tr></thead>
+        <tbody>
+          <tr><td>Maison Sora</td><td><span class="badge b-success"><i></i>Payée</span></td><td>1 250 €</td></tr>
+          <tr><td>Verdure</td><td><span class="badge b-warn"><i></i>En attente</span></td><td>840 €</td></tr>
+          <tr><td>Kalo</td><td><span class="badge b-danger"><i></i>En retard</span></td><td>2 100 €</td></tr>
+        </tbody>
+      </table></div>
+    </section>
+  </main>
+</body>
+</html>

@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Animation — Fond aurora &amp; bouton brillant</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  /* 1) Aurora : trois halos flous qui dérivent lentement (CSS pur, GPU friendly).
+     2) Bouton brillant : un reflet traverse le bouton au survol, bordure dégradée animée.
+     3) Texte dégradé animé. Tout s'arrête avec prefers-reduced-motion. */
+  .aurora { position: absolute; inset: 0; overflow: hidden; background: #050508; }
+  .aurora span { position: absolute; width: 60vmax; height: 60vmax; border-radius: 50%; filter: blur(80px); opacity: .5; mix-blend-mode: screen; animation: drift 22s ease-in-out infinite alternate; }
+  .aurora span:nth-child(1) { background: #7c3aed; top: -30%; left: -10%; }
+  .aurora span:nth-child(2) { background: #06b6d4; top: -10%; right: -20%; animation-duration: 28s; animation-delay: -8s; }
+  .aurora span:nth-child(3) { background: #ec4899; bottom: -40%; left: 20%; animation-duration: 34s; animation-delay: -14s; opacity: .35; }
+  .aurora::after { content: ""; position: absolute; inset: 0; background: radial-gradient(ellipse at center, transparent 0%, #050508 75%); }
+  @keyframes drift { 0% { transform: translate(0, 0) scale(1); } 50% { transform: translate(8vw, 6vh) scale(1.15); } 100% { transform: translate(-6vw, 10vh) scale(.95); } }
+
+  .shine { position: relative; overflow: hidden; display: inline-flex; align-items: center; gap: 10px; height: 52px; padding: 0 28px; border-radius: 999px; color: #fff; font: 500 16px "Inter", sans-serif; text-decoration: none; background: rgba(255,255,255,.06); isolation: isolate; }
+  .shine::before { content: ""; position: absolute; inset: 0; padding: 1px; border-radius: inherit; background: conic-gradient(from var(--a, 0deg), #7c3aed, #06b6d4, #ec4899, #7c3aed); -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite: xor; mask-composite: exclude; animation: spin-border 4s linear infinite; z-index: -1; }
+  .shine::after { content: ""; position: absolute; top: 0; bottom: 0; left: -60%; width: 40%; background: linear-gradient(100deg, transparent, rgba(255,255,255,.35), transparent); transform: skewX(-20deg); transition: left .7s ease; }
+  .shine:hover::after { left: 130%; }
+  @property --a { syntax: "<angle>"; inherits: false; initial-value: 0deg; }
+  @keyframes spin-border { to { --a: 360deg; } }
+
+  .gradient-text { background: linear-gradient(90deg, #c4b5fd, #67e8f9, #f9a8d4, #c4b5fd); background-size: 300% 100%; -webkit-background-clip: text; background-clip: text; color: transparent; animation: flow 8s linear infinite; }
+  @keyframes flow { to { background-position: 300% 0; } }
+
+  @media (prefers-reduced-motion: reduce) { .aurora span, .shine::before, .gradient-text { animation: none; } .shine::after { display: none; } }
+
+  /* Démo */
+  * { box-sizing: border-box; margin: 0; }
+  body { min-height: 100vh; font: 400 16px/1.6 "Inter", system-ui, sans-serif; color: #f4f4f5; -webkit-font-smoothing: antialiased; }
+  .stage { position: relative; min-height: 100vh; display: grid; place-items: center; text-align: center; padding: 24px; }
+  .content { position: relative; z-index: 1; max-width: 760px; }
+  .content small { display: inline-block; padding: 6px 14px; border-radius: 999px; border: 1px solid rgba(255,255,255,.15); font-size: 13px; color: #d4d4d8; background: rgba(255,255,255,.04); backdrop-filter: blur(8px); }
+  .content h1 { margin-top: 22px; font-size: clamp(44px, 7.5vw, 88px); line-height: .98; letter-spacing: -.05em; font-weight: 600; }
+  .content p { margin: 20px auto 34px; max-width: 480px; color: #a1a1aa; font-size: 18px; }
+</style>
+</head>
+<body>
+  <section class="stage">
+    <div class="aurora" aria-hidden="true"><span></span><span></span><span></span></div>
+    <div class="content">
+      <small>✦ Lancement — version 3.0</small>
+      <h1>Créez l'avenir <span class="gradient-text">à la vitesse de la pensée.</span></h1>
+      <p>Un fond vivant et un appel à l'action lumineux, en CSS pur, pour les héros qui doivent marquer les esprits.</p>
+      <a class="shine" href="#">Commencer maintenant →</a>
+    </div>
+  </section>
+</body>
+</html>

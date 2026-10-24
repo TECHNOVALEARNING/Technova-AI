@@ -1,0 +1,154 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Nomad — Vos dépenses de voyage, sans effort</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root { --bg: #07080b; --panel: #0f1116; --line: #1d2028; --text: #f2f3f5; --muted: #8b90a0; --lime: #c8f560; --sky: #7cc4ff; --font: "Space Grotesk", system-ui, sans-serif; }
+  * { box-sizing: border-box; margin: 0; }
+  body { background: var(--bg); color: var(--text); font: 400 16px/1.6 var(--font); -webkit-font-smoothing: antialiased; overflow-x: hidden; }
+  a { color: inherit; text-decoration: none; }
+  .wrap { width: min(1160px, 100% - 40px); margin-inline: auto; }
+
+  header { display: flex; align-items: center; justify-content: space-between; height: 76px; }
+  .logo { display: flex; align-items: center; gap: 10px; font-weight: 600; font-size: 18px; letter-spacing: -.02em; }
+  .logo i { width: 26px; height: 26px; border-radius: 8px; background: var(--lime); position: relative; }
+  .logo i::after { content: ""; position: absolute; inset: 7px; border-radius: 50%; border: 2px solid var(--bg); border-right-color: transparent; }
+  header nav { display: flex; gap: 28px; font-size: 14px; color: var(--muted); }
+  header nav a:hover { color: var(--text); }
+  .chip { height: 40px; padding: 0 18px; border-radius: 999px; border: 1px solid var(--line); display: inline-flex; align-items: center; font-size: 14px; }
+  .chip:hover { border-color: #343846; }
+
+  .hero { display: grid; grid-template-columns: 1.1fr .9fr; gap: 48px; align-items: center; padding: 72px 0 96px; position: relative; }
+  .hero::before { content: ""; position: absolute; width: 640px; height: 640px; right: -120px; top: -60px; background: radial-gradient(closest-side, rgba(200,245,96,.18), transparent); filter: blur(10px); pointer-events: none; }
+  .tag { display: inline-flex; align-items: center; gap: 8px; font-size: 13px; color: var(--muted); }
+  .tag::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: var(--lime); box-shadow: 0 0 12px var(--lime); }
+  h1 { margin-top: 22px; font-size: clamp(44px, 6.6vw, 84px); line-height: .98; letter-spacing: -.05em; font-weight: 600; }
+  h1 span { color: var(--lime); }
+  .lead { margin-top: 22px; max-width: 470px; color: var(--muted); font-size: 18px; }
+  .stores { margin-top: 36px; display: flex; flex-wrap: wrap; gap: 12px; }
+  .store { display: inline-flex; align-items: center; gap: 12px; height: 56px; padding: 0 20px 0 16px; border-radius: 14px; background: var(--text); color: var(--bg); transition: transform .2s; }
+  .store:hover { transform: translateY(-2px); }
+  .store svg { width: 24px; height: 24px; }
+  .store small { display: block; font-size: 10px; opacity: .7; line-height: 1.1; }
+  .store b { display: block; font-size: 17px; line-height: 1.15; letter-spacing: -.01em; }
+  .rating { margin-top: 26px; display: flex; align-items: center; gap: 14px; font-size: 14px; color: var(--muted); }
+  .faces { display: flex; }
+  .faces i { width: 32px; height: 32px; border-radius: 50%; border: 2px solid var(--bg); margin-left: -8px; }
+  .faces i:first-child { margin-left: 0; background: linear-gradient(135deg, #fbcfe8, #f472b6); }
+  .faces i:nth-child(2) { background: linear-gradient(135deg, #bae6fd, #38bdf8); }
+  .faces i:nth-child(3) { background: linear-gradient(135deg, #d9f99d, #84cc16); }
+
+  /* Phone */
+  .phone { justify-self: center; width: 300px; aspect-ratio: 9 / 19.2; border-radius: 46px; padding: 12px; background: linear-gradient(160deg, #2a2d36, #0c0d11); box-shadow: 0 0 0 1px #2c2f38, 0 60px 120px -40px rgba(0,0,0,.9), 0 0 80px -20px rgba(200,245,96,.25); position: relative; transform: rotate(-4deg); }
+  .screen { height: 100%; border-radius: 36px; background: #0b0c10; overflow: hidden; padding: 46px 18px 18px; display: grid; align-content: start; gap: 14px; position: relative; }
+  .screen::before { content: ""; position: absolute; top: 12px; left: 50%; transform: translateX(-50%); width: 92px; height: 26px; border-radius: 20px; background: #000; }
+  .bal { padding: 18px; border-radius: 22px; background: linear-gradient(140deg, var(--lime), #8be04e); color: #0b0c10; }
+  .bal small { font-size: 11px; opacity: .7; } .bal strong { display: block; font-size: 30px; letter-spacing: -.04em; line-height: 1.1; }
+  .bal span { font-size: 11px; }
+  .row { display: flex; align-items: center; gap: 10px; padding: 10px; border-radius: 14px; background: #14161c; font-size: 12px; }
+  .row i { width: 30px; height: 30px; border-radius: 10px; display: grid; place-items: center; font-style: normal; background: #1f222a; }
+  .row div { flex: 1; } .row small { display: block; color: var(--muted); font-size: 10px; }
+  .row b { font-weight: 500; }
+  .mini { display: flex; align-items: flex-end; gap: 5px; height: 64px; padding: 10px; border-radius: 14px; background: #14161c; }
+  .mini i { flex: 1; border-radius: 4px; background: #2a2e38; }
+  .mini i.on { background: var(--sky); }
+
+  section.features { padding: 96px 0; border-top: 1px solid var(--line); }
+  .features h2, .stories h2 { font-size: clamp(32px, 4.5vw, 52px); letter-spacing: -.04em; line-height: 1.04; font-weight: 600; max-width: 640px; }
+  .grid { margin-top: 56px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 1px; background: var(--line); border: 1px solid var(--line); border-radius: 24px; overflow: hidden; }
+  .feat { background: var(--bg); padding: 34px; min-height: 250px; display: flex; flex-direction: column; gap: 12px; transition: background .3s; }
+  .feat:hover { background: var(--panel); }
+  .feat b.num { font-size: 13px; color: var(--lime); font-weight: 500; }
+  .feat h3 { font-size: 21px; letter-spacing: -.02em; font-weight: 500; }
+  .feat p { color: var(--muted); font-size: 15px; }
+
+  .stories { padding: 96px 0; }
+  .quotes { margin-top: 48px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+  .q { padding: 28px; border-radius: 22px; background: var(--panel); border: 1px solid var(--line); display: flex; flex-direction: column; gap: 20px; }
+  .q p { font-size: 17px; line-height: 1.5; }
+  .q footer { margin-top: auto; font-size: 13px; color: var(--muted); }
+
+  .download { margin-bottom: 80px; padding: 72px 40px; border-radius: 32px; text-align: center; background: radial-gradient(80% 120% at 50% 100%, rgba(200,245,96,.22), transparent 60%), var(--panel); border: 1px solid var(--line); }
+  .download h2 { font-size: clamp(36px, 5.5vw, 64px); letter-spacing: -.045em; line-height: 1; font-weight: 600; }
+  .download p { margin: 16px auto 0; max-width: 440px; color: var(--muted); }
+  .download .stores { justify-content: center; }
+  .foot { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 16px; padding: 32px 0 48px; border-top: 1px solid var(--line); font-size: 13px; color: var(--muted); }
+
+  @media (max-width: 900px) {
+    header nav { display: none; }
+    .hero { grid-template-columns: 1fr; text-align: left; }
+    .phone { width: 260px; margin-top: 24px; }
+    .grid, .quotes { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <a class="logo" href="#"><i></i>Nomad</a>
+      <nav><a href="#fonctions">Fonctionnalités</a><a href="#avis">Avis</a><a href="#">Entreprises</a><a href="#">Aide</a></nav>
+      <a class="chip" href="#telecharger">Télécharger</a>
+    </header>
+
+    <section class="hero">
+      <div>
+        <span class="tag">Disponible sur iOS et Android</span>
+        <h1>Voyagez. <span>On s'occupe</span> des notes de frais.</h1>
+        <p class="lead">Photographiez un reçu, Nomad fait le reste : conversion des devises, catégorie, export comptable.</p>
+        <div class="stores">
+          <a class="store" href="#"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M16.37 12.6c-.02-2.2 1.8-3.26 1.88-3.31-1.02-1.5-2.62-1.7-3.19-1.73-1.36-.14-2.65.8-3.34.8-.69 0-1.75-.78-2.88-.76-1.48.02-2.85.86-3.61 2.19-1.54 2.67-.39 6.62 1.11 8.79.73 1.06 1.6 2.25 2.75 2.2 1.1-.04 1.52-.71 2.85-.71 1.33 0 1.71.71 2.88.69 1.19-.02 1.94-1.08 2.67-2.14.84-1.23 1.19-2.42 1.21-2.48-.03-.01-2.31-.89-2.33-3.54zM14.17 6.1c.6-.74 1.01-1.76.9-2.78-.87.04-1.93.58-2.55 1.31-.56.64-1.05 1.68-.92 2.68.97.07 1.96-.49 2.57-1.21z"/></svg><span><small>Télécharger sur l'</small><b>App Store</b></span></a>
+          <a class="store" href="#"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3.6 2.2 13.2 12l-9.6 9.8a1.6 1.6 0 0 1-.5-1.2V3.4c0-.5.2-.9.5-1.2Z" fill="#00A0FF"/><path d="M3.6 2.2c.5-.4 1.2-.5 1.9-.1l11 6.3-3.3 3.6Z" fill="#00C853"/><path d="M13.2 12l3.3 3.6-11 6.3c-.7.4-1.4.3-1.9-.1Z" fill="#FF3A44"/><path d="M16.5 8.4 20 10.4c1.2.7 1.2 2.5 0 3.2l-3.5 2L13.2 12Z" fill="#FFC107"/></svg><span><small>Disponible sur</small><b>Google Play</b></span></a>
+        </div>
+        <div class="rating"><span class="faces"><i></i><i></i><i></i></span><span>★★★★★ 4,8 · 38 000 avis</span></div>
+      </div>
+
+      <div class="phone" aria-hidden="true">
+        <div class="screen">
+          <div class="bal"><small>Ce voyage · Lisbonne</small><strong>1 284,50 €</strong><span>12 dépenses · 3 en attente</span></div>
+          <div class="row"><i>☕</i><div><b>Café Tati</b><small>Repas · 08:42</small></div><b>4,80 €</b></div>
+          <div class="row"><i>🚕</i><div><b>Uber</b><small>Transport · 10:15</small></div><b>18,20 €</b></div>
+          <div class="row"><i>🏨</i><div><b>Hotel Lumiar</b><small>Logement · 3 nuits</small></div><b>396,00 €</b></div>
+          <div class="mini"><i style="height:30%"></i><i style="height:55%"></i><i style="height:40%"></i><i class="on" style="height:90%"></i><i style="height:60%"></i><i style="height:35%"></i><i style="height:50%"></i></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="features" id="fonctions">
+      <h2>Pensée pour ceux qui ne s'arrêtent jamais.</h2>
+      <div class="grid">
+        <article class="feat"><b class="num">01</b><h3>Scan instantané</h3><p>Une photo suffit : montant, date, devise et commerçant sont reconnus en une seconde.</p></article>
+        <article class="feat"><b class="num">02</b><h3>Toutes les devises</h3><p>Conversion au taux du jour, même hors ligne, dans plus de 160 monnaies.</p></article>
+        <article class="feat"><b class="num">03</b><h3>Export en un geste</h3><p>PDF, CSV ou envoi direct à votre logiciel comptable.</p></article>
+        <article class="feat"><b class="num">04</b><h3>Politiques intégrées</h3><p>Plafonds et règles de l'entreprise appliqués avant même la validation.</p></article>
+        <article class="feat"><b class="num">05</b><h3>Validation rapide</h3><p>Les managers approuvent depuis une notification, sans ouvrir l'ordinateur.</p></article>
+        <article class="feat"><b class="num">06</b><h3>Données protégées</h3><p>Chiffrement de bout en bout et hébergement européen.</p></article>
+      </div>
+    </section>
+
+    <section class="stories" id="avis">
+      <h2>Adoptée en un voyage.</h2>
+      <div class="quotes">
+        <figure class="q"><p>« J'ai rendu ma note de frais dans l'avion du retour. Une première en dix ans. »</p><footer>Léa M. — Consultante</footer></figure>
+        <figure class="q"><p>« L'équipe finance a divisé par trois le temps de traitement des remboursements. »</p><footer>Youssef B. — Responsable financier</footer></figure>
+        <figure class="q"><p>« Simple, rapide et beau. Exactement ce qu'on attend d'une app. »</p><footer>Aminata D. — Cheffe de projet</footer></figure>
+      </div>
+    </section>
+
+    <section class="download" id="telecharger">
+      <h2>Votre prochain voyage commence ici.</h2>
+      <p>Gratuit pour un usage personnel. Offres équipe à partir de 5 utilisateurs.</p>
+      <div class="stores">
+        <a class="store" href="#"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M16.37 12.6c-.02-2.2 1.8-3.26 1.88-3.31-1.02-1.5-2.62-1.7-3.19-1.73-1.36-.14-2.65.8-3.34.8-.69 0-1.75-.78-2.88-.76-1.48.02-2.85.86-3.61 2.19-1.54 2.67-.39 6.62 1.11 8.79.73 1.06 1.6 2.25 2.75 2.2 1.1-.04 1.52-.71 2.85-.71 1.33 0 1.71.71 2.88.69 1.19-.02 1.94-1.08 2.67-2.14.84-1.23 1.19-2.42 1.21-2.48-.03-.01-2.31-.89-2.33-3.54zM14.17 6.1c.6-.74 1.01-1.76.9-2.78-.87.04-1.93.58-2.55 1.31-.56.64-1.05 1.68-.92 2.68.97.07 1.96-.49 2.57-1.21z"/></svg><span><small>Télécharger sur l'</small><b>App Store</b></span></a>
+        <a class="store" href="#"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3.6 2.2 13.2 12l-9.6 9.8a1.6 1.6 0 0 1-.5-1.2V3.4c0-.5.2-.9.5-1.2Z" fill="#00A0FF"/><path d="M3.6 2.2c.5-.4 1.2-.5 1.9-.1l11 6.3-3.3 3.6Z" fill="#00C853"/><path d="M13.2 12l3.3 3.6-11 6.3c-.7.4-1.4.3-1.9-.1Z" fill="#FF3A44"/><path d="M16.5 8.4 20 10.4c1.2.7 1.2 2.5 0 3.2l-3.5 2L13.2 12Z" fill="#FFC107"/></svg><span><small>Disponible sur</small><b>Google Play</b></span></a>
+      </div>
+    </section>
+
+    <div class="foot"><span>© 2026 Nomad Labs</span><span>Confidentialité · Conditions · Presse</span></div>
+  </div>
+</body>
+</html>

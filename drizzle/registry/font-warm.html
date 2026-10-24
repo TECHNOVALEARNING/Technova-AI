@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Duo typographique — Fraunces × Manrope</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,600;1,9..144,300&family=Manrope:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  /* À copier dans votre projet :
+     @import url("https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,600;1,9..144,300&family=Manrope:wght@400;500;600&display=swap");
+     :root { --font-display: "Fraunces", Georgia, serif; --font-body: "Manrope", system-ui, sans-serif; }
+     h1, h2 { font-family: var(--font-display); font-weight: 300; font-variation-settings: "opsz" 144; letter-spacing: -0.03em; }
+     body { font-family: var(--font-body); }
+     Licence : SIL Open Font License 1.1 (usage commercial autorisé). */
+  :root { --display: "Fraunces", Georgia, serif; --body: "Manrope", system-ui, sans-serif; --bg: #fff8f1; --ink: #2b1d14; --muted: #8c7565; --line: #efdccb; --terra: #c2562b; --sage: #6b7f5e; }
+  * { box-sizing: border-box; margin: 0; }
+  body { background: var(--bg); color: var(--ink); font: 400 16px/1.65 var(--body); -webkit-font-smoothing: antialiased; padding: 56px 24px; }
+  .spec { width: min(1040px, 100%); margin: 0 auto; }
+  .top { display: flex; justify-content: space-between; font-size: 13px; color: var(--muted); padding-bottom: 16px; border-bottom: 1px solid var(--line); }
+  .hero { font-family: var(--display); font-weight: 300; font-variation-settings: "opsz" 144; font-size: clamp(60px, 11.5vw, 168px); line-height: .9; letter-spacing: -.045em; margin: 48px 0 24px; }
+  .hero i { color: var(--terra); }
+  .cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-top: 48px; }
+  .card { border-radius: 24px; padding: 28px; min-height: 260px; display: flex; flex-direction: column; justify-content: space-between; }
+  .card:nth-child(1) { background: #f6e3d3; } .card:nth-child(2) { background: var(--terra); color: #fff8f1; } .card:nth-child(3) { background: #dfe6d6; }
+  .card small { font-size: 12px; text-transform: uppercase; letter-spacing: .14em; opacity: .7; }
+  .card h3 { font-family: var(--display); font-weight: 300; font-size: 40px; line-height: 1; letter-spacing: -.03em; }
+  .card p { font-size: 14px; opacity: .85; }
+  .menu { margin-top: 64px; display: grid; grid-template-columns: 1fr 1fr; gap: 56px; }
+  .menu h2 { font-family: var(--display); font-weight: 300; font-size: clamp(38px, 5vw, 60px); line-height: 1; letter-spacing: -.03em; }
+  .item { display: flex; justify-content: space-between; gap: 12px; padding: 16px 0; border-bottom: 1px dotted #d7bfa9; }
+  .item b { font-weight: 600; } .item span { color: var(--muted); font-size: 14px; display: block; }
+  .item em { font-family: var(--display); font-style: normal; font-size: 20px; color: var(--terra); }
+  @media (max-width: 760px) { .cards, .menu { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+  <article class="spec">
+    <div class="top"><span>Duo typographique · Chaleureux</span><span>Fraunces × Manrope</span></div>
+    <p class="hero">Fait main,<br><i>avec soin.</i></p>
+    <p style="max-width:540px;color:var(--muted)">Un serif généreux aux courbes douces, associé à une linéale ronde et lisible. Parfait pour la restauration, l'artisanat, le bien-être et les marques de lifestyle.</p>
+    <div class="cards">
+      <div class="card"><small>Display</small><h3>Fraunces Light</h3><p>Optique 144, idéale à grande taille.</p></div>
+      <div class="card"><small>Accent</small><h3><i>Fraunces Italic</i></h3><p>Pour souligner un mot, une émotion.</p></div>
+      <div class="card"><small>Texte</small><h3 style="font-family:var(--body);font-weight:600;font-size:32px;letter-spacing:-.02em">Manrope</h3><p>Lisible du menu au formulaire.</p></div>
+    </div>
+    <div class="menu">
+      <h2>La carte de saison</h2>
+      <div>
+        <div class="item"><div><b>Velouté de patate douce</b><span>Gingembre, lait de coco, coriandre</span></div><em>9 €</em></div>
+        <div class="item"><div><b>Poisson braisé</b><span>Attiéké, piment doux, oignons confits</span></div><em>18 €</em></div>
+        <div class="item"><div><b>Tarte au bissap</b><span>Pâte sablée, crème légère à la vanille</span></div><em>8 €</em></div>
+      </div>
+    </div>
+  </article>
+</body>
+</html>

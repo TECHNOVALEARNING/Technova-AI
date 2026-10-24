@@ -443,7 +443,7 @@ function ChatComposer({
   const { lang } = useDashboard();
   const ownRef = useRef<HTMLTextAreaElement>(null);
   const textareaRef = inputRef ?? ownRef;
-  // A design picked in the Design Library arrives as a draft: switch to Créer and prefill the brief.
+  // A Registry item arrives as a draft: switch to its mode and prefill the brief.
   useEffect(() => {
     let raw: string | null = null;
     try { raw = sessionStorage.getItem(DESIGN_DRAFT_KEY); sessionStorage.removeItem(DESIGN_DRAFT_KEY); } catch { return; }

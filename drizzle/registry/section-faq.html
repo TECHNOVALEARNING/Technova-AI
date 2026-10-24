@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Section — FAQ accordéon</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600&family=DM+Serif+Display&display=swap" rel="stylesheet">
+<style>
+  /* Accordéon accessible sans JavaScript, basé sur <details>/<summary>. */
+  :root { --bg: #fbfaf8; --ink: #17150f; --muted: #75716a; --line: #e7e3dc; --accent: #c2410c; }
+  * { box-sizing: border-box; margin: 0; }
+  body { background: var(--bg); color: var(--ink); font: 400 16px/1.65 "DM Sans", system-ui, sans-serif; -webkit-font-smoothing: antialiased; }
+  .faq { width: min(1080px, 100% - 40px); margin: 0 auto; padding: 96px 0; display: grid; grid-template-columns: 1fr 1.6fr; gap: 64px; }
+  .faq-aside h2 { font-family: "DM Serif Display", Georgia, serif; font-weight: 400; font-size: clamp(36px, 4.6vw, 54px); line-height: 1.02; letter-spacing: -.02em; }
+  .faq-aside p { margin-top: 16px; color: var(--muted); max-width: 300px; }
+  .faq-aside a { display: inline-flex; margin-top: 24px; font-weight: 500; color: var(--accent); text-decoration: none; border-bottom: 1px solid currentColor; }
+  .list { border-top: 1px solid var(--line); }
+  details { border-bottom: 1px solid var(--line); }
+  summary { list-style: none; cursor: pointer; display: flex; justify-content: space-between; align-items: center; gap: 24px; padding: 24px 0; font-size: 18px; font-weight: 500; letter-spacing: -.01em; }
+  summary::-webkit-details-marker { display: none; }
+  summary:focus-visible { outline: 2px solid var(--accent); outline-offset: 4px; border-radius: 4px; }
+  .icon { flex: none; width: 28px; height: 28px; border-radius: 50%; border: 1px solid var(--line); position: relative; transition: background .3s, border-color .3s, transform .35s; }
+  .icon::before, .icon::after { content: ""; position: absolute; left: 50%; top: 50%; width: 11px; height: 1.5px; background: currentColor; transform: translate(-50%, -50%); transition: transform .35s; }
+  .icon::after { transform: translate(-50%, -50%) rotate(90deg); }
+  details[open] .icon { background: var(--ink); border-color: var(--ink); color: var(--bg); transform: rotate(180deg); }
+  details[open] .icon::after { transform: translate(-50%, -50%) rotate(0); }
+  .answer { padding: 0 52px 26px 0; color: var(--muted); }
+  details[open] .answer { animation: reveal .35s ease; }
+  @keyframes reveal { from { opacity: 0; transform: translateY(-6px); } }
+  @media (prefers-reduced-motion: reduce) { details[open] .answer { animation: none; } .icon, .icon::before, .icon::after { transition: none; } }
+  @media (max-width: 820px) { .faq { grid-template-columns: 1fr; gap: 32px; } .answer { padding-right: 0; } }
+</style>
+</head>
+<body>
+  <section class="faq">
+    <div class="faq-aside">
+      <h2>Questions fréquentes</h2>
+      <p>Tout ce qu'il faut savoir avant de commencer. Une autre question ?</p>
+      <a href="#">Parler à l'équipe →</a>
+    </div>
+    <div class="list">
+      <details open><summary>Puis-je essayer avant de payer ?<span class="icon" aria-hidden="true"></span></summary><div class="answer">Oui. L'essai de 14 jours donne accès à toutes les fonctionnalités, sans carte bancaire. À la fin, vous choisissez librement votre offre.</div></details>
+      <details><summary>Comment fonctionne la facturation ?<span class="icon" aria-hidden="true"></span></summary><div class="answer">Vous êtes facturé au début de chaque période, mensuelle ou annuelle. Les changements d'offre sont calculés au prorata.</div></details>
+      <details><summary>Mes données sont-elles en sécurité ?<span class="icon" aria-hidden="true"></span></summary><div class="answer">Toutes les données sont chiffrées au repos et en transit, sauvegardées chaque jour et hébergées dans l'Union européenne.</div></details>
+      <details><summary>Puis-je annuler à tout moment ?<span class="icon" aria-hidden="true"></span></summary><div class="answer">Bien sûr. L'annulation prend effet à la fin de la période en cours et vous pouvez exporter vos données à tout moment.</div></details>
+      <details><summary>Proposez-vous un tarif pour les associations ?<span class="icon" aria-hidden="true"></span></summary><div class="answer">Oui, une remise de 50 % est accordée aux associations et aux établissements d'enseignement sur simple demande.</div></details>
+    </div>
+  </section>
+</body>
+</html>

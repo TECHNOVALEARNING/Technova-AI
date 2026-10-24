@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Animation — Défilement infini de logos</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  /* Bandeau infini en CSS pur : la piste contient deux fois la même liste et se translate de -50 %.
+     Pause au survol, fondu sur les bords, sens inversé avec .reverse, arrêt si prefers-reduced-motion. */
+  .marquee { --gap: 56px; --speed: 32s; position: relative; overflow: hidden; mask-image: linear-gradient(90deg, transparent, #000 12%, #000 88%, transparent); }
+  .marquee-track { display: flex; gap: var(--gap); width: max-content; animation: marquee var(--speed) linear infinite; }
+  .marquee:hover .marquee-track { animation-play-state: paused; }
+  .marquee.reverse .marquee-track { animation-direction: reverse; }
+  .marquee ul { display: flex; gap: var(--gap); list-style: none; padding: 0; margin: 0; }
+  @keyframes marquee { to { transform: translateX(calc(-50% - var(--gap) / 2)); } }
+  @media (prefers-reduced-motion: reduce) { .marquee-track { animation: none; flex-wrap: wrap; justify-content: center; width: auto; } .marquee ul[aria-hidden] { display: none; } }
+
+  /* Démo */
+  * { box-sizing: border-box; margin: 0; }
+  body { font: 400 16px/1.6 "Inter", system-ui, sans-serif; background: #fff; color: #0a0a0a; -webkit-font-smoothing: antialiased; padding: 96px 0; display: grid; gap: 72px; }
+  .title { text-align: center; padding: 0 20px; }
+  .title small { font-size: 13px; color: #737373; letter-spacing: .12em; text-transform: uppercase; }
+  .title h2 { margin-top: 10px; font-size: clamp(28px, 4vw, 42px); letter-spacing: -.04em; font-weight: 600; }
+  .logo { display: flex; align-items: center; gap: 10px; font-weight: 700; font-size: 22px; letter-spacing: -.04em; color: #a3a3a3; white-space: nowrap; transition: color .3s; }
+  .logo:hover { color: #0a0a0a; }
+  .logo i { width: 26px; height: 26px; border-radius: 8px; background: currentColor; opacity: .9; }
+  .logo:nth-child(2n) i { border-radius: 50%; } .logo:nth-child(3n) i { transform: rotate(45deg) scale(.8); border-radius: 4px; }
+  .pill { display: inline-flex; align-items: center; gap: 10px; padding: 12px 20px; border-radius: 999px; background: #f5f5f5; font-size: 15px; white-space: nowrap; }
+  .pill b { font-weight: 600; } .pill span { color: #737373; }
+</style>
+</head>
+<body>
+  <div class="title"><small>Ils nous font confiance</small><h2>Plus de 4 000 équipes, partout dans le monde.</h2></div>
+
+  <div class="marquee">
+    <div class="marquee-track">
+      <ul><li class="logo"><i></i>Northwind</li><li class="logo"><i></i>Lumen</li><li class="logo"><i></i>Kora</li><li class="logo"><i></i>Vertex</li><li class="logo"><i></i>Atlas</li><li class="logo"><i></i>Mosaic</li><li class="logo"><i></i>Sora</li></ul>
+      <ul aria-hidden="true"><li class="logo"><i></i>Northwind</li><li class="logo"><i></i>Lumen</li><li class="logo"><i></i>Kora</li><li class="logo"><i></i>Vertex</li><li class="logo"><i></i>Atlas</li><li class="logo"><i></i>Mosaic</li><li class="logo"><i></i>Sora</li></ul>
+    </div>
+  </div>
+
+  <div class="marquee reverse" style="--speed:46s;--gap:14px">
+    <div class="marquee-track">
+      <ul><li class="pill"><b>★★★★★</b><span>« Indispensable au quotidien »</span></li><li class="pill"><b>Awa D.</b><span>a rejoint il y a 2 min</span></li><li class="pill"><b>+38 %</b><span>de conversion</span></li><li class="pill"><b>★★★★★</b><span>« Le support est génial »</span></li><li class="pill"><b>Marc L.</b><span>a publié son site</span></li></ul>
+      <ul aria-hidden="true"><li class="pill"><b>★★★★★</b><span>« Indispensable au quotidien »</span></li><li class="pill"><b>Awa D.</b><span>a rejoint il y a 2 min</span></li><li class="pill"><b>+38 %</b><span>de conversion</span></li><li class="pill"><b>★★★★★</b><span>« Le support est génial »</span></li><li class="pill"><b>Marc L.</b><span>a publié son site</span></li></ul>
+    </div>
+  </div>
+</body>
+</html>
