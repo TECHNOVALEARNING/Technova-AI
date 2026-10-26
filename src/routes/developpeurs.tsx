@@ -4,7 +4,7 @@ import { ArrowRight, Boxes, Route as RouteIcon, BarChart3, ShieldCheck, Check, M
 import { Button } from "@/components/ui/button";
 import { Nav, Footer, PageHero, Heading, R, ActionText, useReveal, useSiteLang } from "@/components/site/SiteChrome";
 import { CodeBlock } from "@/components/site/CodeBlock";
-import { codeSamples } from "@/lib/site-pages";
+import { codeSamples, useApiBase, withApiBase } from "@/lib/site-pages";
 
 export const Route = createFileRoute("/developpeurs")({
   head: () => ({
@@ -22,55 +22,55 @@ export const Route = createFileRoute("/developpeurs")({
 
 const txt = {
   fr: {
-    tag: "Développeurs", title: "Une API. Des possibilités infinies.", sub: "Architecture double moteur : OpenRouter pour le texte et les LLM, KIE.ai pour les images et vidéos studio — derrière une seule clé TechNova.", docs: "Lire la documentation", models: "Voir les modèles",
-    stats: ["99,99 % de disponibilité", "Faible latence", "API unifiée", "Clés sécurisées"],
+    tag: "Développeurs", title: "Une API. Des possibilités infinies.", sub: "Une seule clé TechNova pour intégrer GPT, Claude, Gemini, DeepSeek et les meilleurs modèles de texte et de code à vos produits, facturés en crédits.", docs: "Lire la documentation", models: "Voir les modèles",
+    stats: ["Une seule clé API", "15 modèles de texte", "Facturation au token", "Clés hachées et révocables"],
     exTag: "Exemples", exTitle: "Votre première requête.",
     feTag: "Expérience développeur", feTitle: "Pensée pour les développeurs.",
-    features: [["Une seule API", "Une API pour des centaines de modèles."], ["Routage intelligent", "Le meilleur modèle pour chaque tâche."], ["Analytique d'usage", "Jetons, coûts et performances en temps réel."], ["Infrastructure sécurisée", "Clés à portée limitée et contrôles d'accès fins."]],
+    features: [["Une seule API", "Le même format de requête pour tous les modèles de texte."], ["Coût transparent", "Chaque réponse indique les crédits exacts débités."], ["Suivi d'usage", "Requêtes, tokens et crédits par modèle dans votre tableau de bord."], ["Clés protégées", "Clés stockées sous forme hachée, révocables à tout moment."]],
     reTag: "Cas d'usage", reTitle: "Recettes prêtes à copier.",
     recipes: [["Assistant client WhatsApp", "Branchez votre webhook WhatsApp sur /api/ai/chat et gardez l'historique côté serveur."], ["Résumé de documents", "Découpez le texte en blocs de 4 000 jetons, résumez chaque bloc puis fusionnez les résumés."], ["Génération de code", "Utilisez un modèle spécialisé avec temperature 0.2 pour des sorties déterministes."], ["Traduction locale", "Français, anglais, fon, yoruba, wolof : précisez la langue cible dans le message système."]],
     bpTitle: "À vérifier avant la mise en production.",
     bp: ["Appelez l'API depuis votre serveur, jamais depuis le navigateur.", "Envoyez une idempotency_key par requête pour ne jamais payer deux fois.", "Gérez INSUFFICIENT_CREDITS en proposant un rechargement Mobile Money.", "Prévoyez un repli sur un modèle plus léger en cas d'indisponibilité.", "Surveillez votre consommation depuis le tableau de bord."],
-    stTitle: "Disponibilité de la plateforme.", status: [["API", "Opérationnel"], ["Tableau de bord", "Opérationnel"], ["Paiements", "Opérationnel"]],
+    stTitle: "Limites de l'API.", status: [["Requêtes", "60 par minute"], ["Messages par requête", "60 maximum"], ["Longueur de réponse", "4 096 tokens maximum"]],
     ctaT: "Construisez le futur avec l'IA.", ctaS: "Un compte. Des centaines de modèles. Une API puissante.", cta: "Commencer gratuitement",
   },
   en: {
-    tag: "Developers", title: "One API. Infinite possibilities.", sub: "Dual-engine architecture: OpenRouter for text and LLMs, KIE.ai for studio images and video — behind a single TechNova key.", docs: "Read the docs", models: "Explore models",
-    stats: ["99.99% uptime", "Low latency", "Unified API", "Secure keys"],
+    tag: "Developers", title: "One API. Infinite possibilities.", sub: "One TechNova key to bring GPT, Claude, Gemini, DeepSeek and the best text and code models into your products, billed in credits.", docs: "Read the docs", models: "Explore models",
+    stats: ["One API key", "15 text models", "Per-token billing", "Hashed, revocable keys"],
     exTag: "Examples", exTitle: "Your first request.",
     feTag: "Developer experience", feTitle: "Built for developers.",
-    features: [["One API", "One single API for hundreds of models."], ["Smart routing", "Automatically pick the best model for the job."], ["Usage analytics", "Track tokens, cost and performance in real time."], ["Secure infrastructure", "Scoped API keys and granular access controls."]],
+    features: [["One API", "The same request format for every text model."], ["Transparent cost", "Every response states the exact credits charged."], ["Usage tracking", "Requests, tokens and credits per model in your dashboard."], ["Protected keys", "Keys stored hashed, revocable at any time."]],
     reTag: "Use cases", reTitle: "Copy-ready recipes.",
     recipes: [["WhatsApp support assistant", "Connect your WhatsApp webhook to /api/ai/chat and keep history server-side."], ["Document summaries", "Split text into 4,000-token chunks, summarise each, then merge the summaries."], ["Code generation", "Use a specialised model with temperature 0.2 for deterministic output."], ["Local translation", "French, English, Fon, Yoruba, Wolof: set the target language in the system message."]],
     bpTitle: "Check before going to production.",
     bp: ["Call the API from your server, never from the browser.", "Send one idempotency_key per request so you never pay twice.", "Handle INSUFFICIENT_CREDITS by offering a Mobile Money top-up.", "Plan a fallback to a lighter model during outages.", "Monitor usage from the dashboard."],
-    stTitle: "Platform status.", status: [["API", "Operational"], ["Dashboard", "Operational"], ["Payments", "Operational"]],
+    stTitle: "API limits.", status: [["Requests", "60 per minute"], ["Messages per request", "60 max"], ["Response length", "4,096 tokens max"]],
     ctaT: "Build the future with AI.", ctaS: "One account. Hundreds of models. One powerful API.", cta: "Start for free",
   },
   es: {
-    tag: "Desarrolladores", title: "Una API. Posibilidades infinitas.", sub: "Arquitectura de doble motor: OpenRouter para el texto y los LLM, KIE.ai para las imágenes y vídeos de estudio, detrás de una sola clave TechNova.", docs: "Leer la documentación", models: "Ver los modelos",
-    stats: ["99,99 % de disponibilidad", "Baja latencia", "API unificada", "Claves seguras"],
+    tag: "Desarrolladores", title: "Una API. Posibilidades infinitas.", sub: "Una sola clave TechNova para integrar GPT, Claude, Gemini, DeepSeek y los mejores modelos de texto y código en tus productos, facturados en créditos.", docs: "Leer la documentación", models: "Ver los modelos",
+    stats: ["Una sola clave API", "15 modelos de texto", "Facturación por token", "Claves cifradas y revocables"],
     exTag: "Ejemplos", exTitle: "Tu primera solicitud.",
     feTag: "Experiencia del desarrollador", feTitle: "Pensada para desarrolladores.",
-    features: [["Una sola API", "Una API para cientos de modelos."], ["Enrutamiento inteligente", "El mejor modelo para cada tarea."], ["Analítica de uso", "Tokens, costes y rendimiento en tiempo real."], ["Infraestructura segura", "Claves de alcance limitado y controles de acceso precisos."]],
+    features: [["Una sola API", "El mismo formato de petición para todos los modelos de texto."], ["Coste transparente", "Cada respuesta indica los créditos exactos cobrados."], ["Seguimiento de uso", "Peticiones, tokens y créditos por modelo en tu panel."], ["Claves protegidas", "Claves guardadas cifradas, revocables en cualquier momento."]],
     reTag: "Casos de uso", reTitle: "Recetas listas para copiar.",
     recipes: [["Asistente de clientes en WhatsApp", "Conecta tu webhook de WhatsApp a /api/ai/chat y guarda el historial en el servidor."], ["Resumen de documentos", "Divide el texto en bloques de 4.000 tokens, resume cada bloque y luego fusiona los resúmenes."], ["Generación de código", "Usa un modelo especializado con temperature 0.2 para obtener salidas deterministas."], ["Traducción local", "Francés, inglés, fon, yoruba, wolof: indica el idioma de destino en el mensaje de sistema."]],
     bpTitle: "Revisa esto antes de pasar a producción.",
     bp: ["Llama a la API desde tu servidor, nunca desde el navegador.", "Envía una idempotency_key por solicitud para no pagar nunca dos veces.", "Gestiona INSUFFICIENT_CREDITS proponiendo una recarga con Mobile Money.", "Prevé un modelo más ligero de respaldo en caso de indisponibilidad.", "Supervisa tu consumo desde el panel."],
-    stTitle: "Disponibilidad de la plataforma.", status: [["API", "Operativo"], ["Panel", "Operativo"], ["Pagos", "Operativo"]],
+    stTitle: "Límites de la API.", status: [["Peticiones", "60 por minuto"], ["Mensajes por petición", "60 como máximo"], ["Longitud de respuesta", "4.096 tokens como máximo"]],
     ctaT: "Construye el futuro con IA.", ctaS: "Una cuenta. Cientos de modelos. Una API potente.", cta: "Empezar gratis",
   },
   pt: {
-    tag: "Desenvolvedores", title: "Uma API. Possibilidades infinitas.", sub: "Arquitetura de motor duplo: OpenRouter para texto e LLMs, KIE.ai para imagens e vídeos de estúdio, por trás de uma única chave TechNova.", docs: "Ler a documentação", models: "Ver os modelos",
-    stats: ["99,99% de disponibilidade", "Baixa latência", "API unificada", "Chaves seguras"],
+    tag: "Desenvolvedores", title: "Uma API. Possibilidades infinitas.", sub: "Uma única chave TechNova para integrar GPT, Claude, Gemini, DeepSeek e os melhores modelos de texto e código aos seus produtos, cobrados em créditos.", docs: "Ler a documentação", models: "Ver os modelos",
+    stats: ["Uma única chave de API", "15 modelos de texto", "Cobrança por token", "Chaves protegidas e revogáveis"],
     exTag: "Exemplos", exTitle: "Sua primeira solicitação.",
     feTag: "Experiência do desenvolvedor", feTitle: "Pensada para desenvolvedores.",
-    features: [["Uma única API", "Uma API para centenas de modelos."], ["Roteamento inteligente", "O melhor modelo para cada tarefa."], ["Análise de uso", "Tokens, custos e desempenho em tempo real."], ["Infraestrutura segura", "Chaves com escopo limitado e controles de acesso detalhados."]],
+    features: [["Uma única API", "O mesmo formato de requisição para todos os modelos de texto."], ["Custo transparente", "Cada resposta indica os créditos exatos cobrados."], ["Acompanhamento de uso", "Requisições, tokens e créditos por modelo no seu painel."], ["Chaves protegidas", "Chaves guardadas de forma protegida, revogáveis a qualquer momento."]],
     reTag: "Casos de uso", reTitle: "Receitas prontas para copiar.",
     recipes: [["Assistente de clientes no WhatsApp", "Ligue o seu webhook do WhatsApp a /api/ai/chat e mantenha o histórico no servidor."], ["Resumo de documentos", "Divida o texto em blocos de 4.000 tokens, resuma cada bloco e depois junte os resumos."], ["Geração de código", "Use um modelo especializado com temperature 0.2 para saídas determinísticas."], ["Tradução local", "Francês, inglês, fon, iorubá, wolof: indique o idioma de destino na mensagem de sistema."]],
     bpTitle: "Verifique antes de ir para produção.",
     bp: ["Chame a API a partir do seu servidor, nunca do navegador.", "Envie uma idempotency_key por solicitação para nunca pagar duas vezes.", "Trate INSUFFICIENT_CREDITS propondo uma recarga com Mobile Money.", "Preveja um modelo mais leve como alternativa em caso de indisponibilidade.", "Acompanhe o seu consumo no painel."],
-    stTitle: "Disponibilidade da plataforma.", status: [["API", "Operacional"], ["Painel", "Operacional"], ["Pagamentos", "Operacional"]],
+    stTitle: "Limites da API.", status: [["Requisições", "60 por minuto"], ["Mensagens por requisição", "60 no máximo"], ["Tamanho da resposta", "4.096 tokens no máximo"]],
     ctaT: "Construa o futuro com IA.", ctaS: "Uma conta. Centenas de modelos. Uma API poderosa.", cta: "Começar grátis",
   },
 };
@@ -81,6 +81,7 @@ const recipeIcons = [MessageCircle, FileText, Code2, Languages];
 function DevPage() {
   const [lang, setLang] = useSiteLang();
   const t = txt[lang];
+  const apiBase = useApiBase();
   const [tab, setTab] = useState(0);
   useReveal();
   return (
@@ -100,7 +101,7 @@ function DevPage() {
           <div className="mb-3 flex flex-wrap justify-center gap-2">
             {codeSamples.map((c, i) => <button key={c.label} type="button" onClick={() => setTab(i)} className={`rounded-full px-4 py-2 text-sm transition ${tab === i ? "bg-ink text-ink-foreground shadow-soft" : "glass text-muted-foreground hover:text-foreground"}`}>{c.label}</button>)}
           </div>
-          <CodeBlock code={codeSamples[tab]!.code} label={`POST /api/ai/chat · ${codeSamples[tab]!.label}`} />
+          <CodeBlock code={withApiBase(codeSamples[tab]!.code, apiBase)} label={`POST /api/ai/chat · ${codeSamples[tab]!.label}`} />
         </R>
       </section>
 
@@ -136,7 +137,7 @@ function DevPage() {
           </div></R>
           <R delay={80}><div className="h-full rounded-[28px] bg-ink p-6 text-ink-foreground shadow-lift md:p-8">
             <h2 className="font-display text-2xl font-semibold">{t.stTitle}</h2>
-            <div className="mt-5 space-y-2">{t.status.map(([n, s]) => <div key={n} className="flex items-center justify-between rounded-[16px] bg-ink-foreground/5 px-4 py-3 text-sm"><span>{n}</span><span className="flex items-center gap-2 text-ink-foreground/70"><span className="size-2 rounded-full bg-iris" />{s}</span></div>)}</div>
+            <div className="mt-5 space-y-2">{t.status.map(([n, s]) => <div key={n} className="flex items-center justify-between rounded-[16px] bg-ink-foreground/5 px-4 py-3 text-sm"><span>{n}</span><span className="font-medium text-ink-foreground/85">{s}</span></div>)}</div>
           </div></R>
         </div>
       </section>

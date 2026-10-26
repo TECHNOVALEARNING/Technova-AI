@@ -25,10 +25,10 @@ import { PricingContent } from "@/components/site/PricingContent";
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "TechNova AI Hub | 100+ modèles d'IA, payables en FCFA" },
-      { name: "description", content: "GPT, Claude, Gemini, DeepSeek et 100+ modèles d'IA sur une seule plateforme. Sans abonnement, paiement Mobile Money." },
+      { title: "TechNova AI Hub | 60+ modèles d'IA, payables en FCFA" },
+      { name: "description", content: "GPT, Claude, Gemini, DeepSeek et 60+ modèles d'IA sur une seule plateforme. Sans abonnement, paiement Mobile Money." },
       { property: "og:title", content: "TechNova AI Hub | Tous les modèles d'IA en un seul hub" },
-      { property: "og:description", content: "100+ modèles d'IA, une seule API, crédits sans expiration, paiement en FCFA." },
+      { property: "og:description", content: "60+ modèles d'IA, une seule API, crédits sans expiration, paiement en FCFA." },
       { property: "og:image", content: media.heroPoster },
       { name: "twitter:image", content: media.heroPoster },
       { property: "og:type", content: "website" },
@@ -390,7 +390,7 @@ function Ecosystem({ t }: { t: T }) {
                     <li key={f} className="flex items-center gap-1.5 rounded-full bg-ink-foreground/10 px-3 py-1.5 text-xs"><Check className="h-3.5 w-3.5" />{f}</li>
                   ))}
                 </ul>
-                 {/* Products without a public site (e.g. Technova Mobil) show no link. */}
+                 {/* Products without a public site (e.g. Technova Connect) show no link. */}
                  {"url" in it && it.url && <Button asChild variant="pill" size="pill" className="action-pill action-pill-light mt-5 px-5 py-2.5 text-sm font-semibold"><a href={it.url} target="_blank" rel="noreferrer"><ActionText>{it.n}</ActionText><ArrowUpRight className="h-4 w-4" /></a></Button>}
               </div>
               <div className="mt-6 flex items-center gap-4">

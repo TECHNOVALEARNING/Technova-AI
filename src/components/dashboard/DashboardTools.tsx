@@ -154,7 +154,7 @@ export function BillingPage() {
   const c = useCopy(); const { email } = useDashboard(); const cur = useCurrency(); const { rows, balance, totalIn } = useLedger();
   const [live, setLive] = useState(true);
   useEffect(() => { getPaymentMode().then((m) => setLive(m.live)).catch(() => setLive(true)); }, []);
-  const methods = ["MTN MoMo", "Moov Money", "Orange Money", "Wave", "Visa", "Mastercard", "Apple Pay", "Google Pay", "Bank transfer"];
+  const methods = ["MTN MoMo", "Moov Money", "Orange Money", "Wave", "Visa", "Mastercard"];
   return <div className="space-y-4"><PageHead title={c.billingTitle} sub={c.billingSub} />
     <div className="grid gap-4 lg:grid-cols-[2fr_1fr]"><BalanceCard balance={balance} totalIn={totalIn}><p className="mt-3 text-[12px] text-muted-foreground">{email}</p></BalanceCard><div className={card}><p className={eyebrow}>{c.currency.toUpperCase()}</p><div className="mt-4"><CurrencySwitch {...cur} /></div></div></div>
     <div className={card}><p className={eyebrow}>{c.payWay.toUpperCase()}</p><div className="mt-4 flex flex-wrap gap-2">{methods.map(m => <span key={m} className="rounded-full border border-border px-3.5 py-1.5 text-[12px] text-muted-foreground">{m}</span>)}</div><p className="mt-4 text-[11.5px] text-muted-foreground">{c.payNotice}{!live && <strong className="block text-amber-600 dark:text-amber-400">{c.testMode}</strong>}</p><Button asChild className="mt-4 h-9 rounded-full text-[12.5px]"><Link to="/dashboard/credits"><Plus className="size-4" />{c.buy}</Link></Button></div>

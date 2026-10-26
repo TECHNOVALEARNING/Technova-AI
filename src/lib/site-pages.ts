@@ -1,3 +1,5 @@
+import { useEffect, useState } from "react";
+
 // Content for the public Models, Blog, Docs and Developers pages (FR/EN/ES/PT).
 // Source: the client's existing site (technovaaihub.vercel.app).
 
@@ -25,15 +27,23 @@ export const posts: Post[] = [
   { cat: "law", url: "https://blog-ia.com/mode-ia-google/", title: { fr: "Aperçus IA et Mode IA Google : historique et confidentialité", en: "Google AI Overviews & AI Mode: history and privacy", es: "AI Overviews y Modo IA de Google: historial y privacidad", pt: "AI Overviews e Modo IA do Google: histórico e privacidade" }, excerpt: { fr: "Ce que Google enregistre quand vous utilisez le Mode IA, et comment reprendre la main sur vos données.", en: "What Google records when you use AI Mode, and how to take back control of your data.", es: "Lo que Google registra cuando usas sus funciones de IA y cómo controlarlo.", pt: "O que o Google registra quando você usa as funções de IA e como controlar isso." } },
 ];
 
+/** Code samples point at the site the visitor is on (the API lives on the same domain). */
+export function useApiBase() {
+  const [base, setBase] = useState("https://votre-domaine-technova");
+  useEffect(() => { setBase(window.location.origin); }, []);
+  return base;
+}
+export const withApiBase = (code: string, base: string) => code.replaceAll("__API_BASE__", base);
+
 export const codeSamples: { label: string; code: string }[] = [
-  { label: "JavaScript", code: `const r = await fetch("https://api.technova.ai/api/ai/chat", {
+  { label: "JavaScript", code: `const r = await fetch("__API_BASE__/api/ai/chat", {
   method: "POST",
   headers: {
     Authorization: \`Bearer \${process.env.TECHNOVA_API_KEY}\`,
     "Content-Type": "application/json",
   },
   body: JSON.stringify({
-    model: "google/gemini-2.5-flash",
+    model: "Gemini 2.5 Flash",
     messages: [{ role: "user", content: "Résume ce devis." }],
     idempotency_key: crypto.randomUUID(),
   }),
@@ -42,17 +52,17 @@ const data = await r.json();` },
   { label: "Python", code: `import os, uuid, requests
 
 r = requests.post(
-    "https://api.technova.ai/api/ai/chat",
+    "__API_BASE__/api/ai/chat",
     headers={"Authorization": f"Bearer {os.environ['TECHNOVA_API_KEY']}"},
     json={
-        "model": "anthropic/claude-haiku-4.5",
+        "model": "Claude Haiku 4.5",
         "messages": [{"role": "user", "content": "Traduis en fon."}],
         "idempotency_key": str(uuid.uuid4()),
     },
     timeout=60,
 )
 print(r.json())` },
-  { label: "PHP", code: `$ch = curl_init("https://api.technova.ai/api/ai/chat");
+  { label: "PHP", code: `$ch = curl_init("__API_BASE__/api/ai/chat");
 curl_setopt_array($ch, [
   CURLOPT_HTTPHEADER => [
     "Authorization: Bearer " . getenv("TECHNOVA_API_KEY"),
@@ -60,15 +70,15 @@ curl_setopt_array($ch, [
   ],
   CURLOPT_POST => true,
   CURLOPT_POSTFIELDS => json_encode([
-    "model" => "openai/gpt-4o-mini",
+    "model" => "GPT-4o Mini",
     "messages" => [["role" => "user", "content" => "Bonjour"]],
     "idempotency_key" => bin2hex(random_bytes(16)),
   ]),
   CURLOPT_RETURNTRANSFER => true,
 ]);
 $response = curl_exec($ch);` },
-  { label: "cURL", code: `curl https://api.technova.ai/api/ai/chat \\
+  { label: "cURL", code: `curl __API_BASE__/api/ai/chat \\
   -H "Authorization: Bearer $TECHNOVA_API_KEY" \\
   -H "Content-Type: application/json" \\
-  -d '{"model":"deepseek/deepseek-v3.1","messages":[{"role":"user","content":"Salut"}]}'` },
+  -d '{"model":"DeepSeek V3","messages":[{"role":"user","content":"Salut"}]}'` },
 ];
