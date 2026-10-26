@@ -232,6 +232,13 @@
       "when": 1793952000000,
       "tag": "0032_registry_official_items",
       "breakpoints": true
+    },
+    {
+      "idx": 33,
+      "version": "7",
+      "when": 1794038400000,
+      "tag": "0033_admin_console",
+      "breakpoints": true
     }
   ]
 }

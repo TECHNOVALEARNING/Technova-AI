@@ -31,13 +31,13 @@ export const getAdminStats = createServerFn({ method: "GET" })
     const since = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
     const [profiles, credits, usage, media] = await Promise.all([
       supabaseAdmin.from("profiles").select("id", { count: "exact", head: true }),
-      supabaseAdmin.from("credit_transactions").select("amount,kind"),
+      supabaseAdmin.rpc("admin_credit_totals"),
       supabaseAdmin.from("usage_logs").select("model,input_tokens,output_tokens,credits").gte("created_at", since),
       supabaseAdmin.from("media_generations").select("kind,status,charged_credits").gte("created_at", since),
     ]);
-    const ledger = credits.data ?? [];
-    const distributed = ledger.filter((r) => r.amount > 0).reduce((s, r) => s + r.amount, 0);
-    const consumed = ledger.filter((r) => r.amount < 0).reduce((s, r) => s - r.amount, 0);
+    // Totals are summed in SQL: the ledger is never loaded into memory.
+    const distributed = credits.data?.[0]?.distributed ?? 0;
+    const consumed = credits.data?.[0]?.consumed ?? 0;
     const byModel = new Map<string, { calls: number; credits: number; tokens: number }>();
     for (const row of usage.data ?? []) {
       const entry = byModel.get(row.model) ?? { calls: 0, credits: 0, tokens: 0 };

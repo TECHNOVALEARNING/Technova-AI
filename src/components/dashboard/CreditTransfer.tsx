@@ -10,9 +10,9 @@ type Transfer = { id: string; to_user_id: string; amount: number; reason: string
 const MAX = 1000;
 
 /** Admin: give credits to one account (created credits, 1 000 max per transfer). */
-export function CreditTransfer({ fr }: { fr: boolean }) {
+export function CreditTransfer({ fr, initialEmail = "" }: { fr: boolean; initialEmail?: string }) {
   const loc = fr ? "fr-FR" : "en-US";
-  const [email, setEmail] = useState("");
+  const [email, setEmail] = useState(initialEmail);
   const [user, setUser] = useState<Found | null>(null);
   const [amount, setAmount] = useState("");
   const [reason, setReason] = useState("");

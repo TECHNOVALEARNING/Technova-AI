@@ -95,6 +95,10 @@ export const Route = createFileRoute("/api/chat")({
       POST: async ({ request }) => {
         const userId = await verifyUser(request);
         if (!userId) return new Response("Unauthorized", { status: 401 });
+        const { supabaseAdmin: admin } = await import("@/integrations/supabase/client.server");
+        // A suspended account may still hold a valid session for up to an hour: refuse its requests.
+        const { data: suspended } = await admin.from("account_suspensions").select("user_id").eq("user_id", userId).maybeSingle();
+        if (suspended) return new Response("Compte suspendu. / Account suspended.", { status: 403 });
         const { hitRateLimit, rateLimitMessage } = await import("@/lib/security.server");
         if (!(await hitRateLimit(userId, "chat"))) return new Response(rateLimitMessage(request.headers.get("accept-language")?.startsWith("en") ? "en" : "fr", "chat"), { status: 429 });
         const { supabaseAdmin } = await import("@/integrations/supabase/client.server");

@@ -1,6 +1,7 @@
 import { createContext, useCallback, useContext, useEffect, useState, type ReactNode } from "react";
 import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
-import { BookMarked, Bot, Library, Plug, Swords } from "lucide-react";
+import { BookMarked, Bot, Library, Plug, ShieldAlert, Swords } from "lucide-react";
+import { getMyRole } from "@/lib/admin.functions";
 import { Activity, ArrowLeft, Bell, BookOpen, Boxes, ChevronDown, Code2, CreditCard, Diamond, Gift, Globe2, LayoutDashboard, LogOut, Menu, MessageCircle, Moon, PanelLeftClose, PanelLeftOpen, Search, Settings2, Sun, Wallet, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -74,6 +75,9 @@ export function DashboardLayout({ children }: { children: ReactNode }) {
     setError(""); setThreads(data ?? []);
   }, [lang]);
   useEffect(() => { void reload(); }, [reload]);
+  // The admin link is shown only to administrators (the page itself re-checks the role server-side).
+  const [isAdmin, setIsAdmin] = useState(false);
+  useEffect(() => { getMyRole().then((r) => setIsAdmin(r.admin)).catch(() => setIsAdmin(false)); }, []);
   async function createThread() {
     const { data, error: insertError } = await supabase.from("chat_threads").insert({ title: t.newChat }).select("id").single();
     if (insertError || !data) { setError(t.actionError); return; }
@@ -111,6 +115,7 @@ export function DashboardLayout({ children }: { children: ReactNode }) {
         <div className="flex min-h-0 flex-1 flex-col px-3">
           <nav aria-label={t.navigation} className="shrink-0 space-y-px">
             {links.map(item => <Link key={item.key} to={item.to} title={t[item.key]} aria-current={current === item.key ? "page" : undefined} className={`side-link flex h-8 items-center gap-2.5 rounded-lg px-2.5 text-[12.5px] font-medium transition-colors ${mini ? "lg:justify-center lg:px-0" : ""} ${current === item.key ? "is-active text-foreground" : "text-muted-foreground hover:text-foreground"}`}><item.icon className="size-[15px] shrink-0" strokeWidth={1.7} /><span className={mini ? "lg:hidden" : ""}>{t[item.key]}</span></Link>)}
+            {isAdmin && <Link to="/dashboard/admin" title="Administration" aria-current={pathname === "/dashboard/admin" ? "page" : undefined} className={`side-link flex h-8 items-center gap-2.5 rounded-lg px-2.5 text-[12.5px] font-medium transition-colors ${mini ? "lg:justify-center lg:px-0" : ""} ${pathname === "/dashboard/admin" ? "is-active text-foreground" : "text-muted-foreground hover:text-foreground"}`}><ShieldAlert className="size-[15px] shrink-0" strokeWidth={1.7} /><span className={mini ? "lg:hidden" : ""}>Administration</span></Link>}
           </nav>
           <div className={`mt-5 flex min-h-0 flex-1 flex-col ${mini ? "lg:hidden" : ""}`}>
             <p className="shrink-0 px-2.5 pb-1.5 text-[11px] font-medium text-muted-foreground">{t.history}</p>

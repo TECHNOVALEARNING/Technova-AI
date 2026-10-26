@@ -26,6 +26,9 @@ async function ownerForKey(request: Request) {
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
   const { data } = await supabaseAdmin.from("api_keys").select("id,owner_id").eq("key_hash", hash).maybeSingle();
   if (!data) return null;
+  // Suspended accounts lose API access immediately (keys never expire on their own).
+  const { data: suspended } = await supabaseAdmin.from("account_suspensions").select("user_id").eq("user_id", data.owner_id).maybeSingle();
+  if (suspended) return null;
   await supabaseAdmin.from("api_keys").update({ last_used_at: new Date().toISOString() }).eq("id", data.id);
   return data.owner_id;
 }

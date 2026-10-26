@@ -436,6 +436,12 @@ export type Database = {
         }
         Relationships: []
       }
+      account_suspensions: {
+        Row: { created_at: string; reason: string; suspended_by: string | null; user_id: string }
+        Insert: { created_at?: string; reason?: string; suspended_by?: string | null; user_id: string }
+        Update: { created_at?: string; reason?: string; suspended_by?: string | null; user_id?: string }
+        Relationships: []
+      }
       api_keys: {
         Row: {
           created_at: string
@@ -1379,6 +1385,13 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      admin_list_users: {
+        Args: { _limit?: number; _offset?: number; _search?: string }
+        Returns: { balance: number; created_at: string; credits_30d: number; display_name: string; email: string; id: string; is_admin: boolean; last_sign_in_at: string | null; paid_xof: number; requests_30d: number; suspended: boolean }[]
+      }
+      admin_count_users: { Args: { _search?: string }; Returns: number }
+      admin_credit_totals: { Args: never; Returns: { consumed: number; distributed: number; granted: number; purchased: number }[] }
+      admin_revenue: { Args: never; Returns: { buyers: number; failed_30d: number; paid_30d: number; pending_30d: number; revenue_30d: number; revenue_today: number; revenue_total: number }[] }
       match_document_chunks: {
         Args: { _embedding: string; _file_ids: string[]; _k?: number; _kb_ids: string[]; _min_score?: number; _owner: string }
         Returns: { chunk_id: string; chunk_index: number; content: string; file_id: string; filename: string; score: number }[]
