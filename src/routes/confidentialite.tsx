@@ -17,7 +17,7 @@ export const Route = createFileRoute("/confidentialite")({
   component: PrivacyPage,
 });
 
-const UPDATED = "24 octobre 2026";
+const UPDATED = "28 octobre 2026";
 const DPO = "dpo@technovaaihub.com";
 const PRIVACY = "privacy@technovaaihub.com";
 
@@ -91,8 +91,8 @@ function PrivacyPage() {
 
       <div className="min-w-0 space-y-6">
         <Section id="responsable" n={1} title="Responsable du traitement">
-          <p>Le responsable du traitement des données personnelles collectées via TechNova AI Hub est <b>Technova Learning — CED-ORION</b>, situé à Cotonou, au Bénin. À ce titre, nous déterminons les finalités et les moyens des traitements décrits ici. Cette politique s'applique dans le cadre de la loi béninoise n° 2017-20 portant Code du numérique et, pour les personnes situées dans l'Union européenne, du Règlement général sur la protection des données (RGPD).</p>
-          <Facts rows={[["Responsable", "Technova Learning — CED-ORION, Cotonou, Bénin"], ["Service", "TechNova AI Hub — plateforme d'accès aux modèles d'IA : chat, création de sites, images, vidéos, musique et API"], ["Contact vie privée", mail(PRIVACY)], ["Délégué à la protection des données", <>Cédric Toudonou — {mail(DPO)}</>]]} />
+          <p>Le responsable du traitement des données personnelles collectées via TechNova AI Hub est <b>Dolapo ECOM LLC</b>, société enregistrée au Nouveau-Mexique (États-Unis), dont le siège social est situé au 1209 Mountain Rd PL NE, Ste R, Albuquerque, NM 87110, USA. À ce titre, nous déterminons les finalités et les moyens des traitements décrits ici. Cette politique s'applique notamment, pour nos utilisateurs au Bénin, dans le cadre de la loi n° 2017-20 portant Code du numérique et, pour les personnes situées dans l'Union européenne, du Règlement général sur la protection des données (RGPD).</p>
+          <Facts rows={[["Responsable", "Dolapo ECOM LLC — 1209 Mountain Rd PL NE, Ste R, Albuquerque, NM 87110, USA"], ["Service", "TechNova AI Hub — plateforme d'accès aux modèles d'IA : chat, création de sites, images, vidéos, musique et API"], ["Contact vie privée", mail(PRIVACY)], ["Délégué à la protection des données", <>Cédric Toudonou — {mail(DPO)}</>]]} />
           <p>Pour toute question sur cette politique ou pour exercer vos droits, écrivez en priorité à notre délégué à la protection des données. Nous répondons sous 30 jours au plus.</p>
         </Section>
 
@@ -213,7 +213,7 @@ function PrivacyPage() {
         </Section>
 
         <Section id="transferts" n={12} title="Transferts internationaux">
-          <p>Certains de nos prestataires (hébergement, base de données, modèles d'IA, paiement) peuvent traiter des données hors du Bénin, notamment aux États-Unis et dans l'Union européenne. Nous veillons à ce que ces transferts soient encadrés par des garanties appropriées : engagements contractuels, mesures de sécurité et limitation stricte aux finalités décrites ici. Aucun transfert n'a lieu pour revendre des données.</p>
+          <p>Certains de nos prestataires (hébergement, base de données, modèles d'IA, paiement) peuvent traiter des données hors de votre pays, notamment aux États-Unis, où est établie la société responsable du traitement, et dans l'Union européenne. Nous veillons à ce que ces transferts soient encadrés par des garanties appropriées : engagements contractuels, mesures de sécurité et limitation stricte aux finalités décrites ici. Aucun transfert n'a lieu pour revendre des données.</p>
         </Section>
 
         <Section id="modifications" n={13} title="Modifications et contact">
@@ -221,7 +221,7 @@ function PrivacyPage() {
           <Facts rows={[["Questions générales", mail(PRIVACY)], ["Délégué à la protection des données", <>Cédric Toudonou — {mail(DPO)}</>]]} />
         </Section>
 
-        <p className="px-2 text-xs text-muted-foreground">Technova Learning — CED-ORION · Cotonou, Bénin · Dernière mise à jour : {UPDATED}</p>
+        <p className="px-2 text-xs text-muted-foreground">Dolapo ECOM LLC · 1209 Mountain Rd PL NE, Ste R, Albuquerque, NM 87110, USA · Dernière mise à jour : {UPDATED}</p>
       </div>
     </div>
     <Footer lang={lang} />
