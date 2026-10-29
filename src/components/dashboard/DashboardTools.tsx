@@ -17,7 +17,8 @@ import {
   selectSupabaseProject,
   startSupabaseConnect,
 } from "@/lib/supabase-oauth.functions";
-import { formatPrice, modelCatalog, type Currency } from "@/lib/model-pricing";
+import { modelCatalog } from "@/lib/model-pricing";
+import { formatFromXof, rateFor, useGeoPrice } from "@/lib/geo-price-client";
 import { checkPayment, getPaymentMode, startCheckout } from "@/lib/payments.functions";
 import { useDashboard } from "./dashboard-context";
 import supabaseLogo from "@/assets/supabase-logo.svg";
@@ -65,11 +66,23 @@ function PageHead({ title, sub }: { title: string; sub: string }) {
   return <div className="mb-6"><h1 className="font-display text-[26px] font-semibold leading-tight">{title}</h1><p className="mt-1 text-[13px] text-muted-foreground">{sub}</p></div>;
 }
 
+/**
+ * Display currency: the visitor's own currency by default (geopricing), with FCFA, USD and EUR as alternatives.
+ * Packs are always billed in FCFA; other currencies are indicative ("≈" for daily market rates).
+ */
 function useCurrency() {
-  const [currency, setState] = useState<Currency>("FCFA");
-  useEffect(() => { const v = localStorage.getItem("technova-currency"); if (v === "FCFA" || v === "USD" || v === "EUR") setState(v); }, []);
-  const setCurrency = (v: Currency) => { setState(v); localStorage.setItem("technova-currency", v); };
-  return { currency, setCurrency };
+  const geo = useGeoPrice();
+  const [choice, setChoice] = useState<string | null>(null);
+  useEffect(() => {
+    try { const v = localStorage.getItem("technova-currency"); setChoice(v === "FCFA" ? "XOF" : v); } catch { /* storage blocked */ }
+  }, []);
+  const local = geo.currency === "XAF" ? "XOF" : geo.currency;
+  const options = [...new Set([local, "XOF", "USD", "EUR"])].filter((code) => rateFor(geo, code));
+  const currency = choice && options.includes(choice) ? choice : local;
+  const rate = rateFor(geo, currency);
+  const setCurrency = (v: string) => { setChoice(v); try { localStorage.setItem("technova-currency", v); } catch { /* storage blocked */ } };
+  const format = (xof: number) => formatFromXof(xof, currency, rate, "fr-FR");
+  return { currency, setCurrency, options, format, approx: !!rate?.approx };
 }
 
 type Tx = Tables<"credit_transactions">;
@@ -86,8 +99,8 @@ function useLedger() {
   return { rows, balance, totalIn, loaded };
 }
 
-function CurrencySwitch({ currency, setCurrency }: ReturnType<typeof useCurrency>) {
-  return <div className="inline-flex rounded-full border border-border bg-background p-1">{(["FCFA", "USD", "EUR"] as Currency[]).map(c => <button key={c} type="button" onClick={() => setCurrency(c)} className={`h-8 rounded-full px-4 text-[12px] font-semibold transition-colors ${currency === c ? "bg-foreground text-background" : "text-muted-foreground hover:text-foreground"}`}>{c}</button>)}</div>;
+function CurrencySwitch({ currency, setCurrency, options }: ReturnType<typeof useCurrency>) {
+  return <div className="inline-flex flex-wrap rounded-full border border-border bg-background p-1">{options.map(c => <button key={c} type="button" onClick={() => setCurrency(c)} className={`h-8 rounded-full px-4 text-[12px] font-semibold transition-colors ${currency === c ? "bg-foreground text-background" : "text-muted-foreground hover:text-foreground"}`}>{c === "XOF" ? "FCFA" : c}</button>)}</div>;
 }
 
 function ActivityList({ rows }: { rows: Tx[] }) {
@@ -112,8 +125,8 @@ export function ModelsPage() {
     </div>)}</div></div>;
 }
 
-function Packs({ currency }: { currency: Currency }) {
-  const c = useCopy(); const start = useServerFn(startCheckout); const check = useServerFn(checkPayment);
+function Packs({ cur }: { cur: ReturnType<typeof useCurrency> }) {
+  const c = useCopy(); const { lang } = useDashboard(); const start = useServerFn(startCheckout); const check = useServerFn(checkPayment);
   const [packs, setPacks] = useState<Tables<"credit_packs">[]>([]); const [busy, setBusy] = useState("");
   useEffect(() => { void supabase.from("credit_packs").select("*").eq("active", true).order("display_order").then(({ data }) => setPacks(data ?? [])); }, []);
   useEffect(() => {
@@ -132,12 +145,13 @@ function Packs({ currency }: { currency: Currency }) {
   }
   return <div className="space-y-4">{pendingPack && <div className={`${card} border-primary/60 ring-1 ring-primary/30`} role="region" aria-label={pendingPack.name}>
     <p className="text-[13.5px] font-semibold">{c.confirmPack}</p>
-    <p className="mt-1 text-[13px]">{pendingPack.name} · {formatPrice(pendingPack.price_xof, "FCFA")} → {pendingPack.credits.toLocaleString()} {c.credits}</p>
+    <p className="mt-1 text-[13px]">{pendingPack.name} · {pendingPack.price_xof.toLocaleString("fr-FR")} FCFA → {pendingPack.credits.toLocaleString()} {c.credits}</p>
     <p className="mt-1 text-[11.5px] text-muted-foreground">{c.oneTime}</p>
     <div className="mt-3 flex gap-2"><Button disabled={!!busy} className="h-9 rounded-full text-[12.5px]" onClick={() => void buy(pendingPack.slug)}>{busy === pendingPack.slug ? c.redirecting : c.confirmPay}</Button><Button variant="ghost" className="h-9 rounded-full text-[12.5px]" onClick={() => setPending(null)}>{c.cancel}</Button></div>
   </div>}<div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">{packs.map(p => <div key={p.id} className={`${card} ${p.featured ? "border-primary/60 ring-1 ring-primary/30" : ""}`}>
     <div className="flex items-center justify-between"><p className="text-[13.5px] font-semibold">{p.name}</p>{p.featured && <span className="rounded-full bg-primary px-2 py-0.5 text-[10px] font-semibold text-primary-foreground">{c.popular}</span>}</div>
-    <p className="mt-2 font-display text-[24px] font-semibold">{formatPrice(p.price_xof, currency)}</p>
+    <p className="mt-2 font-display text-[24px] font-semibold">{cur.format(p.price_xof)}</p>
+    {cur.currency !== "XOF" && <p className="text-[11px] text-muted-foreground">{lang === "fr" ? "Facturé" : "Billed"} {p.price_xof.toLocaleString("fr-FR")} FCFA</p>}
     <p className="text-[12px] text-muted-foreground">{p.credits.toLocaleString()} {c.credits}</p>
     <Button variant={p.featured ? "default" : "outline"} disabled={!!busy} className="mt-4 h-9 w-full rounded-full text-[12.5px]" onClick={() => void buy(p.slug)}>{busy === p.slug ? c.redirecting : c.buy}</Button>
   </div>)}</div></div>;
@@ -147,7 +161,7 @@ export function CreditsPage() {
   const c = useCopy(); const cur = useCurrency(); const { rows, balance, totalIn } = useLedger();
   return <div className="space-y-4"><PageHead title={c.creditsTitle} sub={c.creditsSub} />
     <div className="grid gap-4 lg:grid-cols-[2fr_1fr]"><BalanceCard balance={balance} totalIn={totalIn} /><div className={card}><p className={eyebrow}>{c.currency.toUpperCase()}</p><div className="mt-4"><CurrencySwitch {...cur} /></div></div></div>
-    <Packs currency={cur.currency} /><ActivityList rows={rows} /></div>;
+    <Packs cur={cur} /><ActivityList rows={rows} /></div>;
 }
 
 export function BillingPage() {

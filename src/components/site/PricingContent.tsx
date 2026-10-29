@@ -7,7 +7,8 @@ import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { fallbackPacks, packCopy, PENDING_PACK_KEY, type PublicPack } from "@/lib/public-pricing";
 import type { SiteLang } from "@/lib/i18n";
-import { CFA_PRICE, formatLocalPrice, isCfa, type GeoPrice } from "@/lib/geo-pricing";
+import { formatLocalPrice, isCfa } from "@/lib/geo-pricing";
+import { useGeoPrice } from "@/lib/geo-price-client";
 
 const text = {
   fr: { title: "Des forfaits simples et flexibles", sub: "Quatre packs de crédits Technova prépayés, payables en Mobile Money ou par carte.", once: "Paiement unique", terms: "Paiement unique • crédits prépayés • aucun renouvellement automatique", choose: "Choisir", popular: "LE PLUS POPULAIRE", credits: "crédits Technova", allFeatures: "Création de sites web (TechNova Studio) : à partir du pack Essential. Génération vidéo : packs Creator et Pro. Le chat, les images, la musique et la recherche sont inclus dans tous les packs.", validity: "Validité des crédits : vos crédits Technova n'expirent pas.", refund: "Échec de génération : si une génération échoue pour une raison technique, les crédits réservés sont restitués sur votre solde. Il ne s'agit pas d'un remboursement en argent." },
@@ -26,7 +27,7 @@ const locales: Record<SiteLang, string> = { fr: "fr-FR", en: "en-US", es: "es-ES
 
 export function PricingContent({ lang }: { lang: SiteLang }) {
   const t = text[lang]; const g = geoText[lang]; const loc = locales[lang]; const navigate = useNavigate();
-  const [geo, setGeo] = useState<GeoPrice>(CFA_PRICE);
+  const geo = useGeoPrice();
   const [packs, setPacks] = useState<PublicPack[]>(fallbackPacks);
   useEffect(() => {
     void supabase.from("credit_packs").select("slug,name,price_xof,credits,featured").eq("active", true).order("display_order").then(({ data }) => {
@@ -34,11 +35,6 @@ export function PricingContent({ lang }: { lang: SiteLang }) {
       const sold = (data ?? []).filter((p) => packCopy[p.slug]);
       if (sold.length) setPacks(sold);
     });
-    // "?country=XX" previews another country's display (indicative only, billing stays FCFA).
-    const preview = new URLSearchParams(window.location.search).get("country");
-    void fetch(`/api/public/geo-price${preview ? `?country=${encodeURIComponent(preview)}` : ""}`).then((r) => (r.ok ? r.json() : null)).then((data: GeoPrice | null) => {
-      if (data && typeof data.perXof === "number" && data.perXof > 0) setGeo(data);
-    }).catch(() => { /* keep FCFA */ });
   }, []);
   const local = !isCfa(geo.currency);
   async function choose(slug: string) {

@@ -18,8 +18,8 @@ export const Route = createFileRoute("/confidentialite")({
 });
 
 const UPDATED = "28 octobre 2026";
-const DPO = "dpo@technovaaihub.com";
-const PRIVACY = "privacy@technovaaihub.com";
+// Single contact address for privacy questions and data-protection requests.
+const CONTACT = "support@technovaihub.com";
 
 const sections = [
   ["responsable", "Responsable du traitement"], ["donnees", "Données que nous traitons"], ["finalites", "Finalités du traitement"],
@@ -92,7 +92,7 @@ function PrivacyPage() {
       <div className="min-w-0 space-y-6">
         <Section id="responsable" n={1} title="Responsable du traitement">
           <p>Le responsable du traitement des données personnelles collectées via TechNova AI Hub est <b>Dolapo ECOM LLC</b>, société enregistrée au Nouveau-Mexique (États-Unis), dont le siège social est situé au 1209 Mountain Rd PL NE, Ste R, Albuquerque, NM 87110, USA. À ce titre, nous déterminons les finalités et les moyens des traitements décrits ici. Cette politique s'applique notamment, pour nos utilisateurs au Bénin, dans le cadre de la loi n° 2017-20 portant Code du numérique et, pour les personnes situées dans l'Union européenne, du Règlement général sur la protection des données (RGPD).</p>
-          <Facts rows={[["Responsable", "Dolapo ECOM LLC — 1209 Mountain Rd PL NE, Ste R, Albuquerque, NM 87110, USA"], ["Service", "TechNova AI Hub — plateforme d'accès aux modèles d'IA : chat, création de sites, images, vidéos, musique et API"], ["Contact vie privée", mail(PRIVACY)], ["Délégué à la protection des données", <>Cédric Toudonou — {mail(DPO)}</>]]} />
+          <Facts rows={[["Responsable", "Dolapo ECOM LLC — 1209 Mountain Rd PL NE, Ste R, Albuquerque, NM 87110, USA"], ["Service", "TechNova AI Hub — plateforme d'accès aux modèles d'IA : chat, création de sites, images, vidéos, musique et API"], ["Contact vie privée", mail(CONTACT)], ["Délégué à la protection des données", "Cédric Toudonou"]]} />
           <p>Pour toute question sur cette politique ou pour exercer vos droits, écrivez en priorité à notre délégué à la protection des données. Nous répondons sous 30 jours au plus.</p>
         </Section>
 
@@ -149,7 +149,7 @@ function PrivacyPage() {
             ["Modèles d'IA", "Les fournisseurs des modèles que vous utilisez (par exemple OpenAI, Anthropic, Google, Meta, Mistral, DeepSeek, Alibaba), via notre infrastructure d'accès ; ils reçoivent uniquement le contenu nécessaire à chaque demande"],
             ["Paiement", "Nyole / Feexpay — aucun numéro de carte n'est stocké par Technova"],
           ]} />
-          <p>La liste détaillée et à jour de nos prestataires est disponible sur simple demande à {mail(DPO)}.</p>
+          <p>La liste détaillée et à jour de nos prestataires est disponible sur simple demande à {mail(CONTACT)}.</p>
         </Section>
 
         <Section id="conservation" n={6} title="Durées de conservation">
@@ -167,9 +167,9 @@ function PrivacyPage() {
 
         <Section id="droits" n={7} title="Vos droits">
           <p>Vous disposez des droits d'accès, de rectification, d'effacement, de limitation, d'opposition et de portabilité de vos données, ainsi que du droit de retirer votre consentement. Vous pouvez aussi définir des directives sur le sort de vos données après votre décès, lorsque la loi le prévoit.</p>
-          <p>Vous pouvez supprimer vous-même à tout moment vos conversations, fichiers, bases de connaissances et projets depuis votre espace. Pour toute autre demande, dont la suppression de votre compte, écrivez à {mail(DPO)} ou {mail(PRIVACY)}. Une vérification d'identité proportionnée pourra vous être demandée. Nous répondons sous 30 jours.</p>
+          <p>Vous pouvez supprimer vous-même à tout moment vos conversations, fichiers, bases de connaissances et projets depuis votre espace. Pour toute autre demande, dont la suppression de votre compte, écrivez à {mail(CONTACT)}. Une vérification d'identité proportionnée pourra vous être demandée. Nous répondons sous 30 jours.</p>
           <p>Si vous estimez que vos droits ne sont pas respectés, vous pouvez saisir l'<b>Autorité de Protection des Données à caractère Personnel (APDP)</b> du Bénin ou, si vous résidez dans l'Union européenne, l'autorité de protection des données de votre pays.</p>
-          <div className="pt-1"><Button asChild className="rounded-full"><a href={`mailto:${DPO}?subject=${encodeURIComponent("Exercice de mes droits")}`}>Écrire au délégué à la protection des données</a></Button></div>
+          <div className="pt-1"><Button asChild className="rounded-full"><a href={`mailto:${CONTACT}?subject=${encodeURIComponent("Exercice de mes droits")}`}>Écrire au délégué à la protection des données</a></Button></div>
         </Section>
 
         <Section id="cookies" n={8} title="Cookies et stockage local">
@@ -199,7 +199,7 @@ function PrivacyPage() {
             <Sub title="Encadrer">Les outils des agents sont désactivés par défaut et chaque réponse respecte un budget défini.</Sub>
             <Sub title="Informer">Les réponses sont générées automatiquement et peuvent contenir des erreurs : vérifiez les informations importantes.</Sub>
           </div>
-          <p>Vous pouvez demander une intervention humaine, exprimer votre point de vue et contester une décision prise avec l'aide d'un système d'IA en écrivant à {mail(DPO)}.</p>
+          <p>Vous pouvez demander une intervention humaine, exprimer votre point de vue et contester une décision prise avec l'aide d'un système d'IA en écrivant à {mail(CONTACT)}.</p>
         </Section>
 
         <Section id="public" n={11} title="Contenus que vous rendez publics">
@@ -218,7 +218,7 @@ function PrivacyPage() {
 
         <Section id="modifications" n={13} title="Modifications et contact">
           <p>Nous pouvons mettre à jour cette politique pour tenir compte de l'évolution du service ou de la réglementation. Toute modification importante sera signalée sur cette page avec sa date d'entrée en vigueur. La version applicable est celle publiée ici.</p>
-          <Facts rows={[["Questions générales", mail(PRIVACY)], ["Délégué à la protection des données", <>Cédric Toudonou — {mail(DPO)}</>]]} />
+          <Facts rows={[["Contact", mail(CONTACT)], ["Délégué à la protection des données", "Cédric Toudonou"]]} />
         </Section>
 
         <p className="px-2 text-xs text-muted-foreground">Dolapo ECOM LLC · 1209 Mountain Rd PL NE, Ste R, Albuquerque, NM 87110, USA · Dernière mise à jour : {UPDATED}</p>

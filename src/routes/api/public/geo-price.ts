@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { CFA_PRICE, EUR_PEGS, XOF_PER_EUR, currencyForCountry, type GeoPrice } from "@/lib/geo-pricing";
+import { CFA_PRICE, EUR_PEGS, XOF_PER_EUR, currencyForCountry, type GeoPrice, type Rate } from "@/lib/geo-pricing";
 
 // Public: the visitor's country (Vercel edge header) and an indicative FCFA → local rate.
 // Market rates come from open.er-api.com (no key), cached in memory for 12 hours.
@@ -29,12 +29,18 @@ export const Route = createFileRoute("/api/public/geo-price")({
         const country = raw && /^[A-Za-z]{2}$/.test(raw) ? raw.toUpperCase() : null;
         const currency = currencyForCountry(country);
         const headers = { "cache-control": "private, max-age=3600", vary: "x-vercel-ip-country" };
-        const pegged = EUR_PEGS[currency];
-        if (pegged) return Response.json({ country, currency, perXof: pegged / XOF_PER_EUR, approx: false } satisfies GeoPrice, { headers });
-        const rate = (await eurRates())?.[currency];
+        const rates = await eurRates();
+        const rateFor = (code: string): Rate | null => {
+          const pegged = EUR_PEGS[code];
+          if (pegged) return { perXof: pegged / XOF_PER_EUR, approx: false };
+          const market = rates?.[code];
+          return market ? { perXof: market / XOF_PER_EUR, approx: true } : null;
+        };
+        const alternatives = Object.fromEntries((["USD", "EUR"] as const).flatMap((code) => { const r = rateFor(code); return r ? [[code, r]] : []; }));
+        const local = rateFor(currency);
         // No market rate available: show FCFA rather than a guessed price.
-        if (!rate) return Response.json({ ...CFA_PRICE, country } satisfies GeoPrice, { headers });
-        return Response.json({ country, currency, perXof: rate / XOF_PER_EUR, approx: true } satisfies GeoPrice, { headers });
+        if (!local) return Response.json({ ...CFA_PRICE, country, alternatives } satisfies GeoPrice, { headers });
+        return Response.json({ country, currency, ...local, alternatives } satisfies GeoPrice, { headers });
       },
     },
   },

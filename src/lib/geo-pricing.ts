@@ -28,8 +28,10 @@ export const currencyForCountry = (country: string | null | undefined) => (count
 
 export const isCfa = (currency: string) => currency === "XOF" || currency === "XAF";
 
-/** What the API returns: how many units of `currency` one FCFA is worth. */
-export type GeoPrice = { country: string | null; currency: string; perXof: number; approx: boolean };
+/** How many units of a currency one FCFA is worth; approx = daily market rate (not a fixed peg). */
+export type Rate = { perXof: number; approx: boolean };
+/** What the API returns: the visitor's currency, plus USD and EUR so a visitor can switch. */
+export type GeoPrice = { country: string | null; currency: string; perXof: number; approx: boolean; alternatives?: Record<string, Rate> };
 export const CFA_PRICE: GeoPrice = { country: null, currency: "XOF", perXof: 1, approx: false };
 
 export function formatLocalPrice(xof: number, geo: GeoPrice, locale: string) {

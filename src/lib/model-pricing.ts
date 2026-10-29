@@ -35,10 +35,3 @@ export function creditCost(model: string, inputTokens: number, outputTokens: num
 }
 
 export const estimateTokens = (text: string) => Math.ceil(text.length / 4);
-
-export type Currency = "FCFA" | "USD" | "EUR";
-export function formatPrice(fcfa: number, currency: Currency) {
-  if (currency === "FCFA") return `${fcfa.toLocaleString("fr-FR")} FCFA`;
-  if (currency === "EUR") return `€${(fcfa / 655.957).toFixed(2)}`;
-  return `$${(fcfa / 600).toFixed(2)}`;
-}
