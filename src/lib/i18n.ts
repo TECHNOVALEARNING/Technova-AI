@@ -2,7 +2,7 @@ export type Lang = "fr" | "en";
 
 export const content = {
   fr: {
-    nav: { features: "Avantages", services: "Services", pricing: "Tarifs", faq: "FAQ", models: "Modèles", ranking: "Classement", blog: "Blog", docs: "Documentation", developers: "Développeurs", cta: "Commencer", login: "Connexion", account: "Mon compte", menu: "Ouvrir le menu", close: "Fermer le menu", language: "Langue" },
+    nav: { features: "Avantages", services: "Services", pricing: "Tarifs", faq: "FAQ", models: "Modèles", ranking: "Classement", blog: "Blog", docs: "Documentation", developers: "Développeurs", about: "À propos", cta: "Commencer", login: "Connexion", account: "Mon compte", menu: "Ouvrir le menu", close: "Fermer le menu", language: "Langue" },
     hero: {
       badge: "60+ modèles d'IA · Un seul hub",
       title1: "L'intelligence artificielle",
@@ -117,7 +117,7 @@ export const content = {
     },
   },
   en: {
-    nav: { features: "Benefits", services: "Services", pricing: "Pricing", faq: "FAQ", models: "Models", ranking: "Leaderboard", blog: "Blog", docs: "Docs", developers: "Developers", cta: "Get started", login: "Sign in", account: "My account", menu: "Open menu", close: "Close menu", language: "Language" },
+    nav: { features: "Benefits", services: "Services", pricing: "Pricing", faq: "FAQ", models: "Models", ranking: "Leaderboard", blog: "Blog", docs: "Docs", developers: "Developers", about: "About", cta: "Get started", login: "Sign in", account: "My account", menu: "Open menu", close: "Close menu", language: "Language" },
     hero: {
       badge: "60+ AI models · One hub",
       title1: "Artificial intelligence",
@@ -232,7 +232,7 @@ export const content = {
     },
   },
   es: {
-    nav: { features: "Ventajas", services: "Servicios", pricing: "Precios", faq: "FAQ", models: "Modelos", ranking: "Clasificación", blog: "Blog", docs: "Documentación", developers: "Desarrolladores", cta: "Empezar", login: "Iniciar sesión", account: "Mi cuenta", menu: "Abrir el menú", close: "Cerrar el menú", language: "Idioma" },
+    nav: { features: "Ventajas", services: "Servicios", pricing: "Precios", faq: "FAQ", models: "Modelos", ranking: "Clasificación", blog: "Blog", docs: "Documentación", developers: "Desarrolladores", about: "Acerca de", cta: "Empezar", login: "Iniciar sesión", account: "Mi cuenta", menu: "Abrir el menú", close: "Cerrar el menú", language: "Idioma" },
     hero: {
       badge: "60+ modelos de IA · Un solo hub",
       title1: "La inteligencia artificial",
@@ -347,7 +347,7 @@ export const content = {
     },
   },
   pt: {
-    nav: { features: "Vantagens", services: "Serviços", pricing: "Preços", faq: "FAQ", models: "Modelos", ranking: "Ranking", blog: "Blog", docs: "Documentação", developers: "Desenvolvedores", cta: "Começar", login: "Entrar", account: "Minha conta", menu: "Abrir o menu", close: "Fechar o menu", language: "Idioma" },
+    nav: { features: "Vantagens", services: "Serviços", pricing: "Preços", faq: "FAQ", models: "Modelos", ranking: "Ranking", blog: "Blog", docs: "Documentação", developers: "Desenvolvedores", about: "Sobre", cta: "Começar", login: "Entrar", account: "Minha conta", menu: "Abrir o menu", close: "Fechar o menu", language: "Idioma" },
     hero: {
       badge: "60+ modelos de IA · Um só hub",
       title1: "A inteligência artificial",

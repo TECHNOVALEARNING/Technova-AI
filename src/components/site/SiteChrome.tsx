@@ -100,7 +100,7 @@ export function ActionText({ children }: { children: string }) {
   return <span className="action-pill-label"><span>{children}</span><span aria-hidden="true">{children}</span></span>;
 }
 
-type NavPath = "/modeles" | "/classement" | "/blog" | "/tarifs" | "/documentation" | "/developpeurs";
+type NavPath = "/modeles" | "/classement" | "/blog" | "/tarifs" | "/documentation" | "/developpeurs" | "/a-propos";
 
 export function Nav({ lang, setLang }: { lang: SiteLang; setLang: (l: SiteLang) => void }) {
   const t = content[lang];
@@ -108,7 +108,7 @@ export function Nav({ lang, setLang }: { lang: SiteLang; setLang: (l: SiteLang) 
   const [signedIn, setSignedIn] = useState(false);
   const navRef = useRef<HTMLElement>(null);
   const triggerRef = useRef<HTMLButtonElement>(null);
-  const links: [NavPath, string][] = [["/modeles", t.nav.models], ["/classement", t.nav.ranking], ["/blog", t.nav.blog], ["/tarifs", t.nav.pricing], ["/documentation", t.nav.docs], ["/developpeurs", t.nav.developers]];
+  const links: [NavPath, string][] = [["/modeles", t.nav.models], ["/classement", t.nav.ranking], ["/blog", t.nav.blog], ["/tarifs", t.nav.pricing], ["/documentation", t.nav.docs], ["/developpeurs", t.nav.developers], ["/a-propos", t.nav.about]];
 
   useEffect(() => {
     let alive = true;
@@ -141,9 +141,9 @@ export function Nav({ lang, setLang }: { lang: SiteLang; setLang: (l: SiteLang) 
       <nav ref={navRef} aria-label={t.nav.menu} className="relative w-full max-w-lg text-ink-foreground lg:w-auto lg:max-w-none">
         <div className="flex min-h-14 w-full items-center gap-2 rounded-full border border-ink-foreground/10 bg-ink/90 p-1.5 pl-4 shadow-lift backdrop-blur-xl sm:pl-5 lg:w-auto">
           <Link to="/" aria-label="TechNova" onClick={() => setMenuOpen(false)} className="min-w-0 shrink-0 focus-visible:rounded-sm focus-visible:outline-2 focus-visible:outline-iris-2"><Logo className="text-[13px] sm:text-sm" /></Link>
-          <div className="ml-4 hidden items-center gap-1 text-sm lg:flex">
+          <div className="ml-2 hidden items-center gap-0.5 text-[13px] lg:flex xl:ml-4 xl:gap-1 xl:text-sm">
             {links.map(([h, l]) => (
-              <Link key={h} to={h} className="rounded-full px-3 py-1.5 text-ink-foreground/70 transition hover:bg-ink-foreground/10 hover:text-ink-foreground" activeProps={{ className: "bg-ink-foreground/10 text-ink-foreground" }}>{l}</Link>
+              <Link key={h} to={h} className="whitespace-nowrap rounded-full px-2.5 py-1.5 text-ink-foreground/70 xl:px-3 transition hover:bg-ink-foreground/10 hover:text-ink-foreground" activeProps={{ className: "bg-ink-foreground/10 text-ink-foreground" }}>{l}</Link>
             ))}
           </div>
           <div className="flex-1 lg:hidden" />
@@ -151,7 +151,7 @@ export function Nav({ lang, setLang }: { lang: SiteLang; setLang: (l: SiteLang) 
             {menuOpen ? <X className="size-5" /> : <Menu className="size-5" />}
           </Button>
           <LangMenu lang={lang} setLang={setLang} label={t.nav.language} />
-          <Button asChild variant="pill" size="pill" className="action-pill action-pill-glass hidden shrink-0 px-3 lg:inline-flex" title={signedIn ? t.nav.account : t.nav.login}><a href={signedIn ? "/dashboard" : "/connexion"} aria-label={signedIn ? t.nav.account : t.nav.login}><LogIn className="size-4" /><span className="text-xs">{signedIn ? t.nav.account : t.nav.login}</span></a></Button>
+          <Button asChild variant="pill" size="pill" className="action-pill action-pill-glass hidden shrink-0 px-3 lg:inline-flex" title={signedIn ? t.nav.account : t.nav.login}><a href={signedIn ? "/dashboard" : "/connexion"} aria-label={signedIn ? t.nav.account : t.nav.login}><LogIn className="size-4" /><span className="hidden text-xs xl:inline">{signedIn ? t.nav.account : t.nav.login}</span></a></Button>
           <Button asChild variant="pill" size="pill" className="action-pill action-pill-light shrink-0 px-3 py-2 text-xs sm:px-5 sm:text-sm"><a href={signedIn ? "/dashboard" : "/inscription"}><ActionText>{t.nav.cta}</ActionText></a></Button>
         </div>
         {menuOpen && <div id="mobile-navigation" className="absolute inset-x-0 top-[calc(100%+8px)] max-h-[calc(100svh-96px)] overflow-y-auto rounded-[20px] border border-ink-foreground/15 bg-ink/95 p-3 shadow-lift backdrop-blur-xl lg:hidden">
