@@ -9,13 +9,13 @@ export const footerGroups: (Omit<Item, "href"> & { links: Item[] })[] = [
     { fr: "Documentation API", en: "API documentation", es: "Documentación de la API", pt: "Documentação da API", href: "/documentation" }, { fr: "Référence API", en: "API reference", es: "Referencia de la API", pt: "Referência da API", href: "/developpeurs" }, { fr: "Exemples", en: "Examples", es: "Ejemplos", pt: "Exemplos", href: "/developpeurs" },
   ] },
   { fr: "Entreprise", en: "Company", es: "Empresa", pt: "Empresa", links: [
-    { fr: "À propos", en: "About", es: "Acerca de", pt: "Sobre", href: "/a-propos" }, same("Blog", "/blog"), same("support@technovalearning.com", "mailto:support@technovalearning.com"),
+    { fr: "À propos", en: "About", es: "Acerca de", pt: "Sobre", href: "/a-propos" }, same("Blog", "/blog"), same("support@technovaihub.com", "mailto:support@technovaihub.com"),
   ] },
   { fr: "Ressources", en: "Resources", es: "Recursos", pt: "Recursos", links: [
-    { fr: "Centre d’aide", en: "Help Center", es: "Centro de ayuda", pt: "Central de ajuda", href: "mailto:support@technovalearning.com" }, { fr: "Documentation", en: "Documentation", es: "Documentación", pt: "Documentação", href: "/documentation" }, same("FAQ", "/#faq"),
+    { fr: "Centre d’aide", en: "Help Center", es: "Centro de ayuda", pt: "Central de ajuda", href: "mailto:support@technovaihub.com" }, { fr: "Documentation", en: "Documentation", es: "Documentación", pt: "Documentação", href: "/documentation" }, same("FAQ", "/#faq"),
   ] },
   { fr: "Légal", en: "Legal", es: "Legal", pt: "Legal", links: [
-    { fr: "Conditions d’utilisation", en: "Terms of use", es: "Condiciones de uso", pt: "Termos de uso" }, { fr: "Politique de confidentialité", en: "Privacy policy", es: "Política de privacidad", pt: "Política de privacidade", href: "/confidentialite" }, { fr: "Politique de cookies", en: "Cookie policy", es: "Política de cookies", pt: "Política de cookies" }, { fr: "Mentions légales", en: "Legal notice", es: "Aviso legal", pt: "Aviso legal" }, { fr: "RGPD", en: "GDPR", es: "RGPD", pt: "RGPD", href: "https://www.edpb.europa.eu/topics/key-gdpr-concepts/data-subject-rights_en" },
+    { fr: "Conditions d’utilisation", en: "Terms of use", es: "Condiciones de uso", pt: "Termos de uso" }, { fr: "Politique de confidentialité", en: "Privacy policy", es: "Política de privacidad", pt: "Política de privacidade", href: "/confidentialite" }, { fr: "Politique de cookies", en: "Cookie policy", es: "Política de cookies", pt: "Política de cookies", href: "/cookies" }, { fr: "Mentions légales", en: "Legal notice", es: "Aviso legal", pt: "Aviso legal" }, { fr: "RGPD", en: "GDPR", es: "RGPD", pt: "RGPD", href: "https://www.edpb.europa.eu/topics/key-gdpr-concepts/data-subject-rights_en" },
   ] },
   { fr: "TechNova écosystème", en: "TechNova ecosystem", es: "Ecosistema TechNova", pt: "Ecossistema TechNova", links: [
     same("Technova Learning", "https://www.technovalearning.com/"), same("Technova Apps"), same("Technova Connect"),

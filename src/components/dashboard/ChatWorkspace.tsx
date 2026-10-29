@@ -63,6 +63,7 @@ import { Shimmer } from "@/components/ai-elements/shimmer";
 import { ArtifactPanel, StudioPlan, StudioQuestions, StudioTimeline } from "./Studio";
 import { parseBuild, type StudioBuild, type StudioData, type StudioPlanData } from "@/lib/studio";
 import { featureMinTier, packSlugs, upgradeFeatureOf, upgradeSentence, type PlanFeature } from "@/lib/plans";
+import { savePref } from "@/lib/consent";
 import { createMediaGeneration, getVideoAccess, refreshMediaGeneration, VIDEO_UPGRADE_REQUIRED } from "@/lib/media-generation.functions";
 import { PENDING_PACK_KEY } from "@/lib/public-pricing";
 import { RESEARCH_MAX_CREDITS, splitResearchStream } from "@/lib/research";
@@ -151,22 +152,22 @@ function useWorkspaceChoice() {
   }, []);
   function chooseMode(value: Mode) {
     setMode(value);
-    localStorage.setItem("technova-workspace-mode", value);
+    savePref("technova-workspace-mode", value);
   }
   function chooseModel(value: string) {
     setModel(value);
-    localStorage.setItem("technova-workspace-model", value);
+    savePref("technova-workspace-model", value);
   }
   function chooseMediaModel(value: string) {
     const spec = findMediaModel(value);
     if (!spec) return;
-    if (spec.kind === "image") { setImageModel(value); localStorage.setItem("technova-image-model", value); }
-    else if (spec.kind === "video") { setVideoModel(value); localStorage.setItem("technova-video-model", value); }
+    if (spec.kind === "image") { setImageModel(value); savePref("technova-image-model", value); }
+    else if (spec.kind === "video") { setVideoModel(value); savePref("technova-video-model", value); }
   }
   function chooseKnowledgeBases(ids: string[]) {
     const next = ids.slice(0, 5);
     setKbIds(next);
-    try { localStorage.setItem("technova-chat-kbs", JSON.stringify(next)); } catch { /* storage blocked */ }
+    savePref("technova-chat-kbs", JSON.stringify(next));
   }
   function toggleResearch() {
     setResearch((on) => {
@@ -839,7 +840,7 @@ export function ThreadPage({ threadId }: { threadId: string }) {
       handle.removeEventListener("pointercancel", stop);
       document.body.style.cursor = "";
       document.body.style.userSelect = "";
-      try { localStorage.setItem("tn-artifact-width", String(panelWidthRef.current)); } catch { /* ignore */ }
+      savePref("tn-artifact-width", String(panelWidthRef.current));
     };
     document.body.style.cursor = "col-resize";
     document.body.style.userSelect = "none";

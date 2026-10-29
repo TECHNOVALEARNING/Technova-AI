@@ -5,10 +5,10 @@ import { Button } from "@/components/ui/button";
 import { content, isSiteLang, siteLangs, tr, type SiteLang } from "@/lib/i18n";
 import { supabase } from "@/integrations/supabase/client";
 import { footerGroups } from "@/lib/footer-content";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { openCookieSettings, savePref } from "@/lib/consent";
 import { StoreBadges, TrustBadges } from "@/components/site/Badges";
 
-const LANG_KEY = "technova-site-lang";
+const LANG_KEY = "technova-site-lang" as const;
 
 export function useSiteLang(): [SiteLang, (l: SiteLang) => void] {
   const [lang, setLangState] = useState<SiteLang>("fr");
@@ -18,7 +18,7 @@ export function useSiteLang(): [SiteLang, (l: SiteLang) => void] {
     if (isSiteLang(saved)) setLangState(saved);
   }, []);
   useEffect(() => { document.documentElement.lang = lang; }, [lang]);
-  const setLang = (l: SiteLang) => { setLangState(l); try { window.localStorage.setItem(LANG_KEY, l); } catch { /* storage blocked */ } };
+  const setLang = (l: SiteLang) => { setLangState(l); savePref(LANG_KEY, l); };
   return [lang, setLang];
 }
 
@@ -182,7 +182,6 @@ function TikTokIcon({ className = "" }: { className?: string }) {
 
 export function Footer({ lang }: { lang: SiteLang }) {
   const t = content[lang];
-  const [cookiesOpen, setCookiesOpen] = useState(false);
   const soon = tr(lang, { fr: "Lien à confirmer", en: "Link to be confirmed", es: "Enlace por confirmar", pt: "Link a confirmar" });
   const social = [
     ["Facebook", Facebook, "https://www.facebook.com/share/18GYGMg9o8/"],
@@ -207,9 +206,8 @@ export function Footer({ lang }: { lang: SiteLang }) {
       <div className="mx-auto mt-14 max-w-6xl"><TrustBadges lang={lang} /></div>
       <div className="mx-auto mt-6 flex max-w-6xl flex-wrap items-center justify-between gap-4 border-t border-border pt-6 text-xs text-muted-foreground">
         <span>© {new Date().getFullYear()} TechNova AI Hub by Tenulysse. {t.footer.rights}</span>
-        <Button variant="ghost" size="sm" onClick={() => setCookiesOpen(true)} className="text-xs text-muted-foreground">{tr(lang, { fr: "Préférences cookies", en: "Cookie preferences", es: "Preferencias de cookies", pt: "Preferências de cookies" })}</Button>
+        <Button variant="ghost" size="sm" onClick={openCookieSettings} className="text-xs text-muted-foreground">{tr(lang, { fr: "Préférences cookies", en: "Cookie preferences", es: "Preferencias de cookies", pt: "Preferências de cookies" })}</Button>
       </div>
-      <Dialog open={cookiesOpen} onOpenChange={setCookiesOpen}><DialogContent><DialogHeader><DialogTitle>{tr(lang, { fr: "Préférences cookies", en: "Cookie preferences", es: "Preferencias de cookies", pt: "Preferências de cookies" })}</DialogTitle></DialogHeader><p className="text-sm text-muted-foreground">{tr(lang, { fr: "Le site utilise le stockage nécessaire à votre connexion, votre langue et vos préférences. Aucun cookie publicitaire optionnel n’est activé par ce réglage.", en: "The site uses storage necessary for sign-in, language and preferences. This setting does not enable optional advertising cookies.", es: "El sitio usa el almacenamiento necesario para tu sesión, tu idioma y tus preferencias. Este ajuste no activa cookies publicitarias opcionales.", pt: "O site usa o armazenamento necessário para o seu login, idioma e preferências. Esta configuração não ativa cookies publicitários opcionais." })}</p><Button onClick={() => setCookiesOpen(false)}>{tr(lang, { fr: "Fermer", en: "Close", es: "Cerrar", pt: "Fechar" })}</Button></DialogContent></Dialog>
     </footer>
   );
 }

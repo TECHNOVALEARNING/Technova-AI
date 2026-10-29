@@ -16,6 +16,7 @@ import { Route as BlogRouteImport } from './routes/blog'
 import { Route as ClassementRouteImport } from './routes/classement'
 import { Route as ConfidentialiteRouteImport } from './routes/confidentialite'
 import { Route as ConnexionRouteImport } from './routes/connexion'
+import { Route as CookiesRouteImport } from './routes/cookies'
 import { Route as DeveloppeursRouteImport } from './routes/developpeurs'
 import { Route as DocumentationRouteImport } from './routes/documentation'
 import { Route as InscriptionRouteImport } from './routes/inscription'
@@ -92,6 +93,11 @@ const ConfidentialiteRoute = ConfidentialiteRouteImport.update({
 const ConnexionRoute = ConnexionRouteImport.update({
   id: '/connexion',
   path: '/connexion',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CookiesRoute = CookiesRouteImport.update({
+  id: '/cookies',
+  path: '/cookies',
   getParentRoute: () => rootRouteImport,
 } as any)
 const DeveloppeursRoute = DeveloppeursRouteImport.update({
@@ -335,6 +341,7 @@ export interface FileRoutesByFullPath {
   '/classement': typeof ClassementRoute
   '/confidentialite': typeof ConfidentialiteRoute
   '/connexion': typeof ConnexionRoute
+  '/cookies': typeof CookiesRoute
   '/developpeurs': typeof DeveloppeursRoute
   '/documentation': typeof DocumentationRoute
   '/inscription': typeof InscriptionRoute
@@ -386,6 +393,7 @@ export interface FileRoutesByTo {
   '/classement': typeof ClassementRoute
   '/confidentialite': typeof ConfidentialiteRoute
   '/connexion': typeof ConnexionRoute
+  '/cookies': typeof CookiesRoute
   '/developpeurs': typeof DeveloppeursRoute
   '/documentation': typeof DocumentationRoute
   '/inscription': typeof InscriptionRoute
@@ -438,6 +446,7 @@ export interface FileRoutesById {
   '/classement': typeof ClassementRoute
   '/confidentialite': typeof ConfidentialiteRoute
   '/connexion': typeof ConnexionRoute
+  '/cookies': typeof CookiesRoute
   '/developpeurs': typeof DeveloppeursRoute
   '/documentation': typeof DocumentationRoute
   '/inscription': typeof InscriptionRoute
@@ -491,6 +500,7 @@ export interface FileRouteTypes {
     | '/classement'
     | '/confidentialite'
     | '/connexion'
+    | '/cookies'
     | '/developpeurs'
     | '/documentation'
     | '/inscription'
@@ -542,6 +552,7 @@ export interface FileRouteTypes {
     | '/classement'
     | '/confidentialite'
     | '/connexion'
+    | '/cookies'
     | '/developpeurs'
     | '/documentation'
     | '/inscription'
@@ -593,6 +604,7 @@ export interface FileRouteTypes {
     | '/classement'
     | '/confidentialite'
     | '/connexion'
+    | '/cookies'
     | '/developpeurs'
     | '/documentation'
     | '/inscription'
@@ -646,6 +658,7 @@ export interface RootRouteChildren {
   ClassementRoute: typeof ClassementRoute
   ConfidentialiteRoute: typeof ConfidentialiteRoute
   ConnexionRoute: typeof ConnexionRoute
+  CookiesRoute: typeof CookiesRoute
   DeveloppeursRoute: typeof DeveloppeursRoute
   DocumentationRoute: typeof DocumentationRoute
   InscriptionRoute: typeof InscriptionRoute
@@ -722,6 +735,13 @@ declare module '@tanstack/react-router' {
       path: '/connexion'
       fullPath: '/connexion'
       preLoaderRoute: typeof ConnexionRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/cookies': {
+      id: '/cookies'
+      path: '/cookies'
+      fullPath: '/cookies'
+      preLoaderRoute: typeof CookiesRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/developpeurs': {
@@ -1095,6 +1115,7 @@ const rootRouteChildren: RootRouteChildren = {
   ClassementRoute: ClassementRoute,
   ConfidentialiteRoute: ConfidentialiteRoute,
   ConnexionRoute: ConnexionRoute,
+  CookiesRoute: CookiesRoute,
   DeveloppeursRoute: DeveloppeursRoute,
   DocumentationRoute: DocumentationRoute,
   InscriptionRoute: InscriptionRoute,

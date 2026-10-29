@@ -20,6 +20,7 @@ import {
 import { modelCatalog } from "@/lib/model-pricing";
 import { upgradeFeatureOf, upgradeSentence } from "@/lib/plans";
 import { usePlanTier } from "@/lib/plan-client";
+import { savePref } from "@/lib/consent";
 import { formatFromXof, rateFor, useGeoPrice } from "@/lib/geo-price-client";
 import { checkPayment, getPaymentMode, startCheckout } from "@/lib/payments.functions";
 import { useDashboard } from "./dashboard-context";
@@ -82,7 +83,7 @@ function useCurrency() {
   const options = [...new Set([local, "XOF", "USD", "EUR"])].filter((code) => rateFor(geo, code));
   const currency = choice && options.includes(choice) ? choice : local;
   const rate = rateFor(geo, currency);
-  const setCurrency = (v: string) => { setChoice(v); try { localStorage.setItem("technova-currency", v); } catch { /* storage blocked */ } };
+  const setCurrency = (v: string) => { setChoice(v); savePref("technova-currency", v); };
   const format = (xof: number) => formatFromXof(xof, currency, rate, "fr-FR");
   return { currency, setCurrency, options, format, approx: !!rate?.approx };
 }

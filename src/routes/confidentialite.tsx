@@ -17,7 +17,7 @@ export const Route = createFileRoute("/confidentialite")({
   component: PrivacyPage,
 });
 
-const UPDATED = "28 octobre 2026";
+const UPDATED = "29 octobre 2026";
 // Single contact address for privacy questions and data-protection requests.
 const CONTACT = "support@technovaihub.com";
 
@@ -173,9 +173,9 @@ function PrivacyPage() {
         </Section>
 
         <Section id="cookies" n={8} title="Cookies et stockage local">
-          <p>TechNova AI Hub n'utilise <b>aucun cookie publicitaire ni de mesure d'audience</b>. Nous utilisons uniquement le stockage strictement nécessaire au fonctionnement du site :</p>
-          <List items={["la session de connexion et sa sécurité ;", "vos préférences : langue, apparence, mode et modèle choisis dans le chat ;", "les rappels d'interface, comme la carte d'installation de l'application ;", "le cache de l'application installée, pour l'affichage hors connexion."]} />
-          <p>Ces éléments ne nécessitent pas de consentement. Si nous ajoutions un jour des cookies non essentiels, ils ne seraient déposés qu'avec votre accord préalable. Vous pouvez aussi effacer ces données depuis les réglages de votre navigateur.</p>
+          <p>TechNova AI Hub n'utilise <b>aucun cookie publicitaire ni de mesure d'audience</b>. Nous utilisons :</p>
+          <List items={["le stockage strictement nécessaire : session de connexion et sa sécurité, mémorisation de vos choix de cookies, achat ou action en cours, cache de l'application installée ;", "avec votre accord uniquement, vos préférences : langue, apparence, disposition, mode et modèles choisis dans le chat, devise, rappels d'interface."]} />
+          <p>Un bandeau vous permet d'accepter, de refuser ou de personnaliser ces préférences à votre première visite ; votre choix est conservé 6 mois. Le détail de chaque élément, sa finalité et sa durée figurent dans notre <a href="/cookies">politique de cookies</a>, d'où vous pouvez aussi modifier vos choix.</p>
         </Section>
 
         <Section id="securite" n={9} title="Sécurité">

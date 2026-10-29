@@ -1,5 +1,6 @@
 import { createContext, useCallback, useContext, useEffect, useState, type ReactNode } from "react";
 import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
+import { savePref } from "@/lib/consent";
 import { BookMarked, Bot, Library, Plug, ShieldAlert, Swords } from "lucide-react";
 import { getMyRole } from "@/lib/admin.functions";
 import { Activity, ArrowLeft, Bell, BookOpen, Boxes, ChevronDown, Code2, CreditCard, Diamond, Gift, Globe2, LayoutDashboard, LogOut, Menu, MessageCircle, Moon, PanelLeftClose, PanelLeftOpen, Search, Settings2, Sun, Wallet, X } from "lucide-react";
@@ -58,6 +59,7 @@ export function DashboardLayout({ children }: { children: ReactNode }) {
     setCollapsed(window.localStorage.getItem("technova-sidebar-collapsed") === "1");
   }, []);
   useEffect(() => { document.documentElement.classList.toggle("dark", theme === "dark"); return () => document.documentElement.classList.remove("dark"); }, [theme]);
+  useEffect(() => { document.documentElement.lang = lang; }, [lang]);
   useEffect(() => { setMobileOpen(false); setNoticeOpen(false); setAccountOpen(false); setSearchOpen(false); }, [pathname]);
   useEffect(() => {
     let live = true;
@@ -88,11 +90,11 @@ export function DashboardLayout({ children }: { children: ReactNode }) {
     await supabase.auth.signOut();
     void navigate({ to: "/connexion", replace: true });
   }
-  function setLang(value: Lang) { setLangState(value); window.localStorage.setItem("technova-dashboard-lang", value); }
-  function setTheme(value: "light" | "dark") { setThemeState(value); window.localStorage.setItem("technova-dashboard-theme", value); }
+  function setLang(value: Lang) { setLangState(value); savePref("technova-dashboard-lang", value); }
+  function setTheme(value: "light" | "dark") { setThemeState(value); savePref("technova-dashboard-theme", value); }
   function toggleCollapsed() {
     if (artifactWorkspaceOpen) setWorkspaceCollapsed(!effectiveCollapsed);
-    else setCollapsed(v => { window.localStorage.setItem("technova-sidebar-collapsed", v ? "0" : "1"); return !v; });
+    else setCollapsed(v => { savePref("technova-sidebar-collapsed", v ? "0" : "1"); return !v; });
   }
   const effectiveCollapsed = artifactWorkspaceOpen ? (workspaceCollapsed ?? true) : collapsed;
   const mini = effectiveCollapsed && !mobileOpen;

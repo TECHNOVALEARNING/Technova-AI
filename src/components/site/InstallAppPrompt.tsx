@@ -1,11 +1,12 @@
 import { useEffect, useState } from "react";
 import { Download, Share, SquarePlus, X, Zap, Maximize2, BellRing } from "lucide-react";
 import { useInstallApp } from "@/lib/pwa";
+import { savePref } from "@/lib/consent";
 import type { SiteLang as Lang } from "@/lib/i18n";
 
 // Landing-page invitation to install the PWA: appears once the visitor has scrolled past the hero,
 // never blocks the page, and stays hidden for two weeks after "Plus tard".
-const DISMISS_KEY = "technova-install-dismissed";
+const DISMISS_KEY = "technova-install-dismissed" as const;
 const SNOOZE_MS = 14 * 24 * 60 * 60 * 1000;
 
 const copy = {
@@ -63,7 +64,7 @@ export function InstallAppPrompt({ lang }: { lang: Lang }) {
   if (mode === "none" || !visible) return null;
 
   function dismiss() {
-    try { localStorage.setItem(DISMISS_KEY, String(Date.now())); } catch { /* private mode */ }
+    savePref(DISMISS_KEY, String(Date.now()));
     setVisible(false);
   }
   async function onInstall() {
