@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
+import { Route as AProposRouteImport } from './routes/a-propos'
 import { Route as BlogRouteImport } from './routes/blog'
 import { Route as ClassementRouteImport } from './routes/classement'
 import { Route as ConfidentialiteRouteImport } from './routes/confidentialite'
@@ -66,6 +67,11 @@ const IndexRoute = IndexRouteImport.update({
 } as any)
 const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
   id: '/_authenticated',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AProposRoute = AProposRouteImport.update({
+  id: '/a-propos',
+  path: '/a-propos',
   getParentRoute: () => rootRouteImport,
 } as any)
 const BlogRoute = BlogRouteImport.update({
@@ -324,6 +330,7 @@ const ApiPublicSupabaseOauthCallbackRoute =
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/a-propos': typeof AProposRoute
   '/blog': typeof BlogRoute
   '/classement': typeof ClassementRoute
   '/confidentialite': typeof ConfidentialiteRoute
@@ -374,6 +381,7 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/a-propos': typeof AProposRoute
   '/blog': typeof BlogRoute
   '/classement': typeof ClassementRoute
   '/confidentialite': typeof ConfidentialiteRoute
@@ -425,6 +433,7 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
+  '/a-propos': typeof AProposRoute
   '/blog': typeof BlogRoute
   '/classement': typeof ClassementRoute
   '/confidentialite': typeof ConfidentialiteRoute
@@ -477,6 +486,7 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/a-propos'
     | '/blog'
     | '/classement'
     | '/confidentialite'
@@ -527,6 +537,7 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/a-propos'
     | '/blog'
     | '/classement'
     | '/confidentialite'
@@ -577,6 +588,7 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/_authenticated'
+    | '/a-propos'
     | '/blog'
     | '/classement'
     | '/confidentialite'
@@ -629,6 +641,7 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
+  AProposRoute: typeof AProposRoute
   BlogRoute: typeof BlogRoute
   ClassementRoute: typeof ClassementRoute
   ConfidentialiteRoute: typeof ConfidentialiteRoute
@@ -674,6 +687,13 @@ declare module '@tanstack/react-router' {
       path: ''
       fullPath: '/'
       preLoaderRoute: typeof AuthenticatedRouteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/a-propos': {
+      id: '/a-propos'
+      path: '/a-propos'
+      fullPath: '/a-propos'
+      preLoaderRoute: typeof AProposRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/blog': {
@@ -1070,6 +1090,7 @@ const AuthenticatedRouteRouteWithChildren =
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
+  AProposRoute: AProposRoute,
   BlogRoute: BlogRoute,
   ClassementRoute: ClassementRoute,
   ConfidentialiteRoute: ConfidentialiteRoute,

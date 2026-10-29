@@ -9,7 +9,7 @@ export const footerGroups: (Omit<Item, "href"> & { links: Item[] })[] = [
     { fr: "Documentation API", en: "API documentation", es: "Documentación de la API", pt: "Documentação da API", href: "/documentation" }, { fr: "Référence API", en: "API reference", es: "Referencia de la API", pt: "Referência da API", href: "/developpeurs" }, { fr: "Exemples", en: "Examples", es: "Ejemplos", pt: "Exemplos", href: "/developpeurs" },
   ] },
   { fr: "Entreprise", en: "Company", es: "Empresa", pt: "Empresa", links: [
-    { fr: "À propos", en: "About", es: "Acerca de", pt: "Sobre", href: "/#about" }, same("Blog", "/blog"), same("support@technovalearning.com", "mailto:support@technovalearning.com"),
+    { fr: "À propos", en: "About", es: "Acerca de", pt: "Sobre", href: "/a-propos" }, same("Blog", "/blog"), same("support@technovalearning.com", "mailto:support@technovalearning.com"),
   ] },
   { fr: "Ressources", en: "Resources", es: "Recursos", pt: "Recursos", links: [
     { fr: "Centre d’aide", en: "Help Center", es: "Centro de ayuda", pt: "Central de ajuda", href: "mailto:support@technovalearning.com" }, { fr: "Documentation", en: "Documentation", es: "Documentación", pt: "Documentação", href: "/documentation" }, same("FAQ", "/#faq"),
