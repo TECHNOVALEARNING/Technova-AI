@@ -246,6 +246,13 @@
       "when": 1794124800000,
       "tag": "0034_plan_limits",
       "breakpoints": true
+    },
+    {
+      "idx": 35,
+      "version": "7",
+      "when": 1794211200000,
+      "tag": "0035_usage_from_ledger",
+      "breakpoints": true
     }
   ]
 }

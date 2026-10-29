@@ -23,18 +23,20 @@ function useOverview() {
       if (!uid) return;
       await supabase.rpc("claim_welcome_bonus");
       const since = new Date(Date.now() - 30 * 86_400_000).toISOString();
-      const [wallet, usage, keys, activity] = await Promise.all([
+      const [wallet, usage, keys, activity, spent] = await Promise.all([
         supabase.rpc("get_wallet_balance", { _owner: uid }),
         supabase.from("usage_logs").select("credits,input_tokens,output_tokens").gte("created_at", since),
         supabase.from("api_keys").select("id", { count: "exact", head: true }),
         supabase.from("credit_transactions").select("id,amount,label,kind,created_at").order("created_at", { ascending: false }).limit(5),
+        // Credits used = charges and holds minus their refunds (transfers and bonuses are not usage).
+        supabase.from("credit_transactions").select("amount").in("kind", ["charge", "usage", "reserve", "refund"]).gte("created_at", since).limit(10000),
       ]);
       if (!live) return;
       const w = (wallet.data ?? {}) as { balance?: number; reserved?: number };
       const rows = usage.data ?? [];
       setData({
         balance: w.balance ?? 0, reserved: w.reserved ?? 0,
-        credits30: rows.reduce((n, r) => n + r.credits, 0), requests30: rows.length,
+        credits30: Math.max(0, -(spent.data ?? []).reduce((n, r) => n + r.amount, 0)), requests30: rows.length,
         tokens30: rows.reduce((n, r) => n + r.input_tokens + r.output_tokens, 0),
         keys: keys.count ?? 0, activity: activity.data ?? [],
       });

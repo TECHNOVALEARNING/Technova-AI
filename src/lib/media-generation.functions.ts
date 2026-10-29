@@ -157,6 +157,7 @@ export const refreshMediaGeneration = createServerFn({ method: "POST" })
         const charged = state === "fail" ? 0
           : Number.isFinite(consumed) && consumed > 0 ? Math.min(reserved, Math.ceil(consumed * KIE_TO_TECHNOVA)) : reserved;
         await supabaseAdmin.from("media_generations").update({ charged_credits: charged }).eq("id", row.id);
+        if (charged > 0) await supabaseAdmin.from("usage_logs").insert({ owner_id: context.userId, model: `Média · ${findMediaModel(row.model)?.label ?? row.kind}`, input_tokens: 0, output_tokens: 0, credits: charged, latency_ms: 0 });
         if (reserved - charged > 0) await supabaseAdmin.from("credit_transactions").insert({
           owner_id: context.userId, amount: reserved - charged, kind: "refund",
           label: `${findMediaModel(row.model)?.label ?? row.model} (${state === "fail" ? "échec remboursé" : "ajustement"})`,
