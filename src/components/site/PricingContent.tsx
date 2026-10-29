@@ -11,17 +11,17 @@ import { formatLocalPrice, isCfa } from "@/lib/geo-pricing";
 import { useGeoPrice } from "@/lib/geo-price-client";
 
 const text = {
-  fr: { title: "Des forfaits simples et flexibles", sub: "Quatre packs de crédits Technova prépayés, payables en Mobile Money ou par carte.", once: "Paiement unique", terms: "Paiement unique • crédits prépayés • aucun renouvellement automatique", choose: "Choisir", popular: "LE PLUS POPULAIRE", credits: "crédits Technova", allFeatures: "Création de sites web (TechNova Studio) : à partir du pack Essential. Génération vidéo : packs Creator et Pro. Le chat, les images, la musique et la recherche sont inclus dans tous les packs.", validity: "Validité des crédits : vos crédits Technova n'expirent pas.", refund: "Échec de génération : si une génération échoue pour une raison technique, les crédits réservés sont restitués sur votre solde. Il ne s'agit pas d'un remboursement en argent." },
-  en: { title: "Simple, flexible plans", sub: "Four prepaid Technova credit packs, payable by Mobile Money or card.", once: "One-time payment", terms: "One-time payment • prepaid credits • no automatic renewal", choose: "Choose", popular: "MOST POPULAR", credits: "Technova credits", allFeatures: "Website creation (TechNova Studio): from the Essential pack. Video generation: Creator and Pro packs. Chat, images, music and research are included in every pack.", validity: "Credit validity: your Technova credits do not expire.", refund: "Failed generation: if a generation fails for a technical reason, reserved credits are returned to your balance. This is not a cash refund." },
-  es: { title: "Planes sencillos y flexibles", sub: "Cuatro packs de créditos Technova prepagados, pagaderos con Mobile Money o tarjeta.", once: "Pago único", terms: "Pago único • créditos prepagados • sin renovación automática", choose: "Elegir", popular: "EL MÁS POPULAR", credits: "créditos Technova", allFeatures: "Creación de sitios web (TechNova Studio): desde el pack Essential. Generación de vídeo: packs Creator y Pro. El chat, las imágenes, la música y la búsqueda están incluidos en todos los packs.", validity: "Validez de los créditos: tus créditos Technova no caducan.", refund: "Generación fallida: si una generación falla por un motivo técnico, los créditos reservados se devuelven a tu saldo. No se trata de un reembolso en dinero." },
-  pt: { title: "Planos simples e flexíveis", sub: "Quatro pacotes de créditos Technova pré-pagos, pagáveis com Mobile Money ou cartão.", once: "Pagamento único", terms: "Pagamento único • créditos pré-pagos • sem renovação automática", choose: "Escolher", popular: "O MAIS POPULAR", credits: "créditos Technova", allFeatures: "Criação de sites (TechNova Studio): a partir do pacote Essential. Geração de vídeo: pacotes Creator e Pro. Chat, imagens, música e pesquisa estão incluídos em todos os pacotes.", validity: "Validade dos créditos: seus créditos Technova não expiram.", refund: "Falha na geração: se uma geração falhar por motivo técnico, os créditos reservados voltam ao seu saldo. Não se trata de um reembolso em dinheiro." },
+  fr: { title: "Des forfaits simples et flexibles", sub: "Quatre packs de crédits Technova prépayés, payables en Mobile Money ou par carte.", once: "Paiement unique", terms: "Paiement unique • crédits prépayés • aucun renouvellement automatique", choose: "Choisir", popular: "LE PLUS POPULAIRE", credits: "crédits Technova" },
+  en: { title: "Simple, flexible plans", sub: "Four prepaid Technova credit packs, payable by Mobile Money or card.", once: "One-time payment", terms: "One-time payment • prepaid credits • no automatic renewal", choose: "Choose", popular: "MOST POPULAR", credits: "Technova credits" },
+  es: { title: "Planes sencillos y flexibles", sub: "Cuatro packs de créditos Technova prepagados, pagaderos con Mobile Money o tarjeta.", once: "Pago único", terms: "Pago único • créditos prepagados • sin renovación automática", choose: "Elegir", popular: "EL MÁS POPULAR", credits: "créditos Technova" },
+  pt: { title: "Planos simples e flexíveis", sub: "Quatro pacotes de créditos Technova pré-pagos, pagáveis com Mobile Money ou cartão.", once: "Pagamento único", terms: "Pagamento único • créditos pré-pagos • sem renovação automática", choose: "Escolher", popular: "O MAIS POPULAR", credits: "créditos Technova" },
 };
 
 const geoText = {
-  fr: { billed: "Facturé", approx: "Conversion indicative, taux du jour", rates: "Taux de change : ExchangeRate-API" },
-  en: { billed: "Billed", approx: "Indicative conversion, today's rate", rates: "Exchange rates: ExchangeRate-API" },
-  es: { billed: "Se factura", approx: "Conversión indicativa, tipo del día", rates: "Tipos de cambio: ExchangeRate-API" },
-  pt: { billed: "Cobrado", approx: "Conversão indicativa, câmbio do dia", rates: "Câmbio: ExchangeRate-API" },
+  fr: { billed: "Facturé" },
+  en: { billed: "Billed" },
+  es: { billed: "Se factura" },
+  pt: { billed: "Cobrado" },
 } satisfies Record<SiteLang, unknown>;
 const locales: Record<SiteLang, string> = { fr: "fr-FR", en: "en-US", es: "es-ES", pt: "pt-BR" };
 
@@ -73,7 +73,6 @@ export function PricingContent({ lang }: { lang: SiteLang }) {
         </article>;
       })}</div>
 
-      <div className="mt-6 space-y-2 text-xs text-muted-foreground"><p>{t.allFeatures}</p><p>{t.validity}</p><p>{t.refund}</p>{local && geo.approx && <p>{g.approx}. <a href="https://www.exchangerate-api.com" target="_blank" rel="noopener noreferrer" className="underline-offset-2 hover:underline">{g.rates}</a></p>}</div>
     </div>
   </section>;
 }
