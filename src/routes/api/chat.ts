@@ -108,14 +108,22 @@ export const Route = createFileRoute("/api/chat")({
         const needsMedia = allFiles.some(f => f.mediaType.startsWith("audio/") || f.mediaType.startsWith("video/"));
         const needsVision = allFiles.length > 0;
         const lastUser = [...parsed.data.messages].reverse().find((m) => m.role === "user")?.content ?? "";
+        // Plan limits (src/lib/plans.ts): premium models from Essential, custom agents from Creator.
+        const { getTier, planResponse } = await import("@/lib/plan.server");
+        const { PREMIUM_CHAT_MODELS, STARTER_SMART_FALLBACK, DEFAULT_AGENT_BUDGET } = await import("@/lib/plans");
+        const tier = await getTier(userId);
         let agent: { name: string; instructions: string; memory: string; model: string; max_tokens: number; max_cost: number; tools: string[]; knowledge_base_ids: string[] } | null = null;
         if (parsed.data.agentId) {
+          if (tier < 2) return planResponse(userId, "agents");
           const { data: a } = await supabaseAdmin.from("agents").select("name, instructions, memory, model, max_tokens, max_cost, tools, knowledge_base_ids").eq("id", parsed.data.agentId).eq("owner_id", userId).maybeSingle();
           if (!a) return new Response("Agent introuvable / Agent not found", { status: 404 });
-          agent = a;
+          // Only Pro chooses the per-reply budget; other plans use the default.
+          agent = tier < 3 ? { ...a, max_cost: DEFAULT_AGENT_BUDGET } : a;
         }
         const chosen = agent ? agent.model : parsed.data.model;
-        const requested = chosen === "TechNova Smart" ? smartPick(lastUser) : chosen;
+        if (tier < 1 && PREMIUM_CHAT_MODELS.has(chosen)) return planResponse(userId, "premium_models");
+        const picked = chosen === "TechNova Smart" ? smartPick(lastUser) : chosen;
+        const requested = tier < 1 ? (STARTER_SMART_FALLBACK[picked] ?? picked) : picked;
         const model = (needsMedia && !mediaModels.has(requested)) || (needsVision && !visionModels.has(requested)) ? "Gemini 2.5 Flash" : requested;
         const modelId = openRouterModelIds[model];
         if (!modelId) return new Response("Model not available for chat", { status: 400 });

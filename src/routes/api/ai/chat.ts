@@ -39,6 +39,9 @@ export const Route = createFileRoute("/api/ai/chat")({
       POST: async ({ request }) => {
         const ownerId = await ownerForKey(request);
         if (!ownerId) return fail(401, "invalid_api_key", "Missing or invalid API key.");
+        // API access is part of the Pro plan.
+        const { getTier } = await import("@/lib/plan.server");
+        if ((await getTier(ownerId)) < 3) return fail(403, "plan_required", "API access requires the Pro plan.");
         const { hitRateLimit, rateLimitMessage } = await import("@/lib/security.server");
         if (!(await hitRateLimit(ownerId, "api"))) return fail(429, "rate_limited", rateLimitMessage("en", "api"));
         const parsed = bodySchema.safeParse(await request.json().catch(() => null));

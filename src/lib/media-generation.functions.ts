@@ -61,6 +61,18 @@ export const createMediaGeneration = createServerFn({ method: "POST" })
       await logSecurityEvent(context.userId, "video_blocked_insufficient_plan", "info", { model: spec.id });
       throw new Error(VIDEO_UPGRADE_REQUIRED);
     }
+    // Starter plan: a rolling 24-hour image quota (failed images are refunded and not counted).
+    if (spec.kind === "image") {
+      const { getTier, requirePlan } = await import("@/lib/plan.server");
+      const { STARTER_DAILY_IMAGES } = await import("@/lib/plans");
+      const tier = await getTier(context.userId);
+      if (tier < 1) {
+        const { supabaseAdmin: admin } = await import("@/integrations/supabase/client.server");
+        const { count } = await admin.from("media_generations").select("id", { count: "exact", head: true })
+          .eq("owner_id", context.userId).eq("kind", "image").neq("status", "fail").gte("created_at", new Date(Date.now() - 86_400_000).toISOString());
+        if ((count ?? 0) >= STARTER_DAILY_IMAGES) await requirePlan(context.userId, "image_quota", tier);
+      }
+    }
     const model = spec.id;
     const built = buildMediaInput(spec, data.prompt, data.aspectRatio, Number(data.duration ?? "5"));
     const aspectRatio = built.ratio;

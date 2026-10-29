@@ -62,6 +62,7 @@ import { cn } from "@/lib/utils";
 import { Shimmer } from "@/components/ai-elements/shimmer";
 import { ArtifactPanel, StudioPlan, StudioQuestions, StudioTimeline } from "./Studio";
 import { parseBuild, type StudioBuild, type StudioData, type StudioPlanData } from "@/lib/studio";
+import { featureMinTier, packSlugs, upgradeFeatureOf, upgradeSentence, type PlanFeature } from "@/lib/plans";
 import { createMediaGeneration, getVideoAccess, refreshMediaGeneration, VIDEO_UPGRADE_REQUIRED } from "@/lib/media-generation.functions";
 import { PENDING_PACK_KEY } from "@/lib/public-pricing";
 import { RESEARCH_MAX_CREDITS, splitResearchStream } from "@/lib/research";
@@ -782,11 +783,16 @@ export function ThreadPage({ threadId }: { threadId: string }) {
   const [messages, setMessages] = useState<UIMessage[]>([]);
   const createMedia = useServerFn(createMediaGeneration);
   const videoAccess = useServerFn(getVideoAccess);
-  const [upgrade, setUpgrade] = useState<{ feature: "video" | "site"; balance: number } | null>(null);
+  const [upgrade, setUpgrade] = useState<{ feature: PlanFeature; balance: number } | null>(null);
   // Shows the plan upgrade card; the balance comes from the server, which also decides access.
-  async function showUpgrade(feature: "video" | "site") {
+  async function showUpgrade(feature: PlanFeature) {
     const access = await videoAccess().catch(() => null);
     setUpgrade({ feature, balance: access?.balance ?? 0 });
+  }
+  /** Server refusals: a plan limit opens the upgrade card, anything else is shown as an error. */
+  async function failWith(message: string) {
+    const feature = message.includes("STUDIO_UPGRADE_REQUIRED") ? "site" : message.includes(VIDEO_UPGRADE_REQUIRED) ? "video" : upgradeFeatureOf(message);
+    if (feature) await showUpgrade(feature); else setError(message || t.actionError);
   }
   const refreshMedia = useServerFn(refreshMediaGeneration);
   const [loading, setLoading] = useState(true);
@@ -980,7 +986,7 @@ export function ThreadPage({ threadId }: { threadId: string }) {
       const res = await studioCall({ stage, ...payload });
       const raw = (await res.text().catch(() => "")).trim();
       if (!res.ok) {
-        if (raw.includes("STUDIO_UPGRADE_REQUIRED")) await showUpgrade("site"); else setError(raw || t.actionError);
+        await failWith(raw);
         return null;
       }
       const json = JSON.parse(raw) as Record<string, unknown>;
@@ -1082,7 +1088,7 @@ export function ThreadPage({ threadId }: { threadId: string }) {
     if (!res?.ok) {
       const msg = res ? await res.text().catch(() => "") : "";
       await saveStudio(id, { kind: "build", request, answers, plan, build, jobStatus: "failed" }, true);
-      if (msg.includes("STUDIO_UPGRADE_REQUIRED")) await showUpgrade("site"); else setError(msg || t.actionError);
+      await failWith(msg);
       return;
     }
     // Keep the connection open while the page is here; the server keeps going if it drops.
@@ -1141,9 +1147,7 @@ export function ThreadPage({ threadId }: { threadId: string }) {
         setMessages((prev) => [...prev, { id, role: "assistant", parts: [{ type: "data-media", data: media }] as unknown as UIMessage["parts"] }]);
       } catch (e) {
         const message = String((e as Error)?.message ?? e);
-        if (message.includes(VIDEO_UPGRADE_REQUIRED)) {
-          await showUpgrade("video");
-        } else setError(message);
+        await failWith(message);
       }
       finally { setThinking(false); }
       return;
@@ -1221,7 +1225,7 @@ export function ThreadPage({ threadId }: { threadId: string }) {
         }),
       });
       if (!res.ok || !res.body) {
-        setError((await res.text().catch(() => "")) || t.actionError);
+        await failWith(await res.text().catch(() => ""));
         return;
       }
       const reader = res.body.getReader();
@@ -1384,19 +1388,20 @@ export function ThreadPage({ threadId }: { threadId: string }) {
       {upgrade && (() => {
         const fr = lang !== "en";
         const site = upgrade.feature === "site";
-        const packs = site ? (["essential", "creator", "pro"] as const) : (["creator", "pro"] as const);
-        const names = { essential: "Essential", creator: "Creator", pro: "Pro" } as const;
+        const generic = !site && upgrade.feature !== "video";
+        const packs = packSlugs.slice(Math.max(1, featureMinTier[upgrade.feature]));
+        const names = { starter: "Starter", essential: "Essential", creator: "Creator", pro: "Pro" } as const;
         return <div role="alert" className="relative z-10 mx-auto mt-2 w-full max-w-3xl px-4">
           <div className="rounded-2xl border border-border bg-card/95 p-4 text-sm shadow-sm backdrop-blur">
             <p className="font-medium">
-              {site
+              {generic ? upgradeSentence(upgrade.feature, fr) : site
                 ? (fr ? "🌐 La création de sites web est réservée aux forfaits Essential (2499 frs), Creator (4999 frs) et Pro (7699 frs)." : "🌐 Website creation is reserved for the Essential (2,499 F), Creator (4,999 F) and Pro (7,699 F) plans.")
                 : (fr ? "🎬 La génération vidéo est réservée aux forfaits Creator (4999 frs) et Pro (7699 frs)." : "🎬 Video generation is reserved for the Creator (4,999 F) and Pro (7,699 F) plans.")}
             </p>
             <p className="mt-1 text-muted-foreground">
               {fr
-                ? `Passez à un forfait supérieur pour débloquer ${site ? "les sites web" : "les vidéos"}. Il vous reste ${upgrade.balance.toLocaleString("fr-FR")} crédits.`
-                : `Upgrade to unlock ${site ? "websites" : "videos"}. You have ${upgrade.balance.toLocaleString("en-US")} credits left.`}
+                ? `${generic ? "Passez à un forfait supérieur pour en profiter." : `Passez à un forfait supérieur pour débloquer ${site ? "les sites web" : "les vidéos"}.`} Il vous reste ${upgrade.balance.toLocaleString("fr-FR")} crédits.`
+                : `${generic ? "Upgrade to use it." : `Upgrade to unlock ${site ? "websites" : "videos"}.`} You have ${upgrade.balance.toLocaleString("en-US")} credits left.`}
             </p>
             <div className="mt-3 flex flex-wrap gap-2">
               {packs.map((slug) => (

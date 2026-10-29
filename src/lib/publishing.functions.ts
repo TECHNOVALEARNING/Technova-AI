@@ -20,6 +20,8 @@ export const publishSite = createServerFn({ method: "POST" })
   .inputValidator((input: { slug: string; title: string; files: unknown }) => z.object({ slug: z.string().regex(SITE_SLUG_RE), title: z.string().max(120), files: filesSchema }).parse(input))
   .handler(async ({ data, context }) => {
     const { hitRateLimit, logSecurityEvent } = await import("@/lib/security.server");
+    const { getTier, allows } = await import("@/lib/plan.server");
+    if (!allows(await getTier(context.userId), "publish")) { await logSecurityEvent(context.userId, "plan_limit_blocked", "info", { feature: "publish" }); return { ok: false as const, error: "plan_publish" }; }
     if (RESERVED.has(data.slug)) return { ok: false as const, error: "reserved" };
     if (!(await hitRateLimit(context.userId, "publish"))) return { ok: false as const, error: "rate" };
     const total = data.files.reduce((n, f) => n + f.content.length, 0);
@@ -67,6 +69,8 @@ export const pushSiteToGitHub = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     const { getAccessToken, githubFetch } = await import("@/lib/connections.server");
     const { hitRateLimit, logSecurityEvent } = await import("@/lib/security.server");
+    const { getTier, allows } = await import("@/lib/plan.server");
+    if (!allows(await getTier(context.userId), "github")) { await logSecurityEvent(context.userId, "plan_limit_blocked", "info", { feature: "github" }); return { ok: false as const, error: "plan_github" }; }
     if (!(await hitRateLimit(context.userId, "publish"))) return { ok: false as const, error: "rate" };
     const { findSecrets } = await import("@/lib/secret-scan");
     const leaks = findSecrets(data.files);

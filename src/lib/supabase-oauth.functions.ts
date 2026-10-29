@@ -35,7 +35,9 @@ function appOrigin(): string {
 export const startSupabaseConnect = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d) => z.object({ state: z.string().min(16).max(128) }).parse(d))
-  .handler(async ({ data }) => {
+  .handler(async ({ data, context }) => {
+    const { requirePlan } = await import("@/lib/plan.server");
+    await requirePlan(context.userId, "supabase");
     const { clientId, scope } = oauthConfig();
     if (!clientId) return { configured: false, url: "" };
     return {
@@ -61,6 +63,8 @@ export const completeSupabaseConnect = createServerFn({ method: "POST" })
     );
     const projects = await fetchProjects(tokens.access);
     const only = projects.length === 1 ? projects[0] : undefined;
+    const { requirePlan } = await import("@/lib/plan.server");
+    await requirePlan(context.userId, "supabase");
     await saveConnection(context.userId, tokens, only);
     return { projectRef: only?.ref ?? "", projectName: only?.name ?? "", projects };
   });

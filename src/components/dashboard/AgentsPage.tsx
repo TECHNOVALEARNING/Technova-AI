@@ -6,6 +6,8 @@ import { Modal } from "./Modal";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { supabase } from "@/integrations/supabase/client";
+import { DEFAULT_AGENT_BUDGET, upgradeFeatureOf, upgradeSentence } from "@/lib/plans";
+import { usePlanTier } from "@/lib/plan-client";
 import type { Tables } from "@/integrations/supabase/types";
 import { openRouterModelIds } from "@/lib/chat-models";
 import { useDashboard } from "./DashboardLayout";
@@ -44,6 +46,8 @@ export function AgentsPage() {
   }, [lang]);
   useEffect(() => { void load(); }, [load]);
 
+  const tier = usePlanTier();
+  const fr = lang !== "en";
   const save = async () => {
     if (!form || !form.name.trim() || !form.instructions.trim()) { setNotice(tx(lang, "Nom et instructions sont obligatoires.", "Name and instructions are required.")); return; }
     setSaving(true); setNotice("");
@@ -53,7 +57,7 @@ export function AgentsPage() {
       ? await supabase.from("agents").update(row).eq("id", form.id)
       : await supabase.from("agents").insert({ ...row, owner_id: u.user?.id ?? "" });
     setSaving(false);
-    if (error) { setNotice(tx(lang, "Enregistrement impossible.", "Could not save.")); return; }
+    if (error) { const f = upgradeFeatureOf(error.message); setNotice(f ? upgradeSentence(f, fr) : tx(lang, "Enregistrement impossible.", "Could not save.")); return; }
     setForm(null); setNotice(tx(lang, "Agent enregistré.", "Agent saved.")); void load();
   };
   const remove = async (a: Agent) => {
@@ -65,8 +69,9 @@ export function AgentsPage() {
   return <div className="mx-auto w-full max-w-5xl space-y-6 p-4 sm:p-8">
     <header className="flex flex-wrap items-end justify-between gap-3">
       <div><h1 className="font-display text-2xl font-semibold">{tx(lang, "Agents IA", "AI Agents")}</h1><p className="mt-1 text-sm text-muted-foreground">{tx(lang, "Créez vos assistants : consignes, modèle, mémoire et budget par réponse.", "Build your assistants: instructions, model, memory and per-reply budget.")}</p></div>
-      <Button className="rounded-full" onClick={() => setForm({ ...empty })}><Plus className="size-4" />{tx(lang, "Nouvel agent", "New agent")}</Button>
+      <Button className="rounded-full" disabled={tier !== null && tier < 2} onClick={() => setForm({ ...empty })}><Plus className="size-4" />{tx(lang, "Nouvel agent", "New agent")}</Button>
     </header>
+    {tier !== null && tier < 2 && <p className="rounded-xl border border-border bg-card px-4 py-3 text-sm">{upgradeSentence("agents", fr)} <a href="/dashboard/credits" className="font-medium text-primary hover:underline">{tx(lang, "Voir les packs", "See packs")}</a></p>}
     {notice && <p role="status" className="rounded-xl border border-border bg-card px-4 py-2 text-sm">{notice}</p>}
 
     {agents.length === 0 ? <div className="rounded-2xl border border-dashed border-border bg-card/80 p-10 text-center"><Bot className="mx-auto size-8 text-muted-foreground" /><p className="mt-3 text-sm text-muted-foreground">{tx(lang, "Aucun agent pour le moment.", "No agents yet.")}</p></div>
@@ -87,7 +92,7 @@ export function AgentsPage() {
         <div className="grid gap-3 sm:grid-cols-3">
           <label className="block space-y-1 text-sm"><span>{tx(lang, "Modèle", "Model")}</span><select className="h-9 w-full rounded-md border border-input bg-background px-2 text-sm" value={form.model} onChange={e => setForm({ ...form, model: e.target.value })}>{models.map(m => <option key={m}>{m}</option>)}</select></label>
           <label className="block space-y-1 text-sm"><span>{tx(lang, "Longueur max (jetons)", "Max length (tokens)")}</span><Input type="number" min={128} max={4096} value={form.max_tokens} onChange={e => setForm({ ...form, max_tokens: Math.min(4096, Math.max(128, Number(e.target.value) || 128)) })} /></label>
-          <label className="block space-y-1 text-sm"><span>{tx(lang, "Budget / réponse", "Budget / reply")}</span><Input type="number" min={1} max={500} value={form.max_cost} onChange={e => setForm({ ...form, max_cost: Math.min(500, Math.max(1, Number(e.target.value) || 1)) })} /></label>
+          <label className="block space-y-1 text-sm"><span>{tx(lang, "Budget / réponse", "Budget / reply")}</span><Input type="number" min={1} max={500} disabled={tier !== null && tier < 3} value={tier !== null && tier < 3 ? DEFAULT_AGENT_BUDGET : form.max_cost} onChange={e => setForm({ ...form, max_cost: Math.min(500, Math.max(1, Number(e.target.value) || 1)) })} />{tier !== null && tier < 3 && <span className="block text-xs text-muted-foreground">{upgradeSentence("agent_budget", fr)}</span>}</label>
         </div>
         <fieldset className="space-y-2"><legend className="text-sm">{tx(lang, "Outils (désactivés par défaut)", "Tools (off by default)")}</legend>
           <p className="text-xs text-muted-foreground">{tx(lang, "Les autorisations sont enregistrées ; l’exécution des outils arrive dans une prochaine étape. Pour l’instant l’agent répond uniquement par écrit.", "Permissions are saved; tool execution comes in a later step. For now the agent replies in text only.")}</p>

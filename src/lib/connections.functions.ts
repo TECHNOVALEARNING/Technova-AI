@@ -25,6 +25,7 @@ export const startConnect = createServerFn({ method: "POST" })
     const { isConfigured, appOrigin, authorizationUrl, signState, RETURN_PATH } = await import("@/lib/connections.server");
     const { hitRateLimit } = await import("@/lib/security.server");
     if (!(await hitRateLimit(context.userId, "connect"))) throw new Error("Trop de tentatives. Réessayez plus tard.");
+    if (data.connectorId === "github") { const { requirePlan } = await import("@/lib/plan.server"); await requirePlan(context.userId, "github"); }
     if (!isConfigured(data.connectorId)) throw new Error("Ce service n'est pas encore configuré.");
     const redirectUri = `${appOrigin(getRequest())}${RETURN_PATH}`;
     return { authorizationUrl: authorizationUrl(data.connectorId, redirectUri, signState(context.userId, data.connectorId)) };

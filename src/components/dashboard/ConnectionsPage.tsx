@@ -5,6 +5,7 @@ import { useDashboard } from "./DashboardLayout";
 import { CONNECTOR_CATALOG } from "@/lib/connectors";
 import { completeConnect, disconnectConnector, listConnections, startConnect } from "@/lib/connections.functions";
 import { listMySites, unpublishSite } from "@/lib/publishing.functions";
+import { upgradeFeatureOf, upgradeSentence } from "@/lib/plans";
 
 type Status = { id: string; configured: boolean; connected: boolean; label: string | null };
 const tx = (lang: string, fr: string, en: string) => (lang === "en" ? en : fr);
@@ -46,7 +47,11 @@ export function ConnectionsPage() {
       await completeConnect({ data: { code, state, connectorId: id } });
       setNotice(tx(lang, "Compte connecté.", "Account connected."));
       await load();
-    } catch { popup.close(); setNotice(tx(lang, "La connexion n’a pas abouti.", "Connection did not complete.")); }
+    } catch (e) {
+      popup.close();
+      const feature = upgradeFeatureOf(e instanceof Error ? e.message : "");
+      setNotice(feature ? upgradeSentence(feature, lang !== "en") : tx(lang, "La connexion n’a pas abouti.", "Connection did not complete."));
+    }
     setBusy(null);
   };
   const disconnect = async (id: string) => { setBusy(id); await disconnectConnector({ data: { connectorId: id } }).catch(() => {}); await load(); setBusy(null); };

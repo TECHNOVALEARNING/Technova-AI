@@ -239,6 +239,13 @@
       "when": 1794038400000,
       "tag": "0033_admin_console",
       "breakpoints": true
+    },
+    {
+      "idx": 34,
+      "version": "7",
+      "when": 1794124800000,
+      "tag": "0034_plan_limits",
+      "breakpoints": true
     }
   ]
 }

@@ -7,10 +7,13 @@ import { SITE_SLUG_RE, toSlug } from "@/lib/connectors";
 import { publishSite, pushSiteToGitHub } from "@/lib/publishing.functions";
 import type { StudioFile } from "@/lib/studio";
 import { phishingMessage } from "@/lib/phishing-scan";
+import { upgradeSentence } from "@/lib/plans";
 
 const tx = (lang: string, fr: string, en: string) => (lang === "en" ? en : fr);
 const ERR: Record<string, [string, string]> = {
   taken: ["Ce nom est déjà pris.", "This name is taken."],
+  plan_publish: [upgradeSentence("publish", true), upgradeSentence("publish", false)],
+  plan_github: [upgradeSentence("github", true), upgradeSentence("github", false)],
   reserved: ["Ce nom est réservé.", "This name is reserved."],
   rate: ["Trop de publications. Réessayez dans quelques minutes.", "Too many publishes. Try again in a few minutes."],
   size: ["Le site est trop volumineux.", "The site is too large."],

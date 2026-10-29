@@ -40,6 +40,13 @@ export const Route = createFileRoute("/api/studio-job")({
         const { runStudioJob, BUILD_COST } = await import("@/lib/studio-job.server");
         const { data: thread } = await supabaseAdmin.from("chat_threads").select("id").eq("id", d.threadId).eq("owner_id", userId).maybeSingle();
         if (!thread) return new Response("Not found", { status: 404 });
+        // Essential includes one Studio site: builds in any other conversation need Creator or Pro.
+        const { getTier, planResponse } = await import("@/lib/plan.server");
+        const { ESSENTIAL_STUDIO_SITES } = await import("@/lib/plans");
+        if ((await getTier(userId)) < 2) {
+          const { data: built } = await supabaseAdmin.from("studio_jobs").select("thread_id").eq("owner_id", userId).neq("thread_id", d.threadId).neq("status", "failed").limit(50);
+          if (new Set((built ?? []).map((j) => j.thread_id)).size >= ESSENTIAL_STUDIO_SITES) return planResponse(userId, "site_limit");
+        }
         // The build cost stays reserved until the job finishes (charged) or fails (released).
         const { reserveCredits, releaseCredits } = await import("@/lib/credits.server");
         const reservation = await reserveCredits(userId, BUILD_COST, "TechNova Studio · build");

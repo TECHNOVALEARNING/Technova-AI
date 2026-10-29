@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState, type FormEvent } from "react";
 import { Loader2, Scale, Swords, Trophy } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { upgradeFeatureOf, upgradeSentence } from "@/lib/plans";
 import { Textarea } from "@/components/ui/textarea";
 import { MessageResponse } from "@/components/ai-elements/message";
 import { useDashboard } from "./DashboardLayout";
@@ -35,7 +36,7 @@ export function ArenaPage() {
       const b = await runArena({ data: { prompt, modelA, modelB, lang: fr ? "fr" : "en" } });
       setBattle(b);
       setRevealed(b.models);
-    } catch (err) { setError(String((err as Error)?.message ?? err)); }
+    } catch (err) { const msg = String((err as Error)?.message ?? err); const f = upgradeFeatureOf(msg); setError(f ? upgradeSentence(f, fr) : msg); }
     setBusy(false);
   }
 

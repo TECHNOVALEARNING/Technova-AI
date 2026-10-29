@@ -6,6 +6,8 @@ export const createApiKey = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((data) => z.object({ name: z.string().trim().min(1).max(60) }).parse(data))
   .handler(async ({ data, context }) => {
+    const { requirePlan } = await import("@/lib/plan.server");
+    await requirePlan(context.userId, "api");
     const bytes = crypto.getRandomValues(new Uint8Array(24));
     const secret = "tn_live_" + Array.from(bytes, b => b.toString(16).padStart(2, "0")).join("");
     const digest = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(secret));

@@ -23,7 +23,12 @@ export const runArena = createServerFn({ method: "POST" })
     const { hitRateLimit, rateLimitMessage } = await import("@/lib/security.server");
     if (!(await hitRateLimit(context.userId, "arena"))) throw new Error(rateLimitMessage(data.lang, "arena"));
     const blind = data.modelA === RANDOM || data.modelB === RANDOM;
-    const pool = [...models].sort(() => Math.random() - 0.5);
+    // Starter plans compare only the models their plan includes.
+    const { getTier, requirePlan } = await import("@/lib/plan.server");
+    const { PREMIUM_CHAT_MODELS } = await import("@/lib/plans");
+    const tier = await getTier(context.userId);
+    if (tier < 1 && (PREMIUM_CHAT_MODELS.has(data.modelA) || PREMIUM_CHAT_MODELS.has(data.modelB))) await requirePlan(context.userId, "premium_models", tier);
+    const pool = models.filter((m) => tier >= 1 || !PREMIUM_CHAT_MODELS.has(m)).sort(() => Math.random() - 0.5);
     const a = data.modelA === RANDOM ? pool.find((m) => m !== data.modelB)! : data.modelA;
     const b = data.modelB === RANDOM ? pool.find((m) => m !== a)! : data.modelB;
     if (a === b) throw new Error(fr ? "Choisissez deux modèles différents." : "Pick two different models.");

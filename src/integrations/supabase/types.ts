@@ -1385,6 +1385,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      account_tier: { Args: { _user: string }; Returns: number }
       admin_list_users: {
         Args: { _limit?: number; _offset?: number; _search?: string }
         Returns: { balance: number; created_at: string; credits_30d: number; display_name: string; email: string; id: string; is_admin: boolean; last_sign_in_at: string | null; paid_xof: number; requests_30d: number; suspended: boolean }[]

@@ -1,9 +1,12 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { Activity, ChevronLeft, ChevronRight, Coins, Download, Gauge, RefreshCw, Zap } from "lucide-react";
+import { Activity, ChevronLeft, ChevronRight, Coins, Download, Gauge, Lock, RefreshCw, Zap } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import type { Tables } from "@/integrations/supabase/types";
 import { useDashboard } from "./dashboard-context";
+import { Link } from "@tanstack/react-router";
+import { upgradeSentence } from "@/lib/plans";
+import { usePlanTier } from "@/lib/plan-client";
 
 // Usage: period filters (with comparison to the previous period), activity chart, per-model ranking,
 // paginated request log and CSV export. Rows come from usage_logs (owner-only reads).
@@ -37,7 +40,7 @@ function Delta({ now, before, label }: { now: number; before: number; label: str
 }
 
 export function UsagePage() {
-  const { lang } = useDashboard(); const c = copy[lang === "en" ? "en" : "fr"];
+  const { lang } = useDashboard(); const c = copy[lang === "en" ? "en" : "fr"]; const tier = usePlanTier();
   const [period, setPeriod] = useState<Period>("7d");
   const [rows, setRows] = useState<Log[] | null>(null);
   const [model, setModel] = useState("all");
@@ -99,6 +102,8 @@ export function UsagePage() {
     a.download = `technova-usage-${period}-${new Date().toISOString().slice(0, 10)}.csv`; a.click(); URL.revokeObjectURL(a.href);
   }
 
+  const detailed = tier === null || tier >= 3;
+  const lockedNote = <div className="flex flex-col items-center gap-2 py-12 text-center text-[12.5px] text-muted-foreground"><Lock className="size-4" /><p className="max-w-xs">{upgradeSentence("usage_details", lang !== "en")}</p><Link to="/dashboard/credits" className="font-medium text-primary hover:underline">{lang === "en" ? "See packs" : "Voir les packs"}</Link></div>;
   const card = "rounded-2xl border border-border bg-card p-5 shadow-sm";
   const eyebrow = "text-[10.5px] font-semibold tracking-[0.16em] text-muted-foreground";
   const tiles = [
@@ -115,7 +120,7 @@ export function UsagePage() {
         <div className="inline-flex rounded-full bg-secondary p-1" role="tablist">{(Object.keys(c.periods) as Period[]).map((p) => <button key={p} type="button" role="tab" aria-selected={period === p} onClick={() => setPeriod(p)}
           className={`h-8 rounded-full px-3 text-[12px] font-medium transition ${period === p ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"}`}>{c.periods[p]}</button>)}</div>
         <Button variant="outline" size="icon" className="size-9 rounded-full" aria-label={c.refresh} title={c.refresh} onClick={() => void load()}><RefreshCw className="size-4" /></Button>
-        <Button variant="outline" className="h-9 rounded-full" disabled={!filtered.length} onClick={exportCsv}><Download className="size-4" />{c.export}</Button>
+        <Button variant="outline" className="h-9 rounded-full" disabled={!detailed || !filtered.length} onClick={exportCsv}><Download className="size-4" />{c.export}</Button>
       </div>
     </div>
 
@@ -133,7 +138,7 @@ export function UsagePage() {
         </div>)}</div> : <p className="py-14 text-center text-[12.5px] text-muted-foreground">{c.none}</p>}
       </div>
       <div className={card}><p className={eyebrow}>{c.byModel.toUpperCase()}</p>
-        {view.models.length ? <table className="mt-3 w-full text-[12px]"><thead className="text-muted-foreground"><tr><th className="py-1.5 text-left font-medium">{c.model}</th><th className="text-right font-medium">{c.requests}</th><th className="text-right font-medium">{c.credits}</th><th className="text-right font-medium">{c.share}</th></tr></thead>
+        {!detailed ? lockedNote : view.models.length ? <table className="mt-3 w-full text-[12px]"><thead className="text-muted-foreground"><tr><th className="py-1.5 text-left font-medium">{c.model}</th><th className="text-right font-medium">{c.requests}</th><th className="text-right font-medium">{c.credits}</th><th className="text-right font-medium">{c.share}</th></tr></thead>
           <tbody>{view.models.slice(0, 8).map((m) => <tr key={m.model} className="border-t border-border"><td className="max-w-[140px] truncate py-2"><button type="button" className="truncate hover:underline" onClick={() => { setModel(m.model); setPage(1); }}>{m.model}</button></td><td className="text-right tabular-nums">{n(m.requests)}</td><td className="text-right tabular-nums">{n(m.credits)}</td><td className="text-right tabular-nums text-muted-foreground">{view.totals.credits ? Math.round((m.credits / view.totals.credits) * 100) : 0} %</td></tr>)}</tbody>
         </table> : <p className="py-14 text-center text-[12.5px] text-muted-foreground">{rows ? c.none : c.loading}</p>}
       </div>
@@ -143,7 +148,7 @@ export function UsagePage() {
       <div className="flex flex-wrap items-center justify-between gap-3"><p className={eyebrow}>{c.log.toUpperCase()}</p>
         <select aria-label={c.model} value={model} onChange={(e) => { setModel(e.target.value); setPage(1); }} className="h-8 rounded-full border border-border bg-background px-3 text-[12px]"><option value="all">{c.allModels}</option>{view.models.map((m) => <option key={m.model}>{m.model}</option>)}</select>
       </div>
-      {shown.length ? <><div className="mt-3 overflow-x-auto"><table className="w-full min-w-[560px] text-left text-[12px]"><thead className="text-muted-foreground"><tr><th className="py-2 font-medium">{c.date}</th><th className="font-medium">{c.model}</th><th className="text-right font-medium">{c.input}</th><th className="text-right font-medium">{c.output}</th><th className="text-right font-medium">{c.credits}</th></tr></thead>
+      {!detailed ? lockedNote : shown.length ? <><div className="mt-3 overflow-x-auto"><table className="w-full min-w-[560px] text-left text-[12px]"><thead className="text-muted-foreground"><tr><th className="py-2 font-medium">{c.date}</th><th className="font-medium">{c.model}</th><th className="text-right font-medium">{c.input}</th><th className="text-right font-medium">{c.output}</th><th className="text-right font-medium">{c.credits}</th></tr></thead>
         <tbody>{shown.map((l) => <tr key={l.id} className="border-t border-border"><td className="py-2 tabular-nums text-muted-foreground">{new Date(l.created_at).toLocaleString(c.locale, { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" })}</td><td>{l.model}</td><td className="text-right tabular-nums">{n(l.input_tokens)}</td><td className="text-right tabular-nums">{n(l.output_tokens)}</td><td className="text-right font-medium tabular-nums">{n(l.credits)}</td></tr>)}</tbody></table></div>
         {pages > 1 && <div className="mt-4 flex items-center justify-end gap-3 text-[12px]"><Button variant="outline" size="icon" className="size-8 rounded-full" aria-label="←" disabled={page <= 1} onClick={() => setPage(page - 1)}><ChevronLeft className="size-4" /></Button><span className="tabular-nums">{c.page} {Math.min(page, pages)} / {pages}</span><Button variant="outline" size="icon" className="size-8 rounded-full" aria-label="→" disabled={page >= pages} onClick={() => setPage(page + 1)}><ChevronRight className="size-4" /></Button></div>}
       </> : <p className="py-10 text-center text-[12.5px] text-muted-foreground">{rows ? c.none : c.loading}</p>}

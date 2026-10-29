@@ -6,6 +6,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { supabase } from "@/integrations/supabase/client";
 import type { Thread } from "./dashboard-context";
+import { upgradeFeatureOf, upgradeSentence } from "@/lib/plans";
 
 type Props = { thread: Thread; active: boolean; lang: "fr" | "en"; reload: () => Promise<void> };
 
@@ -81,6 +82,7 @@ function ShareDialog({ open, onOpenChange, thread, lang, reload }: { open: boole
   const [token, setToken] = useState<string | null>(thread.share_token);
   const [state, setState] = useState<"idle" | "loading" | "ready" | "revoked" | "error">("idle");
   const [copied, setCopied] = useState(false);
+  const [planLimited, setPlanLimited] = useState(false);
 
   async function createLink() {
     setState("loading");
@@ -89,7 +91,7 @@ function ShareDialog({ open, onOpenChange, thread, lang, reload }: { open: boole
       supabase.from("chat_threads").update({ share_token: next }).eq("id", thread.id),
       new Promise(r => setTimeout(r, 900)),
     ]);
-    if (error) { setState("error"); return; }
+    if (error) { setPlanLimited(upgradeFeatureOf(error.message) === "share"); setState("error"); return; }
     setToken(next); setState("ready"); void reload();
   }
   useEffect(() => {
@@ -126,7 +128,7 @@ function ShareDialog({ open, onOpenChange, thread, lang, reload }: { open: boole
             </div>
           </div>
         </>}
-        {(state === "revoked" || state === "error") && <div className="flex items-center justify-between gap-3"><p className="text-[13px] text-muted-foreground">{state === "error" ? c.error : c.revoked}</p><Button size="sm" className="h-8 rounded-full" onClick={() => void createLink()}>{c.newLink}</Button></div>}
+        {(state === "revoked" || state === "error") && <div className="flex items-center justify-between gap-3"><p className="text-[13px] text-muted-foreground">{state === "error" ? (planLimited ? upgradeSentence("share", lang === "fr") : c.error) : c.revoked}</p>{!(state === "error" && planLimited) && <Button size="sm" className="h-8 rounded-full" onClick={() => void createLink()}>{c.newLink}</Button>}</div>}
       </div>
     </DialogContent>
   </Dialog>;
