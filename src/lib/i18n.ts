@@ -59,7 +59,7 @@ export const content = {
       items: [
         { n: "Sonorya", d: "Création de musique et de chansons personnalisées par IA.", url: "https://sonorya.co/", k: "Musique IA", f: ["Chansons sur mesure", "Tous les styles musicaux", "Voix et paroles générées"] },
         { n: "Humanizer AI", d: "Rendez vos textes IA naturels et indétectables.", url: "https://www.humanizerai.space/", k: "Écriture", f: ["Contourne les détecteurs IA", "Style naturel et fluide", "Multilingue"] },
-        { n: "Technova Flotte", d: "Suivi de flotte en temps réel : GPS, entretien, carburant.", url: "https://www.technovalearning.com/", k: "Logistique", f: ["GPS en temps réel", "Alertes d'entretien", "Suivi du carburant"] },
+        { n: "Technova Flotte", d: "Suivi de flotte en temps réel : GPS, entretien, carburant.", url: "https://technova-flotte.vercel.app/", k: "Logistique", f: ["GPS en temps réel", "Alertes d'entretien", "Suivi du carburant"] },
         { n: "Technova Connect", d: "Connectivité et services mobiles pour le quotidien.", k: "Connectivité", f: ["Services mobiles", "Connectivité", "Paiements du quotidien"] },
       ],
     },
@@ -174,7 +174,7 @@ export const content = {
       items: [
         { n: "Sonorya", d: "Custom music and song creation with AI.", url: "https://sonorya.co/", k: "AI music", f: ["Custom songs", "Every music style", "Generated vocals & lyrics"] },
         { n: "Humanizer AI", d: "Make AI text natural and undetectable.", url: "https://www.humanizerai.space/", k: "Writing", f: ["Bypasses AI detectors", "Natural, fluent style", "Multilingual"] },
-        { n: "Technova Flotte", d: "Real-time fleet tracking: GPS, maintenance, fuel.", url: "https://www.technovalearning.com/", k: "Logistics", f: ["Real-time GPS", "Maintenance alerts", "Fuel tracking"] },
+        { n: "Technova Flotte", d: "Real-time fleet tracking: GPS, maintenance, fuel.", url: "https://technova-flotte.vercel.app/", k: "Logistics", f: ["Real-time GPS", "Maintenance alerts", "Fuel tracking"] },
         { n: "Technova Connect", d: "Connectivity and mobile services for everyday life.", k: "Connectivity", f: ["Mobile services", "Connectivity", "Everyday payments"] },
       ],
     },
@@ -289,7 +289,7 @@ export const content = {
       items: [
         { n: "Sonorya", d: "Creación de música y canciones personalizadas con IA.", url: "https://sonorya.co/", k: "Música IA", f: ["Canciones a medida", "Todos los estilos musicales", "Voces y letras generadas"] },
         { n: "Humanizer AI", d: "Haz que tus textos de IA suenen naturales e indetectables.", url: "https://www.humanizerai.space/", k: "Escritura", f: ["Evita los detectores de IA", "Estilo natural y fluido", "Multilingüe"] },
-        { n: "Technova Flotte", d: "Seguimiento de flotas en tiempo real: GPS, mantenimiento, combustible.", url: "https://www.technovalearning.com/", k: "Logística", f: ["GPS en tiempo real", "Alertas de mantenimiento", "Control de combustible"] },
+        { n: "Technova Flotte", d: "Seguimiento de flotas en tiempo real: GPS, mantenimiento, combustible.", url: "https://technova-flotte.vercel.app/", k: "Logística", f: ["GPS en tiempo real", "Alertas de mantenimiento", "Control de combustible"] },
         { n: "Technova Connect", d: "Conectividad y servicios móviles para el día a día.", k: "Conectividad", f: ["Servicios móviles", "Conectividad", "Pagos cotidianos"] },
       ],
     },
@@ -404,7 +404,7 @@ export const content = {
       items: [
         { n: "Sonorya", d: "Criação de músicas e canções personalizadas com IA.", url: "https://sonorya.co/", k: "Música IA", f: ["Canções sob medida", "Todos os estilos musicais", "Vozes e letras geradas"] },
         { n: "Humanizer AI", d: "Deixe seus textos de IA naturais e indetectáveis.", url: "https://www.humanizerai.space/", k: "Escrita", f: ["Contorna os detectores de IA", "Estilo natural e fluido", "Multilíngue"] },
-        { n: "Technova Flotte", d: "Rastreamento de frota em tempo real: GPS, manutenção, combustível.", url: "https://www.technovalearning.com/", k: "Logística", f: ["GPS em tempo real", "Alertas de manutenção", "Controle de combustível"] },
+        { n: "Technova Flotte", d: "Rastreamento de frota em tempo real: GPS, manutenção, combustível.", url: "https://technova-flotte.vercel.app/", k: "Logística", f: ["GPS em tempo real", "Alertas de manutenção", "Controle de combustível"] },
         { n: "Technova Connect", d: "Conectividade e serviços móveis para o dia a dia.", k: "Conectividade", f: ["Serviços móveis", "Conectividade", "Pagamentos do dia a dia"] },
       ],
     },
