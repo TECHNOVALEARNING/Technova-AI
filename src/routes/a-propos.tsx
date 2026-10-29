@@ -32,6 +32,12 @@ const text = {
     tag: "À propos", title: "Conçu en Afrique, ouvert au monde.", sub: "TechNova AI Hub est né d'un constat simple : les meilleurs outils d'intelligence artificielle existent, mais restent hors de portée de millions de créateurs, d'étudiants et d'entreprises, faute de moyen de paiement adapté.",
     visionTag: "Vision", visionTitle: "Une IA de premier plan entre toutes les mains.", vision: "Nous voulons que chaque créateur, développeur ou entrepreneur, où qu'il soit, puisse utiliser les modèles les plus avancés du monde pour apprendre, créer et bâtir, sans barrière de langue, de devise ou de carte bancaire.",
     missionTag: "Mission", missionTitle: "Réunir les meilleurs modèles, au juste prix.", mission: "Nous rassemblons GPT, Claude, Gemini, DeepSeek et des dizaines d'autres modèles dans un seul espace : chat, création de sites, images, vidéos, musique et API. Pas d'abonnement : des crédits sans expiration, payables en FCFA par Mobile Money ou par carte.",
+    whyTag: "Pourquoi TechNova AI Hub ?", whyTitle: "Les géants de l'IA imposent la carte bancaire en dollars. Une barrière invisible qui freine l'innovation en Afrique.",
+    whyIntro: "L'accès aux modèles d'intelligence artificielle sur le continent africain ne se heurte pas à un manque de compétences techniques, mais à une asymétrie profonde des infrastructures de facturation internationale.",
+    whyCols: ["Réalité du marché africain", "Impasse actuelle"],
+    why: [["Moins de 4 %", "Adoption de la carte de crédit", "Taux de pénétration moyen des cartes permettant des règlements récurrents en devises étrangères sur le continent.", "La quasi-totalité des API d'intelligence artificielle exigent une carte Visa ou Mastercard internationale."], ["4,7 millions", "Développeurs actifs", "Le bassin de talents tech à la croissance la plus rapide au monde (+21 % par an).", "Une génération d'ingénieurs et de créateurs freinée dans l'accès aux modèles d'IA de pointe."], ["74 %", "Poids mondial du Mobile Money", "Part du volume mondial des transactions Mobile Money générée en Afrique : plus de 1 100 milliards $ sur 1,1 milliard de comptes.", "Le moyen de paiement de référence du continent reste ignoré par les fournisseurs mondiaux d'IA."]],
+    whyFinding: "Le constat", whyFindingText: "L'écosystème tech africain regorge de talents, mais reste bridé par des infrastructures de paiement inadaptées aux réalités locales. TechNova AI Hub ouvre les meilleurs modèles au paiement en FCFA par Mobile Money.",
+    whySources: "Sources : GitHub Octoverse · Andela · McKinsey & African Business, 2025–2026",
     statsTag: "TechNova en chiffres", statsTitle: "Une plateforme complète, dès aujourd'hui.",
     statLabels: { models: "modèles d'IA disponibles", languages: "langues : français, anglais, espagnol, portugais", payments: "moyens de paiement, dont 4 Mobile Money", registry: "modèles et ressources prêts à l'emploi", subscription: "abonnement : vous ne payez que ce que vous utilisez" },
     valuesTag: "Nos valeurs", valuesTitle: "Ce qui guide chacune de nos décisions.",
@@ -43,6 +49,12 @@ const text = {
     tag: "About", title: "Built in Africa, open to the world.", sub: "TechNova AI Hub started from a simple observation: the best artificial intelligence tools exist, yet they remain out of reach for millions of creators, students and businesses who lack a suitable way to pay.",
     visionTag: "Vision", visionTitle: "World-class AI in everyone's hands.", vision: "We want every creator, developer or entrepreneur, wherever they are, to use the world's most advanced models to learn, create and build, with no language, currency or bank-card barrier.",
     missionTag: "Mission", missionTitle: "The best models, at a fair price.", mission: "We bring GPT, Claude, Gemini, DeepSeek and dozens of other models together in one place: chat, website building, images, video, music and an API. No subscription: credits that never expire, payable in FCFA by Mobile Money or card.",
+    whyTag: "Why TechNova AI Hub?", whyTitle: "AI giants require a dollar bank card. An invisible barrier holding back innovation in Africa.",
+    whyIntro: "Access to AI models across the African continent is not limited by a lack of technical skills, but by a deep imbalance in international billing infrastructure.",
+    whyCols: ["African market reality", "Current dead end"],
+    why: [["Under 4%", "Credit card adoption", "Average penetration of cards that allow recurring payments in foreign currencies across the continent.", "Almost every AI API requires an international Visa or Mastercard card."], ["4.7 million", "Active developers", "The fastest-growing tech talent pool in the world (+21% a year).", "A generation of engineers and creators held back from cutting-edge AI models."], ["74%", "Global share of Mobile Money", "Share of global Mobile Money transaction volume generated in Africa: over $1.1 trillion across 1.1 billion accounts.", "The continent's standard way to pay is still ignored by global AI providers."]],
+    whyFinding: "The finding", whyFindingText: "Africa's tech ecosystem is full of talent, yet held back by payment infrastructure that does not fit local realities. TechNova AI Hub opens the best models to FCFA payment by Mobile Money.",
+    whySources: "Sources: GitHub Octoverse · Andela · McKinsey & African Business, 2025–2026",
     statsTag: "TechNova in numbers", statsTitle: "A complete platform, today.",
     statLabels: { models: "AI models available", languages: "languages: French, English, Spanish, Portuguese", payments: "payment methods, including 4 Mobile Money", registry: "ready-to-use templates and resources", subscription: "subscription: you only pay for what you use" },
     valuesTag: "Our values", valuesTitle: "What guides every decision we make.",
@@ -54,6 +66,12 @@ const text = {
     tag: "Acerca de", title: "Creado en África, abierto al mundo.", sub: "TechNova AI Hub nació de una constatación sencilla: las mejores herramientas de inteligencia artificial existen, pero siguen fuera del alcance de millones de creadores, estudiantes y empresas que no tienen un medio de pago adecuado.",
     visionTag: "Visión", visionTitle: "Una IA de primer nivel en todas las manos.", vision: "Queremos que cada creador, desarrollador o emprendedor, esté donde esté, pueda usar los modelos más avanzados del mundo para aprender, crear y construir, sin barreras de idioma, de moneda ni de tarjeta bancaria.",
     missionTag: "Misión", missionTitle: "Reunir los mejores modelos, al precio justo.", mission: "Reunimos GPT, Claude, Gemini, DeepSeek y decenas de modelos más en un solo espacio: chat, creación de sitios, imágenes, vídeos, música y API. Sin suscripción: créditos que no caducan, pagaderos en FCFA con Mobile Money o tarjeta.",
+    whyTag: "¿Por qué TechNova AI Hub?", whyTitle: "Los gigantes de la IA exigen una tarjeta bancaria en dólares. Una barrera invisible que frena la innovación en África.",
+    whyIntro: "El acceso a los modelos de inteligencia artificial en el continente africano no choca con una falta de competencias técnicas, sino con una profunda asimetría de las infraestructuras de facturación internacional.",
+    whyCols: ["Realidad del mercado africano", "Bloqueo actual"],
+    why: [["Menos del 4 %", "Adopción de la tarjeta de crédito", "Tasa media de penetración de tarjetas que permiten pagos recurrentes en divisas extranjeras en el continente.", "Casi todas las API de inteligencia artificial exigen una tarjeta Visa o Mastercard internacional."], ["4,7 millones", "Desarrolladores activos", "La reserva de talento tecnológico de mayor crecimiento del mundo (+21 % al año).", "Una generación de ingenieros y creadores frenada en el acceso a los modelos de IA más avanzados."], ["74 %", "Peso mundial del Mobile Money", "Parte del volumen mundial de transacciones Mobile Money generada en África: más de 1,1 billones $ en 1.100 millones de cuentas.", "El medio de pago de referencia del continente sigue ignorado por los proveedores mundiales de IA."]],
+    whyFinding: "La constatación", whyFindingText: "El ecosistema tecnológico africano rebosa de talento, pero sigue limitado por infraestructuras de pago inadaptadas a las realidades locales. TechNova AI Hub abre los mejores modelos al pago en FCFA con Mobile Money.",
+    whySources: "Fuentes: GitHub Octoverse · Andela · McKinsey & African Business, 2025–2026",
     statsTag: "TechNova en cifras", statsTitle: "Una plataforma completa, desde hoy.",
     statLabels: { models: "modelos de IA disponibles", languages: "idiomas: francés, inglés, español, portugués", payments: "medios de pago, incluidos 4 Mobile Money", registry: "plantillas y recursos listos para usar", subscription: "suscripciones: solo pagas lo que usas" },
     valuesTag: "Nuestros valores", valuesTitle: "Lo que guía cada una de nuestras decisiones.",
@@ -65,6 +83,12 @@ const text = {
     tag: "Sobre", title: "Criado na África, aberto ao mundo.", sub: "A TechNova AI Hub nasceu de uma constatação simples: as melhores ferramentas de inteligência artificial existem, mas continuam fora do alcance de milhões de criadores, estudantes e empresas sem um meio de pagamento adequado.",
     visionTag: "Visão", visionTitle: "Uma IA de ponta em todas as mãos.", vision: "Queremos que cada criador, desenvolvedor ou empreendedor, onde quer que esteja, possa usar os modelos mais avançados do mundo para aprender, criar e construir, sem barreira de idioma, de moeda ou de cartão bancário.",
     missionTag: "Missão", missionTitle: "Reunir os melhores modelos, pelo preço justo.", mission: "Reunimos GPT, Claude, Gemini, DeepSeek e dezenas de outros modelos num só espaço: chat, criação de sites, imagens, vídeos, música e API. Sem assinatura: créditos que não expiram, pagáveis em FCFA por Mobile Money ou cartão.",
+    whyTag: "Por que a TechNova AI Hub?", whyTitle: "Os gigantes da IA exigem cartão bancário em dólares. Uma barreira invisível que trava a inovação na África.",
+    whyIntro: "O acesso aos modelos de inteligência artificial no continente africano não esbarra na falta de competências técnicas, mas numa profunda assimetria das infraestruturas de faturação internacional.",
+    whyCols: ["Realidade do mercado africano", "Impasse atual"],
+    why: [["Menos de 4 %", "Adoção do cartão de crédito", "Taxa média de penetração de cartões que permitem pagamentos recorrentes em moedas estrangeiras no continente.", "Quase todas as API de inteligência artificial exigem um cartão Visa ou Mastercard internacional."], ["4,7 milhões", "Desenvolvedores ativos", "O grupo de talentos tech que mais cresce no mundo (+21 % ao ano).", "Uma geração de engenheiros e criadores travada no acesso aos modelos de IA de ponta."], ["74 %", "Peso mundial do Mobile Money", "Parte do volume mundial de transações Mobile Money gerada na África: mais de 1,1 trilhão $ em 1,1 bilhão de contas.", "O meio de pagamento de referência do continente continua ignorado pelos fornecedores mundiais de IA."]],
+    whyFinding: "A constatação", whyFindingText: "O ecossistema tech africano está repleto de talentos, mas continua limitado por infraestruturas de pagamento inadequadas às realidades locais. A TechNova AI Hub abre os melhores modelos ao pagamento em FCFA por Mobile Money.",
+    whySources: "Fontes: GitHub Octoverse · Andela · McKinsey & African Business, 2025–2026",
     statsTag: "A TechNova em números", statsTitle: "Uma plataforma completa, desde já.",
     statLabels: { models: "modelos de IA disponíveis", languages: "idiomas: francês, inglês, espanhol, português", payments: "meios de pagamento, incluindo 4 Mobile Money", registry: "modelos e recursos prontos para usar", subscription: "assinaturas: você só paga o que usa" },
     valuesTag: "Nossos valores", valuesTitle: "O que orienta cada uma das nossas decisões.",
@@ -98,6 +122,24 @@ function AboutPage() {
             <p className="mt-4 leading-relaxed text-muted-foreground">{body as string}</p>
           </article>;
         })}
+      </div>
+    </section>
+
+    <section className="px-4 pt-14" id="pourquoi">
+      <div className="mx-auto max-w-6xl">
+        <p className={eyebrow}>{t.whyTag}</p>
+        <h2 className="mt-2 max-w-4xl font-display text-3xl font-semibold leading-tight tracking-tight md:text-4xl">{t.whyTitle}</h2>
+        <p className="mt-4 max-w-3xl leading-relaxed text-muted-foreground">{t.whyIntro}</p>
+        <div className="mt-8 grid gap-4 lg:grid-cols-3">{t.why.map(([figure, title, reality, deadEnd]) => <article key={title} className="flex flex-col rounded-[24px] border border-border bg-card p-6 shadow-soft">
+          <p className="font-display text-4xl font-semibold tracking-tight text-primary md:text-5xl">{figure}</p>
+          <h3 className="mt-3 font-display text-lg font-semibold">{title}</h3>
+          <p className={`mt-4 ${eyebrow}`}>{t.whyCols[0]}</p>
+          <p className="mt-1 text-sm leading-relaxed text-muted-foreground">{reality}</p>
+          <p className={`mt-4 border-t border-border pt-4 ${eyebrow}`}>{t.whyCols[1]}</p>
+          <p className="mt-1 text-sm leading-relaxed">{deadEnd}</p>
+        </article>)}</div>
+        <div className="mt-4 rounded-[24px] border-l-4 border-primary bg-secondary p-6"><p className="leading-relaxed"><strong className="font-semibold">{t.whyFinding} :</strong> {t.whyFindingText}</p></div>
+        <p className="mt-3 text-right text-xs text-muted-foreground">{t.whySources}</p>
       </div>
     </section>
 

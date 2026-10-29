@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { Link } from "@tanstack/react-router";
-import { ArrowUpRight, Globe, LogIn, Menu, X, Facebook, Instagram, Linkedin, Youtube } from "lucide-react";
+import { ArrowUpRight, Globe, LogIn, Mail, Menu, X, Facebook, Instagram, Linkedin, Youtube } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { content, isSiteLang, siteLangs, tr, type SiteLang } from "@/lib/i18n";
 import { supabase } from "@/integrations/supabase/client";
@@ -196,6 +196,9 @@ export function Footer({ lang }: { lang: SiteLang }) {
       <div className="mx-auto grid max-w-6xl gap-12 lg:grid-cols-[1fr_2.4fr]">
         <div><Logo className="text-xl" /><p className="mt-1 text-xs text-chat-glow">AI HUB</p><p className="mt-3 text-[10px] uppercase text-muted-foreground">By Tenulysse</p>
           <p className="mt-6 max-w-xs text-sm leading-7 text-muted-foreground">{tr(lang, { fr: "L’infrastructure IA unifiée pour les créateurs, développeurs et entreprises.", en: "Unified AI infrastructure for creators, developers and businesses.", es: "La infraestructura de IA unificada para creadores, desarrolladores y empresas.", pt: "A infraestrutura de IA unificada para criadores, desenvolvedores e empresas." })}</p>
+          <a href="mailto:support@technovaihub.com" className="mt-5 inline-flex items-center gap-2 rounded-full border border-border px-3.5 py-2 text-sm text-muted-foreground transition-colors hover:border-foreground/30 hover:text-foreground">
+            <Mail className="size-4" aria-hidden="true" /><span className="sr-only">{tr(lang, { fr: "Contact :", en: "Contact:", es: "Contacto:", pt: "Contato:" })} </span>support@technovaihub.com
+          </a>
           <StoreBadges lang={lang} className="mt-6" />
           <div className="mt-6 flex gap-2">{social.map(([name, Icon, href]) => <Button key={name} asChild variant="outline" size="icon" className="size-9 rounded-full transition-colors hover:border-foreground/30 hover:bg-foreground hover:text-background"><a href={href} target="_blank" rel="noopener noreferrer" aria-label={`TechNova · ${name}`} title={name}><Icon className="size-4" /></a></Button>)}</div>
         </div>
