@@ -19,6 +19,7 @@ import ecoMobil from "@/assets/eco-mobil.jpg";
 import { content, labs, type SiteLang } from "@/lib/i18n";
 import { Nav, Footer, Heading, Tag, R, ActionText, useReveal, useSiteLang } from "@/components/site/SiteChrome";
 import { InstallAppPrompt } from "@/components/site/InstallAppPrompt";
+import { RoutingSection } from "@/components/site/RoutingSection";
 
 import { PricingContent } from "@/components/site/PricingContent";
 
@@ -52,6 +53,7 @@ function Index() {
       <Why t={t} />
       <Services t={t} />
       <How t={t} />
+      <RoutingSection lang={lang} />
       <Ecosystem t={t} />
       <Tech t={t} />
       <PricingContent lang={lang} />
