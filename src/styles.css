@@ -537,12 +537,19 @@ html, body, * { scrollbar-width: none; }
 
 /* A viewport-fixed color cloud stays behind the workspace regardless of content length. */
 .dashboard-shell { --radius: 0.75rem; --dashboard-highlight: oklch(0.94 0.035 225); --chat-glow: oklch(.51 .15 237); --chat-glow-foreground: oklch(.99 .005 237); }
-.dark .dashboard-shell { --background: oklch(.205 0 0); --foreground: oklch(.95 0 0); --card: oklch(.255 0 0); --card-foreground: oklch(.95 0 0); --secondary: oklch(.29 0 0); --muted: oklch(.29 0 0); --muted-foreground: oklch(.68 0 0); --border: oklch(1 0 0 / 10%); --input: oklch(1 0 0 / 12%); --primary: oklch(.95 0 0); --primary-foreground: oklch(.2 0 0); --popover: oklch(.25 0 0); --popover-foreground: oklch(.95 0 0); --dashboard-highlight: oklch(.29 0 0); --chat-glow: oklch(.77 .13 234); --chat-glow-foreground: oklch(.16 .04 245); }
+.dark .dashboard-shell { --background: oklch(.155 .006 262); --foreground: oklch(.965 .003 262); --card: oklch(.195 .007 262); --card-foreground: oklch(.965 .003 262); --secondary: oklch(.245 .008 262); --secondary-foreground: oklch(.965 .003 262); --muted: oklch(.245 .008 262); --muted-foreground: oklch(.72 .012 262); --accent: oklch(.245 .008 262); --accent-foreground: oklch(.965 .003 262); --border: oklch(1 0 0 / 8%); --input: oklch(1 0 0 / 11%); --primary: oklch(.965 .003 262); --primary-foreground: oklch(.17 .006 262); --popover: oklch(.205 .007 262); --popover-foreground: oklch(.965 .003 262); --ring: oklch(.55 .03 262); --dashboard-highlight: oklch(.25 .012 262); --chat-glow: oklch(.77 .13 234); --chat-glow-foreground: oklch(.16 .04 245); --shadow-soft: 0 1px 2px oklch(0 0 0 / .4), 0 12px 32px -16px oklch(0 0 0 / .6); }
 .dark .dashboard-shell { --supabase: oklch(.77 .15 155); }
 @theme inline { --color-dashboard-highlight: var(--dashboard-highlight); --color-chat-glow: var(--chat-glow); --color-chat-glow-foreground: var(--chat-glow-foreground); }
 .dashboard-wallpaper img { opacity: 1; }
-.dark .dashboard-wallpaper img { opacity: 1; }
+/* Dark mode: the bright cloud picture gives way to a deep night version of the same light (warm at the top, blue below). */
+.dark .dashboard-wallpaper { background:
+  radial-gradient(110% 60% at 50% 115%, oklch(.42 .13 255 / .42), transparent 62%),
+  radial-gradient(70% 45% at 50% -8%, oklch(.55 .06 75 / .10), transparent 65%),
+  radial-gradient(60% 50% at 0% 40%, oklch(.4 .08 300 / .08), transparent 70%),
+  oklch(.145 .006 262); }
+.dark .dashboard-wallpaper img { opacity: 0; }
 .chat-heading { color: oklch(.2 .02 255); }
+.dark .chat-heading { color: var(--foreground); }
 .chat-composer { box-shadow: 0 16px 42px -22px color-mix(in oklab, var(--chat-glow) 27%, transparent), var(--shadow-soft); }
 .dashboard-shell .dashboard-sidebar { transition: transform 260ms ease; }
 .dash-eyebrow { font-size: 10px; font-weight: 800; color: var(--muted-foreground); }
