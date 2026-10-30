@@ -1,6 +1,7 @@
 import { createContext, useCallback, useContext, useEffect, useState, type ReactNode } from "react";
 import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import { savePref } from "@/lib/consent";
+import { planKeyOf, planLabels, usePlan } from "@/lib/plan-client";
 import { BookMarked, Bot, Library, Plug, ShieldAlert, Swords } from "lucide-react";
 import { getMyRole } from "@/lib/admin.functions";
 import { Activity, ArrowLeft, Bell, BookOpen, Boxes, ChevronDown, Code2, CreditCard, Diamond, Gift, Globe2, LayoutDashboard, LogOut, Menu, MessageCircle, Moon, PanelLeftClose, PanelLeftOpen, Search, Settings2, Sun, Wallet, X } from "lucide-react";
@@ -104,11 +105,15 @@ export function DashboardLayout({ children }: { children: ReactNode }) {
   const filtered = threads.filter(thread => thread.title.toLocaleLowerCase().includes(search.toLocaleLowerCase())).sort((a, b) => Number(b.pinned) - Number(a.pinned));
   const matchingSections = [...links, { key: "docs", to: "/dashboard/docs", icon: BookOpen } as const].filter(item => t[item.key].toLocaleLowerCase().includes(search.toLocaleLowerCase()));
   const initials = (name || email || "T").charAt(0).toUpperCase();
+  // Plan badge and avatar ring colours follow the highest pack bought (display only).
+  const plan = usePlan();
+  const planKey = plan ? planKeyOf(plan.tier, plan.paid) : null;
+  const planName = planKey ? planLabels[planKey][lang] : "";
 
   return <DashboardContext.Provider value={{ lang, t, theme, setLang, setTheme, setArtifactWorkspaceOpen: setWorkspaceOpen, threads, reload, createThread, name, email, error }}>
     <div className="dashboard-shell flex min-h-svh overflow-x-clip bg-background text-foreground">
       {mobileOpen && <div className="fixed inset-0 z-40 bg-ink/50 lg:hidden" onClick={() => setMobileOpen(false)} />}
-      <aside className={`dashboard-sidebar fixed inset-y-0 left-0 z-50 flex w-[224px] flex-col border-r border-border bg-card transition-[width,transform] duration-200 lg:sticky ${mini ? "lg:w-[60px]" : ""} lg:top-0 lg:h-svh ${mobileOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"}`}>
+      <aside className={`dashboard-sidebar sidebar-glass fixed inset-y-0 left-0 z-50 flex w-[224px] flex-col border-r border-border bg-card transition-[width,transform] duration-200 lg:sticky ${mini ? "lg:w-[60px]" : ""} lg:top-0 lg:h-svh ${mobileOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"}`}>
         <div className={`flex h-14 shrink-0 items-center justify-between ${mini ? "lg:justify-center lg:px-0" : ""} px-5`}>
           <Link to="/dashboard" className={`font-display text-[15px] font-bold tracking-[0.14em] text-foreground ${mini ? "lg:hidden" : ""}`}>TECHNOVA</Link>
           <Button variant="ghost" size="icon-sm" className="hidden rounded-lg text-muted-foreground lg:inline-flex" onClick={toggleCollapsed} aria-label={effectiveCollapsed ? (lang === "fr" ? "Déplier le menu" : "Expand menu") : (lang === "fr" ? "Replier le menu" : "Collapse menu")} title={effectiveCollapsed ? (lang === "fr" ? "Déplier le menu" : "Expand menu") : (lang === "fr" ? "Replier le menu" : "Collapse menu")}>{effectiveCollapsed ? <PanelLeftOpen className="size-4" /> : <PanelLeftClose className="size-4" />}</Button>
@@ -126,8 +131,13 @@ export function DashboardLayout({ children }: { children: ReactNode }) {
           </div>
         </div>
         <div className="shrink-0 border-t border-border p-2">
+          {planKey && <Link to="/dashboard/credits" title={lang === "fr" ? "Voir les forfaits" : "See plans"} className={`plan-${planKey} plan-chip mb-1.5 flex items-center gap-2 rounded-xl px-2.5 py-2 transition-opacity hover:opacity-90 ${mini ? "lg:hidden" : ""}`}>
+            <span className="plan-chip-dot size-2.5 shrink-0 rounded-full" aria-hidden="true" />
+            <span className="min-w-0 flex-1 text-[11.5px] font-semibold"><span className="text-muted-foreground">{lang === "fr" ? "Forfait " : "Plan "}</span><span className="plan-chip-text">{planName}</span></span>
+            {planKey !== "pro" && <span className="shrink-0 text-[10.5px] font-medium text-muted-foreground">{lang === "fr" ? "Améliorer" : "Upgrade"}</span>}
+          </Link>}
           <div className={`flex items-center gap-2.5 rounded-lg px-2 py-1.5 ${mini ? "lg:hidden" : ""}`}>
-            <span className="grid size-7 shrink-0 place-items-center rounded-full bg-secondary text-[11px] font-semibold text-foreground">{initials}</span>
+            <span className={`plan-ring plan-${planKey ?? "free"}`} title={planName ? `${lang === "fr" ? "Forfait" : "Plan"} ${planName}` : undefined}><span className="grid size-7 place-items-center rounded-full bg-card text-[11px] font-semibold text-foreground">{initials}</span></span>
             <span className="min-w-0 flex-1"><span className="block truncate text-[12px] font-medium">{name || t.accountName}</span>{email && <span className="block truncate text-[10.5px] text-muted-foreground">{email}</span>}</span>
           </div>
           <div className={`mt-1 flex items-center gap-0.5 px-1 ${mini ? "lg:mt-auto lg:flex-col lg:px-0" : ""}`}>
@@ -139,8 +149,8 @@ export function DashboardLayout({ children }: { children: ReactNode }) {
         </div>
       </aside>
       <div className="relative isolate min-w-0 flex-1">
-        {!isThread && <div className={`dashboard-wallpaper pointer-events-none fixed inset-y-0 right-0 left-0 z-0 overflow-hidden ${mini ? "lg:left-[60px]" : "lg:left-[224px]"}`} aria-hidden="true"><img src={media.cloudBackground} alt="" className="h-full w-full scale-105 object-cover" /></div>}
-        <header className="sticky top-0 z-30 flex h-12 items-center justify-between border-b border-border bg-card/95 px-3 backdrop-blur-xl lg:hidden"><Button variant="ghost" size="icon-sm" aria-label={t.menu} onClick={() => setMobileOpen(true)}><Menu className="size-5" /></Button><Link to="/dashboard" className="font-display text-[14px] font-bold">TechNova</Link><span className="grid size-8 place-items-center rounded-full bg-iris text-[11px] font-bold text-ink">{initials}</span></header>
+        {!isThread && <div className={`dashboard-wallpaper pointer-events-none fixed inset-0 z-0 overflow-hidden`} aria-hidden="true"><img src={media.cloudBackground} alt="" className="h-full w-full scale-105 object-cover" /></div>}
+        <header className="sticky top-0 z-30 flex h-12 items-center justify-between border-b border-border bg-card/95 px-3 backdrop-blur-xl lg:hidden"><Button variant="ghost" size="icon-sm" aria-label={t.menu} onClick={() => setMobileOpen(true)}><Menu className="size-5" /></Button><Link to="/dashboard" className="font-display text-[14px] font-bold">TechNova</Link><span className={`plan-ring plan-${planKey ?? "free"}`}><span className="grid size-7 place-items-center rounded-full bg-card text-[11px] font-bold text-foreground">{initials}</span></span></header>
         {!isChat && <div className="dashboard-marquee relative z-10 flex h-8 items-center overflow-hidden border-b border-border bg-card"><span className="shrink-0 border-r border-border px-3 text-[9px] font-semibold text-muted-foreground">TECHNOVA / HUB</span><div className="min-w-0 overflow-hidden"><div className="dashboard-marquee-track flex w-max items-center gap-12 px-6 text-[10px] text-muted-foreground"><span>TECHNOVA <strong className="text-foreground">AI HUB</strong> · {t.marqueeOne}</span><span>SONORYA · {t.marqueeTwo}</span><span>HUMANIZER AI · {t.marqueeThree}</span><span>TECHNOVA <strong className="text-foreground">AI HUB</strong> · {t.marqueeOne}</span><span>SONORYA · {t.marqueeTwo}</span><span>HUMANIZER AI · {t.marqueeThree}</span></div></div></div>}
         <main className="relative z-10 mx-auto min-h-[calc(100svh-80px)] lg:min-h-[calc(100svh-32px)] w-full max-w-[1640px] px-4 pb-8 pt-6 sm:px-6 lg:px-7">{error && <div role="alert" className="mb-5 flex items-center justify-between border-l-2 border-destructive bg-secondary px-4 py-3 text-sm"><span>{error}</span><Button variant="ghost" size="sm" onClick={() => void reload()}>{t.retry}</Button></div>}<div key={pathname} className="dashboard-page-enter">{children}</div></main>
       </div>

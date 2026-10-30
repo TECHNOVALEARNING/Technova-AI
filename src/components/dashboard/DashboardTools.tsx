@@ -24,6 +24,7 @@ import { savePref } from "@/lib/consent";
 import { formatFromXof, rateFor, useGeoPrice } from "@/lib/geo-price-client";
 import { checkPayment, getPaymentMode, startCheckout } from "@/lib/payments.functions";
 import { useDashboard } from "./dashboard-context";
+import { PaymentSuccess } from "./PaymentSuccess";
 import supabaseLogo from "@/assets/supabase-logo.svg";
 
 const copy = {
@@ -131,12 +132,14 @@ export function ModelsPage() {
 function Packs({ cur }: { cur: ReturnType<typeof useCurrency> }) {
   const c = useCopy(); const { lang } = useDashboard(); const start = useServerFn(startCheckout); const check = useServerFn(checkPayment);
   const [packs, setPacks] = useState<Tables<"credit_packs">[]>([]); const [busy, setBusy] = useState("");
+  // Confirmed payment: celebrate, then reload so the balance and plan badge show the new pack.
+  const [paid, setPaid] = useState<{ pack: string | null; credits: number | null } | null>(null);
   useEffect(() => { void supabase.from("credit_packs").select("*").eq("active", true).order("display_order").then(({ data }) => setPacks(data ?? [])); }, []);
   useEffect(() => {
     const q = new URLSearchParams(window.location.search); const id = q.get("payment"); if (!id) return;
     window.history.replaceState(null, "", window.location.pathname);
     if (q.get("cancelled")) { toast(c.payCancelled); return; }
-    void check({ data: { id } }).then(r => { if (r.status === "success") { toast.success(c.paySuccess); setTimeout(() => window.location.reload(), 1200); } else if (r.status === "test_blocked") toast.error(c.testBlocked); else toast(c.payPending); }).catch(() => toast.error(c.payError));
+    void check({ data: { id } }).then(r => { if (r.status === "success") setPaid({ pack: r.pack, credits: r.credits }); else if (r.status === "test_blocked") toast.error(c.testBlocked); else toast(c.payPending); }).catch(() => toast.error(c.payError));
   }, [check, c]);
   const [pending, setPending] = useState<string | null>(null);
   useEffect(() => { const s = localStorage.getItem(PENDING_PACK_KEY); if (s) { localStorage.removeItem(PENDING_PACK_KEY); setPending(s); } }, []);
@@ -146,7 +149,7 @@ function Packs({ cur }: { cur: ReturnType<typeof useCurrency> }) {
     try { const r = await start({ data: { slug } }); window.location.href = r.url; }
     catch { toast.error(c.payError); setBusy(""); }
   }
-  return <div className="space-y-4">{pendingPack && <div className={`${card} border-primary/60 ring-1 ring-primary/30`} role="region" aria-label={pendingPack.name}>
+  return <div className="space-y-4"><PaymentSuccess open={!!paid} pack={paid?.pack ?? null} credits={paid?.credits ?? null} lang={lang === "en" ? "en" : "fr"} onClose={() => { setPaid(null); window.location.reload(); }} />{pendingPack && <div className={`${card} border-primary/60 ring-1 ring-primary/30`} role="region" aria-label={pendingPack.name}>
     <p className="text-[13.5px] font-semibold">{c.confirmPack}</p>
     <p className="mt-1 text-[13px]">{pendingPack.name} · {pendingPack.price_xof.toLocaleString("fr-FR")} FCFA → {pendingPack.credits.toLocaleString()} {c.credits}</p>
     <p className="mt-1 text-[11.5px] text-muted-foreground">{c.oneTime}</p>

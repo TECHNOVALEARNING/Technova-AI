@@ -617,3 +617,51 @@ html, body, * { scrollbar-width: none; }
 @keyframes route-draw { from { stroke-dashoffset: 1; } to { stroke-dashoffset: 0; } }
 .route-draw { stroke-dasharray: 1; stroke-dashoffset: 1; animation: route-draw 0.7s cubic-bezier(0.4, 0, 0.2, 1) forwards; }
 @media (prefers-reduced-motion: reduce) { .route-draw { animation: none; stroke-dashoffset: 0; } }
+
+/* Dashboard sidebar: frosted glass over the wallpaper with a faint geometric pattern inspired by
+   West African textiles (kente bands, bogolan diamonds), tinted with the iris palette. */
+.dashboard-shell .dashboard-sidebar.sidebar-glass { background: color-mix(in oklab, oklch(.985 0 0) 72%, transparent); backdrop-filter: blur(22px) saturate(1.5); -webkit-backdrop-filter: blur(22px) saturate(1.5); border-right-color: color-mix(in oklab, var(--border) 70%, transparent); }
+.dark .dashboard-shell .dashboard-sidebar.sidebar-glass { background: color-mix(in oklab, oklch(.18 0 0) 74%, transparent); }
+.sidebar-glass::before { content: ""; position: absolute; inset: 0; z-index: 0; pointer-events: none; opacity: .13;
+  background: linear-gradient(165deg, var(--iris-1), var(--iris-2) 50%, var(--iris-3));
+  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='56' height='56' viewBox='0 0 56 56'%3E%3Cg fill='none' stroke='black' stroke-width='1.5' stroke-linejoin='round'%3E%3Cpath d='M0 12 L12 0 L24 12 L36 0 L48 12 L56 4'/%3E%3Cpath d='M0 44 L12 32 L24 44 L36 32 L48 44 L56 36'/%3E%3Cpath d='M28 17 L39 28 L28 39 L17 28 Z'/%3E%3Cpath d='M28 22 L34 28 L28 34 L22 28 Z'/%3E%3Cpath d='M0 28 H10 M46 28 H56'/%3E%3C/g%3E%3Cg fill='black'%3E%3Ccircle cx='28' cy='28' r='1.8'/%3E%3Crect x='3' y='49' width='4' height='4'/%3E%3Crect x='15' y='49' width='4' height='4'/%3E%3Crect x='27' y='49' width='4' height='4'/%3E%3Crect x='39' y='49' width='4' height='4'/%3E%3Crect x='51' y='49' width='4' height='4'/%3E%3Cpath d='M6 20 l3 3 l-3 3 l-3 -3 Z'/%3E%3Cpath d='M50 20 l3 3 l-3 3 l-3 -3 Z'/%3E%3C/g%3E%3C/svg%3E") repeat; mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='56' height='56' viewBox='0 0 56 56'%3E%3Cg fill='none' stroke='black' stroke-width='1.5' stroke-linejoin='round'%3E%3Cpath d='M0 12 L12 0 L24 12 L36 0 L48 12 L56 4'/%3E%3Cpath d='M0 44 L12 32 L24 44 L36 32 L48 44 L56 36'/%3E%3Cpath d='M28 17 L39 28 L28 39 L17 28 Z'/%3E%3Cpath d='M28 22 L34 28 L28 34 L22 28 Z'/%3E%3Cpath d='M0 28 H10 M46 28 H56'/%3E%3C/g%3E%3Cg fill='black'%3E%3Ccircle cx='28' cy='28' r='1.8'/%3E%3Crect x='3' y='49' width='4' height='4'/%3E%3Crect x='15' y='49' width='4' height='4'/%3E%3Crect x='27' y='49' width='4' height='4'/%3E%3Crect x='39' y='49' width='4' height='4'/%3E%3Crect x='51' y='49' width='4' height='4'/%3E%3Cpath d='M6 20 l3 3 l-3 3 l-3 -3 Z'/%3E%3Cpath d='M50 20 l3 3 l-3 3 l-3 -3 Z'/%3E%3C/g%3E%3C/svg%3E") repeat; -webkit-mask-size: 56px; mask-size: 56px; }
+.dark .sidebar-glass::before { opacity: .16; }
+.sidebar-glass::after { content: ""; position: absolute; inset: 0; z-index: 0; pointer-events: none; background: linear-gradient(180deg, transparent 0%, color-mix(in oklab, var(--background) 55%, transparent) 70%); }
+.sidebar-glass > * { position: relative; z-index: 1; }
+
+/* Plan colours: badge in the sidebar and the spinning ring around the avatar (Gemini-like). */
+.plan-free { --plan-a: oklch(.72 .01 260); --plan-b: oklch(.86 .01 260); --plan-c: oklch(.6 .01 260); --plan-d: oklch(.8 .01 260); }
+.plan-starter { --plan-a: #10b981; --plan-b: #06b6d4; --plan-c: #34d399; --plan-d: #22d3ee; }
+.plan-essential { --plan-a: #3b82f6; --plan-b: #8b5cf6; --plan-c: #22d3ee; --plan-d: #6366f1; }
+.plan-creator { --plan-a: #ec4899; --plan-b: #f97316; --plan-c: #a855f7; --plan-d: #f43f5e; }
+.plan-pro { --plan-a: #f59e0b; --plan-b: #ef4444; --plan-c: #8b5cf6; --plan-d: #06b6d4; }
+@property --plan-angle { syntax: "<angle>"; initial-value: 0deg; inherits: false; }
+.plan-ring { position: relative; display: grid; place-items: center; flex-shrink: 0; border-radius: 9999px; padding: 2px; isolation: isolate;
+  background: conic-gradient(from var(--plan-angle), var(--plan-a), var(--plan-b), var(--plan-c), var(--plan-d), var(--plan-a)); animation: plan-spin 3.6s linear infinite; }
+.plan-ring::after { content: ""; position: absolute; inset: -3px; z-index: -1; border-radius: inherit; background: inherit; filter: blur(6px); opacity: .45; }
+.plan-ring > span { border: 1.5px solid var(--card); }
+@keyframes plan-spin { to { --plan-angle: 360deg; } }
+.plan-chip { border: 1px solid color-mix(in oklab, var(--plan-a) 38%, transparent);
+  background: linear-gradient(100deg, color-mix(in oklab, var(--plan-a) 14%, transparent), color-mix(in oklab, var(--plan-b) 14%, transparent)); }
+.plan-chip-text { background: linear-gradient(90deg, var(--plan-a), var(--plan-b), var(--plan-c)); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.plan-chip-dot { background: conic-gradient(from var(--plan-angle), var(--plan-a), var(--plan-b), var(--plan-c), var(--plan-a)); animation: plan-spin 3.6s linear infinite; }
+
+/* Payment successful: a burst of confetti, a ring that fills and a tick that draws itself. */
+.pay-success-ring { background: conic-gradient(var(--plan-a), var(--plan-b), var(--plan-c), var(--plan-d), var(--plan-a)); animation: pay-pop 520ms cubic-bezier(.2, 1.4, .4, 1) both; }
+.pay-success-tick { stroke-dasharray: 1; stroke-dashoffset: 1; animation: route-draw 520ms 380ms cubic-bezier(.4, 0, .2, 1) forwards; }
+.pay-success-halo { animation: pay-halo 1.6s 300ms ease-out infinite; border: 2px solid var(--plan-a); }
+.pay-confetti { position: absolute; left: 50%; top: 50%; width: 8px; height: 12px; border-radius: 2px; opacity: 0;
+  animation: pay-confetti 1.25s calc(var(--i) * 18ms + 250ms) cubic-bezier(.15, .7, .3, 1) forwards; }
+@keyframes pay-pop { from { transform: scale(.2); opacity: 0; } to { transform: none; opacity: 1; } }
+@keyframes pay-halo { from { transform: scale(1); opacity: .7; } to { transform: scale(1.7); opacity: 0; } }
+@keyframes pay-confetti {
+  0% { opacity: 1; transform: translate(-50%, -50%) rotate(0deg); }
+  100% { opacity: 0; transform: translate(calc(-50% + var(--x)), calc(-50% + var(--y))) rotate(var(--r)); } }
+.pay-success-count { animation: pay-rise 600ms 650ms cubic-bezier(.22, 1, .36, 1) both; }
+@keyframes pay-rise { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+@media (prefers-reduced-motion: reduce) {
+  .plan-ring, .plan-chip-dot { animation: none; }
+  .pay-success-ring, .pay-success-tick, .pay-success-halo, .pay-confetti, .pay-success-count { animation: none; }
+  .pay-success-tick { stroke-dashoffset: 0; }
+  .pay-confetti { display: none; }
+}

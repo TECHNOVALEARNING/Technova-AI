@@ -39,10 +39,11 @@ export const checkPayment = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     const { hitRateLimit } = await import("@/lib/security.server");
     if (!(await hitRateLimit(context.userId, "payment_check"))) throw new Error("Trop de vérifications. Réessayez dans une minute.");
-    const { data: p } = await context.supabase.from("payments").select("id").eq("id", data.id).maybeSingle();
+    const { data: p } = await context.supabase.from("payments").select("id,pack_slug,credits").eq("id", data.id).maybeSingle();
     if (!p) throw new Error("Paiement introuvable");
     const { reconcilePayment } = await import("./nyole.server");
-    return { status: (await reconcilePayment(p.id)) ?? "unknown" };
+    // Pack and credits feed the "payment successful" animation.
+    return { status: (await reconcilePayment(p.id)) ?? "unknown", pack: p.pack_slug, credits: p.credits };
   });
 
 /** Whether the billing page should show the "test mode" notice (no secret is exposed). */

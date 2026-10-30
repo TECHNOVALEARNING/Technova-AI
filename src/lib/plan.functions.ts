@@ -6,5 +6,10 @@ export const getMyPlan = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
     const { getTier } = await import("@/lib/plan.server");
-    return { tier: await getTier(context.userId) };
+    // Tier 0 covers both a bought Starter pack and no purchase at all; the badge tells them apart.
+    const [tier, paid] = await Promise.all([
+      getTier(context.userId),
+      context.supabase.from("payments").select("id", { count: "exact", head: true }).eq("owner_id", context.userId).eq("credited", true).then((r) => (r.count ?? 0) > 0),
+    ]);
+    return { tier, paid };
   });
