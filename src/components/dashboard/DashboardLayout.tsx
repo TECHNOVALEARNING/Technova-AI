@@ -4,7 +4,7 @@ import { savePref } from "@/lib/consent";
 import { planKeyOf, planLabels, usePlan } from "@/lib/plan-client";
 import { BookMarked, Bot, Library, Plug, ShieldAlert, Swords } from "lucide-react";
 import { getMyRole } from "@/lib/admin.functions";
-import { Activity, ArrowLeft, Bell, BookOpen, Boxes, ChevronDown, Code2, CreditCard, Diamond, Gift, Globe2, LayoutDashboard, LogOut, Menu, MessageCircle, Moon, PanelLeftClose, PanelLeftOpen, Search, Settings2, Sun, Wallet, X } from "lucide-react";
+import { Activity, ArrowLeft, Crown, Bell, BookOpen, Boxes, ChevronDown, Code2, CreditCard, Diamond, Gift, Globe2, LayoutDashboard, LogOut, Menu, MessageCircle, Moon, PanelLeftClose, PanelLeftOpen, Search, Settings2, Sun, Wallet, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { dashboardText, type Lang } from "@/lib/i18n";
@@ -138,7 +138,7 @@ export function DashboardLayout({ children }: { children: ReactNode }) {
         <div className="shrink-0 border-t border-border p-2">
           <div className={`flex items-center gap-2.5 rounded-lg px-2 py-1.5 ${mini ? "lg:hidden" : ""}`}>
             <span className={`plan-ring plan-${planKey ?? "free"}`} title={planName ? `${lang === "fr" ? "Forfait" : "Plan"} ${planName}` : undefined}><span className="grid size-9 place-items-center rounded-full bg-card text-[13px] font-semibold text-foreground">{initials}</span></span>
-            <span className="min-w-0 flex-1"><span className="block truncate text-[12px] font-medium">{name || t.accountName}</span>{email && <span className="block truncate text-[10.5px] text-muted-foreground">{email}</span>}{planKey && planKey !== "free" && <Link to="/dashboard/credits" title={lang === "fr" ? "Voir les forfaits" : "See plans"} className={`plan-${planKey} plan-pill mt-1 inline-flex h-[18px] items-center rounded-full px-2 text-[10px] font-semibold leading-none transition-opacity hover:opacity-85`}><span className="plan-chip-text">{planName}</span></Link>}</span>
+            <span className="min-w-0 flex-1"><span className="block truncate text-[12px] font-medium">{name || t.accountName}</span>{email && <span className="block truncate text-[10.5px] text-muted-foreground">{email}</span>}{planKey && planKey !== "free" && <Link to="/dashboard/credits" title={lang === "fr" ? "Voir les forfaits" : "See plans"} className={`plan-${planKey} plan-pill mt-1 inline-flex items-center gap-1 rounded-full font-semibold leading-none transition-opacity hover:opacity-85 ${planKey === "pro" ? "h-5 px-2.5 text-[10.5px] tracking-[0.06em]" : "h-[18px] px-2 text-[10px]"}`}>{planKey === "pro" && <Crown className="size-3" strokeWidth={2.4} aria-hidden="true" />}<span className="plan-chip-text">{planKey === "pro" ? "PRO" : planName}</span></Link>}</span>
           </div>
           <div className={`mt-1 flex items-center gap-0.5 px-1 ${mini ? "lg:mt-auto lg:flex-col lg:px-0" : ""}`}>
             <Button variant="ghost" size="icon-sm" className="size-8 rounded-lg text-muted-foreground" onClick={() => setTheme(theme === "light" ? "dark" : "light")} aria-label={t.theme} title={t.theme}>{theme === "light" ? <Moon className="size-4" /> : <Sun className="size-4" />}</Button>

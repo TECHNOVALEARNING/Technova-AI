@@ -678,3 +678,11 @@ html, body, * { scrollbar-width: none; }
 .plan-pill { border: 1px solid transparent; background: linear-gradient(color-mix(in oklab, var(--card) 88%, var(--plan-a)), color-mix(in oklab, var(--card) 88%, var(--plan-a))) padding-box, linear-gradient(90deg, var(--plan-a), var(--plan-b), var(--plan-c)) border-box; }
 /* Cookie banner: translucent frosted glass so the page stays visible behind it. */
 .cookie-glass { background: color-mix(in oklab, var(--card) 74%, transparent); border-color: color-mix(in oklab, var(--border) 80%, transparent); backdrop-filter: blur(18px) saturate(1.6); -webkit-backdrop-filter: blur(18px) saturate(1.6); box-shadow: 0 12px 40px -16px oklch(0 0 0 / .35); }
+/* Pro badge: solid gold capsule with dark text, a soft glow and a slow light sweep — clearly visible on both themes. */
+.plan-pro.plan-pill { position: relative; overflow: hidden; color: oklch(.24 .05 75); border: 1px solid oklch(.86 .12 90 / .9);
+  background: linear-gradient(135deg, oklch(.93 .11 95), oklch(.8 .15 80) 50%, oklch(.68 .14 70));
+  box-shadow: 0 0 0 1px oklch(.75 .14 80 / .25), 0 4px 14px -4px oklch(.72 .15 75 / .7), inset 0 1px 0 oklch(1 0 0 / .55); }
+.plan-pro.plan-pill .plan-chip-text { background: none; -webkit-background-clip: border-box; background-clip: border-box; color: inherit; }
+.plan-pro.plan-pill::after { content: ""; position: absolute; inset: 0; background: linear-gradient(105deg, transparent 35%, oklch(1 0 0 / .65) 50%, transparent 65%); transform: translateX(-120%); animation: pro-shine 3.8s ease-in-out infinite; }
+@keyframes pro-shine { 0%, 55% { transform: translateX(-120%); } 85%, 100% { transform: translateX(120%); } }
+@media (prefers-reduced-motion: reduce) { .plan-pro.plan-pill::after { animation: none; display: none; } }
