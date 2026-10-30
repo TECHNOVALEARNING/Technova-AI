@@ -1,6 +1,9 @@
 // Builds the migration that installs the official Registry items from drizzle/registry/.
-// Usage: node scripts/build-registry-migration.mjs  →  drizzle/migrations/0032_registry_official_items.sql
+// Usage: node scripts/build-registry-migration.mjs [migration name]
+//   default 0032_registry_official_items (already applied); new catalogue versions get a new name, e.g. 0037_registry_items_v2.
 import { readFileSync, writeFileSync } from "node:fs";
+
+const target = process.argv[2] ?? "0032_registry_official_items";
 
 const dir = new URL("../drizzle/registry/", import.meta.url);
 const items = JSON.parse(readFileSync(new URL("manifest.json", dir), "utf8"));
@@ -34,5 +37,5 @@ ON CONFLICT (id) DO UPDATE SET
   commercial_use = EXCLUDED.commercial_use, modification = EXCLUDED.modification, redistribution = EXCLUDED.redistribution,
   attribution_required = EXCLUDED.attribution_required, visibility = EXCLUDED.visibility, updated_at = now();
 `;
-writeFileSync(new URL("../drizzle/migrations/0032_registry_official_items.sql", import.meta.url), sql);
+writeFileSync(new URL(`../drizzle/migrations/${target}.sql`, import.meta.url), sql);
 console.log(`${items.length} items written`);

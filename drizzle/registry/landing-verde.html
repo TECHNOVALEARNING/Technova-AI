@@ -1,0 +1,151 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Verde — Soins botaniques, formulés avec soin</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #f6f2ea; --paper: #fffdf8; --ink: #1f2a22; --muted: #6c7468; --line: #e3dccd;
+    --green: #2f5d43; --sage: #b9c9a7; --clay: #d9a27b; --radius: 20px;
+    --serif: "DM Serif Display", Georgia, serif; --sans: "DM Sans", system-ui, sans-serif;
+  }
+  * { box-sizing: border-box; margin: 0; }
+  body { background: var(--bg); color: var(--ink); font: 400 16px/1.65 var(--sans); -webkit-font-smoothing: antialiased; }
+  a { color: inherit; text-decoration: none; }
+  .wrap { width: min(1180px, 100% - 40px); margin-inline: auto; }
+  .bar { background: var(--green); color: #eef3e8; text-align: center; font-size: 13px; padding: 9px 16px; letter-spacing: .02em; }
+  nav .wrap { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; height: 76px; }
+  .nav-l, .nav-r { display: flex; gap: 26px; font-size: 14px; }
+  .nav-r { justify-content: end; align-items: center; }
+  .brand { font-family: var(--serif); font-size: 30px; letter-spacing: .01em; }
+  .bag { display: inline-flex; align-items: center; gap: 8px; height: 38px; padding: 0 16px; border-radius: 999px; background: var(--ink); color: var(--paper); font-size: 13px; }
+  .bag b { background: var(--clay); color: var(--ink); border-radius: 999px; padding: 0 7px; font-size: 11px; }
+  .hero { display: grid; grid-template-columns: 1.1fr 1fr; gap: 20px; padding: 10px 0 40px; }
+  .hero-copy { background: var(--paper); border-radius: 28px; padding: 64px 56px; display: flex; flex-direction: column; justify-content: center; border: 1px solid var(--line); }
+  .kicker { font-size: 12px; letter-spacing: .18em; text-transform: uppercase; color: var(--green); font-weight: 600; }
+  h1 { font-family: var(--serif); font-weight: 400; font-size: clamp(44px, 5.4vw, 76px); line-height: 1; letter-spacing: -.01em; margin-top: 18px; }
+  h1 i { color: var(--green); }
+  .lead { color: var(--muted); font-size: 18px; margin-top: 20px; max-width: 460px; }
+  .btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; height: 50px; padding: 0 26px; border-radius: 999px; font-weight: 600; font-size: 15px; transition: transform .2s, background .2s; }
+  .btn-green { background: var(--green); color: #fff; } .btn-green:hover { transform: translateY(-1px); }
+  .btn-line { border: 1px solid var(--ink); } .btn-line:hover { background: var(--ink); color: var(--paper); }
+  .row { display: flex; gap: 12px; margin-top: 30px; flex-wrap: wrap; }
+  .rating { margin-top: 30px; display: flex; align-items: center; gap: 12px; font-size: 14px; color: var(--muted); }
+  .stars { color: var(--clay); letter-spacing: 2px; }
+  .hero-art { border-radius: 28px; background: radial-gradient(60% 55% at 50% 45%, #dfe8d2, #b9c9a7 70%); position: relative; overflow: hidden; min-height: 560px; }
+  .bottle { position: absolute; left: 50%; bottom: 70px; transform: translateX(-50%); width: 150px; height: 300px; border-radius: 26px 26px 34px 34px; background: linear-gradient(90deg, #2f5d43, #437a5a 45%, #2b513b); box-shadow: 0 50px 70px -30px rgba(31,42,34,.55); }
+  .bottle::before { content: ""; position: absolute; top: -56px; left: 50%; transform: translateX(-50%); width: 54px; height: 62px; border-radius: 10px 10px 4px 4px; background: linear-gradient(90deg, #c9a27e, #e9c8a6 50%, #b98f6a); }
+  .bottle span { position: absolute; inset: 90px 18px auto; background: var(--paper); border-radius: 10px; padding: 14px 10px; text-align: center; font-family: var(--serif); font-size: 22px; color: var(--green); }
+  .bottle span small { display: block; font-family: var(--sans); font-size: 9px; letter-spacing: .2em; color: var(--muted); margin-top: 4px; }
+  .leaf { position: absolute; width: 180px; height: 70px; border-radius: 100% 0; background: #87a575; opacity: .8; }
+  .leaf.a { top: 70px; left: -20px; transform: rotate(25deg); } .leaf.b { top: 140px; right: -30px; transform: rotate(-35deg); background: #6f8f5f; } .leaf.c { bottom: 40px; left: 30px; transform: rotate(-12deg); width: 120px; height: 46px; }
+  .tag { position: absolute; top: 28px; right: 28px; background: var(--paper); border-radius: 999px; padding: 8px 14px; font-size: 13px; font-weight: 600; }
+  .marquee { border-block: 1px solid var(--line); overflow: hidden; padding: 18px 0; margin: 30px 0; }
+  .marquee div { display: flex; gap: 56px; width: max-content; animation: slide 30s linear infinite; font-family: var(--serif); font-size: 26px; color: var(--muted); }
+  .marquee span::before { content: "✦"; color: var(--clay); margin-right: 56px; font-size: 16px; vertical-align: middle; }
+  @keyframes slide { to { transform: translateX(-50%); } }
+  section { padding: 70px 0; }
+  .head { display: flex; justify-content: space-between; align-items: end; gap: 24px; flex-wrap: wrap; }
+  h2 { font-family: var(--serif); font-weight: 400; font-size: clamp(34px, 3.8vw, 52px); line-height: 1.05; }
+  .products { display: grid; grid-template-columns: repeat(4, 1fr); gap: 18px; margin-top: 36px; }
+  .product { background: var(--paper); border: 1px solid var(--line); border-radius: var(--radius); overflow: hidden; transition: transform .25s, box-shadow .25s; }
+  .product:hover { transform: translateY(-3px); box-shadow: 0 24px 40px -28px rgba(31,42,34,.45); }
+  .pimg { aspect-ratio: 4 / 5; display: grid; place-items: center; position: relative; }
+  .pimg i { width: 56px; height: 120px; border-radius: 14px 14px 18px 18px; box-shadow: 0 24px 30px -16px rgba(31,42,34,.5); }
+  .pimg em { position: absolute; top: 12px; left: 12px; font-style: normal; font-size: 11px; font-weight: 600; background: var(--paper); border-radius: 999px; padding: 4px 10px; }
+  .pinfo { padding: 16px 18px 20px; }
+  .pinfo h3 { font-size: 16px; font-weight: 600; } .pinfo p { color: var(--muted); font-size: 13.5px; }
+  .pinfo .price { display: flex; justify-content: space-between; align-items: center; margin-top: 12px; font-weight: 600; }
+  .add { width: 36px; height: 36px; border-radius: 50%; border: 1px solid var(--line); display: grid; place-items: center; font-size: 18px; }
+  .add:hover { background: var(--green); color: #fff; border-color: var(--green); }
+  .values { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; }
+  .value { border-top: 1px solid var(--ink); padding-top: 20px; }
+  .value b { font-family: var(--serif); font-weight: 400; font-size: 26px; display: block; }
+  .value p { color: var(--muted); margin-top: 8px; }
+  .ritual { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+  .ritual-art { border-radius: 28px; background: linear-gradient(160deg, #e8c9ad, #d9a27b); min-height: 420px; position: relative; overflow: hidden; }
+  .ritual-art::after { content: "Rituel du soir"; position: absolute; left: 32px; bottom: 28px; font-family: var(--serif); font-size: 40px; color: var(--paper); }
+  .steps { background: var(--paper); border: 1px solid var(--line); border-radius: 28px; padding: 48px; }
+  .step { display: grid; grid-template-columns: 44px 1fr; gap: 16px; padding: 18px 0; border-bottom: 1px solid var(--line); }
+  .step:last-child { border-bottom: 0; }
+  .step span { font-family: var(--serif); font-size: 28px; color: var(--green); }
+  .step p { color: var(--muted); font-size: 15px; }
+  .quote { text-align: center; max-width: 820px; margin: 0 auto; }
+  .quote p { font-family: var(--serif); font-size: clamp(26px, 3vw, 38px); line-height: 1.25; }
+  .quote small { display: block; margin-top: 18px; color: var(--muted); font-size: 14px; }
+  .news { background: var(--green); color: #eef3e8; border-radius: 28px; padding: 56px; display: grid; grid-template-columns: 1fr 1fr; gap: 32px; align-items: center; }
+  .news h2 { color: #fff; }
+  .news form { display: flex; gap: 10px; background: rgba(255,255,255,.1); padding: 6px; border-radius: 999px; }
+  .news input { flex: 1; background: transparent; border: 0; color: #fff; padding: 0 16px; font: inherit; outline: none; }
+  .news input::placeholder { color: rgba(238,243,232,.7); }
+  .news button { border: 0; cursor: pointer; background: var(--paper); color: var(--ink); }
+  footer { padding: 46px 0; color: var(--muted); font-size: 13px; display: flex; justify-content: space-between; flex-wrap: wrap; gap: 16px; }
+  @media (max-width: 900px) {
+    .hero, .ritual, .news { grid-template-columns: 1fr; } .hero-copy { padding: 44px 28px; } .hero-art { min-height: 440px; }
+    .products { grid-template-columns: 1fr 1fr; } .values { grid-template-columns: 1fr; } .nav-l { display: none; }
+    nav .wrap { grid-template-columns: auto 1fr; } .brand { order: -1; } .steps, .news { padding: 32px; }
+  }
+  @media (prefers-reduced-motion: reduce) { .marquee div { animation: none; } }
+</style>
+</head>
+<body>
+<div class="bar">Livraison offerte dès 45 € · Échantillons inclus dans chaque commande</div>
+<nav><div class="wrap">
+  <div class="nav-l"><a href="#boutique">Boutique</a><a href="#rituel">Rituels</a><a href="#histoire">Notre histoire</a></div>
+  <a class="brand" href="#">Verde</a>
+  <div class="nav-r"><a href="#">Compte</a><a class="bag" href="#">Panier <b>2</b></a></div>
+</div></nav>
+
+<div class="wrap">
+  <header class="hero">
+    <div class="hero-copy">
+      <p class="kicker">Nouvelle collection · Automne</p>
+      <h1>Des soins <i>botaniques</i>, formulés avec soin.</h1>
+      <p class="lead">Huiles, sérums et baumes aux plantes cultivées localement. 98 % d'ingrédients d'origine naturelle, flacons rechargeables.</p>
+      <div class="row"><a class="btn btn-green" href="#boutique">Découvrir la collection</a><a class="btn btn-line" href="#rituel">Trouver mon rituel</a></div>
+      <div class="rating"><span class="stars">★★★★★</span><span>4,8/5 · 12 400 avis vérifiés</span></div>
+    </div>
+    <div class="hero-art" aria-hidden="true"><span class="leaf a"></span><span class="leaf b"></span><span class="leaf c"></span><span class="tag">Best-seller</span><div class="bottle"><span>Sève<small>SÉRUM · 30 ML</small></span></div></div>
+  </header>
+</div>
+
+<div class="marquee" aria-hidden="true"><div><span>Vegan</span><span>Rechargeable</span><span>Fabriqué en petites séries</span><span>Sans parfum ajouté</span><span>Testé dermatologiquement</span><span>Vegan</span><span>Rechargeable</span><span>Fabriqué en petites séries</span><span>Sans parfum ajouté</span><span>Testé dermatologiquement</span></div></div>
+
+<section id="boutique"><div class="wrap">
+  <div class="head"><h2>Nos essentiels</h2><a class="btn btn-line" href="#" style="height:42px">Tout voir</a></div>
+  <div class="products">
+    <article class="product"><div class="pimg" style="background:#dfe8d2"><em>Nouveau</em><i style="background:linear-gradient(90deg,#2f5d43,#437a5a)"></i></div><div class="pinfo"><h3>Sève · Sérum éclat</h3><p>Vitamine C végétale</p><div class="price"><span>38 €</span><a class="add" href="#" aria-label="Ajouter">+</a></div></div></article>
+    <article class="product"><div class="pimg" style="background:#f0dfcd"><i style="background:linear-gradient(90deg,#c9895f,#e2aa82)"></i></div><div class="pinfo"><h3>Ambre · Huile nuit</h3><p>Rose musquée & jojoba</p><div class="price"><span>44 €</span><a class="add" href="#" aria-label="Ajouter">+</a></div></div></article>
+    <article class="product"><div class="pimg" style="background:#e6e3dc"><em>−20 %</em><i style="background:linear-gradient(90deg,#7c8a73,#a4b39a);height:80px;width:80px;border-radius:50%"></i></div><div class="pinfo"><h3>Baume · Lèvres</h3><p>Karité & calendula</p><div class="price"><span>14 €</span><a class="add" href="#" aria-label="Ajouter">+</a></div></div></article>
+    <article class="product"><div class="pimg" style="background:#dce6e1"><i style="background:linear-gradient(90deg,#3e6b62,#5d8f84);width:70px"></i></div><div class="pinfo"><h3>Rosée · Brume</h3><p>Hydrolat de concombre</p><div class="price"><span>22 €</span><a class="add" href="#" aria-label="Ajouter">+</a></div></div></article>
+  </div>
+</div></section>
+
+<section id="histoire"><div class="wrap values">
+  <div class="value"><b>Cultivé ici.</b><p>Nos plantes viennent de fermes partenaires à moins de 300 km de l'atelier.</p></div>
+  <div class="value"><b>Rechargeable.</b><p>Chaque flacon se recharge en boutique ou par recharge éco, −30 % de plastique.</p></div>
+  <div class="value"><b>Transparent.</b><p>La liste complète des ingrédients et leur origine, sur chaque fiche produit.</p></div>
+</div></section>
+
+<section id="rituel"><div class="wrap ritual">
+  <div class="ritual-art" aria-hidden="true"></div>
+  <div class="steps">
+    <p class="kicker">Votre rituel en 3 gestes</p>
+    <div class="step"><span>1</span><div><b>Nettoyer</b><p>Le lait démaquillant Nuage dissout impuretés et maquillage en douceur.</p></div></div>
+    <div class="step"><span>2</span><div><b>Traiter</b><p>Trois gouttes de Sève sur peau humide pour un teint lumineux.</p></div></div>
+    <div class="step"><span>3</span><div><b>Nourrir</b><p>L'huile Ambre répare la peau pendant la nuit.</p></div></div>
+    <div class="row"><a class="btn btn-green" href="#">Acheter le rituel · 89 €</a></div>
+  </div>
+</div></section>
+
+<section><div class="wrap quote"><p>« Ma peau n'a jamais été aussi calme. Et j'adore recharger mes flacons au lieu de les jeter. »</p><small>Aïcha D., cliente depuis 2024</small></div></section>
+
+<section><div class="wrap"><div class="news"><div><h2>−10 % sur votre première commande</h2><p style="margin-top:12px;opacity:.85">Conseils de saison, nouveautés et ventes privées, une fois par mois.</p></div><form onsubmit="event.preventDefault()"><input type="email" placeholder="Votre adresse e-mail" aria-label="E-mail"><button class="btn" type="submit">S'inscrire</button></form></div></div></section>
+
+<div class="wrap"><footer><span>© 2026 Verde. Modèle TechNova Registry.</span><span>Livraison · Retours · Contact · CGV</span></footer></div>
+</body>
+</html>

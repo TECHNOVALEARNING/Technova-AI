@@ -1443,7 +1443,12 @@ export type Database = {
         Args: { _amount: number; _label: string; _owner: string }
         Returns: boolean
       }
+      registry_catalog: {
+        Args: never
+        Returns: { id: string; title: string; description: string; category: string; file_ext: string; downloads: number; created_at: string; unlocked: boolean }[]
+      }
       registry_download: { Args: { _item: string }; Returns: string }
+      registry_item_open: { Args: { _id: string; _owner: string }; Returns: boolean }
       registry_remix: { Args: { _item: string }; Returns: string }
       release_credits: { Args: { _reservation: string }; Returns: boolean }
       reserve_credits: {

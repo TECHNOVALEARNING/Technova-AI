@@ -1,0 +1,124 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Signal — L'assistant IA qui répond à vos clients</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700&family=Inter:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #050507; --panel: #0d0d12; --line: rgba(255,255,255,.08); --ink: #f4f4f6; --muted: #8d8d99;
+    --a: #8b5cf6; --b: #22d3ee; --c: #f472b6; --radius: 20px;
+    --display: "Sora", system-ui, sans-serif; --sans: "Inter", system-ui, sans-serif;
+  }
+  * { box-sizing: border-box; margin: 0; }
+  body { background: var(--bg); color: var(--ink); font: 400 16px/1.6 var(--sans); -webkit-font-smoothing: antialiased; overflow-x: hidden; }
+  a { color: inherit; text-decoration: none; }
+  .wrap { width: min(1140px, 100% - 40px); margin-inline: auto; }
+  .grad { background: linear-gradient(90deg, var(--a), var(--b) 55%, var(--c)); -webkit-background-clip: text; background-clip: text; color: transparent; }
+  nav .wrap { height: 72px; display: flex; align-items: center; justify-content: space-between; }
+  .logo { font-family: var(--display); font-weight: 700; font-size: 20px; display: flex; gap: 10px; align-items: center; }
+  .logo i { width: 26px; height: 26px; border-radius: 8px; background: conic-gradient(from 200deg, var(--a), var(--b), var(--c), var(--a)); }
+  .links { display: flex; gap: 30px; color: var(--muted); font-size: 14px; } .links a:hover { color: var(--ink); }
+  .btn { display: inline-flex; align-items: center; gap: 8px; height: 46px; padding: 0 22px; border-radius: 12px; font-weight: 500; font-size: 15px; transition: transform .2s, opacity .2s; }
+  .btn-white { background: var(--ink); color: #08080a; } .btn-white:hover { transform: translateY(-1px); }
+  .btn-dim { border: 1px solid var(--line); background: rgba(255,255,255,.03); } .btn-dim:hover { background: rgba(255,255,255,.07); }
+  .hero { position: relative; text-align: center; padding: 90px 0 40px; }
+  .glow { position: absolute; inset: -140px 0 auto; height: 640px; background: radial-gradient(40% 50% at 50% 30%, rgba(139,92,246,.35), transparent 70%), radial-gradient(30% 40% at 35% 45%, rgba(34,211,238,.18), transparent 70%), radial-gradient(30% 40% at 65% 45%, rgba(244,114,182,.16), transparent 70%); filter: blur(10px); pointer-events: none; }
+  .pill { position: relative; display: inline-flex; gap: 10px; align-items: center; border: 1px solid var(--line); background: rgba(255,255,255,.04); border-radius: 999px; padding: 6px 14px 6px 6px; font-size: 13px; color: var(--muted); }
+  .pill b { background: linear-gradient(90deg, var(--a), var(--b)); color: #fff; border-radius: 999px; padding: 2px 10px; font-weight: 500; font-size: 12px; }
+  h1 { position: relative; font-family: var(--display); font-size: clamp(42px, 6.4vw, 82px); line-height: 1; letter-spacing: -.045em; font-weight: 600; margin: 26px auto 0; max-width: 900px; }
+  .lead { position: relative; color: var(--muted); font-size: 18px; max-width: 600px; margin: 22px auto 0; }
+  .cta { position: relative; display: flex; justify-content: center; gap: 12px; margin-top: 34px; flex-wrap: wrap; }
+  .demo { position: relative; margin: 64px auto 0; max-width: 920px; border-radius: 24px; padding: 1px; background: linear-gradient(140deg, rgba(139,92,246,.6), rgba(34,211,238,.25) 40%, rgba(255,255,255,.06) 70%); box-shadow: 0 60px 120px -40px rgba(139,92,246,.45); }
+  .demo-in { background: var(--panel); border-radius: 23px; overflow: hidden; display: grid; grid-template-columns: 240px 1fr; text-align: left; min-height: 380px; }
+  .side { border-right: 1px solid var(--line); padding: 18px; display: grid; align-content: start; gap: 6px; font-size: 13px; color: var(--muted); }
+  .side div { padding: 10px 12px; border-radius: 10px; display: flex; justify-content: space-between; }
+  .side .on { background: rgba(255,255,255,.06); color: var(--ink); }
+  .side em { font-style: normal; font-size: 11px; background: var(--a); color: #fff; border-radius: 999px; padding: 0 7px; }
+  .chat { padding: 22px; display: flex; flex-direction: column; gap: 14px; }
+  .msg { max-width: 78%; padding: 12px 15px; border-radius: 14px; font-size: 14px; line-height: 1.5; }
+  .msg.user { background: rgba(255,255,255,.06); align-self: flex-start; border-bottom-left-radius: 4px; }
+  .msg.bot { align-self: flex-end; background: linear-gradient(135deg, rgba(139,92,246,.28), rgba(34,211,238,.18)); border: 1px solid rgba(139,92,246,.35); border-bottom-right-radius: 4px; }
+  .msg small { display: block; margin-top: 6px; font-size: 11px; color: var(--muted); }
+  .typing { align-self: flex-end; display: flex; gap: 4px; padding: 12px 14px; border-radius: 14px; background: rgba(255,255,255,.04); }
+  .typing span { width: 6px; height: 6px; border-radius: 50%; background: var(--muted); animation: blink 1.2s infinite; }
+  .typing span:nth-child(2) { animation-delay: .15s; } .typing span:nth-child(3) { animation-delay: .3s; }
+  @keyframes blink { 50% { opacity: .2; } }
+  .logos { display: flex; justify-content: center; flex-wrap: wrap; gap: 44px; margin-top: 60px; color: #5c5c68; font-family: var(--display); font-weight: 600; font-size: 18px; letter-spacing: -.02em; }
+  section { padding: 96px 0; }
+  .head { text-align: center; max-width: 660px; margin: 0 auto; }
+  .label { font-size: 13px; color: var(--b); font-weight: 500; }
+  h2 { font-family: var(--display); font-size: clamp(32px, 4vw, 50px); letter-spacing: -.035em; line-height: 1.05; font-weight: 600; margin-top: 12px; }
+  .sub { color: var(--muted); margin-top: 14px; font-size: 17px; }
+  .bento { display: grid; grid-template-columns: repeat(6, 1fr); gap: 14px; margin-top: 54px; }
+  .tile { background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); padding: 28px; position: relative; overflow: hidden; }
+  .tile h3 { font-family: var(--display); font-size: 20px; letter-spacing: -.02em; font-weight: 600; }
+  .tile p { color: var(--muted); margin-top: 8px; font-size: 15px; }
+  .w4 { grid-column: span 4; } .w2 { grid-column: span 2; } .w3 { grid-column: span 3; }
+  .big { font-family: var(--display); font-size: 64px; font-weight: 600; letter-spacing: -.04em; margin-top: 18px; }
+  .langs { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 20px; }
+  .langs span { border: 1px solid var(--line); border-radius: 999px; padding: 4px 12px; font-size: 13px; color: var(--muted); }
+  .flow { display: flex; align-items: center; gap: 10px; margin-top: 22px; flex-wrap: wrap; font-size: 13px; }
+  .flow span { border: 1px solid var(--line); background: rgba(255,255,255,.03); border-radius: 10px; padding: 8px 12px; }
+  .flow b { color: var(--muted); font-weight: 400; }
+  .tile.accent::after { content: ""; position: absolute; width: 260px; height: 260px; right: -80px; bottom: -120px; border-radius: 50%; background: radial-gradient(circle, rgba(139,92,246,.45), transparent 70%); }
+  .steps { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin-top: 54px; counter-reset: s; }
+  .steps div { border-top: 1px solid var(--line); padding-top: 22px; counter-increment: s; }
+  .steps div::before { content: "0" counter(s); font-family: var(--display); color: var(--b); font-size: 14px; }
+  .steps h3 { font-family: var(--display); font-size: 20px; margin-top: 10px; font-weight: 600; }
+  .steps p { color: var(--muted); margin-top: 6px; }
+  .final { text-align: center; border: 1px solid var(--line); border-radius: 28px; padding: 80px 30px; position: relative; overflow: hidden; background: var(--panel); }
+  .final::before { content: ""; position: absolute; inset: auto 0 -60%; height: 120%; background: radial-gradient(50% 50% at 50% 50%, rgba(34,211,238,.18), transparent 70%); }
+  .final > * { position: relative; }
+  footer { padding: 40px 0; color: var(--muted); font-size: 13px; border-top: 1px solid var(--line); margin-top: 90px; }
+  footer .wrap { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 14px; }
+  @media (max-width: 860px) {
+    .links { display: none; } .demo-in { grid-template-columns: 1fr; } .side { display: none; }
+    .bento { grid-template-columns: 1fr; } .w4, .w2, .w3 { grid-column: auto; } .steps { grid-template-columns: 1fr; }
+  }
+  @media (prefers-reduced-motion: reduce) { .typing span { animation: none; } }
+</style>
+</head>
+<body>
+<nav><div class="wrap"><a class="logo" href="#"><i></i>Signal</a><div class="links"><a href="#fonctions">Fonctions</a><a href="#integration">Intégration</a><a href="#">Tarifs</a><a href="#">Clients</a></div><a class="btn btn-white" href="#" style="height:40px;font-size:14px">Essai gratuit</a></div></nav>
+
+<header class="hero"><div class="glow"></div><div class="wrap">
+  <span class="pill"><b>Nouveau</b> Signal 3 répond aussi par WhatsApp</span>
+  <h1>L'assistant IA qui répond à vos clients <span class="grad">avant qu'ils n'attendent.</span></h1>
+  <p class="lead">Signal apprend votre catalogue, vos politiques et votre ton, puis résout 70 % des demandes en quelques secondes, jour et nuit.</p>
+  <div class="cta"><a class="btn btn-white" href="#">Démarrer gratuitement</a><a class="btn btn-dim" href="#fonctions">Voir comment ça marche</a></div>
+  <div class="demo" aria-label="Aperçu de l'interface"><div class="demo-in">
+    <div class="side"><div class="on">Boîte de réception <em>12</em></div><div>Résolus par l'IA <span>184</span></div><div>Transférés <span>9</span></div><div>Base de connaissances</div><div>Réglages</div></div>
+    <div class="chat">
+      <div class="msg user">Bonjour, ma commande #4821 n'est pas arrivée, je pars demain.<small>Client · WhatsApp · 09:41</small></div>
+      <div class="msg bot">Bonjour Kofi ! Votre colis est au dépôt de Cotonou et sera livré aujourd'hui avant 18 h. Je vous envoie le lien de suivi en direct.<small>Signal · répondu en 3 s</small></div>
+      <div class="msg user">Parfait, merci beaucoup 🙏</div>
+      <div class="typing" aria-hidden="true"><span></span><span></span><span></span></div>
+    </div>
+  </div></div>
+  <div class="logos" aria-label="Ils nous font confiance"><span>Nordline</span><span>kaza.</span><span>Teranga</span><span>Mosaic</span><span>Fluxo</span></div>
+</div></header>
+
+<section id="fonctions"><div class="wrap">
+  <div class="head"><p class="label">Fonctions</p><h2>Moins de tickets, des clients plus heureux.</h2><p class="sub">Tout ce qu'il faut pour automatiser le support sans perdre la touche humaine.</p></div>
+  <div class="bento">
+    <div class="tile w4 accent"><h3>Réponses justes, sourcées</h3><p>Chaque réponse s'appuie sur vos documents. Si Signal n'est pas sûr, il transfère à un humain avec le contexte.</p><div class="big grad">70 %</div><p>des demandes résolues sans intervention</p></div>
+    <div class="tile w2"><h3>Multilingue</h3><p>Il répond dans la langue de votre client.</p><div class="langs"><span>Français</span><span>English</span><span>Español</span><span>Português</span><span>Wolof</span><span>+40</span></div></div>
+    <div class="tile w3"><h3>Tous vos canaux</h3><p>Site web, WhatsApp, e-mail et Instagram dans une seule boîte de réception.</p></div>
+    <div class="tile w3"><h3>Actions automatiques</h3><p>Suivi de colis, remboursement, prise de rendez-vous : Signal agit, pas seulement il parle.</p><div class="flow"><span>Question</span><b>→</b><span>Vérifie la commande</span><b>→</b><span>Répond</span></div></div>
+  </div>
+</div></section>
+
+<section id="integration" style="padding-top:0"><div class="wrap">
+  <div class="head"><p class="label">Mise en place</p><h2>En ligne en un après-midi.</h2></div>
+  <div class="steps"><div><h3>Connectez vos sources</h3><p>Site, FAQ, PDF, catalogue : Signal les lit en quelques minutes.</p></div><div><h3>Réglez le ton</h3><p>Formel, chaleureux ou concis : vous validez quelques exemples.</p></div><div><h3>Activez les canaux</h3><p>Un widget à coller ou WhatsApp à relier, et c'est parti.</p></div></div>
+</div></section>
+
+<div class="wrap"><div class="final"><p class="label">14 jours offerts</p><h2>Offrez à vos clients des réponses instantanées.</h2><p class="sub">Sans carte bancaire. Sans engagement.</p><div class="cta"><a class="btn btn-white" href="#">Créer mon assistant</a></div></div></div>
+
+<footer><div class="wrap"><span>© 2026 Signal. Modèle TechNova Registry.</span><span>Confidentialité · Conditions · Statut</span></div></footer>
+</body>
+</html>

@@ -1,0 +1,173 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Orbit — La banque des entreprises qui avancent vite</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #070b16; --panel: #0e1424; --panel-2: #121a2e; --line: rgba(255,255,255,.08); --ink: #eef2ff; --muted: #8b93ad;
+    --lime: #c6f432; --lime-ink: #10170a; --blue: #5b8cff; --radius: 18px;
+    --sans: "Manrope", system-ui, sans-serif; --mono: "JetBrains Mono", ui-monospace, monospace;
+  }
+  * { box-sizing: border-box; margin: 0; }
+  body { background: var(--bg); color: var(--ink); font: 400 16px/1.6 var(--sans); -webkit-font-smoothing: antialiased; overflow-x: hidden; }
+  a { color: inherit; text-decoration: none; }
+  .wrap { width: min(1160px, 100% - 40px); margin-inline: auto; }
+  .btn { display: inline-flex; align-items: center; gap: 8px; height: 46px; padding: 0 22px; border-radius: 999px; font-weight: 700; font-size: 15px; transition: transform .2s, box-shadow .2s; }
+  .btn-lime { background: var(--lime); color: var(--lime-ink); box-shadow: 0 10px 30px -10px rgba(198,244,50,.55); }
+  .btn-lime:hover { transform: translateY(-1px); }
+  .btn-ghost { border: 1px solid var(--line); color: var(--ink); }
+  .btn-ghost:hover { background: rgba(255,255,255,.04); }
+  .eyebrow { font-family: var(--mono); font-size: 12px; letter-spacing: .12em; text-transform: uppercase; color: var(--lime); }
+  nav { position: sticky; top: 0; z-index: 10; backdrop-filter: blur(14px); background: rgba(7,11,22,.7); border-bottom: 1px solid var(--line); }
+  nav .wrap { display: flex; align-items: center; justify-content: space-between; height: 68px; }
+  .logo { display: flex; align-items: center; gap: 10px; font-weight: 800; letter-spacing: -.02em; font-size: 19px; }
+  .logo i { width: 22px; height: 22px; border-radius: 50%; border: 2px solid var(--lime); position: relative; }
+  .logo i::after { content: ""; position: absolute; width: 7px; height: 7px; border-radius: 50%; background: var(--lime); top: -4px; right: -3px; }
+  .links { display: flex; gap: 28px; font-size: 14px; color: var(--muted); }
+  .links a:hover { color: var(--ink); }
+  .hero { position: relative; padding: 96px 0 72px; }
+  .hero::before { content: ""; position: absolute; inset: -20% -10% auto; height: 620px; background: radial-gradient(50% 50% at 70% 30%, rgba(91,140,255,.22), transparent 70%), radial-gradient(35% 40% at 25% 20%, rgba(198,244,50,.12), transparent 70%); pointer-events: none; }
+  .hero .wrap { position: relative; display: grid; grid-template-columns: 1.05fr .95fr; gap: 56px; align-items: center; }
+  h1 { font-size: clamp(40px, 5.6vw, 68px); line-height: 1.02; letter-spacing: -.035em; font-weight: 800; margin-top: 18px; }
+  h1 em { font-style: normal; color: var(--lime); }
+  .lead { margin-top: 22px; font-size: 18px; color: var(--muted); max-width: 520px; }
+  .cta { display: flex; gap: 12px; margin-top: 32px; flex-wrap: wrap; }
+  .trust { display: flex; gap: 22px; margin-top: 36px; font-size: 13px; color: var(--muted); flex-wrap: wrap; }
+  .trust b { color: var(--ink); font-weight: 700; }
+  .card-stack { position: relative; height: 460px; }
+  .bank-card { position: absolute; width: 340px; height: 214px; border-radius: 22px; padding: 24px; display: flex; flex-direction: column; justify-content: space-between; box-shadow: 0 40px 80px -30px rgba(0,0,0,.8); }
+  .bank-card.one { top: 30px; right: 10px; background: linear-gradient(135deg, #1b2a55, #0d1430 60%), #0d1430; border: 1px solid rgba(255,255,255,.12); transform: rotate(-6deg); }
+  .bank-card.two { top: 150px; left: 0; background: linear-gradient(135deg, var(--lime), #8fd61c); color: var(--lime-ink); transform: rotate(5deg); }
+  .bank-card .chip { width: 40px; height: 30px; border-radius: 7px; background: linear-gradient(135deg, #f5d27a, #b8913b); }
+  .bank-card .num { font-family: var(--mono); letter-spacing: .14em; font-size: 15px; }
+  .bank-card .row { display: flex; justify-content: space-between; align-items: end; font-size: 12px; opacity: .85; }
+  .widget { position: absolute; right: 0; bottom: 0; width: 280px; background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); padding: 18px; box-shadow: 0 30px 60px -30px rgba(0,0,0,.9); }
+  .widget p { font-size: 12px; color: var(--muted); }
+  .widget strong { display: block; font-size: 26px; letter-spacing: -.02em; margin-top: 4px; }
+  .bars { display: flex; align-items: end; gap: 6px; height: 60px; margin-top: 14px; }
+  .bars span { flex: 1; border-radius: 4px 4px 2px 2px; background: rgba(91,140,255,.35); }
+  .bars span:last-child { background: var(--lime); }
+  section { padding: 88px 0; }
+  .center { text-align: center; max-width: 680px; margin-inline: auto; }
+  h2 { font-size: clamp(30px, 3.6vw, 46px); letter-spacing: -.03em; line-height: 1.08; font-weight: 800; margin-top: 14px; }
+  .sub { color: var(--muted); margin-top: 14px; font-size: 17px; }
+  .features { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-top: 52px; }
+  .feature { background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); padding: 28px; transition: border-color .2s, transform .2s; }
+  .feature:hover { border-color: rgba(198,244,50,.35); transform: translateY(-2px); }
+  .feature .ic { width: 42px; height: 42px; border-radius: 12px; display: grid; place-items: center; background: rgba(198,244,50,.1); color: var(--lime); font-family: var(--mono); font-weight: 500; }
+  .feature h3 { margin-top: 18px; font-size: 18px; letter-spacing: -.01em; }
+  .feature p { margin-top: 8px; color: var(--muted); font-size: 15px; }
+  .split { display: grid; grid-template-columns: 1fr 1fr; gap: 56px; align-items: center; }
+  .ledger { background: var(--panel); border: 1px solid var(--line); border-radius: 22px; overflow: hidden; }
+  .ledger header { display: flex; justify-content: space-between; padding: 18px 22px; border-bottom: 1px solid var(--line); font-size: 13px; color: var(--muted); }
+  .tx { display: grid; grid-template-columns: 36px 1fr auto; gap: 14px; align-items: center; padding: 14px 22px; border-bottom: 1px solid var(--line); font-size: 14px; }
+  .tx:last-child { border-bottom: 0; }
+  .tx .av { width: 36px; height: 36px; border-radius: 10px; background: var(--panel-2); display: grid; place-items: center; font-weight: 700; font-size: 13px; }
+  .tx small { display: block; color: var(--muted); font-size: 12px; }
+  .tx .amt { font-family: var(--mono); font-size: 14px; }
+  .tx .in { color: var(--lime); }
+  .checks { margin-top: 26px; display: grid; gap: 14px; }
+  .checks li { list-style: none; display: flex; gap: 12px; color: var(--muted); }
+  .checks li::before { content: "✓"; flex: none; width: 22px; height: 22px; border-radius: 50%; display: grid; place-items: center; background: rgba(198,244,50,.14); color: var(--lime); font-size: 12px; font-weight: 800; margin-top: 2px; }
+  .checks b { color: var(--ink); font-weight: 600; }
+  .stats { display: grid; grid-template-columns: repeat(4, 1fr); border: 1px solid var(--line); border-radius: 22px; overflow: hidden; }
+  .stats div { padding: 34px 28px; border-right: 1px solid var(--line); }
+  .stats div:last-child { border-right: 0; }
+  .stats strong { display: block; font-size: 40px; letter-spacing: -.03em; font-weight: 800; }
+  .stats span { color: var(--muted); font-size: 14px; }
+  .pricing { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-top: 52px; }
+  .plan { border: 1px solid var(--line); border-radius: 22px; padding: 30px; background: var(--panel); display: flex; flex-direction: column; }
+  .plan.hot { background: linear-gradient(180deg, rgba(198,244,50,.08), transparent 40%), var(--panel); border-color: rgba(198,244,50,.45); }
+  .plan h3 { font-size: 16px; }
+  .plan .price { font-size: 42px; font-weight: 800; letter-spacing: -.03em; margin: 14px 0 4px; }
+  .plan .price small { font-size: 15px; color: var(--muted); font-weight: 500; }
+  .plan ul { margin: 22px 0 28px; padding: 0; display: grid; gap: 10px; color: var(--muted); font-size: 14.5px; flex: 1; }
+  .plan li { list-style: none; } .plan li::before { content: "— "; color: var(--lime); }
+  .final { margin: 0 auto 88px; border-radius: 28px; padding: 72px 40px; text-align: center; background: radial-gradient(60% 80% at 50% 0%, rgba(198,244,50,.18), transparent 70%), var(--panel); border: 1px solid var(--line); }
+  footer { border-top: 1px solid var(--line); padding: 36px 0; color: var(--muted); font-size: 13px; }
+  footer .wrap { display: flex; justify-content: space-between; gap: 20px; flex-wrap: wrap; }
+  @media (max-width: 900px) {
+    .hero .wrap, .split { grid-template-columns: 1fr; }
+    .card-stack { height: 420px; } .links { display: none; }
+    .features, .pricing { grid-template-columns: 1fr; }
+    .stats { grid-template-columns: 1fr 1fr; } .stats div:nth-child(2) { border-right: 0; } .stats div:nth-child(-n+2) { border-bottom: 1px solid var(--line); }
+  }
+</style>
+</head>
+<body>
+<nav><div class="wrap">
+  <a class="logo" href="#"><i></i>Orbit</a>
+  <div class="links"><a href="#produit">Produit</a><a href="#securite">Sécurité</a><a href="#tarifs">Tarifs</a><a href="#">Entreprises</a></div>
+  <a class="btn btn-lime" href="#tarifs" style="height:40px;padding:0 18px;font-size:14px">Ouvrir un compte</a>
+</div></nav>
+
+<header class="hero"><div class="wrap">
+  <div>
+    <p class="eyebrow">Compte pro · Cartes · Trésorerie</p>
+    <h1>La banque des entreprises qui <em>avancent vite.</em></h1>
+    <p class="lead">Ouvrez un compte en 8 minutes, émettez des cartes pour toute l'équipe et suivez votre trésorerie en temps réel, dans une seule application.</p>
+    <div class="cta"><a class="btn btn-lime" href="#tarifs">Ouvrir un compte gratuit →</a><a class="btn btn-ghost" href="#produit">Voir la démo</a></div>
+    <div class="trust"><span><b>4,9/5</b> sur 2 300 avis</span><span><b>40 000+</b> entreprises</span><span><b>0 €</b> de frais cachés</span></div>
+  </div>
+  <div class="card-stack" aria-hidden="true">
+    <div class="bank-card one"><div class="row"><span class="chip"></span><span>ORBIT</span></div><div class="num">5412 •••• •••• 2048</div><div class="row"><span>MARIE KONÉ</span><span>09/29</span></div></div>
+    <div class="bank-card two"><div class="row"><span class="chip"></span><b>VIRTUELLE</b></div><div class="num">4970 •••• •••• 7731</div><div class="row"><span>MARKETING</span><span>Limite 2 000 €</span></div></div>
+    <div class="widget"><p>Solde disponible</p><strong>128 450,20 €</strong><div class="bars"><span style="height:40%"></span><span style="height:55%"></span><span style="height:35%"></span><span style="height:70%"></span><span style="height:60%"></span><span style="height:92%"></span></div></div>
+  </div>
+</div></header>
+
+<section id="produit"><div class="wrap">
+  <div class="center"><p class="eyebrow">Tout-en-un</p><h2>Tout ce dont votre finance a besoin, rien de superflu.</h2><p class="sub">Des outils pensés pour les fondateurs et les équipes finance, pas pour les guichets.</p></div>
+  <div class="features">
+    <article class="feature"><div class="ic">01</div><h3>Cartes illimitées</h3><p>Physiques ou virtuelles, avec plafonds par équipe et blocage instantané.</p></article>
+    <article class="feature"><div class="ic">02</div><h3>Notes de frais automatiques</h3><p>Photographiez le reçu : la dépense est catégorisée et rapprochée.</p></article>
+    <article class="feature"><div class="ic">03</div><h3>Virements groupés</h3><p>Payez 200 fournisseurs en un clic avec double validation.</p></article>
+    <article class="feature"><div class="ic">04</div><h3>Prévisions de trésorerie</h3><p>Visualisez vos 90 prochains jours selon vos revenus récurrents.</p></article>
+    <article class="feature"><div class="ic">05</div><h3>Comptabilité connectée</h3><p>Export propre vers votre logiciel comptable, chaque jour.</p></article>
+    <article class="feature"><div class="ic">06</div><h3>Multi-devises</h3><p>Encaissez et payez dans 30 devises au taux interbancaire.</p></article>
+  </div>
+</div></section>
+
+<section id="securite"><div class="wrap split">
+  <div class="ledger" aria-label="Exemple de transactions">
+    <header><span>Transactions récentes</span><span>Aujourd'hui</span></header>
+    <div class="tx"><span class="av">AW</span><span>AWS Europe<small>Infrastructure · Carte Tech</small></span><span class="amt">−1 240,00 €</span></div>
+    <div class="tx"><span class="av">ST</span><span>Studio Taïwo<small>Facture F-2291 · Virement</small></span><span class="amt in">+8 600,00 €</span></div>
+    <div class="tx"><span class="av">FG</span><span>Figma<small>Abonnement · Carte Design</small></span><span class="amt">−144,00 €</span></div>
+    <div class="tx"><span class="av">LB</span><span>Lumen Bank<small>Remboursement · Prélèvement</small></span><span class="amt in">+312,50 €</span></div>
+  </div>
+  <div>
+    <p class="eyebrow">Sécurité</p>
+    <h2>Votre argent, protégé à chaque étape.</h2>
+    <ul class="checks">
+      <li><span><b>Fonds cantonnés</b> auprès d'établissements partenaires agréés.</span></li>
+      <li><span><b>Validation à deux niveaux</b> pour les virements sensibles.</span></li>
+      <li><span><b>Alertes en temps réel</b> sur chaque dépense inhabituelle.</span></li>
+      <li><span><b>Rôles et permissions</b> fins pour chaque membre.</span></li>
+    </ul>
+  </div>
+</div></section>
+
+<section style="padding-top:0"><div class="wrap">
+  <div class="stats"><div><strong>8 min</strong><span>pour ouvrir un compte</span></div><div><strong>30</strong><span>devises disponibles</span></div><div><strong>99,99 %</strong><span>de disponibilité</span></div><div><strong>24/7</strong><span>support humain</span></div></div>
+</div></section>
+
+<section id="tarifs"><div class="wrap">
+  <div class="center"><p class="eyebrow">Tarifs</p><h2>Simple et transparent.</h2><p class="sub">Changez d'offre à tout moment, sans engagement.</p></div>
+  <div class="pricing">
+    <div class="plan"><h3>Solo</h3><div class="price">0 € <small>/ mois</small></div><p style="color:var(--muted);font-size:14px">Pour démarrer seul.</p><ul><li>1 carte physique</li><li>Virements gratuits</li><li>Application mobile</li></ul><a class="btn btn-ghost" href="#">Commencer</a></div>
+    <div class="plan hot"><h3>Équipe</h3><div class="price">29 € <small>/ mois</small></div><p style="color:var(--muted);font-size:14px">Le plus choisi par les startups.</p><ul><li>10 cartes et cartes virtuelles</li><li>Notes de frais automatiques</li><li>Validation des dépenses</li><li>Export comptable</li></ul><a class="btn btn-lime" href="#">Essayer 30 jours</a></div>
+    <div class="plan"><h3>Scale</h3><div class="price">99 € <small>/ mois</small></div><p style="color:var(--muted);font-size:14px">Pour les équipes finance.</p><ul><li>Cartes illimitées</li><li>Multi-entités et devises</li><li>Accès API</li><li>Conseiller dédié</li></ul><a class="btn btn-ghost" href="#">Contacter l'équipe</a></div>
+  </div>
+</div></section>
+
+<div class="wrap"><div class="final"><p class="eyebrow">Prêt à décoller ?</p><h2>Rejoignez 40 000 entreprises en orbite.</h2><p class="sub">Ouverture de compte gratuite, en ligne, sans paperasse.</p><div class="cta" style="justify-content:center"><a class="btn btn-lime" href="#">Ouvrir mon compte →</a></div></div></div>
+
+<footer><div class="wrap"><span>© 2026 Orbit. Modèle TechNova Registry.</span><span>Produit · Sécurité · Tarifs · Mentions légales</span></div></footer>
+</body>
+</html>

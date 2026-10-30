@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { confirmDialog } from "@/components/ConfirmHost";
 import { useNavigate } from "@tanstack/react-router";
-import { Code2, Copy, Download, Eye, GitFork, Heart, Monitor, Plus, Search, Share2, Smartphone, Trash2, Wand2 } from "lucide-react";
+import { Code2, Copy, Crown, Download, Eye, GitFork, Gift, Heart, Lock, Monitor, Plus, Search, Share2, Smartphone, Trash2, Wand2 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Modal } from "./Modal";
@@ -14,7 +14,7 @@ import type { Tables } from "@/integrations/supabase/types";
 import { useDashboard } from "./dashboard-context";
 
 type Item = Tables<"registry_items">;
-const CATS = ["landing", "animation", "font", "ui_kit", "prompt", "template", "component", "workflow"] as const;
+const CATS = ["landing", "dashboard", "ui_kit", "template", "component", "animation", "font", "prompt", "workflow"] as const;
 const LICENSES = ["technova", "cc0", "mit", "cc_by", "cc_by_sa", "ofl", "all_rights_reserved"] as const;
 const EXTS = ["txt", "md", "html", "css", "js", "tsx", "json", "sql"] as const;
 
@@ -22,7 +22,8 @@ const T = {
   fr: {
     title: "Registry", sub: "Bibliothèque de ressources réutilisables : pages, animations, polices, kits, prompts, modèles, composants et workflows.",
     search: "Rechercher une ressource…", all: "Tout", favs: "Favoris", mine: "Mes ressources", add: "Ajouter",
-    cats: { landing: "Landing pages", animation: "Animations", font: "Polices", ui_kit: "Kits UI", prompt: "Prompts", template: "Modèles", component: "Composants", workflow: "Workflows" },
+    cats: { landing: "Landing pages", dashboard: "Consoles", animation: "Animations", font: "Polices", ui_kit: "Kits UI & UX", prompt: "Prompts", template: "Modèles", component: "Composants", workflow: "Workflows" },
+    locked: "Creator · Pro", free: "Offert", lockedTitle: "Réservé aux forfaits Creator et Pro", lockedText: (t: string) => `« ${t} » fait partie des modèles officiels TechNova inclus avec les packs Creator et Pro : code complet, aperçu, téléchargement et remix. Votre forfait actuel donne accès à un modèle offert.`, seePacks: "Voir les packs", lockedBanner: "Les modèles officiels sont inclus avec les packs Creator et Pro. Votre forfait vous donne accès au modèle offert « Halo ».",
     lic: { technova: "Licence TechNova", cc0: "CC0 (domaine public)", mit: "MIT", cc_by: "CC BY", cc_by_sa: "CC BY-SA", ofl: "SIL OFL", all_rights_reserved: "Tous droits réservés" },
     source: "Source", author: "Auteur", license: "Licence", commercial: "Usage commercial", modif: "Modification", redist: "Redistribution", attrib: "Attribution requise",
     yes: "Oui", no: "Non", download: "Télécharger", share: "Partager", remix: "Remixer", use: "Utiliser dans le Studio", del: "Supprimer",
@@ -37,7 +38,8 @@ const T = {
   en: {
     title: "Registry", sub: "Reusable resource library: landing pages, animations, fonts, UI kits, prompts, templates, components and workflows.",
     search: "Search resources…", all: "All", favs: "Favorites", mine: "My resources", add: "Add",
-    cats: { landing: "Landing pages", animation: "Animations", font: "Fonts", ui_kit: "UI kits", prompt: "Prompts", template: "Templates", component: "Components", workflow: "Workflows" },
+    cats: { landing: "Landing pages", dashboard: "Consoles", animation: "Animations", font: "Fonts", ui_kit: "UI & UX kits", prompt: "Prompts", template: "Templates", component: "Components", workflow: "Workflows" },
+    locked: "Creator · Pro", free: "Free", lockedTitle: "Included with Creator and Pro", lockedText: (t: string) => `"${t}" is one of the official TechNova designs included with the Creator and Pro packs: full code, preview, download and remix. Your current plan includes one free design.`, seePacks: "See packs", lockedBanner: "Official designs come with the Creator and Pro packs. Your plan includes the free \"Halo\" design.",
     lic: { technova: "TechNova licence", cc0: "CC0 (public domain)", mit: "MIT", cc_by: "CC BY", cc_by_sa: "CC BY-SA", ofl: "SIL OFL", all_rights_reserved: "All rights reserved" },
     source: "Source", author: "Author", license: "Licence", commercial: "Commercial use", modif: "Modification", redist: "Redistribution", attrib: "Attribution required",
     yes: "Yes", no: "No", download: "Download", share: "Share", remix: "Remix", use: "Use in Studio", del: "Delete",
@@ -70,6 +72,14 @@ function LivePreview({ html, width = 1280, height = 800, interactive = false, cl
   </div>;
 }
 
+/** Locked official design: a calm placeholder with the category and a lock, never the content. */
+function LockedThumb({ label }: { label: string }) {
+  return <div className="registry-locked relative grid aspect-[1280/800] place-items-center overflow-hidden">
+    <div className="absolute inset-x-6 top-6 grid gap-2 opacity-60" aria-hidden="true"><span className="h-2.5 w-1/3 rounded-full bg-foreground/15" /><span className="h-2 w-2/3 rounded-full bg-foreground/10" /><span className="mt-3 h-16 rounded-xl bg-foreground/[0.06]" /><span className="grid grid-cols-3 gap-2"><i className="h-10 rounded-lg bg-foreground/[0.06]" /><i className="h-10 rounded-lg bg-foreground/[0.06]" /><i className="h-10 rounded-lg bg-foreground/[0.06]" /></span></div>
+    <span className="relative flex flex-col items-center gap-2"><span className="grid size-11 place-items-center rounded-2xl bg-background/90 shadow-sm backdrop-blur"><Lock className="size-5" /></span><span className="plan-pro plan-pill inline-flex h-5 items-center gap-1 rounded-full px-2.5 text-[10.5px] font-semibold"><Crown className="size-3" />{label}</span></span>
+  </div>;
+}
+
 /** Text items (prompts, workflows): a calm "page" showing the first lines. */
 function TextThumb({ item }: { item: Item }) {
   const lines = item.content.split("\n").filter((l) => l.trim() && !/^(---|```|\|)/.test(l.trim())).slice(0, 9);
@@ -86,19 +96,34 @@ export function RegistryPage() {
   const [uid, setUid] = useState(""); const [q, setQ] = useState(""); const [tab, setTab] = useState<string>("all");
   const [open, setOpen] = useState<Item | null>(null); const [creating, setCreating] = useState(false);
   const [loaded, setLoaded] = useState(false);
+  // Official designs this account cannot open (Creator and Pro only): shown as locked cards, never read.
+  const [locked, setLocked] = useState<Set<string>>(new Set());
 
   const load = useCallback(async () => {
-    const [{ data: u }, { data: it }, { data: f }] = await Promise.all([
+    const [{ data: u }, { data: it }, { data: f }, { data: catalog }] = await Promise.all([
       supabase.auth.getUser(),
       supabase.from("registry_items").select("*").order("created_at", { ascending: false }).limit(500),
       supabase.from("registry_favorites").select("item_id"),
+      supabase.rpc("registry_catalog"),
     ]);
+    const readable = it ?? [];
+    const closed = (catalog ?? []).filter((r) => !r.unlocked && !readable.some((x) => x.id === r.id));
+    const placeholders: Item[] = closed.map((r) => ({
+      id: r.id, owner_id: null, title: r.title, description: r.description, category: r.category, content: "", file_ext: r.file_ext,
+      source: "TechNova", author: "TechNova Studio", license: "technova", commercial_use: true, modification: true, redistribution: true,
+      attribution_required: false, visibility: "public", remix_of: null, downloads: r.downloads, created_at: r.created_at, updated_at: r.created_at,
+    }));
     // Official items first, in catalogue order; then the newest community and personal items.
-    const sorted = [...(it ?? [])].sort((a, b) => (a.owner_id === null) !== (b.owner_id === null) ? (a.owner_id === null ? -1 : 1) : a.owner_id === null ? a.id.localeCompare(b.id) : 0);
-    setUid(u.user?.id ?? ""); setItems(sorted); setFavs(new Set((f ?? []).map(x => x.item_id))); setLoaded(true);
+    const sorted = [...readable, ...placeholders].sort((a, b) => (a.owner_id === null) !== (b.owner_id === null) ? (a.owner_id === null ? -1 : 1) : a.owner_id === null ? a.id.localeCompare(b.id) : 0);
+    setUid(u.user?.id ?? ""); setItems(sorted); setLocked(new Set(closed.map((r) => r.id))); setFavs(new Set((f ?? []).map(x => x.item_id))); setLoaded(true);
     const id = new URLSearchParams(window.location.search).get("item");
-    if (id) { const hit = sorted.find(x => x.id === id); if (hit) setOpen(hit); }
+    if (id) { const hit = sorted.find(x => x.id === id); if (hit) openItem(hit, closed.some((r) => r.id === id)); }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+  async function openItem(i: Item, isLocked = locked.has(i.id)) {
+    if (!isLocked) { setOpen(i); return; }
+    if (await confirmDialog({ title: c.lockedTitle, description: c.lockedText(i.title), confirmLabel: c.seePacks })) void navigate({ to: "/dashboard/credits" });
+  }
   useEffect(() => { void load(); }, [load]);
 
   const counts = useMemo(() => Object.fromEntries(CATS.map((k) => [k, items.filter((i) => i.category === k).length])), [items]);
@@ -148,6 +173,11 @@ export function RegistryPage() {
       <div><h1 className="font-display text-[26px] font-semibold leading-tight">{c.title}</h1><p className="mt-1 max-w-2xl text-[13px] text-muted-foreground">{c.sub}</p></div>
       <Button className="h-9 rounded-full" onClick={() => setCreating(true)}><Plus className="size-4" />{c.add}</Button>
     </div>
+    {locked.size > 0 && <div className="plan-pro flex items-center gap-3 rounded-2xl border border-border bg-card px-4 py-3 text-[13px]">
+      <span className="plan-pill grid size-8 shrink-0 place-items-center rounded-full"><Crown className="size-4" /></span>
+      <p className="min-w-0 flex-1 text-muted-foreground">{c.lockedBanner}</p>
+      <Button size="sm" className="h-8 shrink-0 rounded-full" onClick={() => void navigate({ to: "/dashboard/credits" })}>{c.seePacks}</Button>
+    </div>}
     <div className="relative"><Search className="absolute left-4 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" /><Input value={q} onChange={e => setQ(e.target.value)} placeholder={c.search} aria-label={c.search} className="h-11 rounded-full bg-background pl-11" /></div>
     <div className="flex gap-2 overflow-x-auto pb-1">
       {(["all", "favs", "mine", ...CATS] as string[]).map(k => <button key={k} type="button" onClick={() => setTab(k)} className={chip(tab === k)}>
@@ -158,8 +188,9 @@ export function RegistryPage() {
     {!loaded ? <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">{[0, 1, 2].map(k => <div key={k} className="aspect-[4/3] animate-pulse rounded-2xl bg-secondary" />)}</div>
       : shown.length === 0 ? <p className="py-16 text-center text-[13px] text-muted-foreground">{c.empty}</p> :
     <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">{shown.map(i => <article key={i.id} className="group flex flex-col overflow-hidden rounded-2xl border border-border bg-card shadow-sm transition hover:-translate-y-0.5 hover:shadow-lg">
-      <button type="button" onClick={() => setOpen(i)} aria-label={`${c.open} : ${i.title}`} className="relative block border-b border-border text-left">
-        {isPage(i) ? <LivePreview html={i.content} /> : <TextThumb item={i} />}
+      <button type="button" onClick={() => void openItem(i)} aria-label={`${c.open} : ${i.title}`} className="relative block border-b border-border text-left">
+        {locked.has(i.id) ? <LockedThumb label={c.locked} /> : isPage(i) ? <LivePreview html={i.content} /> : <TextThumb item={i} />}
+        {locked.size > 0 && i.owner_id === null && !locked.has(i.id) && <span className="absolute left-3 top-3 inline-flex items-center gap-1 rounded-full bg-background/95 px-2.5 py-1 text-[11px] font-semibold shadow-sm"><Gift className="size-3.5" />{c.free}</span>}
         <span className="absolute inset-0 grid place-items-center bg-foreground/0 opacity-0 transition group-hover:bg-foreground/10 group-hover:opacity-100"><span className="rounded-full bg-background px-3.5 py-1.5 text-[12px] font-medium shadow">{c.open}</span></span>
       </button>
       <div className="flex flex-1 flex-col p-4">

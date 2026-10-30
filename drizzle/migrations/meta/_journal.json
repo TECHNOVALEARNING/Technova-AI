@@ -253,6 +253,20 @@
       "when": 1794211200000,
       "tag": "0035_usage_from_ledger",
       "breakpoints": true
+    },
+    {
+      "idx": 36,
+      "version": "7",
+      "when": 1794297600000,
+      "tag": "0036_registry_access",
+      "breakpoints": true
+    },
+    {
+      "idx": 37,
+      "version": "7",
+      "when": 1794384000000,
+      "tag": "0037_registry_items_v2",
+      "breakpoints": true
     }
   ]
 }

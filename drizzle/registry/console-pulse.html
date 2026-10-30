@@ -1,0 +1,156 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Pulse — Console analytics</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0b0d12; --panel: #12151c; --panel-2: #181c25; --line: rgba(255,255,255,.07); --ink: #e9ecf3; --muted: #8a90a2;
+    --accent: #7c6cff; --green: #34d399; --red: #f87171; --amber: #fbbf24; --radius: 14px;
+    --sans: "Inter", system-ui, sans-serif; --mono: "JetBrains Mono", ui-monospace, monospace;
+  }
+  * { box-sizing: border-box; margin: 0; }
+  body { background: var(--bg); color: var(--ink); font: 400 14px/1.5 var(--sans); -webkit-font-smoothing: antialiased; }
+  a { color: inherit; text-decoration: none; }
+  .app { display: grid; grid-template-columns: 232px 1fr; min-height: 100vh; }
+  aside { border-right: 1px solid var(--line); padding: 18px 14px; display: flex; flex-direction: column; gap: 4px; position: sticky; top: 0; height: 100vh; }
+  .brand { display: flex; align-items: center; gap: 10px; font-weight: 700; font-size: 16px; padding: 4px 8px 18px; }
+  .brand i { width: 26px; height: 26px; border-radius: 8px; background: linear-gradient(135deg, var(--accent), #22d3ee); display: grid; place-items: center; }
+  .brand i::before { content: ""; width: 12px; height: 12px; border: 2px solid #fff; border-radius: 50%; }
+  .group { font-size: 11px; text-transform: uppercase; letter-spacing: .12em; color: #5f6578; padding: 14px 10px 6px; }
+  .nav { display: flex; align-items: center; gap: 10px; padding: 8px 10px; border-radius: 9px; color: var(--muted); font-weight: 500; }
+  .nav svg { width: 16px; height: 16px; flex: none; }
+  .nav:hover { background: rgba(255,255,255,.04); color: var(--ink); }
+  .nav.on { background: rgba(124,108,255,.14); color: var(--ink); }
+  .nav em { margin-left: auto; font-style: normal; font-size: 11px; background: var(--panel-2); border-radius: 999px; padding: 1px 8px; color: var(--muted); }
+  .me { margin-top: auto; display: flex; gap: 10px; align-items: center; padding: 10px; border: 1px solid var(--line); border-radius: 12px; }
+  .me span { width: 32px; height: 32px; border-radius: 50%; background: linear-gradient(135deg, #f472b6, var(--accent)); display: grid; place-items: center; font-weight: 700; font-size: 12px; }
+  .me small { display: block; color: var(--muted); font-size: 12px; }
+  main { padding: 22px 28px 40px; min-width: 0; }
+  .top { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+  .top h1 { font-size: 22px; letter-spacing: -.02em; font-weight: 600; margin-right: auto; }
+  .search { display: flex; align-items: center; gap: 8px; height: 38px; padding: 0 12px; border: 1px solid var(--line); border-radius: 10px; color: var(--muted); min-width: 240px; background: var(--panel); }
+  .search kbd { margin-left: auto; font-family: var(--mono); font-size: 11px; border: 1px solid var(--line); border-radius: 6px; padding: 0 6px; }
+  .seg { display: inline-flex; background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 3px; }
+  .seg button { all: unset; cursor: pointer; padding: 6px 12px; border-radius: 7px; color: var(--muted); font-weight: 500; font-size: 13px; }
+  .seg button.on { background: var(--panel-2); color: var(--ink); }
+  .btn { display: inline-flex; align-items: center; gap: 8px; height: 38px; padding: 0 14px; border-radius: 10px; font-weight: 600; background: var(--accent); color: #fff; }
+  .kpis { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-top: 22px; }
+  .kpi { background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); padding: 18px; }
+  .kpi p { color: var(--muted); font-size: 13px; display: flex; justify-content: space-between; }
+  .kpi strong { display: block; font-size: 28px; letter-spacing: -.03em; margin-top: 8px; font-weight: 600; }
+  .delta { font-family: var(--mono); font-size: 12px; padding: 1px 7px; border-radius: 999px; }
+  .up { color: var(--green); background: rgba(52,211,153,.12); } .down { color: var(--red); background: rgba(248,113,113,.12); }
+  .spark { margin-top: 12px; height: 34px; width: 100%; }
+  .grid2 { display: grid; grid-template-columns: 1.7fr 1fr; gap: 14px; margin-top: 14px; }
+  .card { background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); padding: 20px; min-width: 0; }
+  .card-h { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+  .card-h h2 { font-size: 15px; font-weight: 600; }
+  .card-h small { color: var(--muted); }
+  .legend { display: flex; gap: 14px; color: var(--muted); font-size: 12px; }
+  .legend i { display: inline-block; width: 8px; height: 8px; border-radius: 2px; margin-right: 6px; }
+  .chart { width: 100%; height: 260px; margin-top: 14px; }
+  .channels { display: grid; gap: 14px; margin-top: 18px; }
+  .ch { display: grid; grid-template-columns: 1fr auto; gap: 6px 12px; font-size: 13px; }
+  .ch .bar { grid-column: 1 / -1; height: 8px; border-radius: 999px; background: var(--panel-2); overflow: hidden; }
+  .ch .bar span { display: block; height: 100%; border-radius: inherit; }
+  .ch b { font-family: var(--mono); font-weight: 500; }
+  .donut { display: flex; align-items: center; gap: 20px; margin-top: 18px; }
+  table { width: 100%; border-collapse: collapse; margin-top: 12px; font-size: 13px; }
+  th { text-align: left; color: var(--muted); font-weight: 500; font-size: 12px; padding: 10px 12px; border-bottom: 1px solid var(--line); }
+  td { padding: 12px; border-bottom: 1px solid var(--line); }
+  tr:hover td { background: rgba(255,255,255,.02); }
+  td.num { font-family: var(--mono); text-align: right; } th.num { text-align: right; }
+  .page { display: flex; gap: 10px; align-items: center; }
+  .page i { width: 30px; height: 30px; border-radius: 8px; background: var(--panel-2); display: grid; place-items: center; font-style: normal; font-size: 12px; color: var(--muted); }
+  .status { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; }
+  .status::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: currentColor; }
+  .live { display: inline-flex; align-items: center; gap: 8px; font-size: 12px; color: var(--green); }
+  .live::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: var(--green); box-shadow: 0 0 0 0 rgba(52,211,153,.6); animation: ping 1.8s infinite; }
+  @keyframes ping { 70% { box-shadow: 0 0 0 8px rgba(52,211,153,0); } 100% { box-shadow: 0 0 0 0 rgba(52,211,153,0); } }
+  @media (max-width: 1000px) { .app { grid-template-columns: 1fr; } aside { display: none; } .kpis { grid-template-columns: 1fr 1fr; } .grid2 { grid-template-columns: 1fr; } .search { min-width: 0; flex: 1; } }
+  @media (prefers-reduced-motion: reduce) { .live::before { animation: none; } }
+</style>
+</head>
+<body>
+<div class="app">
+  <aside>
+    <div class="brand"><i></i>Pulse</div>
+    <a class="nav on" href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12h4l3-8 4 16 3-8h4"/></svg>Vue d'ensemble</a>
+    <a class="nav" href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="8" r="4"/><path d="M2 21c0-4 3-7 7-7s7 3 7 7M17 11a3 3 0 1 0 0-6M22 21c0-3-2-5-4-6"/></svg>Audience<em>24k</em></a>
+    <a class="nav" href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16v12H4zM8 20h8"/></svg>Pages</a>
+    <a class="nav" href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3v18h18M7 14l4-4 4 4 5-6"/></svg>Conversions</a>
+    <p class="group">Espace</p>
+    <a class="nav" href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l3 7h7l-5.5 4 2 7L12 16l-6.5 4 2-7L2 9h7z"/></svg>Objectifs</a>
+    <a class="nav" href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 12h10M4 18h7"/></svg>Rapports<em>3</em></a>
+    <a class="nav" href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>Réglages</a>
+    <div class="me"><span>AM</span><div>Awa Mensah<small>Administratrice</small></div></div>
+  </aside>
+
+  <main>
+    <div class="top">
+      <h1>Vue d'ensemble</h1>
+      <div class="search"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4-4"/></svg>Rechercher<kbd>⌘K</kbd></div>
+      <div class="seg" role="tablist"><button>24 h</button><button class="on">7 jours</button><button>30 jours</button></div>
+      <a class="btn" href="#">Exporter</a>
+    </div>
+
+    <div class="kpis">
+      <div class="kpi"><p>Visiteurs uniques <span class="delta up">+12,4 %</span></p><strong>48 213</strong><svg class="spark" viewBox="0 0 120 34" preserveAspectRatio="none"><path d="M0 26 L15 22 L30 24 L45 16 L60 18 L75 10 L90 13 L105 6 L120 8" fill="none" stroke="#7c6cff" stroke-width="2"/></svg></div>
+      <div class="kpi"><p>Taux de conversion <span class="delta up">+0,8 pt</span></p><strong>3,94 %</strong><svg class="spark" viewBox="0 0 120 34" preserveAspectRatio="none"><path d="M0 20 L15 24 L30 18 L45 20 L60 14 L75 16 L90 10 L105 12 L120 7" fill="none" stroke="#34d399" stroke-width="2"/></svg></div>
+      <div class="kpi"><p>Revenu <span class="delta up">+18,1 %</span></p><strong>92 480 €</strong><svg class="spark" viewBox="0 0 120 34" preserveAspectRatio="none"><path d="M0 28 L15 24 L30 25 L45 18 L60 19 L75 12 L90 14 L105 8 L120 4" fill="none" stroke="#22d3ee" stroke-width="2"/></svg></div>
+      <div class="kpi"><p>Taux de rebond <span class="delta down">+2,1 %</span></p><strong>41,2 %</strong><svg class="spark" viewBox="0 0 120 34" preserveAspectRatio="none"><path d="M0 18 L15 16 L30 20 L45 17 L60 21 L75 19 L90 23 L105 21 L120 24" fill="none" stroke="#f87171" stroke-width="2"/></svg></div>
+    </div>
+
+    <div class="grid2">
+      <div class="card">
+        <div class="card-h"><div><h2>Trafic et conversions</h2><small>7 derniers jours</small></div><div class="legend"><span><i style="background:#7c6cff"></i>Visiteurs</span><span><i style="background:#34d399"></i>Conversions</span></div></div>
+        <svg class="chart" viewBox="0 0 700 260" preserveAspectRatio="none" aria-label="Graphique du trafic">
+          <defs><linearGradient id="fa" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#7c6cff" stop-opacity=".35"/><stop offset="1" stop-color="#7c6cff" stop-opacity="0"/></linearGradient></defs>
+          <g stroke="rgba(255,255,255,.06)"><line x1="0" y1="50" x2="700" y2="50"/><line x1="0" y1="110" x2="700" y2="110"/><line x1="0" y1="170" x2="700" y2="170"/><line x1="0" y1="230" x2="700" y2="230"/></g>
+          <path d="M0 170 C60 160 90 120 140 130 S230 90 280 100 S370 60 420 75 S520 40 570 55 S650 30 700 35 L700 260 L0 260 Z" fill="url(#fa)"/>
+          <path d="M0 170 C60 160 90 120 140 130 S230 90 280 100 S370 60 420 75 S520 40 570 55 S650 30 700 35" fill="none" stroke="#7c6cff" stroke-width="2.5"/>
+          <path d="M0 215 C60 210 100 200 140 205 S230 185 280 190 S370 170 420 178 S520 160 570 166 S650 150 700 152" fill="none" stroke="#34d399" stroke-width="2.5" stroke-dasharray="6 6"/>
+          <g fill="#8a90a2" font-size="12" font-family="Inter"><text x="0" y="255">Lun</text><text x="112" y="255">Mar</text><text x="228" y="255">Mer</text><text x="344" y="255">Jeu</text><text x="460" y="255">Ven</text><text x="576" y="255">Sam</text><text x="668" y="255">Dim</text></g>
+          <circle cx="570" cy="55" r="5" fill="#7c6cff" stroke="#12151c" stroke-width="3"/>
+        </svg>
+      </div>
+      <div class="card">
+        <div class="card-h"><h2>Canaux d'acquisition</h2><span class="live">En direct · 312</span></div>
+        <div class="channels">
+          <div class="ch"><span>Recherche organique</span><b>38 %</b><div class="bar"><span style="width:38%;background:#7c6cff"></span></div></div>
+          <div class="ch"><span>Réseaux sociaux</span><b>26 %</b><div class="bar"><span style="width:26%;background:#22d3ee"></span></div></div>
+          <div class="ch"><span>Accès direct</span><b>19 %</b><div class="bar"><span style="width:19%;background:#34d399"></span></div></div>
+          <div class="ch"><span>E-mail</span><b>11 %</b><div class="bar"><span style="width:11%;background:#fbbf24"></span></div></div>
+          <div class="ch"><span>Partenaires</span><b>6 %</b><div class="bar"><span style="width:6%;background:#f472b6"></span></div></div>
+        </div>
+        <div class="donut"><svg width="92" height="92" viewBox="0 0 42 42" aria-hidden="true"><circle cx="21" cy="21" r="15.9" fill="none" stroke="#181c25" stroke-width="5"/><circle cx="21" cy="21" r="15.9" fill="none" stroke="#7c6cff" stroke-width="5" stroke-dasharray="64 36" stroke-dashoffset="25" stroke-linecap="round"/></svg><div><strong style="font-size:22px">64 %</strong><p style="color:var(--muted);font-size:13px">des visites sur mobile</p></div></div>
+      </div>
+    </div>
+
+    <div class="card" style="margin-top:14px">
+      <div class="card-h"><div><h2>Pages les plus performantes</h2><small>Classées par revenu</small></div><a class="btn" href="#" style="background:var(--panel-2);color:var(--ink)">Tout voir</a></div>
+      <table>
+        <thead><tr><th>Page</th><th class="num">Vues</th><th class="num">Conversion</th><th class="num">Revenu</th><th>Statut</th></tr></thead>
+        <tbody>
+          <tr><td><span class="page"><i>/</i>Accueil</span></td><td class="num">18 402</td><td class="num">4,8 %</td><td class="num">31 220 €</td><td><span class="status" style="color:var(--green)">Optimale</span></td></tr>
+          <tr><td><span class="page"><i>/p</i>Tarifs</span></td><td class="num">9 118</td><td class="num">7,1 %</td><td class="num">28 940 €</td><td><span class="status" style="color:var(--green)">Optimale</span></td></tr>
+          <tr><td><span class="page"><i>/b</i>Blog · Guide 2026</span></td><td class="num">7 730</td><td class="num">1,9 %</td><td class="num">8 410 €</td><td><span class="status" style="color:var(--amber)">À surveiller</span></td></tr>
+          <tr><td><span class="page"><i>/c</i>Paiement</span></td><td class="num">3 965</td><td class="num">62,4 %</td><td class="num">21 760 €</td><td><span class="status" style="color:var(--green)">Optimale</span></td></tr>
+          <tr><td><span class="page"><i>/f</i>Fonctionnalités</span></td><td class="num">5 281</td><td class="num">1,2 %</td><td class="num">2 150 €</td><td><span class="status" style="color:var(--red)">En baisse</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </main>
+</div>
+<script>
+  document.querySelectorAll(".seg button").forEach((b) => b.addEventListener("click", () => {
+    document.querySelectorAll(".seg button").forEach((x) => x.classList.toggle("on", x === b));
+  }));
+</script>
+</body>
+</html>

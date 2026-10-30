@@ -686,3 +686,5 @@ html, body, * { scrollbar-width: none; }
 .plan-pro.plan-pill::after { content: ""; position: absolute; inset: 0; background: linear-gradient(105deg, transparent 35%, oklch(1 0 0 / .65) 50%, transparent 65%); transform: translateX(-120%); animation: pro-shine 3.8s ease-in-out infinite; }
 @keyframes pro-shine { 0%, 55% { transform: translateX(-120%); } 85%, 100% { transform: translateX(120%); } }
 @media (prefers-reduced-motion: reduce) { .plan-pro.plan-pill::after { animation: none; display: none; } }
+/* Registry: locked official design placeholder. */
+.registry-locked { background: radial-gradient(70% 60% at 50% 40%, color-mix(in oklab, #f5c542 18%, transparent), transparent 70%), linear-gradient(160deg, var(--secondary), var(--card)); }
