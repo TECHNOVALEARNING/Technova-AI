@@ -667,3 +667,5 @@ html, body, * { scrollbar-width: none; }
   .pay-success-tick { stroke-dashoffset: 0; }
   .pay-confetti { display: none; }
 }
+/* Plan pill under the account e-mail: dark capsule with a thin border in the plan colours. */
+.plan-pill { border: 1px solid transparent; background: linear-gradient(color-mix(in oklab, var(--card) 88%, var(--plan-a)), color-mix(in oklab, var(--card) 88%, var(--plan-a))) padding-box, linear-gradient(90deg, var(--plan-a), var(--plan-b), var(--plan-c)) border-box; }

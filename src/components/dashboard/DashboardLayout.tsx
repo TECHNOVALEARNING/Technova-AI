@@ -137,14 +137,9 @@ export function DashboardLayout({ children }: { children: ReactNode }) {
           </div>
         </div>
         <div className="shrink-0 border-t border-border p-2">
-          {planKey && <Link to="/dashboard/credits" title={lang === "fr" ? "Voir les forfaits" : "See plans"} className={`plan-${planKey} plan-chip mb-1.5 flex items-center gap-2 rounded-xl px-2.5 py-2 transition-opacity hover:opacity-90 ${mini ? "lg:hidden" : ""}`}>
-            <span className="plan-chip-dot size-2.5 shrink-0 rounded-full" aria-hidden="true" />
-            <span className="min-w-0 flex-1 text-[11.5px] font-semibold">{planKey !== "pro" && <span className="text-muted-foreground">{lang === "fr" ? "Forfait " : "Plan "}</span>}<span className="plan-chip-text">{planName}</span></span>
-            {planKey !== "pro" && <span className="shrink-0 text-[10.5px] font-medium text-muted-foreground">{lang === "fr" ? "Améliorer" : "Upgrade"}</span>}
-          </Link>}
           <div className={`flex items-center gap-2.5 rounded-lg px-2 py-1.5 ${mini ? "lg:hidden" : ""}`}>
-            <span className={`plan-ring plan-${planKey ?? "free"}`} title={planName ? `${lang === "fr" ? "Forfait" : "Plan"} ${planName}` : undefined}><span className="grid size-7 place-items-center rounded-full bg-card text-[11px] font-semibold text-foreground">{initials}</span></span>
-            <span className="min-w-0 flex-1"><span className="block truncate text-[12px] font-medium">{name || t.accountName}</span>{email && <span className="block truncate text-[10.5px] text-muted-foreground">{email}</span>}</span>
+            <span className={`plan-ring plan-${planKey ?? "free"}`} title={planName ? `${lang === "fr" ? "Forfait" : "Plan"} ${planName}` : undefined}><span className="grid size-9 place-items-center rounded-full bg-card text-[13px] font-semibold text-foreground">{initials}</span></span>
+            <span className="min-w-0 flex-1"><span className="block truncate text-[12px] font-medium">{name || t.accountName}</span>{email && <span className="block truncate text-[10.5px] text-muted-foreground">{email}</span>}{planKey && planKey !== "free" && <Link to="/dashboard/credits" title={lang === "fr" ? "Voir les forfaits" : "See plans"} className={`plan-${planKey} plan-pill mt-1 inline-flex h-[18px] items-center rounded-full px-2 text-[10px] font-semibold leading-none transition-opacity hover:opacity-85`}><span className="plan-chip-text">{planName}</span></Link>}</span>
           </div>
           <div className={`mt-1 flex items-center gap-0.5 px-1 ${mini ? "lg:mt-auto lg:flex-col lg:px-0" : ""}`}>
             <Button variant="ghost" size="icon-sm" className="size-8 rounded-lg text-muted-foreground" onClick={() => setTheme(theme === "light" ? "dark" : "light")} aria-label={t.theme} title={t.theme}>{theme === "light" ? <Moon className="size-4" /> : <Sun className="size-4" />}</Button>
