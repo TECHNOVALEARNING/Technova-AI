@@ -9,7 +9,7 @@ import { allPublicModels, mediaCatalog, textModels, type PublicModel, type TextC
 export const Route = createFileRoute("/modeles")({
   head: () => ({ meta: [
     { title: "Modèles IA disponibles et prix en crédits — TechNova AI Hub" },
-    { name: "description", content: "GPT, Claude, Gemini, DeepSeek, Nano Banana, Kling, Seedance, Suno… Tous les modèles disponibles sur TechNova, avec leur prix en crédits payables en FCFA." },
+    { name: "description", content: "GPT, Claude, Gemini, DeepSeek, Nano Banana, Kling, Seedance, Suno… Tous les modèles disponibles sur TechNova pour écrire, coder, créer des images, des vidéos et de la musique, avec leur prix en crédits." },
     { property: "og:title", content: "Modèles IA disponibles — TechNova AI Hub" },
     { property: "og:description", content: "Texte, images, vidéos et musique : les modèles disponibles sur TechNova et leur prix en crédits." },
     { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary_large_image" },

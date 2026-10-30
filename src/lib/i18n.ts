@@ -55,7 +55,7 @@ export const content = {
     eco: {
       tag: "Écosystème",
       title: "Bien plus qu'une plateforme IA",
-      sub: "La famille de produits TechNova, conçue en Afrique, ouverte au monde.",
+      sub: "La famille de produits TechNova, ouverte au monde.",
       items: [
         { n: "Sonorya", d: "Création de musique et de chansons personnalisées par IA.", url: "https://sonorya.co/", k: "Musique IA", f: ["Chansons sur mesure", "Tous les styles musicaux", "Voix et paroles générées"] },
         { n: "Humanizer AI", d: "Rendez vos textes IA naturels et indétectables.", url: "https://www.humanizerai.space/", k: "Écriture", f: ["Contourne les détecteurs IA", "Style naturel et fluide", "Multilingue"] },
@@ -98,7 +98,7 @@ export const content = {
       send: "Envoyer",
       sent: "Merci ! Nous revenons vers vous très vite.",
     },
-    footer: { rights: "Tous droits réservés.", made: "Conçu en Afrique, pour le monde." },
+    footer: { rights: "Tous droits réservés.", made: "Ouvert au monde." },
     auth: {
       back: "Retour à l'accueil", login: "Connexion", signup: "Inscription", visualTag: "TECHNOVA / AI HUB",
       visualTitle: "Toutes les intelligences. Un seul espace.", visualSub: "Créez, explorez et avancez à votre rythme.",
@@ -170,7 +170,7 @@ export const content = {
     eco: {
       tag: "Ecosystem",
       title: "Much more than an AI platform",
-      sub: "The TechNova family of products, built in Africa, open to the world.",
+      sub: "The TechNova family of products, open to the world.",
       items: [
         { n: "Sonorya", d: "Custom music and song creation with AI.", url: "https://sonorya.co/", k: "AI music", f: ["Custom songs", "Every music style", "Generated vocals & lyrics"] },
         { n: "Humanizer AI", d: "Make AI text natural and undetectable.", url: "https://www.humanizerai.space/", k: "Writing", f: ["Bypasses AI detectors", "Natural, fluent style", "Multilingual"] },
@@ -213,7 +213,7 @@ export const content = {
       send: "Send",
       sent: "Thanks! We'll get back to you shortly.",
     },
-    footer: { rights: "All rights reserved.", made: "Built in Africa, for the world." },
+    footer: { rights: "All rights reserved.", made: "Open to the world." },
     auth: {
       back: "Back to home", login: "Sign in", signup: "Sign up", visualTag: "TECHNOVA / AI HUB",
       visualTitle: "Every intelligence. One place.", visualSub: "Create, explore and move forward at your own pace.",
@@ -285,7 +285,7 @@ export const content = {
     eco: {
       tag: "Ecosistema",
       title: "Mucho más que una plataforma de IA",
-      sub: "La familia de productos TechNova, creada en África, abierta al mundo.",
+      sub: "La familia de productos TechNova, abierta al mundo.",
       items: [
         { n: "Sonorya", d: "Creación de música y canciones personalizadas con IA.", url: "https://sonorya.co/", k: "Música IA", f: ["Canciones a medida", "Todos los estilos musicales", "Voces y letras generadas"] },
         { n: "Humanizer AI", d: "Haz que tus textos de IA suenen naturales e indetectables.", url: "https://www.humanizerai.space/", k: "Escritura", f: ["Evita los detectores de IA", "Estilo natural y fluido", "Multilingüe"] },
@@ -328,7 +328,7 @@ export const content = {
       send: "Enviar",
       sent: "¡Gracias! Te responderemos muy pronto.",
     },
-    footer: { rights: "Todos los derechos reservados.", made: "Creado en África, para el mundo." },
+    footer: { rights: "Todos los derechos reservados.", made: "Abierto al mundo." },
     auth: {
       back: "Volver al inicio", login: "Iniciar sesión", signup: "Registrarse", visualTag: "TECHNOVA / AI HUB",
       visualTitle: "Todas las inteligencias. Un solo espacio.", visualSub: "Crea, explora y avanza a tu ritmo.",
@@ -400,7 +400,7 @@ export const content = {
     eco: {
       tag: "Ecossistema",
       title: "Muito mais que uma plataforma de IA",
-      sub: "A família de produtos TechNova, criada na África, aberta ao mundo.",
+      sub: "A família de produtos TechNova, aberta ao mundo.",
       items: [
         { n: "Sonorya", d: "Criação de músicas e canções personalizadas com IA.", url: "https://sonorya.co/", k: "Música IA", f: ["Canções sob medida", "Todos os estilos musicais", "Vozes e letras geradas"] },
         { n: "Humanizer AI", d: "Deixe seus textos de IA naturais e indetectáveis.", url: "https://www.humanizerai.space/", k: "Escrita", f: ["Contorna os detectores de IA", "Estilo natural e fluido", "Multilíngue"] },
@@ -443,7 +443,7 @@ export const content = {
       send: "Enviar",
       sent: "Obrigado! Retornaremos muito em breve.",
     },
-    footer: { rights: "Todos os direitos reservados.", made: "Criado na África, para o mundo." },
+    footer: { rights: "Todos os direitos reservados.", made: "Aberto ao mundo." },
     auth: {
       back: "Voltar ao início", login: "Entrar", signup: "Cadastrar", visualTag: "TECHNOVA / AI HUB",
       visualTitle: "Todas as inteligências. Um só espaço.", visualSub: "Crie, explore e avance no seu ritmo.",

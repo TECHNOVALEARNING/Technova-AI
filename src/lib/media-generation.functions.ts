@@ -2,7 +2,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
-import { buildMediaInput, defaultImageModel, defaultMusicModel, defaultVideoModel, findMediaModel, KIE_TO_TECHNOVA, mediaReserve } from "@/lib/media-models";
+import { buildMediaInput, defaultImageModel, defaultMusicModel, defaultVideoModel, findMediaModel, KIE_TO_TECHNOVA, mediaReserve, imageEditModel } from "@/lib/media-models";
 
 const createInput = z.object({
   kind: z.enum(["image", "video", "music"]),
@@ -11,6 +11,8 @@ const createInput = z.object({
   duration: z.enum(["5", "10"]).optional(),
   model: z.string().max(80).optional(),
   threadId: z.string().uuid(),
+  /** A finished image of this account to edit; the edit model then receives it as its source. */
+  sourceId: z.string().uuid().optional(),
 });
 
 async function kie(path: string, init?: RequestInit) {
@@ -54,7 +56,8 @@ export const createMediaGeneration = createServerFn({ method: "POST" })
     const { data: thread, error: threadError } = await context.supabase.from("chat_threads")
       .select("id").eq("id", data.threadId).eq("owner_id", context.userId).maybeSingle();
     if (threadError || !thread) throw new Error("Conversation introuvable.");
-    const spec = (data.model && findMediaModel(data.model)) || findMediaModel(data.kind === "image" ? defaultImageModel : data.kind === "music" ? defaultMusicModel : defaultVideoModel)!;
+    const editing = data.kind === "image" && !!data.sourceId;
+    const spec = editing ? imageEditModel : (data.model && findMediaModel(data.model)) || findMediaModel(data.kind === "image" ? defaultImageModel : data.kind === "music" ? defaultMusicModel : defaultVideoModel)!;
     if (spec.kind !== data.kind) throw new Error("Ce modèle ne correspond pas au type demandé.");
     if (spec.kind === "video" && !(await hasVideoAccess(context.userId))) {
       const { logSecurityEvent } = await import("@/lib/security.server");
@@ -75,6 +78,20 @@ export const createMediaGeneration = createServerFn({ method: "POST" })
     }
     const model = spec.id;
     const built = buildMediaInput(spec, data.prompt, data.aspectRatio, Number(data.duration ?? "5"));
+    if (editing) {
+      // The source must be a finished image of this account, still within its 14-day retention.
+      const { data: source } = await context.supabase.from("media_generations")
+        .select("id,kind,status,aspect_ratio,archived_paths,expires_at,result_urls").eq("id", data.sourceId!).eq("owner_id", context.userId).maybeSingle();
+      if (!source || source.kind !== "image" || source.status !== "success") throw new Error("Image à modifier introuvable.");
+      const { signedMediaUrls } = await import("@/lib/media-archive.server");
+      const expired = !!source.expires_at && new Date(source.expires_at).getTime() < Date.now();
+      const original = Array.isArray(source.result_urls) ? (source.result_urls as unknown[]).filter((u): u is string => typeof u === "string") : [];
+      const urls = expired ? [] : (await signedMediaUrls(source)) ?? original;
+      if (!urls.length) throw new Error("Cette image n’est plus disponible (conservation 14 jours).");
+      built.input["image_urls"] = [urls[0]];
+      built.input["output_format"] = "png";
+      if (["1:1", "16:9", "9:16", "4:3", "3:4"].includes(source.aspect_ratio)) built.input["aspect_ratio"] = source.aspect_ratio;
+    }
     const aspectRatio = built.ratio;
     const reserve = mediaReserve(spec, built.duration ?? 5);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");

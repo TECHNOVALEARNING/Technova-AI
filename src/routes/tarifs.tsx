@@ -7,7 +7,7 @@ import { tr } from "@/lib/i18n";
 export const Route = createFileRoute("/tarifs")({
   head: () => ({ meta: [
     { title: "Tarifs et crédits Technova — TechNova AI Hub" },
-    { name: "description", content: "Les quatre packs de crédits TechNova : Starter, Essential, Creator et Pro, payables en Mobile Money ou par carte." },
+    { name: "description", content: "Les quatre packs de crédits TechNova : Starter, Essential, Creator et Pro, pour discuter, créer et développer avec les meilleurs modèles d'IA." },
     { property: "og:title", content: "Tarifs et crédits Technova — TechNova AI Hub" },
     { property: "og:description", content: "Quatre packs de crédits TechNova prépayés, sans abonnement." },
     { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary_large_image" },

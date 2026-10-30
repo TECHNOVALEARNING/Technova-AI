@@ -1,5 +1,5 @@
-import { useRef } from "react";
-import { Download, Film, Image as ImageIcon, Music, Play, AlertCircle } from "lucide-react";
+import { useRef, useState, type ReactNode } from "react";
+import { AlertCircle, Download, Film, Image as ImageIcon, Loader2, Music, Pencil, Play } from "lucide-react";
 
 export type ChatMediaData = {
   id: string;
@@ -73,30 +73,64 @@ function GenerationStage({ data, lang }: { data: ChatMediaData; lang: "fr" | "en
   </div>;
 }
 
-export function ChatMedia({ data, lang, onBroken }: { data: ChatMediaData; lang: "fr" | "en"; onBroken?: (id: string) => void }) {
+/** Saves the file under a readable name; falls back to opening it when the host refuses a direct download. */
+async function downloadFile(url: string, kind: ChatMediaData["kind"], id: string, index: number) {
+  try {
+    const response = await fetch(url);
+    if (!response.ok) throw new Error(String(response.status));
+    const blob = await response.blob();
+    const ext = blob.type.split("/")[1]?.replace("jpeg", "jpg").replace("mpeg", "mp3").split(";")[0] || (kind === "video" ? "mp4" : kind === "music" ? "mp3" : "png");
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(blob);
+    link.download = `technova-${kind}-${id.slice(0, 8)}${index ? `-${index + 1}` : ""}.${ext}`;
+    link.click();
+    setTimeout(() => URL.revokeObjectURL(link.href), 1000);
+  } catch {
+    window.open(url, "_blank", "noopener,noreferrer");
+  }
+}
+
+function IconAction({ label, onClick, children }: { label: string; onClick: () => void; children: ReactNode }) {
+  return <button type="button" onClick={onClick} aria-label={label} title={label}
+    className="inline-flex h-8 items-center gap-1.5 rounded-full px-2.5 text-xs font-medium text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground focus-visible:outline-2 focus-visible:outline-ring">
+    {children}
+  </button>;
+}
+
+/** A generated image, video or song shown bare in the conversation, like a ChatGPT reply, with download and edit actions. */
+export function ChatMedia({ data, lang, onBroken, onEdit }: { data: ChatMediaData; lang: "fr" | "en"; onBroken?: (id: string) => void; onEdit?: (media: ChatMediaData, url: string) => void }) {
+  const fr = lang === "fr";
   // A link that stops loading (signed link expired) asks once for a fresh one.
   const retried = useRef(new Set<string>());
   const broken = (url: string) => { if (retried.current.has(url)) return; retried.current.add(url); onBroken?.(data.id); };
+  const [saving, setSaving] = useState<string | null>(null);
   const urls = Array.isArray(data.urls) ? data.urls.filter((url) => typeof url === "string" && url.startsWith("https://")) : [];
-  const isVideo = data.kind === "video";
-  const isMusic = data.kind === "music";
   const pending = !["success", "fail"].includes(data.status);
-  return <div className="my-2 w-full max-w-[490px] overflow-hidden rounded-md border border-border bg-card shadow-soft">
-    {pending ? <GenerationStage data={data} lang={lang} /> : <>
-    <div className="flex items-center gap-2 border-b border-border px-4 py-3 text-sm font-medium">
-      {data.status === "fail" ? <AlertCircle className="size-4 text-destructive" /> : <KindIcon kind={data.kind} className="size-4 text-chat-glow" />}
-      {copyFor(data.kind, lang === "fr").label}
-    </div>
-    {data.status === "success" && urls.length ? <div className={`grid gap-2 p-2 ${isMusic ? "" : "sm:grid-cols-2"}`}>
-      {urls.map((url, index) => <div key={url} className={urls.length === 1 ? "sm:col-span-2" : ""}>
-        {isMusic ? <div className="rounded-sm bg-secondary/60 p-3"><audio src={url} controls preload="metadata" className="w-full" onError={() => broken(url)} /></div> : isVideo ? <video src={url} controls playsInline preload="metadata" className="aspect-video w-full rounded-sm bg-secondary object-contain" onError={() => broken(url)} /> : <a href={url} target="_blank" rel="noopener noreferrer"><img src={url} alt={`${data.prompt} ${index + 1}`} className="max-h-[520px] w-full rounded-sm bg-secondary object-contain" onError={() => broken(url)} /></a>}
-        <a href={url} target="_blank" rel="noopener noreferrer" className="mt-2 inline-flex items-center gap-1.5 px-1 text-xs text-foreground underline underline-offset-2"><Download className="size-3.5" />{lang === "fr" ? "Ouvrir le fichier" : "Open file"}</a>
-      </div>)}
-    </div> : <div className="flex min-h-28 items-center justify-center bg-secondary/60 p-5 text-center text-sm text-muted-foreground">
-      {data.status === "fail" ? (data.error || (lang === "fr" ? "La création a échoué." : "Generation failed."))
-        : data.expired ? (lang === "fr" ? "Ce fichier a été supprimé : les créations sont conservées 14 jours. Pensez à les télécharger." : "This file was deleted: creations are kept for 14 days. Remember to download them.")
-        : (lang === "fr" ? "Aucun fichier n’a été renvoyé." : "No file was returned.")}
-    </div>}
-    </>}
+  if (pending) return <div className="my-2 w-full max-w-[490px] overflow-hidden rounded-md border border-border bg-card shadow-soft"><GenerationStage data={data} lang={lang} /></div>;
+  if (data.status !== "success" || !urls.length) {
+    return <p className="my-2 flex items-start gap-2 text-sm text-muted-foreground">
+      <AlertCircle className={`mt-0.5 size-4 shrink-0 ${data.status === "fail" ? "text-destructive" : ""}`} />
+      {data.status === "fail" ? (data.error || (fr ? "La création a échoué." : "Generation failed."))
+        : data.expired ? (fr ? "Ce fichier a été supprimé : les créations sont conservées 14 jours. Pensez à les télécharger." : "This file was deleted: creations are kept for 14 days. Remember to download them.")
+        : (fr ? "Aucun fichier n’a été renvoyé." : "No file was returned.")}
+    </p>;
+  }
+  const label = copyFor(data.kind, fr).label;
+  return <div className="my-2 flex w-full max-w-[520px] flex-col gap-4">
+    {urls.map((url, index) => <figure key={url} className="m-0">
+      {data.kind === "music"
+        ? <audio src={url} controls preload="metadata" className="w-full" onError={() => broken(url)} />
+        : data.kind === "video"
+          ? <video src={url} controls playsInline preload="metadata" className="max-h-[520px] w-full rounded-2xl bg-black object-contain" onError={() => broken(url)} />
+          : <img src={url} alt={`${label} ${index + 1}`} className="max-h-[520px] w-auto max-w-full rounded-2xl" onError={() => broken(url)} />}
+      <figcaption className="mt-1.5 flex items-center gap-0.5">
+        <IconAction label={fr ? "Télécharger" : "Download"} onClick={() => { setSaving(url); void downloadFile(url, data.kind, data.id, index).finally(() => setSaving(null)); }}>
+          {saving === url ? <Loader2 className="size-4 animate-spin" /> : <Download className="size-4" />}{fr ? "Télécharger" : "Download"}
+        </IconAction>
+        {data.kind === "image" && onEdit && <IconAction label={fr ? "Modifier l’image" : "Edit image"} onClick={() => onEdit(data, url)}>
+          <Pencil className="size-4" />{fr ? "Modifier" : "Edit"}
+        </IconAction>}
+      </figcaption>
+    </figure>)}
   </div>;
 }

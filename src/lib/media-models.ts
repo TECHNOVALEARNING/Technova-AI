@@ -79,10 +79,13 @@ export const mediaModels: MediaModel[] = [
   { id: "ai-music-api/generate", label: "Suno V6", provider: "Suno", kind: "music", size: "none", ratios: [] },
 ];
 
+/** Edits an existing image ("Modifier" on a generated image); not offered in the model pickers. */
+export const imageEditModel: MediaModel = { id: "google/nano-banana-edit", label: "Nano Banana Edit", provider: "Google", kind: "image", size: "aspect_ratio", ratios: all5 };
+
 export const defaultImageModel = "nano-banana-2-lite";
 export const defaultVideoModel = "kling/v2-1-master-text-to-video";
 export const defaultMusicModel = "ai-music-api/generate";
-export const findMediaModel = (id: string) => mediaModels.find((m) => m.id === id);
+export const findMediaModel = (id: string) => mediaModels.find((m) => m.id === id) ?? (id === imageEditModel.id ? imageEditModel : undefined);
 
 const named: Record<MediaRatio, string> = {
   "1:1": "square_hd", "16:9": "landscape_16_9", "9:16": "portrait_16_9", "4:3": "landscape_4_3", "3:4": "portrait_4_3",
@@ -115,7 +118,7 @@ export const KIE_TO_TECHNOVA = 0.005 * 1200;
 // From kie.ai's public price list (api.kie.ai/client/v1/model-pricing/page) on 2026-10-23.
 // Used to reserve credits up front; the final charge uses what kie.ai reports as consumed.
 const kieCost: Record<string, number> = {
-  "nano-banana-2-lite": 4, "nano-banana-2": 8, "google/nano-banana": 4,
+  "nano-banana-2-lite": 4, "nano-banana-2": 8, "google/nano-banana": 4, "google/nano-banana-edit": 4,
   "google/imagen4-fast": 4, "google/imagen4": 8, "google/imagen4-ultra": 12,
   "gpt-image-2-5-flare-text-to-image": 6, "gpt-image-2-5-sunburst-text-to-image": 6, "gpt-image-2-text-to-image": 6, "gpt-image/1.5-text-to-image": 4,
   "seedream/5-flash-text-to-image": 3.24, "seedream/5-lite-text-to-image": 5.5, "seedream/5-pro-text-to-image": 14, "seedream/4.5-text-to-image": 6.5,

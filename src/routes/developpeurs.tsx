@@ -12,7 +12,7 @@ export const Route = createFileRoute("/developpeurs")({
       { title: "Développeurs — API TechNova AI" },
       { name: "description", content: "Une seule clé API TechNova : OpenRouter pour le texte, KIE.ai pour les images et vidéos. Exemples JavaScript, Python, PHP et cURL." },
       { property: "og:title", content: "Développeurs — API TechNova AI" },
-      { property: "og:description", content: "Une API unifiée pour des centaines de modèles d'IA, payable en FCFA." },
+      { property: "og:description", content: "Une API unifiée pour des centaines de modèles d'IA, conçue pour intégrer l'IA dans vos produits." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
     ],

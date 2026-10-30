@@ -68,7 +68,7 @@ import { createMediaGeneration, getVideoAccess, refreshMediaGeneration, VIDEO_UP
 import { PENDING_PACK_KEY } from "@/lib/public-pricing";
 import { RESEARCH_MAX_CREDITS, splitResearchStream } from "@/lib/research";
 import { DESIGN_DRAFT_KEY } from "@/lib/design-library";
-import { defaultImageModel, defaultMusicModel, defaultVideoModel, findMediaModel, mediaModels, mediaReserve, type MediaKind } from "@/lib/media-models";
+import { defaultImageModel, defaultMusicModel, defaultVideoModel, findMediaModel, imageEditModel, mediaModels, mediaReserve, type MediaKind } from "@/lib/media-models";
 import { ChatMedia, type ChatMediaData } from "./ChatMedia";
 
 type Mode = "chat" | "create";
@@ -441,11 +441,16 @@ function ChatComposer({
   onSubmit,
   disabled,
   inputRef,
+  editing,
+  onCancelEdit,
 }: {
   choice: ReturnType<typeof useWorkspaceChoice>;
   onSubmit: (text: string, files: ChatFilePart[]) => Promise<void>;
   disabled?: boolean;
   inputRef?: React.RefObject<HTMLTextAreaElement | null>;
+  /** A generated image chosen with "Modifier": the next message describes the change. */
+  editing?: { url: string } | null;
+  onCancelEdit?: () => void;
 }) {
   const { copy, mode } = choice;
   const { lang } = useDashboard();
@@ -507,6 +512,16 @@ function ChatComposer({
         }}
         className="chat-composer rounded-[26px] border border-border bg-card"
       >
+        {editing && (
+          <div className="flex w-full items-center gap-3 px-3 pt-3">
+            <img src={editing.url} alt="" className="size-12 rounded-xl object-cover" />
+            <div className="min-w-0 flex-1">
+              <p className="text-[13px] font-medium">{lang === "fr" ? "Modifier cette image" : "Edit this image"}</p>
+              <p className="text-[11px] text-muted-foreground">{lang === "fr" ? "Décrivez le changement souhaité, la nouvelle version apparaîtra dans la conversation." : "Describe the change; the new version will appear in the conversation."}</p>
+            </div>
+            <button type="button" onClick={onCancelEdit} aria-label={lang === "fr" ? "Annuler la modification" : "Cancel edit"} className="grid size-8 place-items-center rounded-full text-muted-foreground hover:bg-secondary hover:text-foreground"><X className="size-4" /></button>
+          </div>
+        )}
         {(files.length > 0 || docs.length > 0) && (
           <div className="flex w-full flex-wrap gap-2 px-3 pt-3">
             {files.map((f, i) => <AttachmentChip key={i} file={f} onRemove={() => setFiles(files.filter((_, j) => j !== i))} />)}
@@ -517,7 +532,7 @@ function ChatComposer({
           ref={textareaRef}
           autoFocus
           disabled={disabled}
-          placeholder={mode === "chat" ? copy.chatPlaceholder : copy.createPlaceholder}
+          placeholder={editing ? (lang === "fr" ? "Ex. : rends le ciel plus orangé, ajoute un logo…" : "E.g. make the sky more orange, add a logo…") : mode === "chat" ? copy.chatPlaceholder : copy.createPlaceholder}
           className="min-h-[56px] max-h-48 px-4 pt-3.5 text-[14px]"
         />
         <PromptInputFooter className="min-h-12 flex-wrap justify-between gap-2 px-2 pb-2">
@@ -912,6 +927,15 @@ export function ThreadPage({ threadId }: { threadId: string }) {
   const signedMedia = useRef(new Set<string>());
   const [mediaRetry, setMediaRetry] = useState(0);
   const reloadMedia = useCallback((id: string) => { signedMedia.current.delete(id); setMediaRetry((n) => n + 1); }, []);
+  // "Modifier" on a generated image: the next message is sent to the image edit model with that image.
+  const [editSource, setEditSource] = useState<{ id: string; url: string } | null>(null);
+  const editSourceRef = useRef(editSource);
+  editSourceRef.current = editSource;
+  const startEdit = useCallback((media: ChatMediaData, url: string) => {
+    if (choice.mode !== "chat") choice.chooseMode("chat");
+    setEditSource({ id: media.id, url });
+    inputRef.current?.focus();
+  }, [choice]);
   useEffect(() => {
     const media = messages.flatMap((message) => message.parts.flatMap((part) => {
       if ((part.type as string) !== "data-media") return [];
@@ -1142,6 +1166,20 @@ export function ThreadPage({ threadId }: { threadId: string }) {
         setThinking(false);
         setResearchStatus("");
       }
+      return;
+    }
+    const editing = editSourceRef.current;
+    if (last?.role === "user" && request && editing && choice.mode === "chat") {
+      setEditSource(null);
+      setThinking(true);
+      try {
+        const id = await createMedia({ data: { threadId, kind: "image", prompt: request, aspectRatio: "1:1", sourceId: editing.id } });
+        const media: ChatMediaData = { id, kind: "image", model: imageEditModel.label, prompt: request, status: "waiting", progress: null, urls: [], error: null };
+        setMessages((prev) => [...prev, { id, role: "assistant", parts: [{ type: "data-media", data: media }] as unknown as UIMessage["parts"] }]);
+      } catch (e) {
+        await failWith(String((e as Error)?.message ?? e));
+      }
+      finally { setThinking(false); }
       return;
     }
     const mediaRequest = choice.mode === "chat" && /\b(?:g[ée]n[èe]re(?:z)?(?:-moi)?|cr[ée]e(?:z)?(?:-moi)?|fais(?:-moi)?|fabrique(?:-moi)?|generate|create|make)\b[\s\S]{0,110}\b(?:image|photo|illustration|visuel|picture|image|video|vid[ée]o|clip|animation|musique|chanson|morceau|jingle|beat|music|song|track)\b/i.test(request);
@@ -1446,7 +1484,7 @@ export function ThreadPage({ threadId }: { threadId: string }) {
                     ) : (part.type as string) === "data-studio" ? (
                       <div key={index} className="w-full">{renderStudio(message.id, (part as unknown as { data: StudioData }).data)}</div>
                     ) : (part.type as string) === "data-media" ? (
-                      <ChatMedia key={index} data={(part as unknown as { data: ChatMediaData }).data} lang={lang} onBroken={reloadMedia} />
+                      <ChatMedia key={index} data={(part as unknown as { data: ChatMediaData }).data} lang={lang} onBroken={reloadMedia} onEdit={startEdit} />
                     ) : part.type === "file" ? (
                       <div key={index} className="my-1"><AttachmentChip file={{ type: "file", mediaType: part.mediaType, filename: part.filename ?? "file", url: part.url }} /></div>
                     ) : null,
@@ -1472,6 +1510,8 @@ export function ThreadPage({ threadId }: { threadId: string }) {
           inputRef={inputRef}
           disabled={loading || !thread || busy}
           onSubmit={addNote}
+          editing={editSource}
+          onCancelEdit={() => setEditSource(null)}
         />
         {saved && (
           <span role="status" className="sr-only">
