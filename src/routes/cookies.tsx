@@ -13,7 +13,7 @@ export const Route = createFileRoute("/cookies")({
     { name: "description", content: "Quels cookies et quel stockage local TechNova AI Hub utilise, à quoi ils servent, combien de temps ils sont conservés et comment changer vos choix." },
     { property: "og:title", content: "Politique de cookies — TechNova AI Hub" },
     { property: "og:description", content: "Aucun cookie publicitaire ni de mesure d'audience : le détail du stockage utilisé par TechNova AI Hub." },
-    { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" },
+    { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary_large_image" },
   ] }),
   component: CookiePolicyPage,
 });

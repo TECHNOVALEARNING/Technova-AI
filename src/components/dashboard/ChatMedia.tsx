@@ -1,3 +1,4 @@
+import { useRef } from "react";
 import { Download, Film, Image as ImageIcon, Music, Play, AlertCircle } from "lucide-react";
 
 export type ChatMediaData = {
@@ -9,6 +10,8 @@ export type ChatMediaData = {
   progress?: number | null;
   urls: string[];
   error: string | null;
+  /** True once the 14-day retention has ended and the files were deleted. */
+  expired?: boolean;
 };
 
 const dots = Array.from({ length: 19 * 11 }, (_, index) => {
@@ -70,7 +73,10 @@ function GenerationStage({ data, lang }: { data: ChatMediaData; lang: "fr" | "en
   </div>;
 }
 
-export function ChatMedia({ data, lang }: { data: ChatMediaData; lang: "fr" | "en" }) {
+export function ChatMedia({ data, lang, onBroken }: { data: ChatMediaData; lang: "fr" | "en"; onBroken?: (id: string) => void }) {
+  // A link that stops loading (signed link expired) asks once for a fresh one.
+  const retried = useRef(new Set<string>());
+  const broken = (url: string) => { if (retried.current.has(url)) return; retried.current.add(url); onBroken?.(data.id); };
   const urls = Array.isArray(data.urls) ? data.urls.filter((url) => typeof url === "string" && url.startsWith("https://")) : [];
   const isVideo = data.kind === "video";
   const isMusic = data.kind === "music";
@@ -83,13 +89,14 @@ export function ChatMedia({ data, lang }: { data: ChatMediaData; lang: "fr" | "e
     </div>
     {data.status === "success" && urls.length ? <div className={`grid gap-2 p-2 ${isMusic ? "" : "sm:grid-cols-2"}`}>
       {urls.map((url, index) => <div key={url} className={urls.length === 1 ? "sm:col-span-2" : ""}>
-        {isMusic ? <div className="rounded-sm bg-secondary/60 p-3"><audio src={url} controls preload="metadata" className="w-full" /></div> : isVideo ? <video src={url} controls playsInline preload="metadata" className="aspect-video w-full rounded-sm bg-secondary object-contain" /> : <a href={url} target="_blank" rel="noopener noreferrer"><img src={url} alt={`${data.prompt} ${index + 1}`} className="max-h-[520px] w-full rounded-sm bg-secondary object-contain" /></a>}
+        {isMusic ? <div className="rounded-sm bg-secondary/60 p-3"><audio src={url} controls preload="metadata" className="w-full" onError={() => broken(url)} /></div> : isVideo ? <video src={url} controls playsInline preload="metadata" className="aspect-video w-full rounded-sm bg-secondary object-contain" onError={() => broken(url)} /> : <a href={url} target="_blank" rel="noopener noreferrer"><img src={url} alt={`${data.prompt} ${index + 1}`} className="max-h-[520px] w-full rounded-sm bg-secondary object-contain" onError={() => broken(url)} /></a>}
         <a href={url} target="_blank" rel="noopener noreferrer" className="mt-2 inline-flex items-center gap-1.5 px-1 text-xs text-foreground underline underline-offset-2"><Download className="size-3.5" />{lang === "fr" ? "Ouvrir le fichier" : "Open file"}</a>
       </div>)}
     </div> : <div className="flex min-h-28 items-center justify-center bg-secondary/60 p-5 text-center text-sm text-muted-foreground">
-      {data.status === "fail" ? (data.error || (lang === "fr" ? "La création a échoué." : "Generation failed.")) : (lang === "fr" ? "Aucun fichier n’a été renvoyé." : "No file was returned.")}
+      {data.status === "fail" ? (data.error || (lang === "fr" ? "La création a échoué." : "Generation failed."))
+        : data.expired ? (lang === "fr" ? "Ce fichier a été supprimé : les créations sont conservées 14 jours. Pensez à les télécharger." : "This file was deleted: creations are kept for 14 days. Remember to download them.")
+        : (lang === "fr" ? "Aucun fichier n’a été renvoyé." : "No file was returned.")}
     </div>}
     </>}
-    <p className="line-clamp-3 px-4 py-3 text-xs text-muted-foreground">{data.prompt}</p>
   </div>;
 }

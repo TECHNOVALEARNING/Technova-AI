@@ -30,8 +30,6 @@ export const Route = createFileRoute("/")({
       { name: "description", content: "GPT, Claude, Gemini, DeepSeek et 60+ modèles d'IA sur une seule plateforme. Sans abonnement, paiement Mobile Money." },
       { property: "og:title", content: "TechNova AI Hub | Tous les modèles d'IA en un seul hub" },
       { property: "og:description", content: "60+ modèles d'IA, une seule API, crédits sans expiration, paiement en FCFA." },
-      { property: "og:image", content: media.heroPoster },
-      { name: "twitter:image", content: media.heroPoster },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
     ],

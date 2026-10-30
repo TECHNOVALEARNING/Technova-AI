@@ -12,7 +12,7 @@ export const Route = createFileRoute("/confidentialite")({
     { name: "description", content: "Quelles données TechNova AI Hub traite, pourquoi, avec qui, combien de temps, et comment exercer vos droits." },
     { property: "og:title", content: "Politique de confidentialité — TechNova AI Hub" },
     { property: "og:description", content: "Nous collectons le minimum et protégeons le maximum : la politique de confidentialité de TechNova AI Hub, en langage clair." },
-    { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" },
+    { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary_large_image" },
   ] }),
   component: PrivacyPage,
 });

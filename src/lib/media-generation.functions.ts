@@ -118,8 +118,10 @@ export const refreshMediaGeneration = createServerFn({ method: "POST" })
       // Serve archived copies (14-day retention) through short-lived signed URLs when available.
       const { signedMediaUrls } = await import("@/lib/media-archive.server");
       const archived = await signedMediaUrls(row);
-      const urls = archived ?? (row.status === "success" ? row.result_urls : []);
-      return { id: row.id, kind: row.kind, model: findMediaModel(row.model)?.label ?? row.model, prompt: row.prompt, status: row.status, urls, error: row.error };
+      // Past the 14-day retention the files are gone: say so instead of serving dead provider links.
+      const expired = row.status === "success" && !!row.expires_at && new Date(row.expires_at).getTime() < Date.now();
+      const urls = expired ? [] : archived ?? (row.status === "success" ? row.result_urls : []);
+      return { id: row.id, kind: row.kind, model: findMediaModel(row.model)?.label ?? row.model, prompt: row.prompt, status: row.status, urls, error: row.error, expired };
     }
     const result = await kie(`recordInfo?taskId=${encodeURIComponent(row.task_id)}`);
     const state = result["state"];

@@ -52,7 +52,7 @@ export async function signedMediaUrls(row: { id: string; archived_paths: unknown
     await supabaseAdmin.from("media_generations").update({ archived_paths: [] }).eq("id", row.id);
     return [];
   }
-  const { data } = await supabaseAdmin.storage.from(BUCKET).createSignedUrls(paths, 3600);
+  const { data } = await supabaseAdmin.storage.from(BUCKET).createSignedUrls(paths, 6 * 3600);
   const urls = (data ?? []).map((entry) => entry.signedUrl).filter((u): u is string => typeof u === "string" && u.length > 0);
   return urls.length ? urls : null;
 }

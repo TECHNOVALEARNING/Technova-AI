@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type PointerEvent as ReactPointerEvent } from "react";
+import { useCallback, useEffect, useRef, useState, type PointerEvent as ReactPointerEvent } from "react";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import {
@@ -907,28 +907,37 @@ export function ThreadPage({ threadId }: { threadId: string }) {
       live = false;
     };
   }, [threadId, t.loadError]);
+  // Finished media are served through signed links that expire: they are re-signed once per visit
+  // (and again when a file fails to load); unfinished ones are polled every 5 seconds.
+  const signedMedia = useRef(new Set<string>());
+  const [mediaRetry, setMediaRetry] = useState(0);
+  const reloadMedia = useCallback((id: string) => { signedMedia.current.delete(id); setMediaRetry((n) => n + 1); }, []);
   useEffect(() => {
-    const pending = messages.flatMap((message) => message.parts.flatMap((part) => {
+    const media = messages.flatMap((message) => message.parts.flatMap((part) => {
       if ((part.type as string) !== "data-media") return [];
       const data = (part as unknown as { data: ChatMediaData }).data;
-      return data && !["success", "fail"].includes(data.status) ? [data.id] : [];
+      return data ? [data] : [];
     }));
-    if (!pending.length) return;
+    const pending = media.filter((m) => !["success", "fail"].includes(m.status)).map((m) => m.id);
+    const unsigned = media.filter((m) => m.status === "success" && !signedMedia.current.has(m.id)).map((m) => m.id);
+    if (!pending.length && !unsigned.length) return;
     let active = true;
     const timer = window.setTimeout(() => {
-      void Promise.allSettled(pending.map((id) => refreshMedia({ data: { id, threadId } }))).then((results) => {
+      unsigned.forEach((id) => signedMedia.current.add(id));
+      void Promise.allSettled([...pending, ...unsigned].map((id) => refreshMedia({ data: { id, threadId } }))).then((results) => {
         if (!active) return;
-        for (const result of results) {
-          if (result.status === "rejected") { setError(String(result.reason?.message ?? result.reason)); continue; }
+        for (const [i, result] of results.entries()) {
+          // Re-signing an old file quietly keeps its previous link; only a running creation reports errors.
+          if (result.status === "rejected") { if (i < pending.length) setError(String(result.reason?.message ?? result.reason)); continue; }
           const data = result.value;
           if (!data) continue;
           setMessages((prev) => prev.map((message) => message.id === data.id
             ? { ...message, parts: [{ type: "data-media", data }] as unknown as UIMessage["parts"] } : message));
         }
       });
-    }, 5000);
+    }, pending.length ? 5000 : 0);
     return () => { active = false; window.clearTimeout(timer); };
-  }, [messages, refreshMedia, threadId]);
+  }, [messages, refreshMedia, threadId, mediaRetry]);
   useEffect(() => {
     if (!loading && thread && !editing) inputRef.current?.focus();
   }, [loading, thread, editing]);
@@ -1437,7 +1446,7 @@ export function ThreadPage({ threadId }: { threadId: string }) {
                     ) : (part.type as string) === "data-studio" ? (
                       <div key={index} className="w-full">{renderStudio(message.id, (part as unknown as { data: StudioData }).data)}</div>
                     ) : (part.type as string) === "data-media" ? (
-                      <ChatMedia key={index} data={(part as unknown as { data: ChatMediaData }).data} lang={lang} />
+                      <ChatMedia key={index} data={(part as unknown as { data: ChatMediaData }).data} lang={lang} onBroken={reloadMedia} />
                     ) : part.type === "file" ? (
                       <div key={index} className="my-1"><AttachmentChip file={{ type: "file", mediaType: part.mediaType, filename: part.filename ?? "file", url: part.url }} /></div>
                     ) : null,

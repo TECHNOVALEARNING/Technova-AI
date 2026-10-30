@@ -19,7 +19,7 @@ export const Route = createFileRoute("/a-propos")({
 
 /** Founders. `linkedin` stays empty until the profile URL is provided: the button then shows as coming soon. */
 const team = [
-  { name: "AGONAN Isidore Abraham", photo: "/team/isidore-agonan.webp", linkedin: "" },
+  { name: "AGONAN Isidore Abraham", photo: "/team/isidore-agonan.webp", linkedin: "https://www.linkedin.com/in/isidore-agonan-807b6b347/" },
   { name: "TOUDONOU Cédric Ulrich", photo: "/team/cedric-toudonou.webp", linkedin: "https://www.linkedin.com/in/c%C3%A9dric-toudonou-5a5401122" },
   { name: "AYELESSO Précieux", photo: "/team/precieux-ayelesso.webp", linkedin: "https://www.linkedin.com/in/pr%C3%A9cieux-ayelesso-a09850327/" },
 ];
