@@ -12,7 +12,7 @@ import serviceCreative from "@/assets/service-creative-depth.png";
 import serviceCode from "@/assets/service-code-depth.png";
 import serviceApi from "@/assets/service-api-depth.png";
 import serviceAnalytics from "@/assets/service-analytics-depth.png";
-import ecoSonorya from "@/assets/eco-sonorya.jpg";
+import ecoLearning from "@/assets/eco-learning.jpg";
 import ecoHumanizer from "@/assets/eco-humanizer.jpg";
 import ecoFlotte from "@/assets/eco-flotte.jpg";
 import ecoMobil from "@/assets/eco-mobil.jpg";
@@ -346,7 +346,7 @@ function How({ t }: { t: T }) {
 }
 
 const ECO = [
-  { img: ecoSonorya, bg: "var(--eco-sonorya)" },
+  { img: ecoLearning, bg: "var(--eco-learning)" },
   { img: ecoHumanizer, bg: "var(--eco-humanizer)" },
   { img: ecoFlotte, bg: "var(--eco-flotte)" },
   { img: ecoMobil, bg: "var(--eco-mobil)" },

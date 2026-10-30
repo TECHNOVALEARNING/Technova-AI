@@ -111,8 +111,7 @@ export function DashboardLayout({ children }: { children: ReactNode }) {
   const planName = planKey ? planLabels[planKey][lang] : "";
   // Top banner: each product name opens its own site (TechNova AI Hub: this site's home page).
   const marqueeItems = [
-    { name: <>TECHNOVA <strong className="text-foreground">AI HUB</strong></>, text: t.marqueeOne, href: "/", external: false },
-    { name: "SONORYA", text: t.marqueeTwo, href: "https://sonorya.co/", external: true },
+    { name: "TECHNOVA LEARNING", text: lang === "fr" ? "Formations en IA, data et cybersécurité" : "AI, data and cybersecurity courses", href: "https://www.technovalearning.com/", external: true },
     { name: "HUMANIZER AI", text: t.marqueeThree, href: "https://www.humanizerai.space/", external: true },
   ];
 

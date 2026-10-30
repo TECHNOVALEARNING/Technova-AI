@@ -91,7 +91,7 @@
   --chat-glow: oklch(.51 .15 237);
   --supabase: oklch(.48 .14 155);
   --chat-glow-foreground: oklch(.99 .005 237);
-  --eco-sonorya: linear-gradient(135deg, oklch(0.45 0.2 262), oklch(0.72 0.15 225));
+  --eco-learning: linear-gradient(135deg, oklch(0.42 0.14 60), oklch(0.78 0.15 80));
   --eco-humanizer: linear-gradient(135deg, oklch(0.45 0.2 295), oklch(0.72 0.18 350));
   --eco-flotte: linear-gradient(135deg, oklch(0.4 0.1 170), oklch(0.75 0.16 155));
   --eco-mobil: linear-gradient(135deg, oklch(0.5 0.12 60), oklch(0.82 0.15 85));
@@ -676,3 +676,5 @@ html, body, * { scrollbar-width: none; }
 }
 /* Plan pill under the account e-mail: dark capsule with a thin border in the plan colours. */
 .plan-pill { border: 1px solid transparent; background: linear-gradient(color-mix(in oklab, var(--card) 88%, var(--plan-a)), color-mix(in oklab, var(--card) 88%, var(--plan-a))) padding-box, linear-gradient(90deg, var(--plan-a), var(--plan-b), var(--plan-c)) border-box; }
+/* Cookie banner: translucent frosted glass so the page stays visible behind it. */
+.cookie-glass { background: color-mix(in oklab, var(--card) 74%, transparent); border-color: color-mix(in oklab, var(--border) 80%, transparent); backdrop-filter: blur(18px) saturate(1.6); -webkit-backdrop-filter: blur(18px) saturate(1.6); box-shadow: 0 12px 40px -16px oklch(0 0 0 / .35); }
