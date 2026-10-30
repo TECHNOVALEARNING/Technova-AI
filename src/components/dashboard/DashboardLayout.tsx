@@ -109,6 +109,12 @@ export function DashboardLayout({ children }: { children: ReactNode }) {
   const plan = usePlan();
   const planKey = plan ? planKeyOf(plan.tier, plan.paid) : null;
   const planName = planKey ? planLabels[planKey][lang] : "";
+  // Top banner: each product name opens its own site (TechNova AI Hub: this site's home page).
+  const marqueeItems = [
+    { name: <>TECHNOVA <strong className="text-foreground">AI HUB</strong></>, text: t.marqueeOne, href: "/", external: false },
+    { name: "SONORYA", text: t.marqueeTwo, href: "https://sonorya.co/", external: true },
+    { name: "HUMANIZER AI", text: t.marqueeThree, href: "https://www.humanizerai.space/", external: true },
+  ];
 
   return <DashboardContext.Provider value={{ lang, t, theme, setLang, setTheme, setArtifactWorkspaceOpen: setWorkspaceOpen, threads, reload, createThread, name, email, error }}>
     <div className="dashboard-shell flex min-h-svh overflow-x-clip bg-background text-foreground">
@@ -133,7 +139,7 @@ export function DashboardLayout({ children }: { children: ReactNode }) {
         <div className="shrink-0 border-t border-border p-2">
           {planKey && <Link to="/dashboard/credits" title={lang === "fr" ? "Voir les forfaits" : "See plans"} className={`plan-${planKey} plan-chip mb-1.5 flex items-center gap-2 rounded-xl px-2.5 py-2 transition-opacity hover:opacity-90 ${mini ? "lg:hidden" : ""}`}>
             <span className="plan-chip-dot size-2.5 shrink-0 rounded-full" aria-hidden="true" />
-            <span className="min-w-0 flex-1 text-[11.5px] font-semibold"><span className="text-muted-foreground">{lang === "fr" ? "Forfait " : "Plan "}</span><span className="plan-chip-text">{planName}</span></span>
+            <span className="min-w-0 flex-1 text-[11.5px] font-semibold">{planKey !== "pro" && <span className="text-muted-foreground">{lang === "fr" ? "Forfait " : "Plan "}</span>}<span className="plan-chip-text">{planName}</span></span>
             {planKey !== "pro" && <span className="shrink-0 text-[10.5px] font-medium text-muted-foreground">{lang === "fr" ? "Améliorer" : "Upgrade"}</span>}
           </Link>}
           <div className={`flex items-center gap-2.5 rounded-lg px-2 py-1.5 ${mini ? "lg:hidden" : ""}`}>
@@ -151,7 +157,7 @@ export function DashboardLayout({ children }: { children: ReactNode }) {
       <div className="relative isolate min-w-0 flex-1">
         {!isThread && <div className={`dashboard-wallpaper pointer-events-none fixed inset-0 z-0 overflow-hidden`} aria-hidden="true"><img src={media.cloudBackground} alt="" className="h-full w-full scale-105 object-cover" /></div>}
         <header className="sticky top-0 z-30 flex h-12 items-center justify-between border-b border-border bg-card/95 px-3 backdrop-blur-xl lg:hidden"><Button variant="ghost" size="icon-sm" aria-label={t.menu} onClick={() => setMobileOpen(true)}><Menu className="size-5" /></Button><Link to="/dashboard" className="font-display text-[14px] font-bold">TechNova</Link><span className={`plan-ring plan-${planKey ?? "free"}`}><span className="grid size-7 place-items-center rounded-full bg-card text-[11px] font-bold text-foreground">{initials}</span></span></header>
-        {!isChat && <div className="dashboard-marquee relative z-10 flex h-8 items-center overflow-hidden border-b border-border bg-card"><span className="shrink-0 border-r border-border px-3 text-[9px] font-semibold text-muted-foreground">TECHNOVA / HUB</span><div className="min-w-0 overflow-hidden"><div className="dashboard-marquee-track flex w-max items-center gap-12 px-6 text-[10px] text-muted-foreground"><span>TECHNOVA <strong className="text-foreground">AI HUB</strong> · {t.marqueeOne}</span><span>SONORYA · {t.marqueeTwo}</span><span>HUMANIZER AI · {t.marqueeThree}</span><span>TECHNOVA <strong className="text-foreground">AI HUB</strong> · {t.marqueeOne}</span><span>SONORYA · {t.marqueeTwo}</span><span>HUMANIZER AI · {t.marqueeThree}</span></div></div></div>}
+        {!isChat && <div className="dashboard-marquee relative z-10 flex h-8 items-center overflow-hidden border-b border-border bg-card"><span className="shrink-0 border-r border-border px-3 text-[9px] font-semibold text-muted-foreground">TECHNOVA / HUB</span><div className="min-w-0 overflow-hidden"><div className="dashboard-marquee-track flex w-max items-center gap-12 px-6 text-[10px] text-muted-foreground">{[0, 1].map((copy) => <span key={copy} className="contents" aria-hidden={copy === 1 ? true : undefined}>{marqueeItems.map((item) => <a key={item.href} href={item.href} {...(item.external ? { target: "_blank", rel: "noopener noreferrer" } : {})} tabIndex={copy === 1 ? -1 : undefined} className="transition-colors hover:text-foreground hover:underline underline-offset-2">{item.name} · {item.text}</a>)}</span>)}</div></div></div>}
         <main className="relative z-10 mx-auto min-h-[calc(100svh-80px)] lg:min-h-[calc(100svh-32px)] w-full max-w-[1640px] px-4 pb-8 pt-6 sm:px-6 lg:px-7">{error && <div role="alert" className="mb-5 flex items-center justify-between border-l-2 border-destructive bg-secondary px-4 py-3 text-sm"><span>{error}</span><Button variant="ghost" size="sm" onClick={() => void reload()}>{t.retry}</Button></div>}<div key={pathname} className="dashboard-page-enter">{children}</div></main>
       </div>
     </div>

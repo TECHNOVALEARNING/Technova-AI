@@ -634,7 +634,9 @@ html, body, * { scrollbar-width: none; }
 .plan-starter { --plan-a: #10b981; --plan-b: #06b6d4; --plan-c: #34d399; --plan-d: #22d3ee; }
 .plan-essential { --plan-a: #3b82f6; --plan-b: #8b5cf6; --plan-c: #22d3ee; --plan-d: #6366f1; }
 .plan-creator { --plan-a: #ec4899; --plan-b: #f97316; --plan-c: #a855f7; --plan-d: #f43f5e; }
-.plan-pro { --plan-a: #f59e0b; --plan-b: #ef4444; --plan-c: #8b5cf6; --plan-d: #06b6d4; }
+/* Pro: gold, green and white. */
+.plan-pro { --plan-a: #d4a017; --plan-b: #22c55e; --plan-c: #ffffff; --plan-d: #f5c542; }
+.plan-pro .plan-chip-text, .plan-pro.plan-chip .plan-chip-text { background: linear-gradient(90deg, #b8860b, #f5c542 45%, #d4a017); -webkit-background-clip: text; background-clip: text; }
 @property --plan-angle { syntax: "<angle>"; initial-value: 0deg; inherits: false; }
 .plan-ring { position: relative; display: grid; place-items: center; flex-shrink: 0; border-radius: 9999px; padding: 2px; isolation: isolate;
   background: conic-gradient(from var(--plan-angle), var(--plan-a), var(--plan-b), var(--plan-c), var(--plan-d), var(--plan-a)); animation: plan-spin 3.6s linear infinite; }
