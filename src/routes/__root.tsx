@@ -13,6 +13,7 @@ import appCss from "../styles.css?url";
 import { supabase } from "@/integrations/supabase/client";
 import { Toaster } from "@/components/ui/sonner";
 import { CookieConsent } from "@/components/site/CookieConsent";
+import { ConfirmHost } from "@/components/ConfirmHost";
 import { publicEnvScript } from "@/lib/public-env";
 import { registerServiceWorker } from "@/lib/pwa";
 
@@ -160,6 +161,7 @@ function RootComponent() {
       <Outlet />
       <Toaster position="top-center" />
       <CookieConsent />
+      <ConfirmHost />
     </QueryClientProvider>
   );
 }

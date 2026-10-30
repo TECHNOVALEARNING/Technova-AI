@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
+import { confirmDialog } from "@/components/ConfirmHost";
 import { useNavigate } from "@tanstack/react-router";
 import { AlertCircle, CheckCircle2, FileText, Library, Loader2, MessageCircle, Pencil, Plus, RotateCcw, Search, Trash2, UploadCloud, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -75,7 +76,7 @@ export function KnowledgePage() {
   }
 
   async function removeBase(b: Base) {
-    if (!window.confirm(tx(lang, `Supprimer la base « ${b.name} » et ses fichiers ?`, `Delete "${b.name}" and its files?`))) return;
+    if (!(await confirmDialog({ title: tx(lang, "Supprimer cette base ?", "Delete this base?"), description: tx(lang, `« ${b.name} » et tous ses fichiers seront définitivement supprimés.`, `"${b.name}" and all its files will be permanently deleted.`), tone: "danger", confirmLabel: tx(lang, "Supprimer", "Delete") }))) return;
     await deleteKnowledgeBase({ data: { id: b.id } });
     setActiveId(null); void loadBases();
   }
@@ -107,7 +108,7 @@ export function KnowledgePage() {
   }
 
   async function removeSource(s: Source) {
-    if (!activeId || !window.confirm(tx(lang, `Retirer « ${s.filename} » de la base ?`, `Remove "${s.filename}" from the base?`))) return;
+    if (!activeId || !(await confirmDialog({ title: tx(lang, "Retirer ce fichier ?", "Remove this file?"), description: tx(lang, `« ${s.filename} » ne sera plus utilisé par cette base.`, `"${s.filename}" will no longer be used by this base.`), tone: "danger", confirmLabel: tx(lang, "Retirer", "Remove") }))) return;
     await removeKnowledgeSource({ data: { knowledgeBaseId: activeId, fileId: s.id } });
     void loadSources(activeId); void loadBases();
   }

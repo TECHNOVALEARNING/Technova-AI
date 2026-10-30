@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
+import { confirmDialog, promptDialog } from "@/components/ConfirmHost";
 import { AlertTriangle, ChevronLeft, ChevronRight, Coins, Loader2, RefreshCw, Search, ShieldCheck, TrendingUp, Users, Wallet } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -117,10 +118,10 @@ export function AdminUsers({ fr, onCredit }: { fr: boolean; onCredit: (email: st
           <td className="p-3"><div className="flex flex-wrap gap-1.5">
             <Button size="sm" variant="outline" className="h-7 rounded-full text-xs" disabled={u.suspended} onClick={() => onCredit(u.email)}>{fr ? "Créditer" : "Credit"}</Button>
             {u.id !== data.me && <Button size="sm" variant="outline" className={`h-7 rounded-full text-xs ${u.suspended ? "" : "text-destructive"}`} disabled={busy === u.id || u.is_admin}
-              onClick={() => { const reason = u.suspended ? "" : window.prompt(fr ? `Suspendre ${u.email} ? Motif :` : `Suspend ${u.email}? Reason:`); if (reason === null) return; void act(u.id, () => adminSetUserSuspension({ data: { userId: u.id, suspend: !u.suspended, reason: reason ?? "" } }), u.suspended ? (fr ? "Compte rétabli" : "Account reinstated") : (fr ? "Compte suspendu" : "Account suspended")); }}>
+              onClick={async () => { const reason = u.suspended ? "" : await promptDialog({ title: fr ? "Suspendre ce compte ?" : "Suspend this account?", description: fr ? `${u.email} ne pourra plus se connecter ni utiliser ses crédits jusqu'à son rétablissement.` : `${u.email} will not be able to sign in or use credits until reinstated.`, tone: "danger", confirmLabel: fr ? "Suspendre" : "Suspend", input: { label: fr ? "Motif" : "Reason", placeholder: fr ? "Ex. : fraude au paiement" : "E.g. payment fraud" } }); if (reason === null) return; void act(u.id, () => adminSetUserSuspension({ data: { userId: u.id, suspend: !u.suspended, reason: reason ?? "" } }), u.suspended ? (fr ? "Compte rétabli" : "Account reinstated") : (fr ? "Compte suspendu" : "Account suspended")); }}>
               {u.suspended ? (fr ? "Rétablir" : "Reinstate") : (fr ? "Suspendre" : "Suspend")}</Button>}
             {u.id !== data.me && <Button size="sm" variant="ghost" className="h-7 rounded-full text-xs" disabled={busy === u.id || u.suspended}
-              onClick={() => { if (!window.confirm(u.is_admin ? (fr ? `Retirer le rôle administrateur de ${u.email} ?` : `Remove admin role from ${u.email}?`) : (fr ? `Nommer ${u.email} administrateur ? Il aura accès à toute cette console.` : `Make ${u.email} an admin? They will access this whole console.`))) return; void act(u.id, () => adminSetAdminRole({ data: { userId: u.id, admin: !u.is_admin } }), fr ? "Rôle mis à jour" : "Role updated"); }}>
+              onClick={async () => { if (!(await confirmDialog(u.is_admin ? { title: fr ? "Retirer le rôle administrateur ?" : "Remove admin role?", description: fr ? `${u.email} n'aura plus accès à la console d'administration.` : `${u.email} will lose access to the admin console.`, tone: "danger", confirmLabel: fr ? "Retirer" : "Remove" } : { title: fr ? "Nommer administrateur ?" : "Make admin?", description: fr ? `${u.email} aura accès à toute la console : utilisateurs, revenus et crédits.` : `${u.email} will access the whole console: users, revenue and credits.`, confirmLabel: fr ? "Nommer" : "Confirm" }))) return; void act(u.id, () => adminSetAdminRole({ data: { userId: u.id, admin: !u.is_admin } }), fr ? "Rôle mis à jour" : "Role updated"); }}>
               <ShieldCheck className="size-3.5" />{u.is_admin ? (fr ? "Retirer admin" : "Remove admin") : (fr ? "Nommer admin" : "Make admin")}</Button>}
           </div></td>
         </tr>)}</tbody>
@@ -170,7 +171,11 @@ export function AdminPacks({ fr }: { fr: boolean }) {
   useEffect(load, [load]);
   const set = (slug: string, patch: Partial<Pack>) => setPacks((all) => all?.map((p) => (p.slug === slug ? { ...p, ...patch } : p)) ?? null);
   async function save(p: Pack) {
-    if (!window.confirm(fr ? `Enregistrer « ${p.name} » à ${p.price_xof.toLocaleString("fr-FR")} FCFA pour ${p.credits.toLocaleString("fr-FR")} crédits ? Les prochains achats utiliseront ces valeurs.` : `Save "${p.name}" at ${p.price_xof} FCFA for ${p.credits} credits?`)) return;
+    if (!(await confirmDialog({
+      title: fr ? `Enregistrer le pack ${p.name} ?` : `Save the ${p.name} pack?`,
+      description: fr ? `${p.price_xof.toLocaleString("fr-FR")} FCFA pour ${p.credits.toLocaleString("fr-FR")} crédits. Les prochains achats utiliseront ces valeurs.` : `${p.price_xof.toLocaleString("en-US")} FCFA for ${p.credits.toLocaleString("en-US")} credits. Future purchases will use these values.`,
+      confirmLabel: fr ? "Enregistrer" : "Save",
+    }))) return;
     setSaving(p.slug);
     try { await adminUpdatePack({ data: { slug: p.slug, name: p.name, price_xof: p.price_xof, credits: p.credits, active: p.active, featured: p.featured } }); toast.success(fr ? "Pack enregistré" : "Pack saved"); load(); }
     catch (e) { toast.error(errText(e)); }
@@ -203,7 +208,7 @@ export function AdminRegistryModeration({ fr }: { fr: boolean }) {
   const load = useCallback(() => { adminListPublicRegistry().then(setItems).catch((e) => toast.error(errText(e))); }, []);
   useEffect(load, [load]);
   async function unpublish(i: RegItem) {
-    if (!window.confirm(fr ? `Rendre privée la ressource « ${i.title} » ?` : `Make "${i.title}" private?`)) return;
+    if (!(await confirmDialog({ title: fr ? "Retirer cette ressource du public ?" : "Unpublish this resource?", description: fr ? `« ${i.title} » redeviendra privée et disparaîtra du Registry public.` : `"${i.title}" will become private and leave the public Registry.`, tone: "danger", confirmLabel: fr ? "Retirer" : "Unpublish" }))) return;
     try { await adminUnpublishRegistryItem({ data: { id: i.id } }); toast.success(fr ? "Ressource retirée du public" : "Resource unpublished"); load(); } catch (e) { toast.error(errText(e)); }
   }
   return <section className="mt-6">

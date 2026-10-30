@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
+import { confirmDialog } from "@/components/ConfirmHost";
 import { useNavigate } from "@tanstack/react-router";
 import { Bot, Lock, MessageCircle, Pencil, Plus, Trash2, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -61,7 +62,7 @@ export function AgentsPage() {
     setForm(null); setNotice(tx(lang, "Agent enregistré.", "Agent saved.")); void load();
   };
   const remove = async (a: Agent) => {
-    if (!window.confirm(tx(lang, `Supprimer « ${a.name} » ?`, `Delete "${a.name}"?`))) return;
+    if (!(await confirmDialog({ title: tx(lang, "Supprimer cet agent ?", "Delete this agent?"), description: tx(lang, `« ${a.name} » et ses réglages seront définitivement supprimés.`, `"${a.name}" and its settings will be permanently deleted.`), tone: "danger", confirmLabel: tx(lang, "Supprimer", "Delete") }))) return;
     await supabase.from("agents").delete().eq("id", a.id); void load();
   };
   const chat = (a: Agent) => { localStorage.setItem("technova-active-agent", JSON.stringify({ id: a.id, name: a.name })); void navigate({ to: "/dashboard/chat" }); };

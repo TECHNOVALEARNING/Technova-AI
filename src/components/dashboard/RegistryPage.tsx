@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { confirmDialog } from "@/components/ConfirmHost";
 import { useNavigate } from "@tanstack/react-router";
 import { Code2, Copy, Download, Eye, GitFork, Heart, Monitor, Plus, Search, Share2, Smartphone, Trash2, Wand2 } from "lucide-react";
 import { toast } from "sonner";
@@ -137,7 +138,7 @@ export function RegistryPage() {
     void navigate({ to: "/dashboard/chat" });
   }
   async function remove(i: Item) {
-    if (!confirm(c.delConfirm)) return;
+    if (!(await confirmDialog({ title: c.delConfirm, description: i.title, tone: "danger", confirmLabel: c.delConfirm.startsWith("Supprimer") ? "Supprimer" : "Delete" }))) return;
     const { error } = await supabase.from("registry_items").delete().eq("id", i.id);
     if (error) { toast.error(c.error); return; } setOpen(null); await load();
   }

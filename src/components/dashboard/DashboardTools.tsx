@@ -1,4 +1,5 @@
 import { PENDING_PACK_KEY } from "@/lib/public-pricing";
+import { confirmDialog } from "@/components/ConfirmHost";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
@@ -187,7 +188,7 @@ export function ApiKeysPage() {
   const load = useCallback(async () => { const { data } = await supabase.from("api_keys").select("*").order("created_at", { ascending: false }); setKeys(data ?? []); }, []);
   useEffect(() => { void load(); }, [load]);
   async function submit(e: React.FormEvent) { e.preventDefault(); if (!name.trim()) return; setBusy(true); try { const r = await create({ data: { name } }); setSecret(r.secret); setName(""); setCopied(false); await load(); } catch (e) { const f = upgradeFeatureOf(e instanceof Error ? e.message : ""); toast.error(f ? upgradeSentence(f, lang !== "en") : "Error"); } finally { setBusy(false); } }
-  async function revoke(id: string) { if (!confirm(c.revokeConfirm)) return; await supabase.from("api_keys").delete().eq("id", id); await load(); }
+  async function revoke(id: string) { if (!(await confirmDialog({ title: c.revokeConfirm, tone: "danger", confirmLabel: c.revoke }))) return; await supabase.from("api_keys").delete().eq("id", id); await load(); }
   return <div className="space-y-4"><PageHead title={c.apiTitle} sub={c.apiSub} />
     {locked && <p className="rounded-xl border border-border bg-card px-4 py-3 text-[13px]">{upgradeSentence("api", lang !== "en")} <Link to="/dashboard/credits" className="font-medium text-primary hover:underline">{lang === "en" ? "See packs" : "Voir les packs"}</Link></p>}
     <div className={card}><form onSubmit={submit} className="flex gap-2"><Input value={name} onChange={e => setName(e.target.value)} maxLength={60} placeholder={c.keyName} aria-label={c.keyName} className="h-10 rounded-full bg-background px-4" /><Button type="submit" disabled={busy || locked || !name.trim()} className="h-10 shrink-0 rounded-full px-5"><Plus className="size-4" />{c.newKey}</Button></form>
@@ -294,7 +295,7 @@ function SupabaseCard() {
   }
 
   async function forget() {
-    if (!confirm(c.supaConfirm)) return;
+    if (!(await confirmDialog({ title: lang === "en" ? "Disconnect Supabase?" : "Déconnecter Supabase ?", description: c.supaConfirm.slice(c.supaConfirm.indexOf("?") + 1).trim(), tone: "danger", confirmLabel: lang === "en" ? "Disconnect" : "Déconnecter" }))) return;
     setBusy(true);
     try {
       await drop({ data: {} });

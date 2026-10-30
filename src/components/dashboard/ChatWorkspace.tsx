@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState, type PointerEvent as ReactPointerEvent } from "react";
+import { confirmDialog } from "@/components/ConfirmHost";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import {
@@ -983,7 +984,7 @@ export function ThreadPage({ threadId }: { threadId: string }) {
     await reload();
   }
   async function removeThread() {
-    if (!window.confirm(t.deleteConfirm)) return;
+    if (!(await confirmDialog({ title: lang === "fr" ? "Supprimer cette conversation ?" : "Delete this conversation?", description: lang === "fr" ? "Tous ses messages et créations seront définitivement supprimés." : "All its messages and creations will be permanently deleted.", tone: "danger", confirmLabel: lang === "fr" ? "Supprimer" : "Delete" }))) return;
     setBusy(true);
     const { error: deleteError } = await supabase.from("chat_threads").delete().eq("id", threadId);
     setBusy(false);
