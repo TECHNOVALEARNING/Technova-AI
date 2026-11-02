@@ -13,7 +13,7 @@ import serviceCode from "@/assets/service-code-depth.png";
 import serviceApi from "@/assets/service-api-depth.png";
 import serviceAnalytics from "@/assets/service-analytics-depth.png";
 import ecoLearning from "@/assets/eco-learning.jpg";
-import ecoMobil from "@/assets/eco-mobil.jpg";
+import ecoConnect from "@/assets/eco-connect.webp";
 import { content, labs, type SiteLang } from "@/lib/i18n";
 import { Nav, Footer, Heading, Tag, R, ActionText, useReveal, useSiteLang } from "@/components/site/SiteChrome";
 import { InstallAppPrompt } from "@/components/site/InstallAppPrompt";
@@ -345,7 +345,8 @@ function How({ t }: { t: T }) {
 
 const ECO = [
   { img: ecoLearning, bg: "var(--eco-learning)" },
-  { img: ecoMobil, bg: "var(--eco-mobil)" },
+  // A square poster with its own title and feature bar: shown whole on a matching backdrop, never cropped.
+  { img: ecoConnect, bg: "var(--eco-connect)", contain: true },
 ];
 
 /** One frosted-glass card per product: the picture (what the product does) fills three quarters, the text one quarter. */
@@ -361,7 +362,7 @@ function Ecosystem({ t }: { t: T }) {
             return (
               <article key={it.n} className="eco-card group flex aspect-[4/5] flex-col rounded-[2rem] p-2.5 sm:aspect-[5/4]" style={{ animationDelay: `${j * 80}ms` }}>
                 <div className="relative min-h-0 flex-[3] overflow-hidden rounded-[1.6rem]" style={{ backgroundImage: ECO[j]!.bg }}>
-                  <img src={ECO[j]!.img} alt={it.n} width={1024} height={1024} loading="lazy" className="h-full w-full object-cover transition duration-700 ease-out group-hover:scale-[1.05]" />
+                  <img src={ECO[j]!.img} alt={it.n} width={1024} height={1024} loading="lazy" className={`h-full w-full ${"contain" in ECO[j]! ? "object-contain" : "object-cover"} transition duration-700 ease-out group-hover:scale-[1.05]`} />
                   <span className="eco-chip absolute left-3.5 top-3.5 rounded-full px-2.5 py-1 text-[10.5px] font-semibold uppercase tracking-widest">{it.k}</span>
                 </div>
                 <div className="flex min-h-0 flex-1 items-center gap-4 px-3 pt-2.5 sm:px-4">

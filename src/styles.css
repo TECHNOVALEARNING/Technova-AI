@@ -92,7 +92,7 @@
   --supabase: oklch(.48 .14 155);
   --chat-glow-foreground: oklch(.99 .005 237);
   --eco-learning: linear-gradient(135deg, oklch(0.42 0.14 60), oklch(0.78 0.15 80));
-  --eco-mobil: linear-gradient(135deg, oklch(0.5 0.12 60), oklch(0.82 0.15 85));
+  --eco-connect: radial-gradient(circle at 50% 40%, #d6d8e4, #b3b8cb);
   --ink-foreground: oklch(0.97 0 0);
   --iris-1: oklch(0.86 0.09 350);
   --iris-2: oklch(0.86 0.08 230);
