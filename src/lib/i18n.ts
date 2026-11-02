@@ -56,6 +56,8 @@ export const content = {
       tag: "Écosystème",
       title: "Bien plus qu'une plateforme IA",
       sub: "La famille de produits TechNova, ouverte au monde.",
+      visit: "Visiter le site",
+      soon: "Bientôt disponible",
       items: [
         { n: "Technova Learning", d: "Formations et ebooks pour maîtriser l'IA, la data et la cybersécurité.", url: "https://www.technovalearning.com/", k: "Formation", f: ["Formations tech en ligne", "IA, data et cybersécurité", "Ebooks prêts à l'emploi"] },
         { n: "Humanizer AI", d: "Rendez vos textes IA naturels et indétectables.", url: "https://www.humanizerai.space/", k: "Écriture", f: ["Contourne les détecteurs IA", "Style naturel et fluide", "Multilingue"] },
@@ -171,6 +173,8 @@ export const content = {
       tag: "Ecosystem",
       title: "Much more than an AI platform",
       sub: "The TechNova family of products, open to the world.",
+      visit: "Visit the site",
+      soon: "Coming soon",
       items: [
         { n: "Technova Learning", d: "Courses and ebooks to master AI, data and cybersecurity.", url: "https://www.technovalearning.com/", k: "Learning", f: ["Online tech courses", "AI, data and cybersecurity", "Ready-to-use ebooks"] },
         { n: "Humanizer AI", d: "Make AI text natural and undetectable.", url: "https://www.humanizerai.space/", k: "Writing", f: ["Bypasses AI detectors", "Natural, fluent style", "Multilingual"] },
@@ -286,6 +290,8 @@ export const content = {
       tag: "Ecosistema",
       title: "Mucho más que una plataforma de IA",
       sub: "La familia de productos TechNova, abierta al mundo.",
+      visit: "Visitar el sitio",
+      soon: "Próximamente",
       items: [
         { n: "Technova Learning", d: "Formaciones y ebooks para dominar la IA, los datos y la ciberseguridad.", url: "https://www.technovalearning.com/", k: "Formación", f: ["Cursos tech en línea", "IA, datos y ciberseguridad", "Ebooks listos para usar"] },
         { n: "Humanizer AI", d: "Haz que tus textos de IA suenen naturales e indetectables.", url: "https://www.humanizerai.space/", k: "Escritura", f: ["Evita los detectores de IA", "Estilo natural y fluido", "Multilingüe"] },
@@ -401,6 +407,8 @@ export const content = {
       tag: "Ecossistema",
       title: "Muito mais que uma plataforma de IA",
       sub: "A família de produtos TechNova, aberta ao mundo.",
+      visit: "Visitar o site",
+      soon: "Em breve",
       items: [
         { n: "Technova Learning", d: "Cursos e ebooks para dominar IA, dados e cibersegurança.", url: "https://www.technovalearning.com/", k: "Formação", f: ["Cursos tech online", "IA, dados e cibersegurança", "Ebooks prontos para usar"] },
         { n: "Humanizer AI", d: "Deixe seus textos de IA naturais e indetectáveis.", url: "https://www.humanizerai.space/", k: "Escrita", f: ["Contorna os detectores de IA", "Estilo natural e fluido", "Multilíngue"] },

@@ -352,94 +352,42 @@ const ECO = [
   { img: ecoMobil, bg: "var(--eco-mobil)" },
 ];
 
+/** One frosted-glass card per product: picture on top, then category, name, description, highlights and link. */
 function Ecosystem({ t }: { t: T }) {
   const items = t.eco.items;
-  const [i, setI] = useState(0);
-  const [paused, setPaused] = useState(false);
-  useEffect(() => {
-    if (paused) return;
-    const id = setTimeout(() => setI((x) => (x + 1) % items.length), 5500);
-    return () => clearTimeout(id);
-  }, [i, paused, items.length]);
-  const it = items[i]!;
-  const others = items.map((x, j) => ({ ...x, j })).filter((x) => x.j !== i);
-
   return (
     <section className="px-4 py-6 sm:py-8">
       <Heading tag={t.eco.tag} title={t.eco.title} sub={t.eco.sub} />
-      <R className="mx-auto max-w-6xl">
-        <div
-          onMouseEnter={() => setPaused(true)}
-          onMouseLeave={() => setPaused(false)}
-          className="relative overflow-hidden rounded-[2rem] p-3 shadow-lift sm:p-4 md:rounded-[2.5rem]"
-        >
-          {ECO.map((e, j) => (
-            <div key={j} className="absolute inset-0 transition-opacity duration-1000" style={{ backgroundImage: e.bg, opacity: j === i ? 1 : 0 }} />
-          ))}
-          <div className="absolute inset-0 bg-[radial-gradient(circle_at_80%_0%,oklch(1_0_0/0.25),transparent_50%)]" />
-
-          <div className="relative grid gap-3 sm:gap-4 lg:grid-cols-[1fr_1.15fr]">
-            {/* Text panel */}
-            <div className="flex flex-col justify-between rounded-[1.5rem] border border-ink-foreground/20 bg-ink/35 p-6 text-ink-foreground backdrop-blur-xl sm:p-8 md:rounded-[2rem]">
-              <div key={i} className="animate-fade-in">
-                <span className="inline-flex rounded-full border border-ink-foreground/25 bg-ink-foreground/10 px-3 py-1 text-[11px] font-medium uppercase tracking-widest">{it.k}</span>
-                 <h3 className="mt-4 font-display text-4xl font-semibold tracking-tight md:text-5xl">{it.n}</h3>
-                 <p className="mt-3 max-w-md text-ink-foreground/75">{it.d}</p>
-                 <ul className="mt-4 flex flex-wrap gap-2">
-                  {it.f.map((f) => (
-                    <li key={f} className="flex items-center gap-1.5 rounded-full bg-ink-foreground/10 px-3 py-1.5 text-xs"><Check className="h-3.5 w-3.5" />{f}</li>
-                  ))}
-                </ul>
-                 {/* Products without a public site (e.g. Technova Connect) show no link. */}
-                 {"url" in it && it.url && <Button asChild variant="pill" size="pill" className="action-pill action-pill-light mt-5 px-5 py-2.5 text-sm font-semibold"><a href={it.url} target="_blank" rel="noreferrer"><ActionText>{it.n}</ActionText><ArrowUpRight className="h-4 w-4" /></a></Button>}
-              </div>
-              <div className="mt-6 flex items-center gap-4">
-                <span className="font-display text-sm tabular-nums text-ink-foreground/70">0{i + 1}<span className="opacity-50"> / 0{items.length}</span></span>
-                <div className="flex flex-1 gap-1.5">
-                  {items.map((x, j) => (
-                    <Button variant="pill" size="pill" key={x.n} aria-label={x.n} onClick={() => setI(j)} className="relative h-1 flex-1 overflow-hidden rounded-full bg-ink-foreground/20">
-                      <span
-                        key={`${i}-${paused}`}
-                        className="absolute inset-y-0 left-0 rounded-full bg-ink-foreground"
-                        style={{ width: j < i ? "100%" : j === i ? undefined : "0%", animation: j === i && !paused ? "eco-progress 5.5s linear forwards" : undefined }}
-                      />
-                    </Button>
-                  ))}
+      <R className="eco-stage relative mx-auto max-w-6xl">
+        <div className="relative grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          {items.map((it, j) => {
+            const url = "url" in it ? it.url : undefined;
+            return (
+              <article key={it.n} className="eco-card group flex flex-col rounded-[1.75rem] p-2.5" style={{ animationDelay: `${j * 80}ms` }}>
+                <div className="relative aspect-[4/3] overflow-hidden rounded-[1.3rem]" style={{ backgroundImage: ECO[j]!.bg }}>
+                  <img src={ECO[j]!.img} alt={it.n} width={1024} height={1024} loading="lazy" className="h-full w-full object-cover transition duration-700 ease-out group-hover:scale-[1.06]" />
+                  <span className="eco-chip absolute left-3 top-3 rounded-full px-2.5 py-1 text-[10.5px] font-semibold uppercase tracking-widest">{it.k}</span>
                 </div>
-              </div>
-            </div>
-
-            {/* Image grid: main + 4 thumbnails */}
-            <div className="grid gap-3 sm:gap-4" style={{ gridTemplateColumns: `repeat(${Math.max(1, others.length)}, minmax(0, 1fr))` }}>
-              <div className="relative col-span-full aspect-[4/3] overflow-hidden rounded-[1.5rem] md:rounded-[2rem]">
-                {ECO.map((e, j) => (
-                  <img
-                    key={j}
-                    src={e.img}
-                    alt={items[j]!.n}
-                    width={1024}
-                    height={1024}
-                    loading="lazy"
-                    className="absolute inset-0 h-full w-full object-cover transition-all duration-1000 ease-out"
-                    style={{ opacity: j === i ? 1 : 0, transform: j === i ? "scale(1)" : "scale(1.12)" }}
-                  />
-                ))}
-                <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-ink/70 to-transparent p-4 text-sm font-medium text-ink-foreground sm:p-5">{it.n}</div>
-              </div>
-              {others.map((o, k) => (
-                 <Button variant="pill" size="pill"
-                  key={o.n}
-                  onClick={() => setI(o.j)}
-                  className="group relative aspect-square overflow-hidden rounded-2xl ring-1 ring-ink-foreground/20 transition duration-500 hover:-translate-y-1 hover:ring-ink-foreground/60"
-                  style={{ animation: `fade-in .6s ease-out ${k * 80}ms both` }}
-                >
-                  <img src={ECO[o.j]!.img} alt={o.n} loading="lazy" className="h-full w-full object-cover transition duration-700 group-hover:scale-110" />
-                  <span className="absolute inset-0 bg-ink/30 transition group-hover:bg-ink/10" />
-                  <span className="absolute inset-x-0 bottom-0 truncate p-1.5 text-center text-[10px] font-medium text-ink-foreground sm:p-2 sm:text-xs">{o.n}</span>
-                 </Button>
-              ))}
-            </div>
-          </div>
+                <div className="flex flex-1 flex-col px-3 pb-3 pt-4">
+                  <h3 className="font-display text-xl font-semibold tracking-tight">{it.n}</h3>
+                  <p className="mt-1.5 text-sm leading-relaxed text-muted-foreground">{it.d}</p>
+                  <ul className="mt-4 space-y-1.5">
+                    {it.f.map((f) => (
+                      <li key={f} className="flex items-center gap-2 text-[13px]"><span className="eco-tick grid size-4 shrink-0 place-items-center rounded-full"><Check className="size-2.5" strokeWidth={3} /></span>{f}</li>
+                    ))}
+                  </ul>
+                  {/* Products without a public site (e.g. Technova Connect) show no link. */}
+                  <div className="mt-auto pt-5">
+                    {url ? (
+                      <Button asChild variant="pill" size="pill" className="action-pill action-pill-dark w-full justify-center px-4 py-2.5 text-sm font-medium"><a href={url} target="_blank" rel="noreferrer"><ActionText>{t.eco.visit}</ActionText><ArrowUpRight className="h-4 w-4" /></a></Button>
+                    ) : (
+                      <span className="eco-soon flex w-full items-center justify-center rounded-full px-4 py-2.5 text-sm font-medium text-muted-foreground">{t.eco.soon}</span>
+                    )}
+                  </div>
+                </div>
+              </article>
+            );
+          })}
         </div>
       </R>
     </section>
