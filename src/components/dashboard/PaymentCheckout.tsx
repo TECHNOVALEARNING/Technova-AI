@@ -41,9 +41,11 @@ export function PaymentCheckout({ pack, lang, country, onClose, onPaid }: { pack
     timer.current = window.setTimeout(async () => {
       try {
         const r = await check({ data: { id } });
+        if (timer.current === null) return; // closed meanwhile
         if (r.status === "success") { setWaiting(null); onPaid({ pack: r.pack, credits: r.credits }); return; }
         if (r.status === "failed") { setWaiting(null); setBusy(false); setError(fr ? "Le paiement a été refusé ou annulé sur le téléphone. Vous pouvez réessayer." : "The payment was declined or cancelled on the phone. You can try again."); return; }
       } catch { /* keep waiting */ }
+      if (timer.current === null) return;
       if (tries < 80) poll(id, tries + 1);
       else { setWaiting(null); setBusy(false); setError(fr ? "Toujours en attente. Si vous avez validé, vos crédits arriveront dans quelques minutes." : "Still pending. If you approved it, your credits will arrive within minutes."); }
     }, 3000);
@@ -72,7 +74,14 @@ export function PaymentCheckout({ pack, lang, country, onClose, onPaid }: { pack
 
   const tab = (on: boolean) => `flex h-10 flex-1 items-center justify-center gap-2 rounded-full text-[13px] font-medium transition-colors ${on ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"}`;
   const sel = "h-10 w-full rounded-xl border border-input bg-background px-3 text-[13px]";
-  return <Dialog open={!!pack} onOpenChange={(o) => { if (!o && !waiting) onClose(); }}>
+  // Closing always works, even while waiting: polling stops, and a payment approved later is still credited (webhook, cron).
+  function close() {
+    if (timer.current) window.clearTimeout(timer.current);
+    timer.current = null;
+    setWaiting(null); setBusy(false); setError("");
+    onClose();
+  }
+  return <Dialog open={!!pack} onOpenChange={(o) => { if (!o) close(); }}>
     <DialogContent className="max-w-[440px] rounded-[24px] p-6 sm:rounded-[24px]">
       <DialogHeader>
         <DialogTitle className="font-display text-lg">{waiting ? (method === "card" ? (fr ? "Finalisez le paiement par carte" : "Complete the card payment") : (fr ? "Confirmez sur votre téléphone" : "Confirm on your phone")) : (fr ? `Pack ${pack?.name ?? ""}` : `${pack?.name ?? ""} pack`)}</DialogTitle>
@@ -82,6 +91,8 @@ export function PaymentCheckout({ pack, lang, country, onClose, onPaid }: { pack
       {waiting ? <div className="grid place-items-center gap-3 py-6 text-center">
         <span className="relative grid size-16 place-items-center rounded-full bg-secondary">{method === "card" ? <CreditCard className="size-7" /> : <Smartphone className="size-7" />}<Loader2 className="absolute -right-1 -top-1 size-6 animate-spin text-primary" /></span>
         <p className="text-sm text-muted-foreground">{fr ? "Gardez cette fenêtre ouverte : elle se met à jour dès la confirmation." : "Keep this window open: it updates as soon as you confirm."}</p>
+        <Button type="button" variant="outline" className="mt-1 h-10 rounded-full px-5" onClick={close}>{fr ? "Annuler" : "Cancel"}</Button>
+        <p className="text-[11.5px] text-muted-foreground">{fr ? "Si vous avez déjà validé, vos crédits seront ajoutés automatiquement." : "If you already approved it, your credits will be added automatically."}</p>
       </div> : <form onSubmit={pay} className="grid gap-4">
         <div className="flex gap-1 rounded-full bg-secondary p-1" role="tablist">
           <button type="button" role="tab" aria-selected={method === "momo"} className={tab(method === "momo")} onClick={() => setMethod("momo")}><Smartphone className="size-4" />Mobile Money</button>
