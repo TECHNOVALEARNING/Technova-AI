@@ -52,13 +52,19 @@ export function PaymentCheckout({ pack, lang, country, onClose, onPaid }: { pack
   async function pay(e: React.FormEvent) {
     e.preventDefault(); if (!pack || !ready) return;
     setBusy(true); setError("");
+    // Card pages have no return link: open them in a new tab (opened now, on the click) and wait here.
+    const cardTab = method === "card" ? window.open("about:blank", "_blank") : null;
     try {
       const r = await start({ data: method === "card"
         ? { slug: pack.slug, method, country: cc === OTHER ? "BJ" : cc, phone, city }
         : viaHosted ? { slug: pack.slug, method } : { slug: pack.slug, method, country: cc, network: net, phone } });
-      if ("url" in r) { window.location.href = r.url; return; }
+      if ("url" in r) {
+        if (cardTab) { cardTab.location.href = r.url; setWaiting(r.paymentId); poll(r.paymentId); return; }
+        window.location.href = r.url; return;
+      }
       setWaiting(r.pendingId); poll(r.pendingId);
     } catch {
+      cardTab?.close();
       setBusy(false);
       setError(fr ? "Le paiement n'a pas pu démarrer. Réessayez dans un instant." : "The payment could not start. Try again shortly.");
     }
@@ -69,12 +75,12 @@ export function PaymentCheckout({ pack, lang, country, onClose, onPaid }: { pack
   return <Dialog open={!!pack} onOpenChange={(o) => { if (!o && !waiting) onClose(); }}>
     <DialogContent className="max-w-[440px] rounded-[24px] p-6 sm:rounded-[24px]">
       <DialogHeader>
-        <DialogTitle className="font-display text-lg">{waiting ? (fr ? "Confirmez sur votre téléphone" : "Confirm on your phone") : (fr ? `Pack ${pack?.name ?? ""}` : `${pack?.name ?? ""} pack`)}</DialogTitle>
-        <DialogDescription>{waiting ? (fr ? "Une demande de paiement a été envoyée. Validez-la avec votre code secret Mobile Money." : "A payment request was sent. Approve it with your Mobile Money PIN.") : `${price} · ${pack?.credits.toLocaleString(fr ? "fr-FR" : "en-US")} ${fr ? "crédits Technova" : "Technova credits"}`}</DialogDescription>
+        <DialogTitle className="font-display text-lg">{waiting ? (method === "card" ? (fr ? "Finalisez le paiement par carte" : "Complete the card payment") : (fr ? "Confirmez sur votre téléphone" : "Confirm on your phone")) : (fr ? `Pack ${pack?.name ?? ""}` : `${pack?.name ?? ""} pack`)}</DialogTitle>
+        <DialogDescription>{waiting ? (method === "card" ? (fr ? "La page de paiement sécurisée s'est ouverte dans un nouvel onglet. Saisissez-y votre carte, puis revenez ici." : "The secure payment page opened in a new tab. Enter your card there, then come back here.") : (fr ? "Une demande de paiement a été envoyée. Validez-la avec votre code secret Mobile Money." : "A payment request was sent. Approve it with your Mobile Money PIN.")) : `${price} · ${pack?.credits.toLocaleString(fr ? "fr-FR" : "en-US")} ${fr ? "crédits Technova" : "Technova credits"}`}</DialogDescription>
       </DialogHeader>
 
       {waiting ? <div className="grid place-items-center gap-3 py-6 text-center">
-        <span className="relative grid size-16 place-items-center rounded-full bg-secondary"><Smartphone className="size-7" /><Loader2 className="absolute -right-1 -top-1 size-6 animate-spin text-primary" /></span>
+        <span className="relative grid size-16 place-items-center rounded-full bg-secondary">{method === "card" ? <CreditCard className="size-7" /> : <Smartphone className="size-7" />}<Loader2 className="absolute -right-1 -top-1 size-6 animate-spin text-primary" /></span>
         <p className="text-sm text-muted-foreground">{fr ? "Gardez cette fenêtre ouverte : elle se met à jour dès la confirmation." : "Keep this window open: it updates as soon as you confirm."}</p>
       </div> : <form onSubmit={pay} className="grid gap-4">
         <div className="flex gap-1 rounded-full bg-secondary p-1" role="tablist">

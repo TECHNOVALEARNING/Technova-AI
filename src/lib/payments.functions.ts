@@ -21,7 +21,7 @@ const checkoutInput = z.object({
 export const startCheckout = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d) => checkoutInput.parse(d))
-  .handler(async ({ data, context }): Promise<{ url: string } | { pendingId: string; provider: "feexpay" }> => {
+  .handler(async ({ data, context }): Promise<{ url: string; paymentId: string } | { pendingId: string; provider: "feexpay" }> => {
     const { createCheckout, isLiveKey } = await import("./nyole.server");
     const feex = await import("./feexpay.server");
     const { feexpayNetwork, internationalPhone, routePayment } = await import("./payment-routing");
@@ -50,6 +50,7 @@ export const startCheckout = createServerFn({ method: "POST" })
       : method === "momo" && !phone ? "invalid_phone_number"
       : method === "momo" && !feex.feexpayLive() && !network?.sandbox ? "operator_not_in_feexpay_sandbox"
       : method === "card" && (!phone || !data.city || !data.country) ? "card_details_missing"
+      : method === "card" && !email ? "card_email_missing"
       : null;
     const provider: "feexpay" | "nyole" = nyoleReason ? "nyole" : "feexpay";
     if (nyoleReason && nyoleReason !== "country_or_operator_not_covered") {
@@ -63,18 +64,19 @@ export const startCheckout = createServerFn({ method: "POST" })
     if (error || !pay) throw new Error("Paiement impossible");
     const origin = process.env["TECHNOVA_APP_URL"]?.trim().replace(/\/+$/, "") || new URL(getRequest().url).origin;
     const back = `${origin}/dashboard/credits?payment=${pay.id}`;
-    const description = `TechNova · ${pack.name} · ${pack.credits} crédits Technova`;
+    const description = `TechNova ${pack.name} ${pack.credits} credits`;
 
     if (provider === "feexpay") {
       try {
         if (method === "card") {
-          const c = await feex.createCardCheckout({ amount: pack.price_xof, paymentId: pay.id, description, customer, phone: phone!, city: data.city!, country: data.country!, returnUrl: back, cancelUrl: `${back}&cancelled=1` });
+          // No return page for cards: the dialog opens FeexPay in a new tab and waits for the confirmation.
+          const c = await feex.createCardCheckout({ amount: pack.price_xof, paymentId: pay.id, description, customer, phone: phone!, city: data.city!, country: data.country! });
           await supabaseAdmin.from("payments").update({ session_id: c.reference, checkout_url: c.url }).eq("id", pay.id);
-          return { url: c.url };
+          return { url: c.url, paymentId: pay.id };
         }
         const m = await feex.requestMobileMoney({ network: network!.id, phone: phone!, amount: pack.price_xof, paymentId: pay.id, description, customer, returnUrl: back, cancelUrl: `${back}&cancelled=1` });
         await supabaseAdmin.from("payments").update({ session_id: m.reference, checkout_url: m.paymentUrl }).eq("id", pay.id);
-        return m.paymentUrl ? { url: m.paymentUrl } : { pendingId: pay.id, provider: "feexpay" };
+        return m.paymentUrl ? { url: m.paymentUrl, paymentId: pay.id } : { pendingId: pay.id, provider: "feexpay" };
       } catch (e) {
         // FeexPay unavailable or refused: the same payment continues on Nyole.
         await logSecurityEvent(context.userId, "payment_fallback_nyole", "info", { payment_id: pay.id, method, network: data.network ?? null, reason: String((e as Error)?.message ?? e).slice(0, 200) });
@@ -87,7 +89,7 @@ export const startCheckout = createServerFn({ method: "POST" })
         metadata: { payment_id: pay.id, owner_id: context.userId, pack: pack.slug },
       });
       await supabaseAdmin.from("payments").update({ session_id: s.id, checkout_url: s.url }).eq("id", pay.id);
-      return { url: s.url };
+      return { url: s.url, paymentId: pay.id };
     } catch (e) {
       await supabaseAdmin.from("payments").update({ status: "failed" }).eq("id", pay.id);
       throw e;
