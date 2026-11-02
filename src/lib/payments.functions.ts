@@ -42,9 +42,19 @@ export const startCheckout = createServerFn({ method: "POST" })
     const cardPhone = data.phone?.replace(/[^\d+]/g, "") ?? "";
     const phone = method === "card" ? (cardPhone.replace(/\D/g, "").length >= 8 ? cardPhone : null)
       : data.country && data.phone ? internationalPhone(data.country, data.phone) : null;
-    let provider: "feexpay" | "nyole" = method && feex.feexpayConfigured() ? routePayment(method, data.country, data.network) : "nyole";
-    if (provider === "feexpay" && method === "momo" && (!network || !phone || (!feex.feexpayLive() && !network.sandbox))) provider = "nyole";
-    if (provider === "feexpay" && method === "card" && (!phone || !data.city || !data.country)) provider = "nyole";
+    // Why a payment goes to Nyole is logged (security log, "payment_routed_nyole") so routing can be checked in the admin console.
+    const nyoleReason =
+      !method ? "no_method"
+      : !feex.feexpayConfigured() ? "feexpay_not_configured (FEEXPAY_API_KEY / FEEXPAY_SHOP_ID missing on the server)"
+      : routePayment(method, data.country, data.network) === "nyole" ? "country_or_operator_not_covered"
+      : method === "momo" && !phone ? "invalid_phone_number"
+      : method === "momo" && !feex.feexpayLive() && !network?.sandbox ? "operator_not_in_feexpay_sandbox"
+      : method === "card" && (!phone || !data.city || !data.country) ? "card_details_missing"
+      : null;
+    const provider: "feexpay" | "nyole" = nyoleReason ? "nyole" : "feexpay";
+    if (nyoleReason && nyoleReason !== "country_or_operator_not_covered") {
+      await logSecurityEvent(context.userId, "payment_routed_nyole", "info", { method: method ?? null, country: data.country ?? null, network: data.network ?? null, reason: nyoleReason });
+    }
 
     const { data: pay, error } = await supabaseAdmin.from("payments").insert({
       owner_id: context.userId, pack_slug: pack.slug, amount_xof: pack.price_xof, credits: pack.credits,

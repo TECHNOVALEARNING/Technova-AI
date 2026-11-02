@@ -108,11 +108,14 @@ export function PaymentCheckout({ pack, lang, country, onClose, onPaid }: { pack
             <label className="grid gap-1 text-[12px] font-medium">{fr ? "Ville" : "City"}<Input value={city} onChange={(e) => setCity(e.target.value)} autoComplete="address-level2" className="h-10 rounded-xl" /></label>
           </div>
           <label className="grid gap-1 text-[12px] font-medium">{fr ? "Téléphone" : "Phone"}<Input inputMode="tel" autoComplete="tel" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="+229 01 97 00 00 00" className="h-10 rounded-xl" /></label>
-          <p className="text-[12px] text-muted-foreground">{fr ? "Visa et Mastercard, avec validation 3-D Secure sur la page de paiement." : "Visa and Mastercard, with 3-D Secure on the payment page."}</p>
+          <p className="rounded-xl bg-secondary px-3 py-2.5 text-[12px] leading-relaxed text-muted-foreground">
+            <span className="mb-1.5 flex items-center gap-1.5"><span className="rounded-md bg-[#1a1f71] px-1.5 py-0.5 text-[10px] font-bold italic text-white">VISA</span><span className="flex items-center rounded-md bg-background px-1.5 py-0.5"><i className="size-3 rounded-full bg-[#eb001b]" /><i className="-ml-1.5 size-3 rounded-full bg-[#f79e1b]/90" /></span></span>
+            {fr ? "Le numéro, la date et le code de votre carte se saisissent à l'étape suivante, sur la page sécurisée de notre partenaire (3-D Secure). TechNova ne les voit jamais. Le téléphone et la ville sont demandés par la banque pour vérifier le paiement." : "Your card number, expiry and code are entered at the next step, on our partner's secure page (3-D Secure). TechNova never sees them. Phone and city are required by the bank to verify the payment."}
+          </p>
         </>}
 
         {error && <p role="alert" className="text-[12.5px] text-destructive">{error}</p>}
-        <Button type="submit" disabled={!ready} className="h-11 rounded-full">{busy ? <Loader2 className="size-4 animate-spin" /> : <Lock className="size-4" />}{fr ? `Payer ${price}` : `Pay ${price}`}</Button>
+        <Button type="submit" disabled={!ready} className="h-11 rounded-full">{busy ? <Loader2 className="size-4 animate-spin" /> : <Lock className="size-4" />}{method === "card" ? (fr ? `Continuer vers le paiement · ${price}` : `Continue to payment · ${price}`) : (fr ? `Payer ${price}` : `Pay ${price}`)}</Button>
         <p className="text-center text-[11px] text-muted-foreground">{fr ? "Paiement sécurisé · Technova PAY. Nous ne voyons ni votre carte ni votre code." : "Secure payment · Technova PAY. We never see your card or PIN."}</p>
       </form>}
     </DialogContent>
