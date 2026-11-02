@@ -39,9 +39,24 @@ function NotFoundComponent() {
   );
 }
 
-function ErrorComponent({ error, reset }: import("@tanstack/react-router").ErrorComponentProps) {
+function ErrorComponent({ error }: import("@tanstack/react-router").ErrorComponentProps) {
   console.error(error);
-  const router = useRouter();
+  const message = error instanceof Error ? error.message : String(error ?? "");
+  // After a deployment, a tab opened on the previous version asks for files that no longer exist:
+  // reload once to pick up the new version instead of showing the error.
+  const staleBuild = /dynamically imported module|Importing a module script failed|ChunkLoadError|Loading (CSS )?chunk|Unable to preload CSS/i.test(message);
+  useEffect(() => {
+    if (!staleBuild) return;
+    try {
+      if (sessionStorage.getItem("tn-stale-reload")) return;
+      sessionStorage.setItem("tn-stale-reload", "1");
+    } catch { /* storage blocked: reload anyway, once per page */ }
+    window.location.reload();
+  }, [staleBuild]);
+  useEffect(() => {
+    const clear = window.setTimeout(() => { try { sessionStorage.removeItem("tn-stale-reload"); } catch { /* ignore */ } }, 10_000);
+    return () => window.clearTimeout(clear);
+  }, []);
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-background px-4">
@@ -55,8 +70,8 @@ function ErrorComponent({ error, reset }: import("@tanstack/react-router").Error
         <div className="mt-6 flex flex-wrap justify-center gap-2">
           <button
             onClick={() => {
-              router.invalidate();
-              reset();
+              // A real reload: re-rendering in place repeats the same failure (missing file after a deployment, broken state).
+              window.location.reload();
             }}
             className="inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
           >
@@ -69,6 +84,7 @@ function ErrorComponent({ error, reset }: import("@tanstack/react-router").Error
             Go home
           </a>
         </div>
+        {message && <p className="mt-6 break-words font-mono text-[11px] text-muted-foreground/80">{message.slice(0, 300)}</p>}
       </div>
     </div>
   );
