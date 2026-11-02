@@ -13,8 +13,6 @@ import serviceCode from "@/assets/service-code-depth.png";
 import serviceApi from "@/assets/service-api-depth.png";
 import serviceAnalytics from "@/assets/service-analytics-depth.png";
 import ecoLearning from "@/assets/eco-learning.jpg";
-import ecoHumanizer from "@/assets/eco-humanizer.jpg";
-import ecoFlotte from "@/assets/eco-flotte.jpg";
 import ecoMobil from "@/assets/eco-mobil.jpg";
 import { content, labs, type SiteLang } from "@/lib/i18n";
 import { Nav, Footer, Heading, Tag, R, ActionText, useReveal, useSiteLang } from "@/components/site/SiteChrome";
@@ -347,43 +345,36 @@ function How({ t }: { t: T }) {
 
 const ECO = [
   { img: ecoLearning, bg: "var(--eco-learning)" },
-  { img: ecoHumanizer, bg: "var(--eco-humanizer)" },
-  { img: ecoFlotte, bg: "var(--eco-flotte)" },
   { img: ecoMobil, bg: "var(--eco-mobil)" },
 ];
 
-/** One frosted-glass card per product: picture on top, then category, name, description, highlights and link. */
+/** One frosted-glass card per product: the picture (what the product does) fills three quarters, the text one quarter. */
 function Ecosystem({ t }: { t: T }) {
   const items = t.eco.items;
   return (
     <section className="px-4 py-6 sm:py-8">
       <Heading tag={t.eco.tag} title={t.eco.title} sub={t.eco.sub} />
       <R className="eco-stage relative mx-auto max-w-6xl">
-        <div className="relative grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="relative grid gap-5 md:grid-cols-2">
           {items.map((it, j) => {
             const url = "url" in it ? it.url : undefined;
             return (
-              <article key={it.n} className="eco-card group flex flex-col rounded-[1.75rem] p-2.5" style={{ animationDelay: `${j * 80}ms` }}>
-                <div className="relative aspect-[4/3] overflow-hidden rounded-[1.3rem]" style={{ backgroundImage: ECO[j]!.bg }}>
-                  <img src={ECO[j]!.img} alt={it.n} width={1024} height={1024} loading="lazy" className="h-full w-full object-cover transition duration-700 ease-out group-hover:scale-[1.06]" />
-                  <span className="eco-chip absolute left-3 top-3 rounded-full px-2.5 py-1 text-[10.5px] font-semibold uppercase tracking-widest">{it.k}</span>
+              <article key={it.n} className="eco-card group flex aspect-[4/5] flex-col rounded-[2rem] p-2.5 sm:aspect-[5/4]" style={{ animationDelay: `${j * 80}ms` }}>
+                <div className="relative min-h-0 flex-[3] overflow-hidden rounded-[1.6rem]" style={{ backgroundImage: ECO[j]!.bg }}>
+                  <img src={ECO[j]!.img} alt={it.n} width={1024} height={1024} loading="lazy" className="h-full w-full object-cover transition duration-700 ease-out group-hover:scale-[1.05]" />
+                  <span className="eco-chip absolute left-3.5 top-3.5 rounded-full px-2.5 py-1 text-[10.5px] font-semibold uppercase tracking-widest">{it.k}</span>
                 </div>
-                <div className="flex flex-1 flex-col px-3 pb-3 pt-4">
-                  <h3 className="font-display text-xl font-semibold tracking-tight">{it.n}</h3>
-                  <p className="mt-1.5 text-sm leading-relaxed text-muted-foreground">{it.d}</p>
-                  <ul className="mt-4 space-y-1.5">
-                    {it.f.map((f) => (
-                      <li key={f} className="flex items-center gap-2 text-[13px]"><span className="eco-tick grid size-4 shrink-0 place-items-center rounded-full"><Check className="size-2.5" strokeWidth={3} /></span>{f}</li>
-                    ))}
-                  </ul>
-                  {/* Products without a public site (e.g. Technova Connect) show no link. */}
-                  <div className="mt-auto pt-5">
-                    {url ? (
-                      <Button asChild variant="pill" size="pill" className="action-pill action-pill-dark w-full justify-center px-4 py-2.5 text-sm font-medium"><a href={url} target="_blank" rel="noreferrer"><ActionText>{t.eco.visit}</ActionText><ArrowUpRight className="h-4 w-4" /></a></Button>
-                    ) : (
-                      <span className="eco-soon flex w-full items-center justify-center rounded-full px-4 py-2.5 text-sm font-medium text-muted-foreground">{t.eco.soon}</span>
-                    )}
+                <div className="flex min-h-0 flex-1 items-center gap-4 px-3 pt-2.5 sm:px-4">
+                  <div className="min-w-0 flex-1">
+                    <h3 className="font-display text-lg font-semibold tracking-tight sm:text-xl">{it.n}</h3>
+                    <p className="mt-0.5 line-clamp-2 text-[13px] leading-snug text-muted-foreground sm:text-sm">{it.d}</p>
                   </div>
+                  {/* Products without a public site (e.g. Technova Connect) show no link. */}
+                  {url ? (
+                    <Button asChild variant="pill" size="pill" className="action-pill action-pill-dark shrink-0 px-4 py-2.5 text-sm font-medium"><a href={url} target="_blank" rel="noreferrer" aria-label={`${t.eco.visit} ${it.n}`}><ActionText>{t.eco.visit}</ActionText><ArrowUpRight className="h-4 w-4" /></a></Button>
+                  ) : (
+                    <span className="eco-soon shrink-0 rounded-full px-4 py-2.5 text-sm font-medium text-muted-foreground">{t.eco.soon}</span>
+                  )}
                 </div>
               </article>
             );

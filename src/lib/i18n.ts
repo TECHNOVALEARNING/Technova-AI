@@ -60,8 +60,6 @@ export const content = {
       soon: "Bientôt disponible",
       items: [
         { n: "Technova Learning", d: "Formations et ebooks pour maîtriser l'IA, la data et la cybersécurité.", url: "https://www.technovalearning.com/", k: "Formation", f: ["Formations tech en ligne", "IA, data et cybersécurité", "Ebooks prêts à l'emploi"] },
-        { n: "Humanizer AI", d: "Rendez vos textes IA naturels et indétectables.", url: "https://www.humanizerai.space/", k: "Écriture", f: ["Contourne les détecteurs IA", "Style naturel et fluide", "Multilingue"] },
-        { n: "Technova Flotte", d: "Suivi de flotte en temps réel : GPS, entretien, carburant.", url: "https://technova-flotte.vercel.app/", k: "Logistique", f: ["GPS en temps réel", "Alertes d'entretien", "Suivi du carburant"] },
         { n: "Technova Connect", d: "Connectivité et services mobiles pour le quotidien.", k: "Connectivité", f: ["Services mobiles", "Connectivité", "Paiements du quotidien"] },
       ],
     },
@@ -177,8 +175,6 @@ export const content = {
       soon: "Coming soon",
       items: [
         { n: "Technova Learning", d: "Courses and ebooks to master AI, data and cybersecurity.", url: "https://www.technovalearning.com/", k: "Learning", f: ["Online tech courses", "AI, data and cybersecurity", "Ready-to-use ebooks"] },
-        { n: "Humanizer AI", d: "Make AI text natural and undetectable.", url: "https://www.humanizerai.space/", k: "Writing", f: ["Bypasses AI detectors", "Natural, fluent style", "Multilingual"] },
-        { n: "Technova Flotte", d: "Real-time fleet tracking: GPS, maintenance, fuel.", url: "https://technova-flotte.vercel.app/", k: "Logistics", f: ["Real-time GPS", "Maintenance alerts", "Fuel tracking"] },
         { n: "Technova Connect", d: "Connectivity and mobile services for everyday life.", k: "Connectivity", f: ["Mobile services", "Connectivity", "Everyday payments"] },
       ],
     },
@@ -294,8 +290,6 @@ export const content = {
       soon: "Próximamente",
       items: [
         { n: "Technova Learning", d: "Formaciones y ebooks para dominar la IA, los datos y la ciberseguridad.", url: "https://www.technovalearning.com/", k: "Formación", f: ["Cursos tech en línea", "IA, datos y ciberseguridad", "Ebooks listos para usar"] },
-        { n: "Humanizer AI", d: "Haz que tus textos de IA suenen naturales e indetectables.", url: "https://www.humanizerai.space/", k: "Escritura", f: ["Evita los detectores de IA", "Estilo natural y fluido", "Multilingüe"] },
-        { n: "Technova Flotte", d: "Seguimiento de flotas en tiempo real: GPS, mantenimiento, combustible.", url: "https://technova-flotte.vercel.app/", k: "Logística", f: ["GPS en tiempo real", "Alertas de mantenimiento", "Control de combustible"] },
         { n: "Technova Connect", d: "Conectividad y servicios móviles para el día a día.", k: "Conectividad", f: ["Servicios móviles", "Conectividad", "Pagos cotidianos"] },
       ],
     },
@@ -411,8 +405,6 @@ export const content = {
       soon: "Em breve",
       items: [
         { n: "Technova Learning", d: "Cursos e ebooks para dominar IA, dados e cibersegurança.", url: "https://www.technovalearning.com/", k: "Formação", f: ["Cursos tech online", "IA, dados e cibersegurança", "Ebooks prontos para usar"] },
-        { n: "Humanizer AI", d: "Deixe seus textos de IA naturais e indetectáveis.", url: "https://www.humanizerai.space/", k: "Escrita", f: ["Contorna os detectores de IA", "Estilo natural e fluido", "Multilíngue"] },
-        { n: "Technova Flotte", d: "Rastreamento de frota em tempo real: GPS, manutenção, combustível.", url: "https://technova-flotte.vercel.app/", k: "Logística", f: ["GPS em tempo real", "Alertas de manutenção", "Controle de combustível"] },
         { n: "Technova Connect", d: "Conectividade e serviços móveis para o dia a dia.", k: "Conectividade", f: ["Serviços móveis", "Conectividade", "Pagamentos do dia a dia"] },
       ],
     },

@@ -112,7 +112,6 @@ export function DashboardLayout({ children }: { children: ReactNode }) {
   // Top banner: each product name opens its own site (TechNova AI Hub: this site's home page).
   const marqueeItems = [
     { name: "TECHNOVA LEARNING", text: lang === "fr" ? "Formations en IA, data et cybersécurité" : "AI, data and cybersecurity courses", href: "https://www.technovalearning.com/", external: true },
-    { name: "HUMANIZER AI", text: t.marqueeThree, href: "https://www.humanizerai.space/", external: true },
   ];
 
   return <DashboardContext.Provider value={{ lang, t, theme, setLang, setTheme, setArtifactWorkspaceOpen: setWorkspaceOpen, threads, reload, createThread, name, email, error }}>

@@ -92,8 +92,6 @@
   --supabase: oklch(.48 .14 155);
   --chat-glow-foreground: oklch(.99 .005 237);
   --eco-learning: linear-gradient(135deg, oklch(0.42 0.14 60), oklch(0.78 0.15 80));
-  --eco-humanizer: linear-gradient(135deg, oklch(0.45 0.2 295), oklch(0.72 0.18 350));
-  --eco-flotte: linear-gradient(135deg, oklch(0.4 0.1 170), oklch(0.75 0.16 155));
   --eco-mobil: linear-gradient(135deg, oklch(0.5 0.12 60), oklch(0.82 0.15 85));
   --ink-foreground: oklch(0.97 0 0);
   --iris-1: oklch(0.86 0.09 350);
@@ -720,10 +718,8 @@ html, body, * { scrollbar-width: none; }
 /* Landing ecosystem: frosted-glass product cards over soft colour blooms taken from each product's palette. */
 .eco-stage::before { content: ""; position: absolute; inset: -6% -4%; z-index: 0; pointer-events: none; filter: blur(60px); opacity: .55;
   background:
-    radial-gradient(28% 55% at 12% 45%, oklch(.78 .15 80 / .7), transparent 70%),
-    radial-gradient(28% 55% at 38% 60%, oklch(.72 .18 330 / .6), transparent 70%),
-    radial-gradient(28% 55% at 64% 40%, oklch(.75 .16 160 / .6), transparent 70%),
-    radial-gradient(28% 55% at 90% 58%, oklch(.72 .14 240 / .65), transparent 70%); }
+    radial-gradient(40% 60% at 22% 45%, oklch(.78 .15 80 / .7), transparent 70%),
+    radial-gradient(40% 60% at 78% 55%, oklch(.72 .14 240 / .65), transparent 70%); }
 .dark .eco-stage::before { opacity: .32; }
 .eco-stage > * { position: relative; z-index: 1; }
 .eco-card { background: color-mix(in oklab, oklch(1 0 0) 55%, transparent); border: 1px solid oklch(1 0 0 / .7);
