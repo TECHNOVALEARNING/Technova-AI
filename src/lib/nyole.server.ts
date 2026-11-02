@@ -59,38 +59,3 @@ export async function verifyWebhook(raw: string, tsHeader: string | null, sigHea
   for (let i = 0; i < sig.length; i++) diff |= expected.charCodeAt(i) ^ sig.charCodeAt(i);
   return diff === 0;
 }
-
-/** Confirms with the provider (never trusts the browser) and credits once. */
-export async function reconcilePayment(paymentId: string) {
-  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-  const { data: p } = await supabaseAdmin.from("payments").select("*").eq("id", paymentId).maybeSingle();
-  if (!p || !p.session_id) return null;
-  if (p.credited) return "success";
-  const s = await getCheckoutStatus(p.session_id);
-  const status = s.status.toLowerCase();
-  if (s.paid && status === "success" && s.amount === p.amount_xof && s.currency === "XOF") {
-    if (!p.livemode && !testPaymentsAllowed()) {
-      await supabaseAdmin.from("payments").update({ status: "test_blocked", updated_at: new Date().toISOString() }).eq("id", p.id);
-      const { logSecurityEvent } = await import("@/lib/security.server");
-      await logSecurityEvent(p.owner_id, "test_payment_blocked", "warning", { payment_id: p.id, amount: p.amount_xof });
-      return "test_blocked";
-    }
-    await supabaseAdmin.rpc("settle_payment", { _payment: p.id });
-    return "success";
-  }
-  if (status !== p.status) await supabaseAdmin.from("payments").update({ status, updated_at: new Date().toISOString() }).eq("id", p.id);
-  return status;
-}
-
-/** Safety net for lost webhooks: re-checks recent unpaid checkouts with the provider. */
-export async function reconcilePendingPayments(maxAgeHours = 72, limit = 50) {
-  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-  const since = new Date(Date.now() - maxAgeHours * 3_600_000).toISOString();
-  const { data } = await supabaseAdmin.from("payments").select("id").eq("credited", false).not("session_id", "is", null)
-    .not("status", "in", "(failed,test_blocked,expired,cancelled,canceled)").gte("created_at", since).order("created_at").limit(limit);
-  let credited = 0;
-  for (const row of data ?? []) {
-    try { if ((await reconcilePayment(row.id)) === "success") credited++; } catch (e) { console.error("reconcile", row.id, e); }
-  }
-  return { checked: data?.length ?? 0, credited };
-}

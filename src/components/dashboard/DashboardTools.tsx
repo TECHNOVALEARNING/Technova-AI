@@ -23,9 +23,10 @@ import { upgradeFeatureOf, upgradeSentence } from "@/lib/plans";
 import { usePlanTier } from "@/lib/plan-client";
 import { savePref } from "@/lib/consent";
 import { formatFromXof, rateFor, useGeoPrice } from "@/lib/geo-price-client";
-import { checkPayment, getPaymentMode, startCheckout } from "@/lib/payments.functions";
+import { checkPayment, getPaymentMode } from "@/lib/payments.functions";
 import { useDashboard } from "./dashboard-context";
 import { PaymentSuccess } from "./PaymentSuccess";
+import { PaymentCheckout } from "./PaymentCheckout";
 import supabaseLogo from "@/assets/supabase-logo.svg";
 
 const copy = {
@@ -131,8 +132,8 @@ export function ModelsPage() {
 }
 
 function Packs({ cur }: { cur: ReturnType<typeof useCurrency> }) {
-  const c = useCopy(); const { lang } = useDashboard(); const start = useServerFn(startCheckout); const check = useServerFn(checkPayment);
-  const [packs, setPacks] = useState<Tables<"credit_packs">[]>([]); const [busy, setBusy] = useState("");
+  const c = useCopy(); const { lang } = useDashboard(); const check = useServerFn(checkPayment);
+  const [packs, setPacks] = useState<Tables<"credit_packs">[]>([]);
   // Confirmed payment: celebrate, then reload so the balance and plan badge show the new pack.
   const [paid, setPaid] = useState<{ pack: string | null; credits: number | null } | null>(null);
   useEffect(() => { void supabase.from("credit_packs").select("*").eq("active", true).order("display_order").then(({ data }) => setPacks(data ?? [])); }, []);
@@ -145,22 +146,21 @@ function Packs({ cur }: { cur: ReturnType<typeof useCurrency> }) {
   const [pending, setPending] = useState<string | null>(null);
   useEffect(() => { const s = localStorage.getItem(PENDING_PACK_KEY); if (s) { localStorage.removeItem(PENDING_PACK_KEY); setPending(s); } }, []);
   const pendingPack = packs.find(p => p.slug === pending);
-  async function buy(slug: string) {
-    setBusy(slug);
-    try { const r = await start({ data: { slug } }); window.location.href = r.url; }
-    catch { toast.error(c.payError); setBusy(""); }
-  }
-  return <div className="space-y-4"><PaymentSuccess open={!!paid} pack={paid?.pack ?? null} credits={paid?.credits ?? null} lang={lang === "en" ? "en" : "fr"} onClose={() => { setPaid(null); window.location.reload(); }} />{pendingPack && <div className={`${card} border-primary/60 ring-1 ring-primary/30`} role="region" aria-label={pendingPack.name}>
+  // Buying opens the checkout (card or Mobile Money); the server routes it to FeexPay or Nyole.
+  const [checkout, setCheckout] = useState<Tables<"credit_packs"> | null>(null);
+  const geo = useGeoPrice();
+  function buy(slug: string) { const p = packs.find((x) => x.slug === slug); if (p) setCheckout(p); }
+  return <div className="space-y-4"><PaymentCheckout pack={checkout} lang={lang === "en" ? "en" : "fr"} country={geo.country} onClose={() => setCheckout(null)} onPaid={(r) => { setCheckout(null); setPaid(r); }} /><PaymentSuccess open={!!paid} pack={paid?.pack ?? null} credits={paid?.credits ?? null} lang={lang === "en" ? "en" : "fr"} onClose={() => { setPaid(null); window.location.reload(); }} />{pendingPack && <div className={`${card} border-primary/60 ring-1 ring-primary/30`} role="region" aria-label={pendingPack.name}>
     <p className="text-[13.5px] font-semibold">{c.confirmPack}</p>
     <p className="mt-1 text-[13px]">{pendingPack.name} · {pendingPack.price_xof.toLocaleString("fr-FR")} FCFA → {pendingPack.credits.toLocaleString()} {c.credits}</p>
     <p className="mt-1 text-[11.5px] text-muted-foreground">{c.oneTime}</p>
-    <div className="mt-3 flex gap-2"><Button disabled={!!busy} className="h-9 rounded-full text-[12.5px]" onClick={() => void buy(pendingPack.slug)}>{busy === pendingPack.slug ? c.redirecting : c.confirmPay}</Button><Button variant="ghost" className="h-9 rounded-full text-[12.5px]" onClick={() => setPending(null)}>{c.cancel}</Button></div>
+    <div className="mt-3 flex gap-2"><Button className="h-9 rounded-full text-[12.5px]" onClick={() => buy(pendingPack.slug)}>{c.confirmPay}</Button><Button variant="ghost" className="h-9 rounded-full text-[12.5px]" onClick={() => setPending(null)}>{c.cancel}</Button></div>
   </div>}<div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">{packs.map(p => <div key={p.id} className={`${card} ${p.featured ? "border-primary/60 ring-1 ring-primary/30" : ""}`}>
     <div className="flex items-center justify-between"><p className="text-[13.5px] font-semibold">{p.name}</p>{p.featured && <span className="rounded-full bg-primary px-2 py-0.5 text-[10px] font-semibold text-primary-foreground">{c.popular}</span>}</div>
     <p className="mt-2 font-display text-[24px] font-semibold">{cur.format(p.price_xof)}</p>
     {cur.currency !== "XOF" && <p className="text-[11px] text-muted-foreground">{lang === "fr" ? "Facturé" : "Billed"} {p.price_xof.toLocaleString("fr-FR")} FCFA</p>}
     <p className="text-[12px] text-muted-foreground">{p.credits.toLocaleString()} {c.credits}</p>
-    <Button variant={p.featured ? "default" : "outline"} disabled={!!busy} className="mt-4 h-9 w-full rounded-full text-[12.5px]" onClick={() => void buy(p.slug)}>{busy === p.slug ? c.redirecting : c.buy}</Button>
+    <Button variant={p.featured ? "default" : "outline"} className="mt-4 h-9 w-full rounded-full text-[12.5px]" onClick={() => buy(p.slug)}>{c.buy}</Button>
   </div>)}</div></div>;
 }
 

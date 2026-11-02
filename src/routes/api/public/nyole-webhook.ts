@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { reconcilePayment, verifyWebhook } from "@/lib/nyole.server";
+import { verifyWebhook } from "@/lib/nyole.server";
+import { reconcilePayment } from "@/lib/payments.server";
 
 export const Route = createFileRoute("/api/public/nyole-webhook")({
   server: {

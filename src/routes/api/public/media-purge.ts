@@ -8,7 +8,7 @@ async function run(request: Request) {
   const { purgeExpiredMedia } = await import("@/lib/media-archive.server");
   const purged = await purgeExpiredMedia();
   // Daily safety net: credit payments whose webhook never arrived.
-  const { reconcilePendingPayments } = await import("@/lib/nyole.server");
+  const { reconcilePendingPayments } = await import("@/lib/payments.server");
   const payments = await reconcilePendingPayments().catch((e) => { console.error("reconcile pending", e); return null; });
   return Response.json({ purged, payments });
 }
