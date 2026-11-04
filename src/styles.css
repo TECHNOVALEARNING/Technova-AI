@@ -928,3 +928,25 @@ html, body, * { scrollbar-width: none; }
   --look-glass: oklch(.2 0 0 / .36); --look-glass-edge: oklch(1 0 0 / .12); --look-veil: oklch(.05 0 0 / .2);
   --look-blob-1: oklch(1 0 0 / .06); --look-blob-2: oklch(1 0 0 / .04); }
 @media (prefers-reduced-motion: reduce) { .dashboard-shell:is(.look-ardoise, .look-amethyste, .look-cobalt, .look-reverbere) .dashboard-wallpaper::before { animation: none; } }
+
+/* Readability on every look: the glass frosts more (stronger blur, fuller fill, calmer saturation) so text never
+   fights the wallpaper; picture looks also soften their image slightly behind the content. */
+.dashboard-shell:is(.look-brume, .look-soie, .look-ardoise, .look-amethyste, .look-cobalt, .look-reverbere, .look-apple, .look-pastel, .look-sable):not(:has(.chat-thread)) main :is(.bg-card, .bg-card\/95, .bg-card\/90, .bg-card\/85, .bg-card\/80, .bg-card\/70).border:not(.chat-composer, .chat-composer *, .border .border),
+.dashboard-shell:is(.look-brume, .look-soie, .look-ardoise, .look-amethyste, .look-cobalt, .look-reverbere, .look-apple, .look-pastel, .look-sable) .dashboard-marquee {
+  backdrop-filter: blur(40px) saturate(1.25); -webkit-backdrop-filter: blur(40px) saturate(1.25); }
+.dark .dashboard-shell.look-brume .dashboard-content { --look-glass: oklch(.17 0 0 / .6); }
+.dark .dashboard-shell.look-soie .dashboard-content { --look-glass: oklch(.15 .012 250 / .6); }
+.dark .dashboard-shell.look-ardoise .dashboard-content { --look-glass: oklch(.17 .015 240 / .62); }
+.dark .dashboard-shell.look-amethyste .dashboard-content { --look-glass: oklch(.14 .03 300 / .62); }
+.dark .dashboard-shell.look-cobalt .dashboard-content { --look-glass: oklch(.15 .035 255 / .62); }
+.dark .dashboard-shell.look-reverbere .dashboard-content { --look-glass: oklch(.14 0 0 / .62); }
+.dashboard-shell.look-apple .dashboard-content { --look-glass: oklch(1 0 0 / .62); }
+.dashboard-shell.look-pastel .dashboard-content { --look-glass: oklch(1 0 0 / .5); }
+.dashboard-shell.look-sable .dashboard-content { --look-glass: oklch(1 .01 80 / .6); }
+.dashboard-shell:is(.look-ardoise, .look-amethyste, .look-cobalt, .look-reverbere) .dashboard-wallpaper::before { filter: blur(3px); }
+/* Starter chips and composer controls: frosted pills that read on any background. */
+.dashboard-shell[class*="look-"] .starter-chip { background: var(--look-glass, oklch(1 0 0 / .6)); border-color: var(--look-glass-edge, oklch(1 0 0 / .7));
+  backdrop-filter: blur(24px) saturate(1.25); -webkit-backdrop-filter: blur(24px) saturate(1.25); box-shadow: inset 0 1px 0 var(--look-glass-shine, oklch(1 0 0 / .8)); }
+.dashboard-shell[class*="look-"] .starter-chip:hover { background: color-mix(in oklab, var(--look-glass, oklch(1 0 0 / .6)), var(--foreground) 8%); }
+.dashboard-shell:is(.look-brume, .look-soie, .look-ardoise, .look-amethyste, .look-cobalt, .look-reverbere, .look-apple, .look-pastel, .look-sable):not(:has(.chat-thread)) .chat-composer {
+  backdrop-filter: blur(48px) saturate(1.25); -webkit-backdrop-filter: blur(48px) saturate(1.25); }
