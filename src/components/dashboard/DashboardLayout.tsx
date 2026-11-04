@@ -11,7 +11,7 @@ import { dashboardText, type Lang } from "@/lib/i18n";
 import { supabase } from "@/integrations/supabase/client";
 import type { Tables } from "@/integrations/supabase/types";
 import { media } from "@/lib/media";
-import { dashboardLooks, isDashboardLook, lookMode, type DashboardLook } from "@/lib/dashboard-themes";
+import { dashboardLooks, defaultLook, lookMode, storedLook, type DashboardLook } from "@/lib/dashboard-themes";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 
 import { ThreadItem } from "./ThreadItem";
@@ -60,7 +60,8 @@ export function DashboardLayout({ children }: { children: ReactNode }) {
     const savedLang = window.localStorage.getItem("technova-dashboard-lang");
     const savedTheme = window.localStorage.getItem("technova-dashboard-theme");
     if (savedLang === "fr" || savedLang === "en") setLangState(savedLang);
-    if (isDashboardLook(savedTheme)) setLookState(savedTheme);
+    const savedLook = storedLook(savedTheme);
+    if (savedLook) setLookState(savedLook);
     setCollapsed(window.localStorage.getItem("technova-sidebar-collapsed") === "1");
   }, []);
   useEffect(() => { document.documentElement.classList.toggle("dark", theme === "dark"); return () => document.documentElement.classList.remove("dark"); }, [theme]);
@@ -98,7 +99,7 @@ export function DashboardLayout({ children }: { children: ReactNode }) {
   function setLang(value: Lang) { setLangState(value); savePref("technova-dashboard-lang", value); }
   function setLook(value: DashboardLook) { setLookState(value); savePref("technova-dashboard-theme", value); }
   // Light/dark switch (Settings): keeps the current look when it already has that mode, else the original theme.
-  function setTheme(value: "light" | "dark") { if (lookMode(look) !== value) setLook(value); }
+  function setTheme(value: "light" | "dark") { if (lookMode(look) !== value) setLook(defaultLook[value]); }
   function toggleCollapsed() {
     if (artifactWorkspaceOpen) setWorkspaceCollapsed(!effectiveCollapsed);
     else setCollapsed(v => { savePref("technova-sidebar-collapsed", v ? "0" : "1"); return !v; });
