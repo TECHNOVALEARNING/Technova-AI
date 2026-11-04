@@ -715,14 +715,26 @@ html, body, * { scrollbar-width: none; }
 .dark .dashboard-shell:not(:has(.chat-thread)) main .border :is(.bg-secondary, .bg-background):not(input, textarea, select) { background-color: oklch(1 0 0 / .05); }
 .dark .dashboard-shell .dashboard-marquee { box-shadow: inset 0 -1px 0 var(--glass-edge); }
 
-/* Landing ecosystem and pricing: the contact form's frosted glass (white 10 %, strong blur, faint edge) over a dark
-   section with the drifting orb, so the picture shows through the cards. */
-.eco-card, .glass-card { background: oklch(1 0 0 / .1); border: 1px solid oklch(1 0 0 / .15);
-  backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px); box-shadow: var(--shadow-lift); }
-.eco-card { transition: transform .5s cubic-bezier(.2, .8, .2, 1), border-color .5s; animation: fade-in .6s ease-out both; }
-.eco-card:hover { transform: translateY(-4px); border-color: oklch(1 0 0 / .3); }
-.eco-chip { color: oklch(.98 0 0); background: oklch(0 0 0 / .35); border: 1px solid oklch(1 0 0 / .2); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); }
-.eco-soon { border: 1px dashed oklch(1 0 0 / .25); }
+/* Landing ecosystem and pricing: frosted-glass cards on the normal page background. A few soft colour orbs sit
+   just behind the cards (not the page) so the blur has something to frost, as on a macOS window. */
+.glass-stage::before { content: ""; position: absolute; inset: -4% 2%; z-index: 0; pointer-events: none; filter: blur(28px);
+  background:
+    radial-gradient(16% 26% at 18% 90%, oklch(.68 .19 255 / .85), transparent 70%),
+    radial-gradient(14% 24% at 50% 78%, oklch(.8 .16 75 / .8), transparent 70%),
+    radial-gradient(16% 26% at 80% 92%, oklch(.7 .19 320 / .7), transparent 70%),
+    radial-gradient(12% 30% at 99% 45%, oklch(.74 .15 175 / .75), transparent 70%),
+    radial-gradient(12% 30% at 1% 40%, oklch(.72 .16 290 / .6), transparent 70%); }
+.glass-stage > * { position: relative; z-index: 1; }
+.eco-card, .glass-card {
+  background: linear-gradient(140deg, oklch(1 0 0 / .62), oklch(1 0 0 / .32));
+  border: 1px solid oklch(1 0 0 / .75);
+  backdrop-filter: blur(22px) saturate(1.7); -webkit-backdrop-filter: blur(22px) saturate(1.7);
+  box-shadow: inset 0 1px 0 oklch(1 0 0 / .9), inset 0 0 0 1px oklch(1 0 0 / .18), 0 1px 2px oklch(.3 .05 255 / .05), 0 22px 50px -24px oklch(.4 .1 255 / .35); }
+.glass-card-featured { border-color: color-mix(in oklab, var(--supabase) 55%, white); }
+.eco-card { transition: transform .5s cubic-bezier(.2, .8, .2, 1), box-shadow .5s; animation: fade-in .6s ease-out both; }
+.eco-card:hover { transform: translateY(-4px); }
+.eco-chip { color: oklch(.2 .02 260); background: oklch(1 0 0 / .6); border: 1px solid oklch(1 0 0 / .75); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); }
+.eco-soon { border: 1px dashed color-mix(in oklab, var(--foreground) 22%, transparent); }
 @media (prefers-reduced-motion: reduce) { .eco-card { transition: none; animation: none; } .eco-card:hover { transform: none; } }
 
 /* Why TechNova: a perspective grid drifting under each medallion, signal ripples and an animation per icon

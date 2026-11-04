@@ -9,7 +9,6 @@ import { fallbackPacks, packCopy, PENDING_PACK_KEY, type PublicPack } from "@/li
 import type { SiteLang } from "@/lib/i18n";
 import { formatLocalPrice, isCfa } from "@/lib/geo-pricing";
 import { useGeoPrice } from "@/lib/geo-price-client";
-import heroOrb from "@/assets/hero-orb.jpg";
 
 const text = {
   fr: { title: "Des forfaits simples et flexibles", sub: "Quatre packs de crédits Technova prépayés, sans abonnement, pour discuter, créer et développer.", once: "Paiement unique", terms: "Paiement unique • crédits prépayés • aucun renouvellement automatique", choose: "Choisir", popular: "LE PLUS POPULAIRE", credits: "crédits Technova" },
@@ -26,7 +25,7 @@ const geoText = {
 } satisfies Record<SiteLang, unknown>;
 const locales: Record<SiteLang, string> = { fr: "fr-FR", en: "en-US", es: "es-ES", pt: "pt-BR" };
 
-/** `glass` (landing page): frosted cards over a dark section with the drifting orb, like the contact form. */
+/** `glass` (landing page): frosted-glass cards on the normal page background. */
 export function PricingContent({ lang, glass = false }: { lang: SiteLang; glass?: boolean }) {
   const t = text[lang]; const g = geoText[lang]; const loc = locales[lang]; const navigate = useNavigate();
   const geo = useGeoPrice();
@@ -45,16 +44,15 @@ export function PricingContent({ lang, glass = false }: { lang: SiteLang; glass?
     void navigate({ to: data.session ? "/dashboard/credits" : "/inscription" });
   }
 
-  return <section id="pricing" className={glass ? "dark relative overflow-hidden bg-ink px-5 py-12 text-foreground sm:py-16" : "px-5 py-12 sm:py-16"}>
-    {glass && <img src={heroOrb} alt="" loading="lazy" className="animate-drift absolute inset-0 h-full w-full object-cover opacity-40" />}
+  return <section id="pricing" className="px-5 py-12 sm:py-16">
     <div className="relative mx-auto max-w-7xl">
       <h2 className="font-display text-3xl font-semibold md:text-4xl">{t.title}</h2>
       <p className="mt-3 text-muted-foreground">{t.sub}</p>
       <p className="mt-2 text-sm font-medium">{t.terms}</p>
 
-      <div className="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">{packs.map((p) => {
+      <div className={`${glass ? "glass-stage " : ""}relative mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-4`}>{packs.map((p) => {
         const copy = packCopy[p.slug]?.[lang];
-        return <article key={p.slug} className={`flex flex-col rounded-2xl border p-6 ${glass ? `glass-card ${p.featured ? "!border-supabase/60" : ""}` : p.featured ? "border-supabase/50 bg-supabase/5 shadow-lift" : "border-border bg-card"}`}>
+        return <article key={p.slug} className={`flex flex-col rounded-2xl border p-6 ${glass ? `glass-card${p.featured ? " glass-card-featured" : ""}` : p.featured ? "border-supabase/50 bg-supabase/5 shadow-lift" : "border-border bg-card"}`}>
           <span aria-hidden={!p.featured} className={`mb-3 self-start rounded-full bg-supabase px-2.5 py-1 text-[10px] font-bold tracking-wide text-white ${p.featured ? "" : "invisible"}`}>{t.popular}</span>
           <h3 className="font-display text-xl font-semibold">{p.name}</h3>
           {copy && <p className="mt-1 text-sm text-muted-foreground">{copy.tagline}</p>}
@@ -72,7 +70,7 @@ export function PricingContent({ lang, glass = false }: { lang: SiteLang; glass?
             <FontAwesomeIcon icon={perk.icon} fixedWidth aria-hidden className={`mt-0.5 size-4 shrink-0 ${p.featured ? "text-supabase" : "text-chat-glow"}`} />
             <span>{perk.text}</span>
           </li>)}</ul>}
-          <Button variant="pill" size="pill" onClick={() => void choose(p.slug)} aria-label={`${t.choose} ${p.name}`} className={`action-pill mt-6 w-full justify-center px-3 py-2.5 text-sm ${glass ? "action-pill-glass" : p.featured ? "action-pill-light" : "action-pill-dark"}`}>{t.choose} {p.name}<ArrowUpRight className="size-3.5" /></Button>
+          <Button variant="pill" size="pill" onClick={() => void choose(p.slug)} aria-label={`${t.choose} ${p.name}`} className={`action-pill mt-6 w-full justify-center px-3 py-2.5 text-sm ${p.featured ? "action-pill-light" : "action-pill-dark"}`}>{t.choose} {p.name}<ArrowUpRight className="size-3.5" /></Button>
         </article>;
       })}</div>
 
