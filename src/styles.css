@@ -697,11 +697,11 @@ html, body, * { scrollbar-width: none; }
   --glass-shine: oklch(1 0 0 / .75);
   background-color: var(--glass-fill);
   border-color: var(--glass-edge);
-  box-shadow: inset 0 1px 0 var(--glass-shine), 0 1px 2px oklch(.3 .05 255 / .05), 0 14px 36px -18px oklch(.35 .08 255 / .28);
+  box-shadow: inset 0 1px 0 var(--glass-shine), 0 20px 50px -20px oklch(.45 .1 255 / .35);
 }
 .dashboard-shell:not(:has(.chat-thread)) main :is(.bg-card, .bg-card\/95, .bg-card\/90, .bg-card\/85, .bg-card\/80, .bg-card\/70).border:not(.chat-composer, .chat-composer *, .border .border),
 .dashboard-shell .dashboard-marquee { backdrop-filter: blur(24px) saturate(1.6); -webkit-backdrop-filter: blur(24px) saturate(1.6); }
-.dashboard-shell:not(:has(.chat-thread)) main :is(.bg-card, .bg-card\/95, .bg-card\/90, .bg-card\/85, .bg-card\/80, .bg-card\/70).border:not(.chat-composer, .chat-composer *, .border .border) { border-radius: max(var(--glass-radius, 14px), 8px); }
+.dashboard-shell:not(:has(.chat-thread)) main :is(.bg-card, .bg-card\/95, .bg-card\/90, .bg-card\/85, .bg-card\/80, .bg-card\/70).border:not(.chat-composer, .chat-composer *, .border .border) { border-radius: max(var(--glass-radius, 22px), 8px); }
 .dashboard-shell .dashboard-marquee { box-shadow: inset 0 -1px 0 var(--glass-edge); border-bottom-color: transparent; }
 /* Inside a glass panel, tinted fills become translucent too so the frost reads through. */
 .dashboard-shell:not(:has(.chat-thread)) main .border :is(.bg-secondary, .bg-background):not(input, textarea, select) { background-color: color-mix(in oklab, oklch(1 0 0) 38%, transparent); }
@@ -732,3 +732,63 @@ html, body, * { scrollbar-width: none; }
 .eco-tick { color: var(--background); background: var(--foreground); }
 .eco-soon { border: 1px dashed color-mix(in oklab, var(--foreground) 22%, transparent); }
 @media (prefers-reduced-motion: reduce) { .eco-card { transition: none; animation: none; } .eco-card:hover { transform: none; } }
+
+/* Why TechNova: a perspective grid drifting under each medallion, signal ripples and an animation per icon
+   (lightning flicker, floating cubes, wallet tilt). Static for reduced-motion users. */
+.why-stage::after {
+  content: ""; position: absolute; inset: -40% -20% -10%; z-index: -1; pointer-events: none;
+  background:
+    linear-gradient(color-mix(in oklab, var(--ink-foreground) 28%, transparent) 1px, transparent 1px) 0 0 / 28px 28px,
+    linear-gradient(90deg, color-mix(in oklab, var(--ink-foreground) 28%, transparent) 1px, transparent 1px) 0 0 / 28px 28px;
+  transform: perspective(320px) rotateX(58deg); transform-origin: 50% 100%;
+  -webkit-mask: radial-gradient(60% 70% at 50% 85%, black 20%, transparent 75%); mask: radial-gradient(60% 70% at 50% 85%, black 20%, transparent 75%);
+  animation: why-grid 3.2s linear infinite;
+}
+@keyframes why-grid { to { background-position: 0 28px, 0 0; } }
+.why-ripple { position: absolute; left: 50%; top: 50%; width: 128px; height: 128px; margin: -64px 0 0 -64px; border-radius: 50%; pointer-events: none;
+  border: 1px solid color-mix(in oklab, var(--ink-foreground) 35%, transparent); animation: why-ripple 3.6s cubic-bezier(.2, .6, .3, 1) infinite; }
+.why-ripple-late { animation-delay: 1.8s; }
+@keyframes why-ripple { from { transform: scale(1); opacity: .7; } to { transform: scale(2.1); opacity: 0; } }
+.why-medallion::after { content: ""; position: absolute; inset: -9px; border-radius: 50%; pointer-events: none;
+  background: conic-gradient(from 0deg, transparent 0 70%, color-mix(in oklab, var(--ink-foreground) 70%, transparent) 88%, transparent 100%);
+  -webkit-mask: radial-gradient(closest-side, transparent calc(100% - 3px), black calc(100% - 2px)); mask: radial-gradient(closest-side, transparent calc(100% - 3px), black calc(100% - 2px));
+  animation: why-orbit 4s linear infinite; }
+@keyframes why-orbit { to { transform: rotate(360deg); } }
+.why-icon-0 { animation: why-zap 2.8s ease-in-out infinite; }
+@keyframes why-zap {
+  0%, 62%, 100% { transform: none; filter: drop-shadow(0 2px 5px color-mix(in oklab, var(--ink-foreground) 32%, transparent)); }
+  66% { transform: scale(1.12) rotate(-6deg); filter: drop-shadow(0 0 14px oklch(.95 .12 95)); opacity: 1; }
+  70% { opacity: .55; } 74% { transform: scale(1.08); opacity: 1; filter: drop-shadow(0 0 18px oklch(.95 .12 95)); } 82% { transform: none; }
+}
+.why-icon-1 { animation: why-float 3.4s ease-in-out infinite; }
+@keyframes why-float { 0%, 100% { transform: translateY(2px) rotate(0deg); } 50% { transform: translateY(-6px) rotate(8deg); } }
+.why-icon-2 { animation: why-wallet 3.6s ease-in-out infinite; transform-origin: 50% 80%; }
+@keyframes why-wallet { 0%, 55%, 100% { transform: none; } 62% { transform: rotate(-9deg) scale(1.06); } 70% { transform: rotate(6deg) scale(1.06); } 78% { transform: none; } }
+@media (prefers-reduced-motion: reduce) {
+  .why-stage::after, .why-ripple, .why-medallion::after, .why-icon-0, .why-icon-1, .why-icon-2 { animation: none; }
+  .why-ripple { display: none; }
+}
+
+/* Dashboard light mode: soft blue-wave backdrop (blurred, under a white veil), cool blue-grey text tokens,
+   white glass panels and a stronger glass composer. Dark mode keeps its own night backdrop and tokens. */
+.dashboard-shell {
+  --foreground: oklch(.22 .03 250); --card-foreground: oklch(.22 .03 250);
+  --muted-foreground: oklch(.52 .03 250); --secondary: oklch(.95 .015 245); --muted: oklch(.95 .012 245);
+  --accent: oklch(.93 .03 245); --border: oklch(.9 .015 245); --input: oklch(.9 .015 245);
+}
+.dashboard-wallpaper { background: oklch(.94 .02 245); }
+.dashboard-wallpaper img { opacity: 0; }
+.dashboard-wallpaper::before { content: ""; position: absolute; inset: -12%; filter: blur(70px) saturate(1.15);
+  background:
+    repeating-radial-gradient(ellipse 140% 70% at 0% 110%, oklch(.62 .15 255 / .32) 0 5%, transparent 9% 15%),
+    radial-gradient(55% 45% at 82% 8%, oklch(.6 .16 256 / .85), transparent 70%),
+    radial-gradient(50% 40% at 18% 30%, oklch(.88 .06 212 / .9), transparent 70%),
+    radial-gradient(65% 50% at 68% 62%, oklch(.56 .17 258 / .7), transparent 70%),
+    radial-gradient(55% 45% at 12% 95%, oklch(.72 .12 240 / .75), transparent 70%),
+    linear-gradient(160deg, oklch(.96 .01 240), oklch(.82 .07 250)); }
+.dashboard-wallpaper::after { content: ""; position: absolute; inset: 0; background: oklch(1 0 0 / .3); }
+.dark .dashboard-wallpaper::before, .dark .dashboard-wallpaper::after { display: none; }
+.dashboard-shell:not(:has(.chat-thread)) .chat-composer { background: oklch(1 0 0 / .85); border-color: oklch(1 0 0 / .7);
+  backdrop-filter: blur(24px) saturate(1.6); -webkit-backdrop-filter: blur(24px) saturate(1.6);
+  box-shadow: 0 20px 50px -20px oklch(.45 .1 255 / .35), inset 0 1px 0 oklch(1 0 0 / .8) !important; border-radius: 28px; }
+.dark .dashboard-shell:not(:has(.chat-thread)) .chat-composer { background: var(--card); border-color: var(--border); box-shadow: var(--shadow-soft) !important; }

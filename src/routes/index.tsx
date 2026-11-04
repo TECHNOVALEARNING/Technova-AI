@@ -12,7 +12,7 @@ import serviceCreative from "@/assets/service-creative-depth.png";
 import serviceCode from "@/assets/service-code-depth.png";
 import serviceApi from "@/assets/service-api-depth.png";
 import serviceAnalytics from "@/assets/service-analytics-depth.png";
-import ecoLearning from "@/assets/eco-learning.jpg";
+import ecoLearning from "@/assets/eco-learning.webp";
 import ecoConnect from "@/assets/eco-connect.webp";
 import { content, labs, type SiteLang } from "@/lib/i18n";
 import { Nav, Footer, Heading, Tag, R, ActionText, useReveal, useSiteLang } from "@/components/site/SiteChrome";
@@ -228,7 +228,8 @@ function Why({ t }: { t: T }) {
           return <R key={it.t} delay={i * 120} className="h-full">
             <article className="why-card group h-full">
               <div className="why-stage" aria-hidden="true">
-                <div className="why-medallion"><Icon className="why-icon" strokeWidth={2.15} /></div>
+                <span className="why-ripple" /><span className="why-ripple why-ripple-late" />
+                <div className="why-medallion"><Icon className={`why-icon why-icon-${i}`} strokeWidth={2.15} /></div>
                 <span className="why-number">{String(i + 1).padStart(2, "0")}</span>
               </div>
               <div className="why-copy">
@@ -344,9 +345,10 @@ function How({ t }: { t: T }) {
 }
 
 const ECO = [
-  { img: ecoLearning, bg: "var(--eco-learning)" },
-  // A square poster with its own title and feature bar: shown whole on a matching backdrop, never cropped.
-  { img: ecoConnect, bg: "var(--eco-connect)", contain: true },
+  // Square poster with text at the top and bottom: shown whole over a blurred copy of itself, never cropped.
+  { img: ecoLearning, bg: "var(--eco-learning)", contain: true },
+  // 16:9 poster: it already matches the picture area, so it fills it.
+  { img: ecoConnect, bg: "var(--eco-connect)" },
 ];
 
 /** One frosted-glass card per product: the picture (what the product does) fills three quarters, the text one quarter. */
@@ -362,7 +364,8 @@ function Ecosystem({ t }: { t: T }) {
             return (
               <article key={it.n} className="eco-card group flex aspect-[4/5] flex-col rounded-[2rem] p-2.5 sm:aspect-[5/4]" style={{ animationDelay: `${j * 80}ms` }}>
                 <div className="relative min-h-0 flex-[3] overflow-hidden rounded-[1.6rem]" style={{ backgroundImage: ECO[j]!.bg }}>
-                  <img src={ECO[j]!.img} alt={it.n} width={1024} height={1024} loading="lazy" className={`h-full w-full ${"contain" in ECO[j]! ? "object-contain" : "object-cover"} transition duration-700 ease-out group-hover:scale-[1.05]`} />
+                  {"contain" in ECO[j]! && <img src={ECO[j]!.img} alt="" aria-hidden="true" loading="lazy" className="absolute inset-0 h-full w-full scale-125 object-cover opacity-80 blur-2xl" />}
+                  <img src={ECO[j]!.img} alt={it.n} width={1600} height={"contain" in ECO[j]! ? 1600 : 900} loading="lazy" className={`relative h-full w-full ${"contain" in ECO[j]! ? "object-contain" : "object-cover"} transition duration-700 ease-out group-hover:scale-[1.04]`} />
                   <span className="eco-chip absolute left-3.5 top-3.5 rounded-full px-2.5 py-1 text-[10.5px] font-semibold uppercase tracking-widest">{it.k}</span>
                 </div>
                 <div className="flex min-h-0 flex-1 items-center gap-4 px-3 pt-2.5 sm:px-4">
