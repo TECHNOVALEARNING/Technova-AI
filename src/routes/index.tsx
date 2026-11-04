@@ -217,6 +217,27 @@ function Intro({ t }: { t: T }) {
   );
 }
 
+/** Line icon that draws itself stroke by stroke when it scrolls into view (and again each time it comes back):
+    every shape gets pathLength=1 so one dash covers it, then the dash offset eases from hidden to drawn. */
+function DrawIcon({ icon: Icon, className, strokeWidth }: { icon: typeof Zap; className?: string; strokeWidth?: number }) {
+  const ref = useRef<SVGSVGElement>(null);
+  const [ready, setReady] = useState(false);
+  const [drawn, setDrawn] = useState(false);
+  useEffect(() => {
+    const svg = ref.current;
+    if (!svg) return;
+    svg.querySelectorAll("path, rect, circle, line, polyline, polygon, ellipse").forEach((el, k) => {
+      el.setAttribute("pathLength", "1");
+      (el as SVGElement).style.transitionDelay = `${250 + k * 140}ms`;
+    });
+    setReady(true);
+    const io = new IntersectionObserver(([entry]) => setDrawn(!!entry?.isIntersecting), { threshold: 0.4 });
+    io.observe(svg);
+    return () => io.disconnect();
+  }, []);
+  return <Icon ref={ref} className={`${className ?? ""} ${ready ? "draw-icon" : ""} ${drawn ? "is-drawn" : ""}`} strokeWidth={strokeWidth} />;
+}
+
 function Why({ t }: { t: T }) {
   const icons = [Zap, Boxes, WalletCards];
   return (
@@ -228,8 +249,7 @@ function Why({ t }: { t: T }) {
           return <R key={it.t} delay={i * 120} className="h-full">
             <article className="why-card group h-full">
               <div className="why-stage" aria-hidden="true">
-                <span className="why-ripple" /><span className="why-ripple why-ripple-late" />
-                <div className="why-medallion"><Icon className={`why-icon why-icon-${i}`} strokeWidth={2.15} /></div>
+                <div className="why-medallion"><DrawIcon icon={Icon} className="why-icon" strokeWidth={2.15} /></div>
                 <span className="why-number">{String(i + 1).padStart(2, "0")}</span>
               </div>
               <div className="why-copy">

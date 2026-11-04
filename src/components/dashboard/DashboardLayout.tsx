@@ -4,13 +4,15 @@ import { savePref } from "@/lib/consent";
 import { planKeyOf, planLabels, usePlan } from "@/lib/plan-client";
 import { BookMarked, Bot, Library, Plug, ShieldAlert, Swords } from "lucide-react";
 import { getMyRole } from "@/lib/admin.functions";
-import { Activity, ArrowLeft, Crown, Bell, BookOpen, Boxes, ChevronDown, Code2, CreditCard, Diamond, Gift, Globe2, LayoutDashboard, LogOut, Menu, MessageCircle, Moon, PanelLeftClose, PanelLeftOpen, Search, Settings2, Sun, Wallet, X } from "lucide-react";
+import { Activity, ArrowLeft, Check, Palette, Crown, Bell, BookOpen, Boxes, ChevronDown, Code2, CreditCard, Diamond, Gift, Globe2, LayoutDashboard, LogOut, Menu, MessageCircle, Moon, PanelLeftClose, PanelLeftOpen, Search, Settings2, Sun, Wallet, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { dashboardText, type Lang } from "@/lib/i18n";
 import { supabase } from "@/integrations/supabase/client";
 import type { Tables } from "@/integrations/supabase/types";
 import { media } from "@/lib/media";
+import { dashboardLooks, isDashboardLook, lookMode, type DashboardLook } from "@/lib/dashboard-themes";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 
 import { ThreadItem } from "./ThreadItem";
 import { DashboardContext, type Thread } from "./dashboard-context";
@@ -34,7 +36,9 @@ const links = [
 
 export function DashboardLayout({ children }: { children: ReactNode }) {
   const [lang, setLangState] = useState<Lang>("fr");
-  const [theme, setThemeState] = useState<"light" | "dark">("light");
+  const [look, setLookState] = useState<DashboardLook>("light");
+  const theme = lookMode(look);
+  const [themeOpen, setThemeOpen] = useState(false);
   const [threads, setThreads] = useState<Thread[]>([]);
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -56,7 +60,7 @@ export function DashboardLayout({ children }: { children: ReactNode }) {
     const savedLang = window.localStorage.getItem("technova-dashboard-lang");
     const savedTheme = window.localStorage.getItem("technova-dashboard-theme");
     if (savedLang === "fr" || savedLang === "en") setLangState(savedLang);
-    if (savedTheme === "dark" || savedTheme === "light") setThemeState(savedTheme);
+    if (isDashboardLook(savedTheme)) setLookState(savedTheme);
     setCollapsed(window.localStorage.getItem("technova-sidebar-collapsed") === "1");
   }, []);
   useEffect(() => { document.documentElement.classList.toggle("dark", theme === "dark"); return () => document.documentElement.classList.remove("dark"); }, [theme]);
@@ -92,7 +96,9 @@ export function DashboardLayout({ children }: { children: ReactNode }) {
     void navigate({ to: "/connexion", replace: true });
   }
   function setLang(value: Lang) { setLangState(value); savePref("technova-dashboard-lang", value); }
-  function setTheme(value: "light" | "dark") { setThemeState(value); savePref("technova-dashboard-theme", value); }
+  function setLook(value: DashboardLook) { setLookState(value); savePref("technova-dashboard-theme", value); }
+  // Light/dark switch (Settings): keeps the current look when it already has that mode, else the original theme.
+  function setTheme(value: "light" | "dark") { if (lookMode(look) !== value) setLook(value); }
   function toggleCollapsed() {
     if (artifactWorkspaceOpen) setWorkspaceCollapsed(!effectiveCollapsed);
     else setCollapsed(v => { savePref("technova-sidebar-collapsed", v ? "0" : "1"); return !v; });
@@ -109,14 +115,11 @@ export function DashboardLayout({ children }: { children: ReactNode }) {
   const planKey = plan ? planKeyOf(plan.tier, plan.paid) : null;
   const planName = planKey ? planLabels[planKey][lang] : "";
   // Top banner: each product name opens its own site (TechNova AI Hub: this site's home page).
-  const marqueeItems: { name: string; text: string; href?: string }[] = [
-    { name: "Technova Learning", text: lang === "fr" ? "Formations en IA, data et cybersécurité" : "AI, data and cybersecurity courses", href: "https://www.technovalearning.com/" },
-    // No public link until the Connect site is confirmed.
-    { name: "Technova Connect", text: lang === "fr" ? "Numéros permanents, eSIM voyage, vérifications SMS" : "Permanent numbers, travel eSIM, SMS verification" },
-  ];
+  // "Sites à visiter" banner: the TechNova family sites, as in the dashboard mockup.
+  const marqueeItems = ["technovalearning.com", "beninbeyond.com", "dukaio.com"];
 
   return <DashboardContext.Provider value={{ lang, t, theme, setLang, setTheme, setArtifactWorkspaceOpen: setWorkspaceOpen, threads, reload, createThread, name, email, error }}>
-    <div className="dashboard-shell flex min-h-svh overflow-x-clip bg-background text-foreground">
+    <div className={`dashboard-shell look-${look} flex min-h-svh overflow-x-clip bg-background text-foreground`}>
       {mobileOpen && <div className="fixed inset-0 z-40 bg-ink/50 lg:hidden" onClick={() => setMobileOpen(false)} />}
       <aside className={`dashboard-sidebar sidebar-glass fixed inset-y-0 left-0 z-50 flex w-[224px] flex-col border-r border-border bg-card transition-[width,transform] duration-200 lg:sticky ${mini ? "lg:w-[60px]" : ""} lg:top-0 lg:h-svh ${mobileOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"}`}>
         <div className={`flex h-14 shrink-0 items-center justify-between ${mini ? "lg:justify-center lg:px-0" : ""} px-5`}>
@@ -141,21 +144,34 @@ export function DashboardLayout({ children }: { children: ReactNode }) {
             <span className="min-w-0 flex-1"><span className="block truncate text-[12px] font-medium">{name || t.accountName}</span>{email && <span className="block truncate text-[10.5px] text-muted-foreground">{email}</span>}{planKey && planKey !== "free" && <Link to="/dashboard/credits" title={lang === "fr" ? "Voir les forfaits" : "See plans"} className={`plan-${planKey} plan-pill mt-1 inline-flex items-center gap-1 rounded-full font-semibold leading-none transition-opacity hover:opacity-85 ${planKey === "pro" ? "h-5 px-2.5 text-[10.5px] tracking-[0.06em]" : "h-[18px] px-2 text-[10px]"}`}>{planKey === "pro" && <Crown className="size-3" strokeWidth={2.4} aria-hidden="true" />}<span className="plan-chip-text">{planKey === "pro" ? "PRO" : planName}</span></Link>}</span>
           </div>
           <div className={`mt-1 flex items-center gap-0.5 px-1 ${mini ? "lg:mt-auto lg:flex-col lg:px-0" : ""}`}>
-            <Button variant="ghost" size="icon-sm" className="size-8 rounded-lg text-muted-foreground" onClick={() => setTheme(theme === "light" ? "dark" : "light")} aria-label={t.theme} title={t.theme}>{theme === "light" ? <Moon className="size-4" /> : <Sun className="size-4" />}</Button>
+            <Popover open={themeOpen} onOpenChange={setThemeOpen}>
+              <PopoverTrigger asChild><Button variant="ghost" size="icon-sm" className="size-8 rounded-lg text-muted-foreground" aria-label={t.theme} title={t.theme}><Palette className="size-4" /></Button></PopoverTrigger>
+              <PopoverContent side="top" align="start" className="w-56 rounded-2xl p-1.5">
+                {(["dark", "light"] as const).map((mode) => <div key={mode} className="py-1">
+                  <p className="px-2.5 pb-1 pt-1.5 text-[10px] font-medium uppercase tracking-[0.12em] text-muted-foreground">{mode === "dark" ? (lang === "fr" ? "Sombres" : "Dark") : (lang === "fr" ? "Clairs" : "Light")}</p>
+                  {dashboardLooks.filter((item) => item.mode === mode).map((item) => <button key={item.id} type="button" onClick={() => { setLook(item.id); setThemeOpen(false); }} aria-pressed={look === item.id}
+                    className={`flex h-8 w-full items-center gap-2.5 rounded-lg px-2.5 text-left text-[12.5px] transition-colors hover:bg-secondary ${look === item.id ? "bg-secondary font-medium" : ""}`}>
+                    {mode === "dark" ? <Moon className="size-3.5 text-muted-foreground" strokeWidth={1.7} /> : <Sun className="size-3.5 text-muted-foreground" strokeWidth={1.7} />}
+                    <span className="flex-1">{mode === "dark" ? (lang === "fr" ? "Sombre" : "Dark") : (lang === "fr" ? "Clair" : "Light")} — {item[lang === "fr" ? "fr" : "en"]}</span>
+                    {look === item.id ? <Check className="size-3.5" /> : <span className="size-3 rounded-full border border-border" style={{ background: item.swatch }} />}
+                  </button>)}
+                </div>)}
+              </PopoverContent>
+            </Popover>
             <Button asChild variant="ghost" size="icon-sm" className="size-8 rounded-lg text-muted-foreground"><Link to="/dashboard/docs" aria-label={t.docs} title={t.docs}><BookOpen className="size-4" /></Link></Button>
             <Button asChild variant="ghost" size="icon-sm" className="size-8 rounded-lg text-muted-foreground"><Link to="/" aria-label={t.home} title={t.home}><ArrowLeft className="size-4" /></Link></Button>
             <Button variant="ghost" size="icon-sm" className={`size-8 rounded-lg text-muted-foreground ${mini ? "" : "ml-auto"}`} onClick={() => void signOut()} aria-label={t.signOut} title={t.signOut}><LogOut className="size-4" /></Button>
           </div>
         </div>
       </aside>
-      <div className="relative isolate min-w-0 flex-1">
-        {!isThread && <div className={`dashboard-wallpaper pointer-events-none fixed inset-0 z-0 overflow-hidden`} aria-hidden="true"><img src={media.cloudBackground} alt="" className="h-full w-full scale-105 object-cover" /></div>}
+      <div className="dashboard-content relative isolate min-w-0 flex-1">
+        {!isThread && <div className={`dashboard-wallpaper pointer-events-none fixed inset-0 z-0 overflow-hidden`} aria-hidden="true"><img src={media.cloudBackground} alt="" className="h-full w-full scale-105 object-cover" /><span className="wallpaper-glow wallpaper-glow-1" /><span className="wallpaper-glow wallpaper-glow-2" /><span className="wallpaper-glow wallpaper-glow-3" /></div>}
         <header className="sticky top-0 z-30 flex h-12 items-center justify-between border-b border-border bg-card/95 px-3 backdrop-blur-xl lg:hidden"><Button variant="ghost" size="icon-sm" aria-label={t.menu} onClick={() => setMobileOpen(true)}><Menu className="size-5" /></Button><Link to="/dashboard" className="font-display text-[14px] font-bold">TechNova</Link><span className={`plan-ring plan-${planKey ?? "free"}`}><span className="grid size-7 place-items-center rounded-full bg-card text-[11px] font-bold text-foreground">{initials}</span></span></header>
-        {!isThread && <div className="dashboard-marquee relative z-10 flex h-7 items-center overflow-hidden border-b border-border bg-card [mask-image:linear-gradient(90deg,transparent,black_6%,black_94%,transparent)]"><div className="dashboard-marquee-track flex w-max items-center gap-10 whitespace-nowrap px-6 text-[10.5px] text-muted-foreground">{[0, 1, 2, 3].map((copy) => <span key={copy} className="contents" aria-hidden={copy > 0 ? true : undefined}>{marqueeItems.map((item) => {
-          const body = <><span className="font-medium text-foreground/75">{item.name}</span><span className="mx-2 opacity-40">·</span>{item.text}</>;
-          return item.href ? <a key={item.name} href={item.href} target="_blank" rel="noopener noreferrer" tabIndex={copy > 0 ? -1 : undefined} className="transition-colors hover:text-foreground">{body}</a> : <span key={item.name}>{body}</span>;
-        })}</span>)}</div></div>}
-        <main className="relative z-10 mx-auto min-h-[calc(100svh-76px)] lg:min-h-[calc(100svh-28px)] w-full max-w-[1640px] px-4 pb-8 pt-6 sm:px-6 lg:px-7">{error && <div role="alert" className="mb-5 flex items-center justify-between border-l-2 border-destructive bg-secondary px-4 py-3 text-sm"><span>{error}</span><Button variant="ghost" size="sm" onClick={() => void reload()}>{t.retry}</Button></div>}<div key={pathname} className="dashboard-page-enter">{children}</div></main>
+        {!isThread && <div className="relative z-10 px-4 pt-3 sm:px-6 lg:px-7"><div className="dashboard-marquee mx-auto flex h-8 max-w-[1640px] items-center overflow-hidden rounded-full border border-border bg-card">
+          <span className="flex shrink-0 items-center gap-1.5 border-r border-border px-3.5 text-[9.5px] font-medium uppercase tracking-[0.16em] text-muted-foreground"><span className="size-1.5 rounded-full bg-foreground/60" />{lang === "fr" ? "Sites à visiter" : "Sites to visit"}</span>
+          <div className="min-w-0 flex-1 overflow-hidden [mask-image:linear-gradient(90deg,transparent,black_6%,black_94%,transparent)]"><div className="dashboard-marquee-track flex w-max items-center gap-9 whitespace-nowrap px-6 text-[11px] text-muted-foreground">{[0, 1, 2, 3].map((copy) => <span key={copy} className="contents" aria-hidden={copy > 0 ? true : undefined}>{marqueeItems.map((site) => <a key={site} href={`https://${site}/`} target="_blank" rel="noopener noreferrer" tabIndex={copy > 0 ? -1 : undefined} className="inline-flex items-center gap-1.5 transition-colors hover:text-foreground"><Globe2 className="size-3.5" strokeWidth={1.6} />{site}</a>)}</span>)}</div></div>
+        </div></div>}
+        <main className="relative z-10 mx-auto min-h-[calc(100svh-92px)] lg:min-h-[calc(100svh-44px)] w-full max-w-[1640px] px-4 pb-8 pt-6 sm:px-6 lg:px-7">{error && <div role="alert" className="mb-5 flex items-center justify-between border-l-2 border-destructive bg-secondary px-4 py-3 text-sm"><span>{error}</span><Button variant="ghost" size="sm" onClick={() => void reload()}>{t.retry}</Button></div>}<div key={pathname} className="dashboard-page-enter">{children}</div></main>
       </div>
     </div>
   </DashboardContext.Provider>;

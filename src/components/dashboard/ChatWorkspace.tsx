@@ -713,8 +713,8 @@ export function ChatListPage() {
     void navigate({ to: "/dashboard/chat/$threadId", params: { threadId: data.id } });
   }
   return (
-    <div className="chat-workspace chat-home relative -mx-4 -mt-6 min-h-[calc(100svh-76px)] lg:min-h-[calc(100svh-28px)] overflow-hidden sm:-mx-6 lg:-mx-7">
-      <div className="relative mx-auto flex min-h-[calc(100svh-76px)] lg:min-h-[calc(100svh-28px)] max-w-[1330px] flex-col px-4 pb-8 sm:px-8 lg:px-12">
+    <div className="chat-workspace chat-home relative -mx-4 -mt-6 min-h-[calc(100svh-92px)] lg:min-h-[calc(100svh-44px)] overflow-hidden sm:-mx-6 lg:-mx-7">
+      <div className="relative mx-auto flex min-h-[calc(100svh-92px)] lg:min-h-[calc(100svh-44px)] max-w-[1330px] flex-col px-4 pb-8 sm:px-8 lg:px-12">
         <section className="flex flex-1 flex-col items-center justify-center gap-7 py-12 sm:gap-8 sm:py-16">
           <div className="text-center">
             <h1 className="max-w-2xl font-display text-3xl font-semibold leading-tight sm:text-4xl">

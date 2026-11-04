@@ -692,28 +692,27 @@ html, body, * { scrollbar-width: none; }
    only the outermost panel blurs, so nested cards stay cheap to render. */
 .dashboard-shell:not(:has(.chat-thread)) main :is(.bg-card, .bg-card\/95, .bg-card\/90, .bg-card\/85, .bg-card\/80, .bg-card\/70).border:not(.chat-composer, .chat-composer *),
 .dashboard-shell .dashboard-marquee {
-  --glass-fill: color-mix(in oklab, oklch(1 0 0) 58%, transparent);
-  --glass-edge: oklch(1 0 0 / .62);
-  --glass-shine: oklch(1 0 0 / .75);
+  --glass-fill: var(--look-glass, color-mix(in oklab, oklch(1 0 0) 58%, transparent));
+  --glass-edge: var(--look-glass-edge, oklch(1 0 0 / .62));
+  --glass-shine: var(--look-glass-shine, oklch(1 0 0 / .75));
   background-color: var(--glass-fill);
   border-color: var(--glass-edge);
-  box-shadow: inset 0 1px 0 var(--glass-shine), 0 20px 50px -20px oklch(.45 .1 255 / .35);
+  box-shadow: inset 0 1px 0 var(--glass-shine), var(--look-glass-shadow, 0 20px 50px -20px oklch(.45 .1 255 / .35));
 }
 .dashboard-shell:not(:has(.chat-thread)) main :is(.bg-card, .bg-card\/95, .bg-card\/90, .bg-card\/85, .bg-card\/80, .bg-card\/70).border:not(.chat-composer, .chat-composer *, .border .border),
 .dashboard-shell .dashboard-marquee { backdrop-filter: blur(24px) saturate(1.6); -webkit-backdrop-filter: blur(24px) saturate(1.6); }
 .dashboard-shell:not(:has(.chat-thread)) main :is(.bg-card, .bg-card\/95, .bg-card\/90, .bg-card\/85, .bg-card\/80, .bg-card\/70).border:not(.chat-composer, .chat-composer *, .border .border) { border-radius: max(var(--glass-radius, 22px), 8px); }
-.dashboard-shell .dashboard-marquee { box-shadow: inset 0 -1px 0 var(--glass-edge); border-bottom-color: transparent; }
 /* Inside a glass panel, tinted fills become translucent too so the frost reads through. */
 .dashboard-shell:not(:has(.chat-thread)) main .border :is(.bg-secondary, .bg-background):not(input, textarea, select) { background-color: color-mix(in oklab, oklch(1 0 0) 38%, transparent); }
 .dark .dashboard-shell:not(:has(.chat-thread)) main :is(.bg-card, .bg-card\/95, .bg-card\/90, .bg-card\/85, .bg-card\/80, .bg-card\/70).border:not(.chat-composer, .chat-composer *),
 .dark .dashboard-shell .dashboard-marquee {
-  --glass-fill: color-mix(in oklab, oklch(.22 .008 262) 58%, transparent);
-  --glass-edge: oklch(1 0 0 / .09);
-  --glass-shine: oklch(1 0 0 / .07);
-  box-shadow: inset 0 1px 0 var(--glass-shine), 0 18px 40px -20px oklch(0 0 0 / .6);
+  --glass-fill: var(--look-glass, color-mix(in oklab, oklch(.22 .008 262) 58%, transparent));
+  --glass-edge: var(--look-glass-edge, oklch(1 0 0 / .09));
+  --glass-shine: var(--look-glass-shine, oklch(1 0 0 / .07));
+  box-shadow: inset 0 1px 0 var(--glass-shine), var(--look-glass-shadow, 0 18px 40px -20px oklch(0 0 0 / .6));
 }
 .dark .dashboard-shell:not(:has(.chat-thread)) main .border :is(.bg-secondary, .bg-background):not(input, textarea, select) { background-color: oklch(1 0 0 / .05); }
-.dark .dashboard-shell .dashboard-marquee { box-shadow: inset 0 -1px 0 var(--glass-edge); }
+
 
 /* Landing ecosystem and pricing: frosted-glass cards on the normal page background. A few soft colour orbs sit
    just behind the cards (not the page) so the blur has something to frost, as on a macOS window. */
@@ -737,8 +736,7 @@ html, body, * { scrollbar-width: none; }
 .eco-soon { border: 1px dashed color-mix(in oklab, var(--foreground) 22%, transparent); }
 @media (prefers-reduced-motion: reduce) { .eco-card { transition: none; animation: none; } .eco-card:hover { transform: none; } }
 
-/* Why TechNova: a perspective grid drifting under each medallion, signal ripples and an animation per icon
-   (lightning flicker, floating cubes, wallet tilt). Static for reduced-motion users. */
+/* Why TechNova: a perspective grid drifting under each medallion; the icons draw themselves (DrawIcon). */
 .why-stage::after {
   content: ""; position: absolute; inset: -40% -20% -10%; z-index: -1; pointer-events: none;
   background:
@@ -749,28 +747,12 @@ html, body, * { scrollbar-width: none; }
   animation: why-grid 3.2s linear infinite;
 }
 @keyframes why-grid { to { background-position: 0 28px, 0 0; } }
-.why-ripple { position: absolute; left: 50%; top: 50%; width: 128px; height: 128px; margin: -64px 0 0 -64px; border-radius: 50%; pointer-events: none;
-  border: 1px solid color-mix(in oklab, var(--ink-foreground) 35%, transparent); animation: why-ripple 3.6s cubic-bezier(.2, .6, .3, 1) infinite; }
-.why-ripple-late { animation-delay: 1.8s; }
-@keyframes why-ripple { from { transform: scale(1); opacity: .7; } to { transform: scale(2.1); opacity: 0; } }
-.why-medallion::after { content: ""; position: absolute; inset: -9px; border-radius: 50%; pointer-events: none;
-  background: conic-gradient(from 0deg, transparent 0 70%, color-mix(in oklab, var(--ink-foreground) 70%, transparent) 88%, transparent 100%);
-  -webkit-mask: radial-gradient(closest-side, transparent calc(100% - 3px), black calc(100% - 2px)); mask: radial-gradient(closest-side, transparent calc(100% - 3px), black calc(100% - 2px));
-  animation: why-orbit 4s linear infinite; }
-@keyframes why-orbit { to { transform: rotate(360deg); } }
-.why-icon-0 { animation: why-zap 2.8s ease-in-out infinite; }
-@keyframes why-zap {
-  0%, 62%, 100% { transform: none; filter: drop-shadow(0 2px 5px color-mix(in oklab, var(--ink-foreground) 32%, transparent)); }
-  66% { transform: scale(1.12) rotate(-6deg); filter: drop-shadow(0 0 14px oklch(.95 .12 95)); opacity: 1; }
-  70% { opacity: .55; } 74% { transform: scale(1.08); opacity: 1; filter: drop-shadow(0 0 18px oklch(.95 .12 95)); } 82% { transform: none; }
-}
-.why-icon-1 { animation: why-float 3.4s ease-in-out infinite; }
-@keyframes why-float { 0%, 100% { transform: translateY(2px) rotate(0deg); } 50% { transform: translateY(-6px) rotate(8deg); } }
-.why-icon-2 { animation: why-wallet 3.6s ease-in-out infinite; transform-origin: 50% 80%; }
-@keyframes why-wallet { 0%, 55%, 100% { transform: none; } 62% { transform: rotate(-9deg) scale(1.06); } 70% { transform: rotate(6deg) scale(1.06); } 78% { transform: none; } }
+/* Self-drawing icons (DrawIcon): each stroke is one dash that slides into place, one after the other. */
+.draw-icon > * { stroke-dasharray: 1 2; stroke-dashoffset: 1; transition: stroke-dashoffset 1.5s cubic-bezier(.5, 0, .2, 1); }
+.draw-icon.is-drawn > * { stroke-dashoffset: 0; }
 @media (prefers-reduced-motion: reduce) {
-  .why-stage::after, .why-ripple, .why-medallion::after, .why-icon-0, .why-icon-1, .why-icon-2 { animation: none; }
-  .why-ripple { display: none; }
+  .why-stage::after { animation: none; }
+  .draw-icon > * { stroke-dashoffset: 0; transition: none; }
 }
 
 /* Dashboard light mode: soft blue-wave backdrop (blurred, under a white veil), cool blue-grey text tokens,
@@ -801,3 +783,119 @@ html, body, * { scrollbar-width: none; }
 .starter-chip:hover { background: oklch(1 0 0 / .85); }
 .dark .starter-chip { background: oklch(1 0 0 / .04); border-color: oklch(1 0 0 / .1); }
 .dark .starter-chip:hover { background: oklch(1 0 0 / .08); }
+
+
+/* Dashboard looks (theme menu in the sidebar): Brume, Soie (dark), Apple, Pastel (light) next to the original
+   Nuit (dark) and Ciel (light). Each look restyles only the content: a blurred, slowly drifting wallpaper rebuilt
+   as gradients from the mockup's pictures, colour glows, a veil, glass panels and an animated composer edge. */
+.wallpaper-glow { display: none; position: absolute; border-radius: 9999px; pointer-events: none; animation: look-glow 12s ease-in-out infinite; }
+.wallpaper-glow-1 { left: 20%; top: 40%; width: 40vw; height: 50vh; background: var(--look-blob-1, transparent); filter: blur(100px); }
+.wallpaper-glow-2 { right: 5%; bottom: -10%; width: 35vw; height: 50vh; background: var(--look-blob-2, transparent); filter: blur(100px); animation-delay: -7s; }
+.wallpaper-glow-3 { right: 18%; top: 8%; width: 35vw; height: 45vh; background: color-mix(in oklab, var(--foreground) 20%, transparent); filter: blur(120px); }
+@keyframes look-glow { 0%, 100% { opacity: .35; transform: none; } 33% { opacity: .75; transform: translate(-18%, 12%) scale(1.25); } 66% { opacity: .5; transform: translate(12%, -8%) scale(.9); } }
+@keyframes look-drift { 0%, 100% { transform: scale(1.15); } 25% { transform: scale(1.3) translate(-5%, 3%) rotate(1deg); } 50% { transform: scale(1.22) translate(3%, -2%); } 75% { transform: scale(1.32) translate(-3%, -3%) rotate(-1deg); } }
+:is(.look-brume, .look-soie, .look-apple, .look-pastel) .wallpaper-glow { display: block; }
+.dashboard-shell:is(.look-brume, .look-soie, .look-apple, .look-pastel) .dashboard-wallpaper { background: var(--background); }
+.dashboard-shell:is(.look-brume, .look-soie, .look-apple, .look-pastel) .dashboard-wallpaper::before { display: block; inset: 0; filter: blur(40px); animation: look-drift 24s ease-in-out infinite; background: var(--look-wallpaper); opacity: var(--look-wallpaper-opacity, 1); }
+.dashboard-shell:is(.look-brume, .look-soie, .look-apple, .look-pastel) .dashboard-wallpaper::after { display: block; background: var(--look-veil); }
+.dark .dashboard-shell.look-brume .dashboard-content, .dark .dashboard-shell.look-soie .dashboard-content {
+  --background: oklch(.12 0 0); --foreground: oklch(.96 0 0); --card-foreground: oklch(.96 0 0); --muted-foreground: oklch(.72 0 0); --border: oklch(1 0 0 / .1);
+  --look-glass: oklch(.22 0 0 / .38); --look-glass-edge: oklch(1 0 0 / .12); --look-glass-shine: oklch(1 0 0 / .12);
+  --look-glass-shadow: 0 20px 60px -20px oklch(0 0 0 / .6); --look-veil: oklch(.08 0 0 / .35); }
+.dark .dashboard-shell.look-soie .dashboard-content { --background: oklch(.1 .01 250); --look-glass: oklch(.18 .01 250 / .35); --look-veil: oklch(.06 .01 250 / .25);
+  --look-blob-1: oklch(.55 .08 240 / .3); --look-blob-2: oklch(.6 .1 50 / .25); }
+.dashboard-shell.look-apple .dashboard-content {
+  --background: oklch(.97 .002 286); --foreground: oklch(.2 0 0); --card-foreground: oklch(.2 0 0); --muted-foreground: oklch(.48 0 0);
+  --look-glass: oklch(1 0 0 / .45); --look-glass-edge: oklch(1 0 0 / .7); --look-glass-shine: oklch(1 0 0 / .9);
+  --look-glass-shadow: 0 20px 60px -24px oklch(.3 0 0 / .25); --look-veil: oklch(.96 .002 286 / .55); --look-wallpaper-opacity: .4;
+  --look-blob-1: oklch(.8 .1 250 / .7); --look-blob-2: oklch(.86 .09 50 / .6); }
+.dashboard-shell.look-pastel .dashboard-content {
+  --background: oklch(.86 .03 240); --foreground: oklch(.22 .02 250); --card-foreground: oklch(.22 .02 250); --muted-foreground: oklch(.42 .02 250);
+  --look-glass: oklch(1 0 0 / .28); --look-glass-edge: oklch(1 0 0 / .6); --look-glass-shine: oklch(1 0 0 / .8);
+  --look-glass-shadow: 0 20px 60px -24px oklch(.3 .03 250 / .3); --look-veil: oklch(.9 .02 240 / .15);
+  --look-blob-1: oklch(.8 .08 250 / .4); --look-blob-2: oklch(.82 .1 40 / .45); }
+.dashboard-shell.look-brume .dashboard-content { --look-wallpaper-opacity: .9; --look-wallpaper:
+    radial-gradient(34% 34% at 12.5% 12.5%, #020204, transparent 72%),
+    radial-gradient(34% 34% at 37.5% 12.5%, #030305, transparent 72%),
+    radial-gradient(34% 34% at 62.5% 12.5%, #131214, transparent 72%),
+    radial-gradient(34% 34% at 87.5% 12.5%, #08080a, transparent 72%),
+    radial-gradient(34% 34% at 12.5% 37.5%, #030305, transparent 72%),
+    radial-gradient(34% 34% at 37.5% 37.5%, #09080a, transparent 72%),
+    radial-gradient(34% 34% at 62.5% 37.5%, #262527, transparent 72%),
+    radial-gradient(34% 34% at 87.5% 37.5%, #161618, transparent 72%),
+    radial-gradient(34% 34% at 12.5% 62.5%, #040406, transparent 72%),
+    radial-gradient(34% 34% at 37.5% 62.5%, #0c0c0e, transparent 72%),
+    radial-gradient(34% 34% at 62.5% 62.5%, #262527, transparent 72%),
+    radial-gradient(34% 34% at 87.5% 62.5%, #0e0d0f, transparent 72%),
+    radial-gradient(34% 34% at 12.5% 87.5%, #060608, transparent 72%),
+    radial-gradient(34% 34% at 37.5% 87.5%, #0c0b0e, transparent 72%),
+    radial-gradient(34% 34% at 62.5% 87.5%, #18181a, transparent 72%),
+    radial-gradient(34% 34% at 87.5% 87.5%, #040406, transparent 72%),
+    #09090b; }
+.dashboard-shell.look-soie .dashboard-content { --look-wallpaper-opacity: .95; --look-wallpaper:
+    radial-gradient(34% 34% at 12.5% 12.5%, #131318, transparent 72%),
+    radial-gradient(34% 34% at 37.5% 12.5%, #4b5860, transparent 72%),
+    radial-gradient(34% 34% at 62.5% 12.5%, #3c464c, transparent 72%),
+    radial-gradient(34% 34% at 87.5% 12.5%, #08090b, transparent 72%),
+    radial-gradient(34% 34% at 12.5% 37.5%, #14191e, transparent 72%),
+    radial-gradient(34% 34% at 37.5% 37.5%, #374858, transparent 72%),
+    radial-gradient(34% 34% at 62.5% 37.5%, #2a3847, transparent 72%),
+    radial-gradient(34% 34% at 87.5% 37.5%, #91a2b4, transparent 72%),
+    radial-gradient(34% 34% at 12.5% 62.5%, #0e141b, transparent 72%),
+    radial-gradient(34% 34% at 37.5% 62.5%, #27323d, transparent 72%),
+    radial-gradient(34% 34% at 62.5% 62.5%, #0f141a, transparent 72%),
+    radial-gradient(34% 34% at 87.5% 62.5%, #0e0e13, transparent 72%),
+    radial-gradient(34% 34% at 12.5% 87.5%, #080b12, transparent 72%),
+    radial-gradient(34% 34% at 37.5% 87.5%, #070a10, transparent 72%),
+    radial-gradient(34% 34% at 62.5% 87.5%, #080b10, transparent 72%),
+    radial-gradient(34% 34% at 87.5% 87.5%, #070a0f, transparent 72%),
+    #0c1016; }
+.dashboard-shell.look-apple .dashboard-content { --look-wallpaper:
+    radial-gradient(34% 34% at 12.5% 12.5%, #fdfdfb, transparent 72%),
+    radial-gradient(34% 34% at 37.5% 12.5%, #fcfcfa, transparent 72%),
+    radial-gradient(34% 34% at 62.5% 12.5%, #ecedeb, transparent 72%),
+    radial-gradient(34% 34% at 87.5% 12.5%, #f7f7f5, transparent 72%),
+    radial-gradient(34% 34% at 12.5% 37.5%, #fcfcfa, transparent 72%),
+    radial-gradient(34% 34% at 37.5% 37.5%, #f6f7f5, transparent 72%),
+    radial-gradient(34% 34% at 62.5% 37.5%, #d9dad8, transparent 72%),
+    radial-gradient(34% 34% at 87.5% 37.5%, #e9e9e7, transparent 72%),
+    radial-gradient(34% 34% at 12.5% 62.5%, #fbfbf9, transparent 72%),
+    radial-gradient(34% 34% at 37.5% 62.5%, #f3f3f1, transparent 72%),
+    radial-gradient(34% 34% at 62.5% 62.5%, #d9dad8, transparent 72%),
+    radial-gradient(34% 34% at 87.5% 62.5%, #f1f2f0, transparent 72%),
+    radial-gradient(34% 34% at 12.5% 87.5%, #f9f9f7, transparent 72%),
+    radial-gradient(34% 34% at 37.5% 87.5%, #f3f4f1, transparent 72%),
+    radial-gradient(34% 34% at 62.5% 87.5%, #e7e7e5, transparent 72%),
+    radial-gradient(34% 34% at 87.5% 87.5%, #fbfbf9, transparent 72%),
+    #f1f1f3; }
+.dashboard-shell.look-pastel .dashboard-content { --look-wallpaper:
+    radial-gradient(34% 34% at 12.5% 12.5%, #7a9cba, transparent 72%),
+    radial-gradient(34% 34% at 37.5% 12.5%, #b1c3d4, transparent 72%),
+    radial-gradient(34% 34% at 62.5% 12.5%, #c1d4e2, transparent 72%),
+    radial-gradient(34% 34% at 87.5% 12.5%, #82a4bd, transparent 72%),
+    radial-gradient(34% 34% at 12.5% 37.5%, #aabcca, transparent 72%),
+    radial-gradient(34% 34% at 37.5% 37.5%, #c7d3dd, transparent 72%),
+    radial-gradient(34% 34% at 62.5% 37.5%, #bed1df, transparent 72%),
+    radial-gradient(34% 34% at 87.5% 37.5%, #87a2ba, transparent 72%),
+    radial-gradient(34% 34% at 12.5% 62.5%, #b3b9bd, transparent 72%),
+    radial-gradient(34% 34% at 37.5% 62.5%, #bfc8cc, transparent 72%),
+    radial-gradient(34% 34% at 62.5% 62.5%, #aabac7, transparent 72%),
+    radial-gradient(34% 34% at 87.5% 62.5%, #959fb8, transparent 72%),
+    radial-gradient(34% 34% at 12.5% 87.5%, #868a8e, transparent 72%),
+    radial-gradient(34% 34% at 37.5% 87.5%, #98999e, transparent 72%),
+    radial-gradient(34% 34% at 62.5% 87.5%, #95929a, transparent 72%),
+    radial-gradient(34% 34% at 87.5% 87.5%, #a38790, transparent 72%),
+    #a9b8c8; }
+/* Composer on the new looks: the look's glass and a slowly turning rainbow edge. */
+@property --siri-angle { syntax: "<angle>"; inherits: false; initial-value: 0deg; }
+@keyframes siri-spin { to { --siri-angle: 360deg; } }
+.dashboard-shell:is(.look-brume, .look-soie, .look-apple, .look-pastel):not(:has(.chat-thread)) .chat-composer {
+  position: relative; background: var(--look-glass) !important; border-color: var(--look-glass-edge); border-radius: 28px;
+  backdrop-filter: blur(40px) saturate(1.8); -webkit-backdrop-filter: blur(40px) saturate(1.8);
+  box-shadow: inset 0 1px 0 var(--look-glass-shine), var(--look-glass-shadow) !important; }
+.dashboard-shell:is(.look-brume, .look-soie, .look-apple, .look-pastel):not(:has(.chat-thread)) .chat-composer::before {
+  content: ""; position: absolute; inset: -1.5px; border-radius: inherit; padding: 1.5px; pointer-events: none; opacity: .55;
+  background: conic-gradient(from var(--siri-angle), oklch(.75 .15 250 / .7), oklch(.7 .2 330 / .7), oklch(.8 .15 60 / .6), oklch(.75 .15 180 / .7), oklch(.75 .15 250 / .7));
+  -webkit-mask: linear-gradient(#000 0 0) content-box exclude, linear-gradient(#000 0 0); mask: linear-gradient(#000 0 0) content-box exclude, linear-gradient(#000 0 0);
+  animation: siri-spin 6s linear infinite; }
+@media (prefers-reduced-motion: reduce) { .wallpaper-glow, .dashboard-shell .dashboard-wallpaper::before, .chat-composer::before { animation: none !important; } }

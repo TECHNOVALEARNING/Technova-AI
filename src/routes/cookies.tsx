@@ -35,7 +35,7 @@ const necessary: Row[] = [
 
 const preferences: Row[] = [
   ["technova-site-lang, technova-dashboard-lang", "Langue du site et du tableau de bord.", "6 mois maximum"],
-  ["technova-dashboard-theme", "Thème clair ou sombre.", "6 mois maximum"],
+  ["technova-dashboard-theme", "Thème du tableau de bord (Brume, Soie, Nuit, Apple, Pastel ou Ciel).", "6 mois maximum"],
   ["technova-sidebar-collapsed, tn-artifact-width", "Menu réduit et largeur du panneau des fichiers générés.", "6 mois maximum"],
   ["technova-workspace-mode, technova-workspace-model", "Mode et modèle d'IA choisis dans le chat.", "6 mois maximum"],
   ["technova-image-model, technova-video-model", "Modèles d'image et de vidéo choisis.", "6 mois maximum"],
