@@ -715,22 +715,14 @@ html, body, * { scrollbar-width: none; }
 .dark .dashboard-shell:not(:has(.chat-thread)) main .border :is(.bg-secondary, .bg-background):not(input, textarea, select) { background-color: oklch(1 0 0 / .05); }
 .dark .dashboard-shell .dashboard-marquee { box-shadow: inset 0 -1px 0 var(--glass-edge); }
 
-/* Landing ecosystem: frosted-glass product cards over soft colour blooms taken from each product's palette. */
-.eco-stage::before { content: ""; position: absolute; inset: -6% -4%; z-index: 0; pointer-events: none; filter: blur(60px); opacity: .55;
-  background:
-    radial-gradient(40% 60% at 22% 45%, oklch(.78 .15 80 / .7), transparent 70%),
-    radial-gradient(40% 60% at 78% 55%, oklch(.72 .14 240 / .65), transparent 70%); }
-.dark .eco-stage::before { opacity: .32; }
-.eco-stage > * { position: relative; z-index: 1; }
-.eco-card { background: color-mix(in oklab, oklch(1 0 0) 55%, transparent); border: 1px solid oklch(1 0 0 / .7);
-  backdrop-filter: blur(24px) saturate(1.6); -webkit-backdrop-filter: blur(24px) saturate(1.6);
-  box-shadow: inset 0 1px 0 oklch(1 0 0 / .8), 0 1px 2px oklch(.3 .05 255 / .06), 0 22px 48px -24px oklch(.3 .08 255 / .35);
-  transition: transform .5s cubic-bezier(.2, .8, .2, 1), box-shadow .5s; animation: fade-in .6s ease-out both; }
-.eco-card:hover { transform: translateY(-4px); box-shadow: inset 0 1px 0 oklch(1 0 0 / .85), 0 1px 2px oklch(.3 .05 255 / .06), 0 30px 60px -26px oklch(.3 .08 255 / .45); }
-.dark .eco-card { background: color-mix(in oklab, oklch(.22 .01 262) 55%, transparent); border-color: oklch(1 0 0 / .1); box-shadow: inset 0 1px 0 oklch(1 0 0 / .08), 0 24px 50px -24px oklch(0 0 0 / .7); }
-.eco-chip { color: oklch(.2 .02 260); background: oklch(1 0 0 / .62); border: 1px solid oklch(1 0 0 / .7); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); }
-.eco-tick { color: var(--background); background: var(--foreground); }
-.eco-soon { border: 1px dashed color-mix(in oklab, var(--foreground) 22%, transparent); }
+/* Landing ecosystem and pricing: the contact form's frosted glass (white 10 %, strong blur, faint edge) over a dark
+   section with the drifting orb, so the picture shows through the cards. */
+.eco-card, .glass-card { background: oklch(1 0 0 / .1); border: 1px solid oklch(1 0 0 / .15);
+  backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px); box-shadow: var(--shadow-lift); }
+.eco-card { transition: transform .5s cubic-bezier(.2, .8, .2, 1), border-color .5s; animation: fade-in .6s ease-out both; }
+.eco-card:hover { transform: translateY(-4px); border-color: oklch(1 0 0 / .3); }
+.eco-chip { color: oklch(.98 0 0); background: oklch(0 0 0 / .35); border: 1px solid oklch(1 0 0 / .2); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); }
+.eco-soon { border: 1px dashed oklch(1 0 0 / .25); }
 @media (prefers-reduced-motion: reduce) { .eco-card { transition: none; animation: none; } .eco-card:hover { transform: none; } }
 
 /* Why TechNova: a perspective grid drifting under each medallion, signal ripples and an animation per icon
@@ -792,3 +784,8 @@ html, body, * { scrollbar-width: none; }
   backdrop-filter: blur(24px) saturate(1.6); -webkit-backdrop-filter: blur(24px) saturate(1.6);
   box-shadow: 0 20px 50px -20px oklch(.45 .1 255 / .35), inset 0 1px 0 oklch(1 0 0 / .8) !important; border-radius: 28px; }
 .dark .dashboard-shell:not(:has(.chat-thread)) .chat-composer { background: var(--card); border-color: var(--border); box-shadow: var(--shadow-soft) !important; }
+/* Chat home starter ideas: quiet glass chips. */
+.starter-chip { background: oklch(1 0 0 / .5); border-color: oklch(1 0 0 / .7); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); }
+.starter-chip:hover { background: oklch(1 0 0 / .85); }
+.dark .starter-chip { background: oklch(1 0 0 / .04); border-color: oklch(1 0 0 / .1); }
+.dark .starter-chip:hover { background: oklch(1 0 0 / .08); }

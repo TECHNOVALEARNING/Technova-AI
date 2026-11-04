@@ -195,15 +195,13 @@ function ChoiceControls({ choice }: { choice: ReturnType<typeof useWorkspaceChoi
             variant="ghost"
             size="sm"
             aria-label={copy.chooseMode}
-            className="h-9 min-w-0 rounded-full border border-border/70 bg-card/80 px-2.5 text-xs font-semibold sm:px-3"
+            className="h-8 min-w-0 gap-1.5 rounded-full px-2.5 text-xs font-medium text-foreground/80 hover:text-foreground"
           >
-            <span className="grid size-5 place-items-center rounded-full bg-chat-glow text-chat-glow-foreground">
-              {mode === "chat" ? (
-                <MessageCircle className="size-3" />
-              ) : (
-                <Code2 className="size-3" />
-              )}
-            </span>
+            {mode === "chat" ? (
+              <MessageCircle className="size-3.5 text-muted-foreground" strokeWidth={1.75} />
+            ) : (
+              <Code2 className="size-3.5 text-muted-foreground" strokeWidth={1.75} />
+            )}
             {copy[mode]}
             <ChevronDown className="size-3" />
           </Button>
@@ -223,13 +221,11 @@ function ChoiceControls({ choice }: { choice: ReturnType<typeof useWorkspaceChoi
               }}
               className="h-auto w-full justify-start gap-3 rounded-xl px-3 py-2.5 text-left"
             >
-              <span className="grid size-8 shrink-0 place-items-center rounded-lg bg-secondary">
-                {item === "chat" ? (
-                  <MessageCircle className="size-4" />
-                ) : (
-                  <Code2 className="size-4" />
-                )}
-              </span>
+              {item === "chat" ? (
+                <MessageCircle className="size-4 shrink-0 text-muted-foreground" strokeWidth={1.6} />
+              ) : (
+                <Code2 className="size-4 shrink-0 text-muted-foreground" strokeWidth={1.6} />
+              )}
               <span className="min-w-0 flex-1 whitespace-normal">
                 <strong className="block text-xs">{copy[item]}</strong>
                 <small className="block text-[10px] font-normal text-muted-foreground">
@@ -660,14 +656,15 @@ function StarterIdeas({ choice, inputRef }: { choice: ReturnType<typeof useWorks
       if (idea.attach) document.querySelector<HTMLInputElement>("input[data-chat-attach]")?.click();
     }, 0);
   }
-  return <div className="grid w-full grid-cols-2 gap-2 sm:grid-cols-3">
+  return <div className="flex w-full flex-wrap justify-center gap-1.5">
     {starterIdeas.map((idea) => {
       const [title, hint] = idea[lang === "en" ? "en" : "fr"];
       const Icon = idea.icon;
       return <button key={title} type="button" onClick={() => pick(idea)}
-        className="group flex items-start gap-3 rounded-2xl border border-border/80 bg-card/80 p-3 text-left backdrop-blur transition hover:-translate-y-0.5 hover:border-foreground/20 hover:bg-card hover:shadow-sm">
-        <span className="grid size-8 shrink-0 place-items-center rounded-lg bg-secondary text-muted-foreground transition group-hover:bg-foreground group-hover:text-background"><Icon className="size-4" /></span>
-        <span className="min-w-0"><span className="block truncate text-[13px] font-medium">{title}</span><span className="block truncate text-[11.5px] text-muted-foreground">{hint}</span></span>
+        title={hint}
+        className="starter-chip group inline-flex h-7 items-center gap-1.5 rounded-full border px-2.5 text-[12px] text-foreground/80 transition-colors hover:text-foreground">
+        <Icon className="size-3.5 text-muted-foreground transition-colors group-hover:text-foreground" strokeWidth={1.6} />
+        <span className="truncate">{title}</span>
       </button>;
     })}
   </div>;
@@ -716,8 +713,8 @@ export function ChatListPage() {
     void navigate({ to: "/dashboard/chat/$threadId", params: { threadId: data.id } });
   }
   return (
-    <div className="chat-workspace chat-home relative -mx-4 -mt-6 min-h-[calc(100svh-80px)] lg:min-h-[calc(100svh-32px)] overflow-hidden sm:-mx-6 lg:-mx-7">
-      <div className="relative mx-auto flex min-h-[calc(100svh-80px)] lg:min-h-[calc(100svh-32px)] max-w-[1330px] flex-col px-4 pb-8 sm:px-8 lg:px-12">
+    <div className="chat-workspace chat-home relative -mx-4 -mt-6 min-h-[calc(100svh-76px)] lg:min-h-[calc(100svh-28px)] overflow-hidden sm:-mx-6 lg:-mx-7">
+      <div className="relative mx-auto flex min-h-[calc(100svh-76px)] lg:min-h-[calc(100svh-28px)] max-w-[1330px] flex-col px-4 pb-8 sm:px-8 lg:px-12">
         <section className="flex flex-1 flex-col items-center justify-center gap-7 py-12 sm:gap-8 sm:py-16">
           <div className="text-center">
             <h1 className="max-w-2xl font-display text-3xl font-semibold leading-tight sm:text-4xl">
@@ -737,10 +734,10 @@ export function ChatListPage() {
         <section className="chat-library relative w-full rounded-2xl border border-border/70 bg-card/85 p-4 shadow-soft backdrop-blur-xl sm:p-6">
           <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3">
             <div className="min-w-0">
-              <p className="text-[10px] font-bold uppercase text-chat-glow">
+              <p className="text-[10px] font-medium uppercase tracking-[0.12em] text-muted-foreground">
                 {choice.copy.libraryLabel}
               </p>
-              <h2 className="mt-1 font-display text-lg font-semibold">{choice.copy.library}</h2>
+              <h2 className="mt-1 font-display text-base font-semibold">{choice.copy.library}</h2>
             </div>
             <span className="text-xs tabular-nums text-muted-foreground">
               {threads.length} {choice.copy.saved}
@@ -762,18 +759,16 @@ export function ChatListPage() {
                 key={thread.id}
                 to="/dashboard/chat/$threadId"
                 params={{ threadId: thread.id }}
-                className="group flex min-w-0 items-center gap-3 rounded-xl border border-border bg-background/75 px-4 py-3 transition-colors hover:border-chat-glow/50 hover:bg-chat-glow/5"
+                className="group flex min-w-0 items-center gap-2.5 rounded-xl border border-border bg-background/75 px-3.5 py-2.5 transition-colors hover:border-foreground/20"
               >
-                <span className="grid size-9 shrink-0 place-items-center rounded-lg bg-secondary text-chat-glow">
-                  <MessageCircle className="size-4" />
-                </span>
+                <MessageCircle className="size-3.5 shrink-0 text-muted-foreground" strokeWidth={1.6} />
                 <span className="min-w-0 flex-1">
                   <strong className="block truncate text-xs font-semibold">{thread.title}</strong>
                   <small className="text-[10px] text-muted-foreground">
                     {new Date(thread.updated_at).toLocaleDateString(choice.copy.locale)}
                   </small>
                 </span>
-                <ArrowRight className="size-4 shrink-0 text-muted-foreground transition-transform group-hover:translate-x-0.5" />
+                <ArrowRight className="size-3.5 shrink-0 text-muted-foreground/60 transition-transform group-hover:translate-x-0.5" strokeWidth={1.6} />
               </Link>
             ))}
             {filtered.length === 0 && (

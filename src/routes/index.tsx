@@ -52,7 +52,7 @@ function Index() {
       <RoutingSection lang={lang} />
       <Ecosystem t={t} />
       <Tech t={t} />
-      <PricingContent lang={lang} />
+      <PricingContent lang={lang} glass />
       <Faq t={t} />
       <Contact t={t} />
       <Footer lang={lang} />
@@ -355,9 +355,11 @@ const ECO = [
 function Ecosystem({ t }: { t: T }) {
   const items = t.eco.items;
   return (
-    <section className="px-4 py-6 sm:py-8">
-      <Heading tag={t.eco.tag} title={t.eco.title} sub={t.eco.sub} />
-      <R className="eco-stage relative mx-auto max-w-6xl">
+    // Same frosted glass as the contact form: translucent cards over a dark section where the orb drifts behind.
+    <section className="dark relative overflow-hidden bg-ink px-4 py-12 text-foreground sm:py-16">
+      <img src={heroOrb} alt="" loading="lazy" className="animate-drift absolute inset-0 h-full w-full object-cover opacity-40" />
+      <div className="relative"><Heading tag={t.eco.tag} title={t.eco.title} sub={t.eco.sub} /></div>
+      <R className="relative mx-auto max-w-6xl">
         <div className="relative grid gap-5 md:grid-cols-2">
           {items.map((it, j) => {
             const url = "url" in it ? it.url : undefined;
@@ -375,7 +377,7 @@ function Ecosystem({ t }: { t: T }) {
                   </div>
                   {/* Products without a public site (e.g. Technova Connect) show no link. */}
                   {url ? (
-                    <Button asChild variant="pill" size="pill" className="action-pill action-pill-dark shrink-0 px-4 py-2.5 text-sm font-medium"><a href={url} target="_blank" rel="noreferrer" aria-label={`${t.eco.visit} ${it.n}`}><ActionText>{t.eco.visit}</ActionText><ArrowUpRight className="h-4 w-4" /></a></Button>
+                    <Button asChild variant="pill" size="pill" className="action-pill action-pill-glass shrink-0 px-4 py-2.5 text-sm font-medium"><a href={url} target="_blank" rel="noreferrer" aria-label={`${t.eco.visit} ${it.n}`}><ActionText>{t.eco.visit}</ActionText><ArrowUpRight className="h-4 w-4" /></a></Button>
                   ) : (
                     <span className="eco-soon shrink-0 rounded-full px-4 py-2.5 text-sm font-medium text-muted-foreground">{t.eco.soon}</span>
                   )}

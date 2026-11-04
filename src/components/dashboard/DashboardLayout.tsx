@@ -99,7 +99,6 @@ export function DashboardLayout({ children }: { children: ReactNode }) {
   }
   const effectiveCollapsed = artifactWorkspaceOpen ? (workspaceCollapsed ?? true) : collapsed;
   const mini = effectiveCollapsed && !mobileOpen;
-  const isChat = pathname.startsWith("/dashboard/chat");
   const isThread = pathname.startsWith("/dashboard/chat/");
   const current = links.find(l => pathname === l.to)?.key ?? (pathname.startsWith("/dashboard/chat") ? "chat" : pathname === "/dashboard/docs" ? "docs" : "overview");
   const filtered = threads.filter(thread => thread.title.toLocaleLowerCase().includes(search.toLocaleLowerCase())).sort((a, b) => Number(b.pinned) - Number(a.pinned));
@@ -110,8 +109,10 @@ export function DashboardLayout({ children }: { children: ReactNode }) {
   const planKey = plan ? planKeyOf(plan.tier, plan.paid) : null;
   const planName = planKey ? planLabels[planKey][lang] : "";
   // Top banner: each product name opens its own site (TechNova AI Hub: this site's home page).
-  const marqueeItems = [
-    { name: "TECHNOVA LEARNING", text: lang === "fr" ? "Formations en IA, data et cybersécurité" : "AI, data and cybersecurity courses", href: "https://www.technovalearning.com/", external: true },
+  const marqueeItems: { name: string; text: string; href?: string }[] = [
+    { name: "Technova Learning", text: lang === "fr" ? "Formations en IA, data et cybersécurité" : "AI, data and cybersecurity courses", href: "https://www.technovalearning.com/" },
+    // No public link until the Connect site is confirmed.
+    { name: "Technova Connect", text: lang === "fr" ? "Numéros permanents, eSIM voyage, vérifications SMS" : "Permanent numbers, travel eSIM, SMS verification" },
   ];
 
   return <DashboardContext.Provider value={{ lang, t, theme, setLang, setTheme, setArtifactWorkspaceOpen: setWorkspaceOpen, threads, reload, createThread, name, email, error }}>
@@ -150,8 +151,11 @@ export function DashboardLayout({ children }: { children: ReactNode }) {
       <div className="relative isolate min-w-0 flex-1">
         {!isThread && <div className={`dashboard-wallpaper pointer-events-none fixed inset-0 z-0 overflow-hidden`} aria-hidden="true"><img src={media.cloudBackground} alt="" className="h-full w-full scale-105 object-cover" /></div>}
         <header className="sticky top-0 z-30 flex h-12 items-center justify-between border-b border-border bg-card/95 px-3 backdrop-blur-xl lg:hidden"><Button variant="ghost" size="icon-sm" aria-label={t.menu} onClick={() => setMobileOpen(true)}><Menu className="size-5" /></Button><Link to="/dashboard" className="font-display text-[14px] font-bold">TechNova</Link><span className={`plan-ring plan-${planKey ?? "free"}`}><span className="grid size-7 place-items-center rounded-full bg-card text-[11px] font-bold text-foreground">{initials}</span></span></header>
-        {!isChat && <div className="dashboard-marquee relative z-10 flex h-8 items-center overflow-hidden border-b border-border bg-card"><span className="shrink-0 border-r border-border px-3 text-[9px] font-semibold text-muted-foreground">TECHNOVA / HUB</span><div className="min-w-0 overflow-hidden"><div className="dashboard-marquee-track flex w-max items-center gap-12 px-6 text-[10px] text-muted-foreground">{[0, 1].map((copy) => <span key={copy} className="contents" aria-hidden={copy === 1 ? true : undefined}>{marqueeItems.map((item) => <a key={item.href} href={item.href} {...(item.external ? { target: "_blank", rel: "noopener noreferrer" } : {})} tabIndex={copy === 1 ? -1 : undefined} className="transition-colors hover:text-foreground hover:underline underline-offset-2">{item.name} · {item.text}</a>)}</span>)}</div></div></div>}
-        <main className="relative z-10 mx-auto min-h-[calc(100svh-80px)] lg:min-h-[calc(100svh-32px)] w-full max-w-[1640px] px-4 pb-8 pt-6 sm:px-6 lg:px-7">{error && <div role="alert" className="mb-5 flex items-center justify-between border-l-2 border-destructive bg-secondary px-4 py-3 text-sm"><span>{error}</span><Button variant="ghost" size="sm" onClick={() => void reload()}>{t.retry}</Button></div>}<div key={pathname} className="dashboard-page-enter">{children}</div></main>
+        {!isThread && <div className="dashboard-marquee relative z-10 flex h-7 items-center overflow-hidden border-b border-border bg-card [mask-image:linear-gradient(90deg,transparent,black_6%,black_94%,transparent)]"><div className="dashboard-marquee-track flex w-max items-center gap-10 whitespace-nowrap px-6 text-[10.5px] text-muted-foreground">{[0, 1, 2, 3].map((copy) => <span key={copy} className="contents" aria-hidden={copy > 0 ? true : undefined}>{marqueeItems.map((item) => {
+          const body = <><span className="font-medium text-foreground/75">{item.name}</span><span className="mx-2 opacity-40">·</span>{item.text}</>;
+          return item.href ? <a key={item.name} href={item.href} target="_blank" rel="noopener noreferrer" tabIndex={copy > 0 ? -1 : undefined} className="transition-colors hover:text-foreground">{body}</a> : <span key={item.name}>{body}</span>;
+        })}</span>)}</div></div>}
+        <main className="relative z-10 mx-auto min-h-[calc(100svh-76px)] lg:min-h-[calc(100svh-28px)] w-full max-w-[1640px] px-4 pb-8 pt-6 sm:px-6 lg:px-7">{error && <div role="alert" className="mb-5 flex items-center justify-between border-l-2 border-destructive bg-secondary px-4 py-3 text-sm"><span>{error}</span><Button variant="ghost" size="sm" onClick={() => void reload()}>{t.retry}</Button></div>}<div key={pathname} className="dashboard-page-enter">{children}</div></main>
       </div>
     </div>
   </DashboardContext.Provider>;
