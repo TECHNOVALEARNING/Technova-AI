@@ -145,7 +145,7 @@ export function DashboardLayout({ children }: { children: ReactNode }) {
           </div>
           <div className={`mt-1 flex items-center gap-0.5 px-1 ${mini ? "lg:mt-auto lg:flex-col lg:px-0" : ""}`}>
             <Popover open={themeOpen} onOpenChange={setThemeOpen}>
-              <PopoverTrigger asChild><Button variant="ghost" size="icon-sm" className="size-8 rounded-lg text-muted-foreground" aria-label={t.theme} title={t.theme}><Palette className="size-4" /></Button></PopoverTrigger>
+              <PopoverTrigger asChild><Button variant="ghost" size="sm" className={`h-8 gap-1.5 rounded-lg px-2 text-[12px] font-medium text-muted-foreground ${mini ? "lg:w-8 lg:px-0" : ""}`} aria-label={t.theme} title={t.theme}><Palette className="size-4" /><span className={mini ? "lg:hidden" : ""}>{lang === "fr" ? "Thème" : "Theme"}</span></Button></PopoverTrigger>
               <PopoverContent side="top" align="start" className="w-56 rounded-2xl p-1.5">
                 {(["dark", "light"] as const).map((mode) => <div key={mode} className="py-1">
                   <p className="px-2.5 pb-1 pt-1.5 text-[10px] font-medium uppercase tracking-[0.12em] text-muted-foreground">{mode === "dark" ? (lang === "fr" ? "Sombres" : "Dark") : (lang === "fr" ? "Clairs" : "Light")}</p>

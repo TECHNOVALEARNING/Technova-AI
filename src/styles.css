@@ -794,11 +794,11 @@ html, body, * { scrollbar-width: none; }
 .wallpaper-glow-3 { right: 18%; top: 8%; width: 35vw; height: 45vh; background: color-mix(in oklab, var(--foreground) 20%, transparent); filter: blur(120px); }
 @keyframes look-glow { 0%, 100% { opacity: .35; transform: none; } 33% { opacity: .75; transform: translate(-18%, 12%) scale(1.25); } 66% { opacity: .5; transform: translate(12%, -8%) scale(.9); } }
 @keyframes look-drift { 0%, 100% { transform: scale(1.15); } 25% { transform: scale(1.3) translate(-5%, 3%) rotate(1deg); } 50% { transform: scale(1.22) translate(3%, -2%); } 75% { transform: scale(1.32) translate(-3%, -3%) rotate(-1deg); } }
-:is(.look-brume, .look-soie, .look-apple, .look-pastel) .wallpaper-glow { display: block; }
-.dashboard-shell:is(.look-brume, .look-soie, .look-apple, .look-pastel) .dashboard-wallpaper { background: var(--background); }
-.dashboard-shell:is(.look-brume, .look-soie, .look-apple, .look-pastel) .dashboard-wallpaper::before { display: block; inset: 0; filter: blur(40px); animation: look-drift 24s ease-in-out infinite; background: var(--look-wallpaper); opacity: var(--look-wallpaper-opacity, 1); }
-.dashboard-shell:is(.look-brume, .look-soie, .look-apple, .look-pastel) .dashboard-wallpaper::after { display: block; background: var(--look-veil); }
-.dark .dashboard-shell.look-brume .dashboard-content, .dark .dashboard-shell.look-soie .dashboard-content {
+:is(.look-brume, .look-soie, .look-emeraude, .look-apple, .look-pastel, .look-sable) .wallpaper-glow { display: block; }
+.dashboard-shell:is(.look-brume, .look-soie, .look-emeraude, .look-apple, .look-pastel, .look-sable) .dashboard-wallpaper { background: var(--background); }
+.dashboard-shell:is(.look-brume, .look-soie, .look-emeraude, .look-apple, .look-pastel, .look-sable) .dashboard-wallpaper::before { display: block; inset: 0; filter: blur(40px); animation: look-drift 24s ease-in-out infinite; background: var(--look-wallpaper); opacity: var(--look-wallpaper-opacity, 1); }
+.dashboard-shell:is(.look-brume, .look-soie, .look-emeraude, .look-apple, .look-pastel, .look-sable) .dashboard-wallpaper::after { display: block; background: var(--look-veil); }
+.dark .dashboard-shell.look-brume .dashboard-content, .dark .dashboard-shell.look-soie .dashboard-content, .dark .dashboard-shell.look-emeraude .dashboard-content {
   --background: oklch(.12 0 0); --foreground: oklch(.96 0 0); --card-foreground: oklch(.96 0 0); --muted-foreground: oklch(.72 0 0); --border: oklch(1 0 0 / .1);
   --look-glass: oklch(.22 0 0 / .38); --look-glass-edge: oklch(1 0 0 / .12); --look-glass-shine: oklch(1 0 0 / .12);
   --look-glass-shadow: 0 20px 60px -20px oklch(0 0 0 / .6); --look-veil: oklch(.08 0 0 / .35); }
@@ -814,24 +814,10 @@ html, body, * { scrollbar-width: none; }
   --look-glass: oklch(1 0 0 / .28); --look-glass-edge: oklch(1 0 0 / .6); --look-glass-shine: oklch(1 0 0 / .8);
   --look-glass-shadow: 0 20px 60px -24px oklch(.3 .03 250 / .3); --look-veil: oklch(.9 .02 240 / .15);
   --look-blob-1: oklch(.8 .08 250 / .4); --look-blob-2: oklch(.82 .1 40 / .45); }
-.dashboard-shell.look-brume .dashboard-content { --look-wallpaper-opacity: .9; --look-wallpaper:
-    radial-gradient(34% 34% at 12.5% 12.5%, #020204, transparent 72%),
-    radial-gradient(34% 34% at 37.5% 12.5%, #030305, transparent 72%),
-    radial-gradient(34% 34% at 62.5% 12.5%, #131214, transparent 72%),
-    radial-gradient(34% 34% at 87.5% 12.5%, #08080a, transparent 72%),
-    radial-gradient(34% 34% at 12.5% 37.5%, #030305, transparent 72%),
-    radial-gradient(34% 34% at 37.5% 37.5%, #09080a, transparent 72%),
-    radial-gradient(34% 34% at 62.5% 37.5%, #262527, transparent 72%),
-    radial-gradient(34% 34% at 87.5% 37.5%, #161618, transparent 72%),
-    radial-gradient(34% 34% at 12.5% 62.5%, #040406, transparent 72%),
-    radial-gradient(34% 34% at 37.5% 62.5%, #0c0c0e, transparent 72%),
-    radial-gradient(34% 34% at 62.5% 62.5%, #262527, transparent 72%),
-    radial-gradient(34% 34% at 87.5% 62.5%, #0e0d0f, transparent 72%),
-    radial-gradient(34% 34% at 12.5% 87.5%, #060608, transparent 72%),
-    radial-gradient(34% 34% at 37.5% 87.5%, #0c0b0e, transparent 72%),
-    radial-gradient(34% 34% at 62.5% 87.5%, #18181a, transparent 72%),
-    radial-gradient(34% 34% at 87.5% 87.5%, #040406, transparent 72%),
-    #09090b; }
+.dashboard-shell.look-brume .dashboard-content { --look-wallpaper-opacity: 1; --look-blob-1: oklch(1 0 0 / .16); --look-blob-2: oklch(1 0 0 / .1); --look-wallpaper:
+    radial-gradient(55% 45% at 78% 12%, oklch(1 0 0 / .34), transparent 70%),
+    radial-gradient(45% 40% at 18% 85%, oklch(1 0 0 / .08), transparent 70%),
+    linear-gradient(160deg, #000 0%, #060607 40%, #1b1b1e 75%, #3a3a3f 100%); }
 .dashboard-shell.look-soie .dashboard-content { --look-wallpaper-opacity: .95; --look-wallpaper:
     radial-gradient(34% 34% at 12.5% 12.5%, #131318, transparent 72%),
     radial-gradient(34% 34% at 37.5% 12.5%, #4b5860, transparent 72%),
@@ -889,13 +875,45 @@ html, body, * { scrollbar-width: none; }
 /* Composer on the new looks: the look's glass and a slowly turning rainbow edge. */
 @property --siri-angle { syntax: "<angle>"; inherits: false; initial-value: 0deg; }
 @keyframes siri-spin { to { --siri-angle: 360deg; } }
-.dashboard-shell:is(.look-brume, .look-soie, .look-apple, .look-pastel):not(:has(.chat-thread)) .chat-composer {
+.dashboard-shell:is(.look-brume, .look-soie, .look-emeraude, .look-apple, .look-pastel, .look-sable):not(:has(.chat-thread)) .chat-composer {
   position: relative; background: var(--look-glass) !important; border-color: var(--look-glass-edge); border-radius: 28px;
   backdrop-filter: blur(40px) saturate(1.8); -webkit-backdrop-filter: blur(40px) saturate(1.8);
   box-shadow: inset 0 1px 0 var(--look-glass-shine), var(--look-glass-shadow) !important; }
-.dashboard-shell:is(.look-brume, .look-soie, .look-apple, .look-pastel):not(:has(.chat-thread)) .chat-composer::before {
+.dashboard-shell:is(.look-brume, .look-soie, .look-emeraude, .look-apple, .look-pastel, .look-sable):not(:has(.chat-thread)) .chat-composer::before {
   content: ""; position: absolute; inset: -1.5px; border-radius: inherit; padding: 1.5px; pointer-events: none; opacity: .55;
   background: conic-gradient(from var(--siri-angle), oklch(.75 .15 250 / .7), oklch(.7 .2 330 / .7), oklch(.8 .15 60 / .6), oklch(.75 .15 180 / .7), oklch(.75 .15 250 / .7));
   -webkit-mask: linear-gradient(#000 0 0) content-box exclude, linear-gradient(#000 0 0); mask: linear-gradient(#000 0 0) content-box exclude, linear-gradient(#000 0 0);
   animation: siri-spin 6s linear infinite; }
 @media (prefers-reduced-motion: reduce) { .wallpaper-glow, .dashboard-shell .dashboard-wallpaper::before, .chat-composer::before { animation: none !important; } }
+
+/* Brume: the white light keeps moving across the black gradient. */
+.dashboard-shell.look-brume .wallpaper-glow-3 { background: oklch(1 0 0 / .45); animation: look-light 16s ease-in-out infinite; }
+@keyframes look-light { 0%, 100% { transform: translate(0, 0) scale(1); opacity: .55; } 25% { transform: translate(-40%, 25%) scale(1.2); opacity: .85; } 50% { transform: translate(-70%, 60%) scale(.9); opacity: .6; } 75% { transform: translate(-20%, 40%) scale(1.15); opacity: .8; } }
+
+/* Soie also dresses the sidebar: silk-blue glass with a slow white light moving down behind the menu
+   (pattern, links and plan badge unchanged). */
+.dark .dashboard-shell.look-soie .dashboard-sidebar.sidebar-glass { background: color-mix(in oklab, oklch(.14 .014 250) 52%, transparent); backdrop-filter: blur(30px) saturate(1.6); -webkit-backdrop-filter: blur(30px) saturate(1.6); border-right-color: oklch(1 0 0 / .1); }
+.dark .dashboard-shell.look-soie .sidebar-glass::after { background: radial-gradient(70% 28% at 30% 0%, oklch(1 0 0 / .16), transparent 70%), radial-gradient(90% 35% at 100% 100%, oklch(.6 .08 240 / .22), transparent 70%); background-size: 100% 200%; animation: soie-light 14s ease-in-out infinite alternate; }
+@keyframes soie-light { from { background-position: 0 0, 0 0; } to { background-position: 0 100%, 0 0; } }
+
+/* Emeraude (dark, new): near-black green with a slow emerald and teal aurora. */
+.dark .dashboard-shell.look-emeraude .dashboard-content { --background: oklch(.13 .02 170); --look-glass: oklch(.2 .025 170 / .38); --look-glass-edge: oklch(.9 .05 165 / .14); --look-glass-shine: oklch(1 0 0 / .1);
+  --look-veil: oklch(.08 .02 170 / .3); --look-blob-1: oklch(.62 .14 165 / .35); --look-blob-2: oklch(.6 .1 200 / .28); --look-wallpaper:
+    radial-gradient(60% 40% at 20% 15%, oklch(.42 .1 165 / .7), transparent 70%),
+    radial-gradient(50% 45% at 85% 70%, oklch(.36 .08 195 / .6), transparent 70%),
+    radial-gradient(40% 30% at 55% 105%, oklch(.5 .12 150 / .45), transparent 70%),
+    linear-gradient(170deg, #04110d, #071a15 55%, #0b241e); }
+.dashboard-shell.look-emeraude .wallpaper-glow-3 { background: oklch(.85 .08 165 / .12); }
+
+/* Sable (light, new): warm sand and cream with a soft peach light, matte glass. */
+.dashboard-shell.look-sable .dashboard-content {
+  --background: oklch(.95 .015 75); --foreground: oklch(.25 .02 60); --card-foreground: oklch(.25 .02 60); --muted-foreground: oklch(.5 .025 60);
+  --look-glass: oklch(1 .01 80 / .42); --look-glass-edge: oklch(1 0 0 / .7); --look-glass-shine: oklch(1 0 0 / .85);
+  --look-glass-shadow: 0 20px 60px -24px oklch(.45 .06 60 / .28); --look-veil: oklch(.97 .012 80 / .35);
+  --look-blob-1: oklch(.86 .08 55 / .55); --look-blob-2: oklch(.9 .06 95 / .5); --look-wallpaper:
+    radial-gradient(55% 45% at 80% 15%, oklch(.88 .07 55 / .9), transparent 70%),
+    radial-gradient(50% 45% at 15% 80%, oklch(.9 .05 90 / .9), transparent 70%),
+    radial-gradient(40% 35% at 50% 50%, oklch(.97 .02 80), transparent 70%),
+    linear-gradient(160deg, #f6efe4, #ead9c4 60%, #e2cbb0); }
+.dashboard-shell.look-sable .wallpaper-glow-3 { background: oklch(1 .02 80 / .5); }
+@media (prefers-reduced-motion: reduce) { .dark .dashboard-shell.look-soie .sidebar-glass::after { animation: none; } }
