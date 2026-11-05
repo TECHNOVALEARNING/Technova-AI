@@ -22,6 +22,7 @@ import {
   Square,
   Copy,
   Wand2,
+  Zap,
   Film,
   Image as ImageIcon,
   Telescope,
@@ -195,15 +196,10 @@ function ChoiceControls({ choice }: { choice: ReturnType<typeof useWorkspaceChoi
             variant="ghost"
             size="sm"
             aria-label={copy.chooseMode}
-            className="h-8 min-w-0 gap-1.5 rounded-full px-2.5 text-xs font-medium text-foreground/80 hover:text-foreground"
+            className="h-8 min-w-0 gap-1 rounded-full px-2.5 text-[13px] font-normal text-muted-foreground hover:bg-transparent hover:text-foreground"
           >
-            {mode === "chat" ? (
-              <MessageCircle className="size-3.5 text-muted-foreground" strokeWidth={1.75} />
-            ) : (
-              <Code2 className="size-3.5 text-muted-foreground" strokeWidth={1.75} />
-            )}
             {copy[mode]}
-            <ChevronDown className="size-3" />
+            <ChevronDown className="size-3.5" />
           </Button>
         </PopoverTrigger>
         <PopoverContent
@@ -237,13 +233,12 @@ function ChoiceControls({ choice }: { choice: ReturnType<typeof useWorkspaceChoi
           ))}
         </PopoverContent>
       </Popover>
-      <span className="h-5 w-px bg-border" />
       {mode === "create" ? (
         <span
           title={copy.locale.startsWith("fr") ? "TechNova Smart choisit automatiquement le meilleur modèle au meilleur prix" : "TechNova Smart picks the best model at the best price automatically"}
-          className="inline-flex h-9 items-center gap-1.5 rounded-full border border-border/70 bg-card/80 px-3 text-xs font-medium"
+          className="inline-flex h-8 items-center gap-1.5 rounded-full px-2.5 text-[13px] text-muted-foreground"
         >
-          <Wand2 className="size-3.5 text-chat-glow" />
+          <Zap className="size-3.5" strokeWidth={1.8} />
           {SMART_MODEL}
         </span>
       ) : (
@@ -254,10 +249,11 @@ function ChoiceControls({ choice }: { choice: ReturnType<typeof useWorkspaceChoi
             variant="ghost"
             size="sm"
             aria-label={copy.chooseModel}
-            className="h-9 min-w-0 max-w-[125px] rounded-full border border-border/70 bg-card/80 px-2.5 text-xs font-medium min-[400px]:max-w-[155px] sm:max-w-[200px]"
+            className="h-8 min-w-0 max-w-[150px] gap-1.5 rounded-full px-2.5 text-[13px] font-normal text-muted-foreground hover:bg-transparent hover:text-foreground sm:max-w-[210px]"
           >
+            <Zap className="size-3.5 shrink-0" strokeWidth={1.8} />
             <span className="truncate">{model}</span>
-            <ChevronDown className="size-3 shrink-0" />
+            <ChevronDown className="size-3.5 shrink-0" />
           </Button>
         </PopoverTrigger>
         <PopoverContent
@@ -412,7 +408,7 @@ function VoiceButton({ inputRef }: { inputRef?: React.RefObject<HTMLTextAreaElem
   const label = listening ? (lang === "fr" ? "Arrêter la dictée" : "Stop dictation") : (lang === "fr" ? "Dicter un message" : "Dictate a message");
   return (
     <button type="button" onClick={toggle} aria-label={label} title={label} aria-pressed={listening}
-      className={`grid size-8 place-items-center rounded-full border transition-colors ${listening ? "voice-live border-transparent" : "border-border text-muted-foreground hover:bg-secondary hover:text-foreground"}`}>
+      className={`grid size-8 place-items-center rounded-full transition-colors ${listening ? "voice-live" : "text-muted-foreground hover:bg-secondary/70 hover:text-foreground"}`}>
       {listening ? <Square className="size-3 fill-current" /> : <Mic className="size-4" />}
     </button>
   );
@@ -470,6 +466,8 @@ function ChatComposer({
   const [docs, setDocs] = useState<ComposerDoc[]>([]);
   const [fileError, setFileError] = useState("");
   const [reading, setReading] = useState(false);
+  // The send button appears once there is something to send (the mic stays alone otherwise).
+  const [hasText, setHasText] = useState(false);
   const fileInput = useRef<HTMLInputElement>(null);
   const updateDoc = (key: string, patch: Partial<ComposerDoc>) => setDocs((all) => all.map((d) => (d.key === key ? { ...d, ...patch } : d)));
   async function pick(list: FileList | null) {
@@ -504,10 +502,10 @@ function ChatComposer({
           const readyDocs = docs.filter((d) => d.phase === "ready" && d.fileId);
           if (docsBusy || (!text.trim() && !files.length && !readyDocs.length)) return;
           const sent = [...files, ...readyDocs.map((d): ChatFilePart => ({ type: "file", mediaType: INDEXED_FILE_TYPE, filename: d.filename, url: indexedFileUrl(d.fileId!) }))];
-          setFiles([]); setDocs([]); setFileError("");
+          setFiles([]); setDocs([]); setFileError(""); setHasText(false);
           await onSubmit(text, sent);
         }}
-        className="chat-composer rounded-[26px] border border-border bg-card"
+        className="chat-composer rounded-[22px] border border-border bg-card"
       >
         {editing && (
           <div className="flex w-full items-center gap-3 px-3 pt-3">
@@ -530,36 +528,41 @@ function ChatComposer({
           autoFocus
           disabled={disabled}
           placeholder={editing ? (lang === "fr" ? "Ex. : rends le ciel plus orangé, ajoute un logo…" : "E.g. make the sky more orange, add a logo…") : mode === "chat" ? copy.chatPlaceholder : copy.createPlaceholder}
-          className="min-h-[56px] max-h-48 px-4 pt-3.5 text-[14px]"
+          onChange={(e) => setHasText(e.currentTarget.value.trim().length > 0)}
+          className="min-h-[76px] max-h-48 px-5 pt-4 text-[15px]"
         />
-        <PromptInputFooter className="min-h-12 flex-wrap justify-between gap-2 px-2 pb-2">
-          <ChoiceControls choice={choice} />
-          <div className="flex items-center gap-1.5">
+        <PromptInputFooter className="min-h-12 flex-wrap justify-between gap-2 px-3 pb-2.5">
+          <div className="flex items-center gap-0.5">
             <input ref={fileInput} data-chat-attach type="file" accept={`${ACCEPT},${ALL_ACCEPT}`} multiple className="hidden" onChange={(e) => void pick(e.target.files)} />
-            {mode === "chat" && <KnowledgePicker choice={choice} />}
+            <button type="button" onClick={() => fileInput.current?.click()} disabled={disabled || reading} aria-label={attachLabel} title={attachLabel}
+              className="grid size-8 place-items-center rounded-full text-muted-foreground transition-colors hover:bg-secondary/70 hover:text-foreground disabled:opacity-50">
+              {reading ? <Loader2 className="size-4 animate-spin" /> : <Paperclip className="size-4" strokeWidth={1.7} />}
+            </button>
             {mode === "chat" && (
               <button
                 type="button"
                 onClick={choice.toggleResearch}
                 aria-pressed={choice.research}
+                aria-label={lang === "fr" ? "Recherche approfondie" : "Deep research"}
                 title={lang === "fr" ? `Recherche approfondie sur le web avec sources (jusqu'à ${RESEARCH_MAX_CREDITS} crédits, facturée au coût réel)` : `Deep web research with sources (up to ${RESEARCH_MAX_CREDITS} credits, billed at real cost)`}
-                className={cn("inline-flex h-8 items-center gap-1.5 rounded-full border px-2.5 text-xs transition-colors disabled:opacity-50", choice.research ? "border-chat-glow bg-chat-glow/10 text-foreground" : "border-border text-muted-foreground hover:bg-secondary hover:text-foreground")}
+                className={cn("grid size-8 place-items-center rounded-full transition-colors disabled:opacity-50", choice.research ? "bg-chat-glow/15 text-foreground" : "text-muted-foreground hover:bg-secondary/70 hover:text-foreground")}
                 disabled={disabled}
               >
-                <Telescope className="size-4" />
-                <span className="hidden sm:inline">{lang === "fr" ? "Recherche" : "Research"}</span>
+                <Telescope className="size-4" strokeWidth={1.7} />
               </button>
             )}
-            <button type="button" onClick={() => fileInput.current?.click()} disabled={disabled || reading} aria-label={attachLabel} title={attachLabel}
-              className="grid size-8 place-items-center rounded-full border border-border text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground disabled:opacity-50">
-              {reading ? <Loader2 className="size-4 animate-spin" /> : <Paperclip className="size-4" />}
-            </button>
+            {mode === "chat" && <KnowledgePicker choice={choice} />}
+          </div>
+          <div className="flex min-w-0 items-center gap-0.5">
+            <ChoiceControls choice={choice} />
             <VoiceButton inputRef={textareaRef} />
-            <PromptInputSubmit
-              disabled={disabled || reading || docsBusy}
-              aria-label={copy.saveIdea}
-              className="size-8 shrink-0 rounded-full bg-foreground text-background hover:bg-foreground/85"
-            />
+            {(hasText || files.length > 0 || docs.length > 0) && (
+              <PromptInputSubmit
+                disabled={disabled || reading || docsBusy}
+                aria-label={copy.saveIdea}
+                className="ml-1 size-8 shrink-0 rounded-full bg-foreground text-background hover:bg-foreground/85"
+              />
+            )}
           </div>
         </PromptInputFooter>
       </PromptInput>
@@ -588,8 +591,8 @@ function KnowledgePicker({ choice }: { choice: ReturnType<typeof useWorkspaceCho
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
         <button type="button" aria-label={label} title={label}
-          className={cn("inline-flex h-8 items-center gap-1.5 rounded-full border px-2.5 text-xs transition-colors", count ? "border-chat-glow bg-chat-glow/10 text-foreground" : "border-border text-muted-foreground hover:bg-secondary hover:text-foreground")}>
-          <Library className="size-4" />{count > 0 && <span className="font-semibold">{count}</span>}
+          className={cn("inline-flex h-8 min-w-8 items-center justify-center gap-1 rounded-full px-1.5 text-xs transition-colors", count ? "bg-chat-glow/10 text-foreground" : "text-muted-foreground hover:bg-secondary/70 hover:text-foreground")}>
+          <Library className="size-4" strokeWidth={1.7} />{count > 0 && <span className="font-semibold">{count}</span>}
         </button>
       </PopoverTrigger>
       <PopoverContent align="end" className="w-72 p-2">
@@ -630,6 +633,11 @@ function AttachmentChip({ file, onRemove, phase, error }: { file: ChatFilePart; 
   );
 }
 
+/** Welcome orb: a glass ball whose colours swirl inside it (the ball itself stays still). */
+function ChatOrb() {
+  return <div className="chat-orb" aria-hidden="true"><span className="chat-orb-ball"><i /><i /><i /><b /></span></div>;
+}
+
 type StarterIdea = { icon: typeof LayoutTemplate; mode: Mode; attach?: boolean; fr: [string, string, string]; en: [string, string, string] };
 
 // One-click starting points: [title, hint, prefilled prompt]. Brackets mark what the user completes.
@@ -656,13 +664,13 @@ function StarterIdeas({ choice, inputRef }: { choice: ReturnType<typeof useWorks
       if (idea.attach) document.querySelector<HTMLInputElement>("input[data-chat-attach]")?.click();
     }, 0);
   }
-  return <div className="flex w-full flex-wrap justify-center gap-1.5">
+  return <div className="starter-row flex w-full flex-nowrap justify-between gap-2 overflow-x-auto">
     {starterIdeas.map((idea) => {
       const [title, hint] = idea[lang === "en" ? "en" : "fr"];
       const Icon = idea.icon;
       return <button key={title} type="button" onClick={() => pick(idea)}
         title={hint}
-        className="starter-chip group inline-flex h-7 items-center gap-1.5 rounded-full border px-2.5 text-[12px] text-foreground/80 transition-colors hover:text-foreground">
+        className="starter-chip group inline-flex h-7 shrink-0 items-center gap-1.5 rounded-full border px-2.5 text-[12px] text-foreground/80 transition-colors hover:text-foreground">
         <Icon className="size-3.5 text-muted-foreground transition-colors group-hover:text-foreground" strokeWidth={1.6} />
         <span className="truncate">{title}</span>
       </button>;
@@ -715,20 +723,21 @@ export function ChatListPage() {
   return (
     <div className="chat-workspace chat-home relative -mx-4 -mt-6 min-h-[calc(100svh-92px)] lg:min-h-[calc(100svh-76px)] overflow-hidden sm:-mx-6 lg:-mx-7">
       <div className="relative mx-auto flex min-h-[calc(100svh-92px)] lg:min-h-[calc(100svh-76px)] max-w-[1330px] flex-col px-4 pb-8 sm:px-8 lg:px-12">
-        <section className="flex flex-1 flex-col items-center justify-center gap-7 py-12 sm:gap-8 sm:py-16">
+        <section className="flex flex-1 flex-col items-center justify-center gap-6 py-12 sm:gap-7 sm:py-16">
           <div className="text-center">
-            <h1 className="max-w-2xl font-display text-3xl font-semibold leading-tight sm:text-4xl">
+            <h1 className="chat-greeting max-w-4xl text-balance text-3xl font-medium leading-tight tracking-tight sm:text-5xl">
               <ChatGreeting choice={choice} />
             </h1>
           </div>
-          <div className="w-full max-w-[660px]">
+          <ChatOrb />
+          <div className="w-full max-w-[920px]">
             <ChatComposer choice={choice} disabled={busy} onSubmit={start} inputRef={composerRef} />
             {error && (
               <p role="alert" className="mt-3 text-center text-xs text-destructive">
                 {error}
               </p>
             )}
-            <div className="mt-5"><StarterIdeas choice={choice} inputRef={composerRef} /></div>
+            <div className="mt-4"><StarterIdeas choice={choice} inputRef={composerRef} /></div>
           </div>
         </section>
         <section className="chat-library relative w-full rounded-2xl border border-border/70 bg-card/85 p-4 shadow-soft backdrop-blur-xl sm:p-6">

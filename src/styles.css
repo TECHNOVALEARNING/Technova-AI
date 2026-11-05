@@ -794,11 +794,11 @@ html, body, * { scrollbar-width: none; }
 .wallpaper-glow-3 { right: 18%; top: 8%; width: 35vw; height: 45vh; background: color-mix(in oklab, var(--foreground) 20%, transparent); filter: blur(120px); }
 @keyframes look-glow { 0%, 100% { opacity: .35; transform: none; } 33% { opacity: .75; transform: translate(-18%, 12%) scale(1.25); } 66% { opacity: .5; transform: translate(12%, -8%) scale(.9); } }
 @keyframes look-drift { 0%, 100% { transform: scale(1.15); } 25% { transform: scale(1.3) translate(-5%, 3%) rotate(1deg); } 50% { transform: scale(1.22) translate(3%, -2%); } 75% { transform: scale(1.32) translate(-3%, -3%) rotate(-1deg); } }
-:is(.look-brume, .look-soie, .look-ardoise, .look-amethyste, .look-cobalt, .look-reverbere, .look-apple, .look-pastel, .look-papier, .look-givre, .look-ivoire) .wallpaper-glow { display: block; }
-.dashboard-shell:is(.look-brume, .look-soie, .look-ardoise, .look-amethyste, .look-cobalt, .look-reverbere, .look-apple, .look-pastel, .look-papier, .look-givre, .look-ivoire) .dashboard-wallpaper { background: var(--background); }
-.dashboard-shell:is(.look-brume, .look-soie, .look-ardoise, .look-amethyste, .look-cobalt, .look-reverbere, .look-apple, .look-pastel, .look-papier, .look-givre, .look-ivoire) .dashboard-wallpaper::before { display: block; inset: 0; filter: blur(40px); animation: look-drift 24s ease-in-out infinite; background: var(--look-wallpaper); opacity: var(--look-wallpaper-opacity, 1); }
-.dashboard-shell:is(.look-brume, .look-soie, .look-ardoise, .look-amethyste, .look-cobalt, .look-reverbere, .look-apple, .look-pastel, .look-papier, .look-givre, .look-ivoire) .dashboard-wallpaper::after { display: block; background: var(--look-veil); }
-.dark .dashboard-shell.look-brume .dashboard-content, .dark .dashboard-shell.look-soie .dashboard-content, .dark .dashboard-shell.look-ardoise .dashboard-content, .dark .dashboard-shell.look-amethyste .dashboard-content, .dark .dashboard-shell.look-cobalt .dashboard-content, .dark .dashboard-shell.look-reverbere .dashboard-content {
+:is(.look-brume, .look-soie, .look-graphite, .look-obsidienne, .look-reverbere, .look-apple, .look-pastel, .look-papier, .look-givre, .look-ivoire) .wallpaper-glow { display: block; }
+.dashboard-shell:is(.look-brume, .look-soie, .look-graphite, .look-obsidienne, .look-reverbere, .look-apple, .look-pastel, .look-papier, .look-givre, .look-ivoire) .dashboard-wallpaper { background: var(--background); }
+.dashboard-shell:is(.look-brume, .look-soie, .look-graphite, .look-obsidienne, .look-reverbere, .look-apple, .look-pastel, .look-papier, .look-givre, .look-ivoire) .dashboard-wallpaper::before { display: block; inset: 0; filter: blur(40px); animation: look-drift 24s ease-in-out infinite; background: var(--look-wallpaper); opacity: var(--look-wallpaper-opacity, 1); }
+.dashboard-shell:is(.look-brume, .look-soie, .look-graphite, .look-obsidienne, .look-reverbere, .look-apple, .look-pastel, .look-papier, .look-givre, .look-ivoire) .dashboard-wallpaper::after { display: block; background: var(--look-veil); }
+.dark .dashboard-shell.look-brume .dashboard-content, .dark .dashboard-shell.look-soie .dashboard-content, .dark .dashboard-shell.look-graphite .dashboard-content, .dark .dashboard-shell.look-obsidienne .dashboard-content, .dark .dashboard-shell.look-reverbere .dashboard-content {
   --background: oklch(.12 0 0); --foreground: oklch(.96 0 0); --card-foreground: oklch(.96 0 0); --muted-foreground: oklch(.72 0 0); --border: oklch(1 0 0 / .1);
   --look-glass: oklch(.22 0 0 / .38); --look-glass-edge: oklch(1 0 0 / .12); --look-glass-shine: oklch(1 0 0 / .12);
   --look-glass-shadow: 0 20px 60px -20px oklch(0 0 0 / .6); --look-veil: oklch(.08 0 0 / .35); }
@@ -875,11 +875,11 @@ html, body, * { scrollbar-width: none; }
 /* Composer on the new looks: the look's glass and a slowly turning rainbow edge. */
 @property --siri-angle { syntax: "<angle>"; inherits: false; initial-value: 0deg; }
 @keyframes siri-spin { to { --siri-angle: 360deg; } }
-.dashboard-shell:is(.look-brume, .look-soie, .look-ardoise, .look-amethyste, .look-cobalt, .look-reverbere, .look-apple, .look-pastel, .look-papier, .look-givre, .look-ivoire):not(:has(.chat-thread)) .chat-composer {
+.dashboard-shell:is(.look-brume, .look-soie, .look-graphite, .look-obsidienne, .look-reverbere, .look-apple, .look-pastel, .look-papier, .look-givre, .look-ivoire):not(:has(.chat-thread)) .chat-composer {
   position: relative; background: var(--look-glass) !important; border-color: var(--look-glass-edge); border-radius: 28px;
   backdrop-filter: blur(40px) saturate(1.8); -webkit-backdrop-filter: blur(40px) saturate(1.8);
   box-shadow: inset 0 1px 0 var(--look-glass-shine), var(--look-glass-shadow) !important; }
-.dashboard-shell:is(.look-brume, .look-soie, .look-ardoise, .look-amethyste, .look-cobalt, .look-reverbere, .look-apple, .look-pastel, .look-papier, .look-givre, .look-ivoire):not(:has(.chat-thread)) .chat-composer::before {
+.dashboard-shell:is(.look-brume, .look-soie, .look-graphite, .look-obsidienne, .look-reverbere, .look-apple, .look-pastel, .look-papier, .look-givre, .look-ivoire):not(:has(.chat-thread)) .chat-composer::before {
   content: ""; position: absolute; inset: -1.5px; border-radius: inherit; padding: 1.5px; pointer-events: none; opacity: .55;
   background: conic-gradient(from var(--siri-angle), oklch(.75 .15 250 / .7), oklch(.7 .2 330 / .7), oklch(.8 .15 60 / .6), oklch(.75 .15 180 / .7), oklch(.75 .15 250 / .7));
   -webkit-mask: linear-gradient(#000 0 0) content-box exclude, linear-gradient(#000 0 0); mask: linear-gradient(#000 0 0) content-box exclude, linear-gradient(#000 0 0);
@@ -900,43 +900,31 @@ html, body, * { scrollbar-width: none; }
 
 /* Picture looks (dark): Ardoise, Améthyste, Cobalt, Réverbère show their wallpaper (public/media/themes) sharp,
    slowly panning, under a dark veil so text stays readable; panels take a tint drawn from each picture. */
-.dashboard-shell:is(.look-ardoise, .look-amethyste, .look-cobalt, .look-reverbere) .dashboard-wallpaper::before {
+.dashboard-shell.look-reverbere .dashboard-wallpaper::before {
   filter: none; background: var(--look-image) center / cover no-repeat; animation: look-pan 40s ease-in-out infinite alternate; }
 @keyframes look-pan { from { transform: scale(1.04) translate(0, 0); } to { transform: scale(1.1) translate(-1.5%, -1%); } }
-.dashboard-shell:is(.look-ardoise, .look-amethyste, .look-cobalt, .look-reverbere) .wallpaper-glow-3 { opacity: .5; }
-.dark .dashboard-shell.look-ardoise .dashboard-content { --look-image: url("/media/themes/ardoise.webp"); --background: oklch(.15 .012 240);
-  --look-glass: oklch(.2 .015 240 / .4); --look-glass-edge: oklch(.85 .03 240 / .16); --look-veil: oklch(.1 .01 240 / .25);
-  --look-blob-1: oklch(.7 .05 240 / .18); --look-blob-2: oklch(.7 .12 55 / .12); }
-.dark .dashboard-shell.look-amethyste .dashboard-content { --look-image: url("/media/themes/amethyste.webp"); --background: oklch(.08 .01 300);
-  --look-glass: oklch(.18 .03 300 / .38); --look-glass-edge: oklch(.85 .06 300 / .16); --look-veil: oklch(.05 .01 300 / .2);
-  --look-blob-1: oklch(.6 .12 300 / .22); --look-blob-2: oklch(.55 .1 280 / .15); }
-.dark .dashboard-shell.look-cobalt .dashboard-content { --look-image: url("/media/themes/cobalt.webp"); --background: oklch(.13 .03 255);
-  --look-glass: oklch(.18 .035 255 / .38); --look-glass-edge: oklch(.85 .05 250 / .16); --look-veil: oklch(.08 .02 255 / .3);
-  --look-blob-1: oklch(.65 .12 250 / .2); --look-blob-2: oklch(.7 .15 50 / .15); }
+.dashboard-shell.look-reverbere .wallpaper-glow-3 { opacity: .5; }
 .dark .dashboard-shell.look-reverbere .dashboard-content { --look-image: url("/media/themes/reverbere.webp"); --background: oklch(.08 0 0);
   --look-glass: oklch(.2 0 0 / .36); --look-glass-edge: oklch(1 0 0 / .12); --look-veil: oklch(.05 0 0 / .2);
   --look-blob-1: oklch(1 0 0 / .06); --look-blob-2: oklch(1 0 0 / .04); }
-@media (prefers-reduced-motion: reduce) { .dashboard-shell:is(.look-ardoise, .look-amethyste, .look-cobalt, .look-reverbere) .dashboard-wallpaper::before { animation: none; } }
+@media (prefers-reduced-motion: reduce) { .dashboard-shell.look-reverbere .dashboard-wallpaper::before { animation: none; } }
 
 /* Readability on every look: the glass frosts more (stronger blur, fuller fill, calmer saturation) so text never
    fights the wallpaper; picture looks also soften their image slightly behind the content. */
-.dashboard-shell:is(.look-brume, .look-soie, .look-ardoise, .look-amethyste, .look-cobalt, .look-reverbere, .look-apple, .look-pastel, .look-papier, .look-givre, .look-ivoire):not(:has(.chat-thread)) main :is(.bg-card, .bg-card\/95, .bg-card\/90, .bg-card\/85, .bg-card\/80, .bg-card\/70).border:not(.chat-composer, .chat-composer *, .border .border),
-.dashboard-shell:is(.look-brume, .look-soie, .look-ardoise, .look-amethyste, .look-cobalt, .look-reverbere, .look-apple, .look-pastel, .look-papier, .look-givre, .look-ivoire) .dashboard-marquee {
+.dashboard-shell:is(.look-brume, .look-soie, .look-graphite, .look-obsidienne, .look-reverbere, .look-apple, .look-pastel, .look-papier, .look-givre, .look-ivoire):not(:has(.chat-thread)) main :is(.bg-card, .bg-card\/95, .bg-card\/90, .bg-card\/85, .bg-card\/80, .bg-card\/70).border:not(.chat-composer, .chat-composer *, .border .border),
+.dashboard-shell:is(.look-brume, .look-soie, .look-graphite, .look-obsidienne, .look-reverbere, .look-apple, .look-pastel, .look-papier, .look-givre, .look-ivoire) .dashboard-marquee {
   backdrop-filter: blur(40px) saturate(1.25); -webkit-backdrop-filter: blur(40px) saturate(1.25); }
 .dark .dashboard-shell.look-brume .dashboard-content { --look-glass: oklch(.17 0 0 / .6); }
 .dark .dashboard-shell.look-soie .dashboard-content { --look-glass: oklch(.15 .012 250 / .6); }
-.dark .dashboard-shell.look-ardoise .dashboard-content { --look-glass: oklch(.17 .015 240 / .62); }
-.dark .dashboard-shell.look-amethyste .dashboard-content { --look-glass: oklch(.14 .03 300 / .62); }
-.dark .dashboard-shell.look-cobalt .dashboard-content { --look-glass: oklch(.15 .035 255 / .62); }
 .dark .dashboard-shell.look-reverbere .dashboard-content { --look-glass: oklch(.14 0 0 / .62); }
 .dashboard-shell.look-apple .dashboard-content { --look-glass: oklch(1 0 0 / .62); }
 .dashboard-shell.look-pastel .dashboard-content { --look-glass: oklch(1 0 0 / .5); }
-.dashboard-shell:is(.look-ardoise, .look-amethyste, .look-cobalt, .look-reverbere) .dashboard-wallpaper::before { filter: blur(3px); }
+.dashboard-shell.look-reverbere .dashboard-wallpaper::before { filter: blur(3px); }
 /* Starter chips and composer controls: frosted pills that read on any background. */
 .dashboard-shell[class*="look-"] .starter-chip { background: var(--look-glass, oklch(1 0 0 / .6)); border-color: var(--look-glass-edge, oklch(1 0 0 / .7));
   backdrop-filter: blur(24px) saturate(1.25); -webkit-backdrop-filter: blur(24px) saturate(1.25); box-shadow: inset 0 1px 0 var(--look-glass-shine, oklch(1 0 0 / .8)); }
 .dashboard-shell[class*="look-"] .starter-chip:hover { background: color-mix(in oklab, var(--look-glass, oklch(1 0 0 / .6)), var(--foreground) 8%); }
-.dashboard-shell:is(.look-brume, .look-soie, .look-ardoise, .look-amethyste, .look-cobalt, .look-reverbere, .look-apple, .look-pastel, .look-papier, .look-givre, .look-ivoire):not(:has(.chat-thread)) .chat-composer {
+.dashboard-shell:is(.look-brume, .look-soie, .look-graphite, .look-obsidienne, .look-reverbere, .look-apple, .look-pastel, .look-papier, .look-givre, .look-ivoire):not(:has(.chat-thread)) .chat-composer {
   backdrop-filter: blur(48px) saturate(1.25); -webkit-backdrop-filter: blur(48px) saturate(1.25); }
 
 /* Light looks from the dashboard mockup: Papier (white paper), Givre (lavender frost), Ivoire (warm ivory). Plain
@@ -972,3 +960,36 @@ body:has(.dashboard-shell) :is([data-radix-popper-content-wrapper] > [data-state
 .dark body:has(.dashboard-shell) :is([data-radix-popper-content-wrapper] > [data-state]:not([data-state$="-open"]), [role="dialog"], [role="alertdialog"]) {
   background-color: color-mix(in oklab, oklch(.19 0 0) 96%, transparent); color: oklch(.96 0 0);
   box-shadow: 0 24px 60px -20px oklch(0 0 0 / .7), inset 0 1px 0 oklch(1 0 0 / .06); }
+
+/* Dark looks from the dashboard mockup: Graphite (neutral charcoal) and Obsidienne (deep green-black with a gold
+   glow). Plain background with two slow colour glows; glass as full as the other dark looks. */
+.dark .dashboard-shell:is(.look-graphite, .look-obsidienne) .dashboard-content { --look-wallpaper: none; }
+.dark .dashboard-shell.look-graphite .dashboard-content { --background: oklch(.16 .004 286); --look-glass: oklch(.2 .004 286 / .62);
+  --look-veil: oklch(.1 0 0 / .2); --look-blob-1: oklch(.5 .02 260 / .35); --look-blob-2: oklch(.45 .01 60 / .25); }
+.dark .dashboard-shell.look-obsidienne .dashboard-content { --background: oklch(.13 .02 165); --muted-foreground: oklch(.72 .03 165);
+  --look-glass: oklch(.17 .02 165 / .62); --look-glass-edge: oklch(.85 .05 165 / .14); --look-veil: oklch(.08 .02 165 / .2);
+  --look-blob-1: oklch(.5 .1 165 / .4); --look-blob-2: oklch(.7 .1 85 / .22); }
+
+/* Chat welcome (mockup): a large light title with a soft vertical sheen, the orb, chips on one line. */
+.chat-greeting { background: linear-gradient(180deg, var(--foreground), color-mix(in oklab, var(--foreground) 62%, transparent)); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.starter-row { scrollbar-width: none; -webkit-mask-image: linear-gradient(90deg, #000 94%, transparent); mask-image: linear-gradient(90deg, #000 94%, transparent); }
+.starter-row::-webkit-scrollbar { display: none; }
+@media (min-width: 900px) { .starter-row { -webkit-mask-image: none; mask-image: none; } }
+
+/* Welcome orb: a still glass ball with a thin iridescent rim; inside, three colour masses drift and swirl
+   (Siri-like), under a glossy highlight. */
+.chat-orb { position: relative; display: grid; place-items: center; width: 84px; height: 84px; border-radius: 9999px; padding: 3px;
+  background: conic-gradient(from 210deg, oklch(.75 .14 300 / .9), oklch(.78 .12 200 / .9), oklch(.8 .14 150 / .8), oklch(.82 .12 60 / .8), oklch(.75 .14 300 / .9));
+  box-shadow: 0 10px 40px -10px oklch(.55 .2 300 / .55), 0 0 0 6px color-mix(in oklab, var(--foreground) 5%, transparent); }
+.chat-orb-ball { position: relative; width: 100%; height: 100%; overflow: hidden; border-radius: inherit; isolation: isolate;
+  background: radial-gradient(circle at 50% 60%, oklch(.32 .12 280), oklch(.14 .06 275) 70%); }
+.chat-orb-ball i { position: absolute; border-radius: 9999px; filter: blur(9px); mix-blend-mode: screen; }
+.chat-orb-ball i:nth-child(1) { width: 75%; height: 75%; left: -10%; top: -5%; background: oklch(.68 .25 330); animation: orb-a 7s ease-in-out infinite; }
+.chat-orb-ball i:nth-child(2) { width: 70%; height: 70%; right: -15%; bottom: -10%; background: oklch(.62 .2 265); animation: orb-b 9s ease-in-out infinite; }
+.chat-orb-ball i:nth-child(3) { width: 55%; height: 55%; left: 22%; top: 30%; background: oklch(.75 .15 210); animation: orb-c 6s ease-in-out infinite; }
+.chat-orb-ball b { position: absolute; inset: 0; border-radius: inherit; z-index: 1;
+  background: radial-gradient(60% 40% at 35% 18%, oklch(1 0 0 / .55), transparent 70%), radial-gradient(circle at 50% 50%, transparent 58%, oklch(0 0 0 / .35)); }
+@keyframes orb-a { 0%, 100% { transform: translate(0, 0) scale(1); } 33% { transform: translate(28%, 22%) scale(1.15); } 66% { transform: translate(8%, 40%) scale(.9); } }
+@keyframes orb-b { 0%, 100% { transform: translate(0, 0) scale(1); } 40% { transform: translate(-35%, -25%) scale(1.2); } 75% { transform: translate(-10%, -45%) scale(.95); } }
+@keyframes orb-c { 0%, 100% { transform: translate(0, 0) scale(1); } 30% { transform: translate(-30%, 20%) scale(.8); } 60% { transform: translate(25%, -25%) scale(1.25); } }
+@media (prefers-reduced-motion: reduce) { .chat-orb-ball i { animation: none; } }
