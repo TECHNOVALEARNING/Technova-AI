@@ -4,7 +4,7 @@ import { Activity, Boxes, ChevronRight, Clock3, Code2, MessageCircle, Plus, Wall
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { useDashboard } from "./dashboard-context";
-import { openRouterModelIds } from "@/lib/chat-models";
+import { chatTierIds } from "@/lib/chat-modes";
 import { mediaModels } from "@/lib/media-models";
 
 type Overview = {
@@ -54,12 +54,12 @@ export function OverviewPage() {
   const loc = fr ? "fr-FR" : "en-US";
   const n = (v: number) => v.toLocaleString(loc);
   const mediaCount = mediaModels.length;
-  const chatCount = Object.keys(openRouterModelIds).length;
+  const chatCount = chatTierIds.length;
   const cards = [
     { label: t.balance, value: o ? n(o.balance - o.reserved) : "…", hint: o ? (o.reserved ? (fr ? `${n(o.reserved)} réservés en cours · solde ${n(o.balance)}` : `${n(o.reserved)} reserved · balance ${n(o.balance)}`) : (fr ? "crédits disponibles" : "credits available")) : t.loading, icon: Wallet, to: "/dashboard/credits" as const },
     { label: t.usage, value: o ? n(o.credits30) : "…", hint: o ? (fr ? `crédits · ${n(o.requests30)} requêtes · 30 jours` : `credits · ${n(o.requests30)} requests · 30 days`) : t.loading, icon: Activity, to: "/dashboard/usage" as const },
     { label: t.api, value: o ? n(o.keys) : "…", hint: o ? (fr ? (o.keys > 1 ? "clés API actives" : "clé API active") : "active API keys") : t.loading, icon: Code2, to: "/dashboard/api" as const },
-    { label: t.models, value: n(chatCount + mediaCount), hint: fr ? `${chatCount} modèles de chat · ${mediaCount} image, vidéo, musique` : `${chatCount} chat models · ${mediaCount} image, video, music`, icon: Boxes, to: "/dashboard/models" as const },
+    { label: t.models, value: n(chatCount + mediaCount), hint: fr ? `${chatCount} modes de réponse · ${mediaCount} créations à prix fixe` : `${chatCount} answer modes · ${mediaCount} fixed-price creations`, icon: Boxes, to: "/dashboard/models" as const },
   ];
   return <div className="relative isolate min-h-[calc(100svh-120px)] lg:min-h-[calc(100svh-104px)]">
     <div className="relative flex flex-wrap items-end justify-between gap-3"><div><h1 className="chat-heading font-display text-[23px] font-semibold leading-tight">{t.greeting}{first ? `, ${first}` : ""}</h1><p className="mt-1 text-xs text-muted-foreground">{t.welcomeSub}</p></div><div className="flex gap-2"><Button asChild variant="outline" size="sm" className="h-8 rounded-full bg-card text-xs"><Link to="/dashboard/chat"><MessageCircle className="size-4" />{t.chat}</Link></Button><Button asChild size="sm" className="h-8 rounded-full text-xs"><Link to="/dashboard/credits"><Plus className="size-4" />{t.credits}</Link></Button></div></div>

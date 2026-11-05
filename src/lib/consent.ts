@@ -14,7 +14,7 @@ export const OPEN_CONSENT_EVENT = "technova:open-cookie-settings";
 /** Browser-stored preferences, removed when preferences are refused. */
 export const PREFERENCE_KEYS = [
   "technova-site-lang", "technova-dashboard-lang", "technova-dashboard-theme", "technova-sidebar-collapsed",
-  "technova-currency", "technova-workspace-mode", "technova-workspace-model", "technova-image-model",
+  "technova-currency", "technova-workspace-mode", "technova-workspace-tier", "technova-workspace-model", "technova-image-model",
   "technova-video-model", "technova-chat-kbs", "tn-artifact-width", "technova-install-dismissed",
 ] as const;
 

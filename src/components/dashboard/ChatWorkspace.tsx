@@ -59,7 +59,8 @@ import { chatWorkspaceText } from "@/lib/i18n";
 import { ACCEPT, INDEXED_FILE_TYPE, MAX_FILES, budgetFiles, indexedFileId, indexedFileUrl, isDirectAttachment, kindOf, mediaKey, pendingMedia, persistableParts, toFilePart, type ChatFilePart } from "@/lib/chat-attachments";
 import { ALL_ACCEPT, MAX_CHAT_DOCUMENTS, checkFile, formatsLabel } from "@/lib/file-types";
 import { fileErrorText, uploadAndIndex, type UploadPhase } from "@/lib/file-upload";
-import { openRouterModelIds } from "@/lib/chat-models";
+import { chatTierCredits, chatTierIds, chatTiers, defaultChatTier, EXPERT_MIN_TIER, isChatTier, type ChatTier } from "@/lib/chat-modes";
+import { usePlanTier } from "@/lib/plan-client";
 import { cn } from "@/lib/utils";
 import { Shimmer } from "@/components/ai-elements/shimmer";
 import { ArtifactPanel, StudioPlan, StudioQuestions, StudioTimeline } from "./Studio";
@@ -70,11 +71,10 @@ import { createMediaGeneration, getVideoAccess, refreshMediaGeneration, VIDEO_UP
 import { PENDING_PACK_KEY } from "@/lib/public-pricing";
 import { RESEARCH_MAX_CREDITS, splitResearchStream } from "@/lib/research";
 import { DESIGN_DRAFT_KEY } from "@/lib/design-library";
-import { defaultImageModel, defaultMusicModel, defaultVideoModel, findMediaModel, imageEditModel, mediaModels, mediaReserve, type MediaKind } from "@/lib/media-models";
+import { defaultImageModel, defaultMusicModel, defaultVideoModel, imageEditModel, mediaLabel, qualityImageModel, qualityVideoModel, type MediaKind } from "@/lib/media-models";
 import { ChatMedia, type ChatMediaData } from "./ChatMedia";
 
 type Mode = "chat" | "create";
-const SMART_MODEL = "TechNova Smart";
 type TimeOfDay = "morning" | "afternoon" | "evening" | "night";
 function getTimeOfDay(): TimeOfDay {
   const hour = new Date().getHours();
@@ -101,70 +101,32 @@ function ChatGreeting({ choice }: { choice: ReturnType<typeof useWorkspaceChoice
   return <span>{question}</span>;
 }
 
-const modelGroups = [
-  {
-    id: "flagship",
-    models: [
-      "GPT-4o",
-      "GPT-4o Mini",
-      "Claude Sonnet 5",
-      "Claude Haiku 4.5",
-      "DeepSeek R1",
-      "DeepSeek V3",
-      "Gemini 2.5 Flash",
-      "Gemini 2.5 Pro",
-    ],
-  },
-  {
-    id: "specialized",
-    models: [
-      "Llama 3.3 70B",
-      "Mistral Large",
-      "Qwen 2.5 Coder 32B",
-      "Qwen 2.5 72B",
-      "Hermes 3 405B",
-    ],
-  },
-  { id: "fast", models: ["Llama 3.1 8B", "Gemma 3 12B"] },
-] as const;
-const allModels = modelGroups.flatMap((group) => group.models);
-
 function useWorkspaceChoice() {
   const { lang } = useDashboard();
   const copy = chatWorkspaceText[lang];
   const [mode, setMode] = useState<Mode>("chat");
-  // Auto (TechNova Smart) by default; a specific model is the Expert choice.
-  const [model, setModel] = useState(SMART_MODEL);
-  const [imageModel, setImageModel] = useState(defaultImageModel);
-  const [videoModel, setVideoModel] = useState(defaultVideoModel);
+  // One of the three modes (Éclair, Équilibré, Expert); the engine behind it is chosen on the server.
+  const [tier, setTier] = useState<ChatTier>(defaultChatTier);
   // Deep Research stays on for the browser session until switched off (it costs more than a reply).
   const [research, setResearch] = useState(false);
   const [kbIds, setKbIds] = useState<string[]>([]);
   useEffect(() => {
     try { setResearch(sessionStorage.getItem("technova-research") === "1"); } catch { /* storage blocked */ }
     try { const kb = JSON.parse(localStorage.getItem("technova-chat-kbs") ?? "[]"); if (Array.isArray(kb)) setKbIds(kb.filter((x): x is string => typeof x === "string").slice(0, 5)); } catch { /* storage blocked */ }
-    const storedImage = localStorage.getItem("technova-image-model");
-    const storedVideo = localStorage.getItem("technova-video-model");
-    if (storedImage && findMediaModel(storedImage)?.kind === "image") setImageModel(storedImage);
-    if (storedVideo && findMediaModel(storedVideo)?.kind === "video") setVideoModel(storedVideo);
-    const storedMode = localStorage.getItem("technova-workspace-mode");
-    const storedModel = localStorage.getItem("technova-workspace-model");
-    if (storedMode === "chat" || storedMode === "create") setMode(storedMode);
-    if (storedModel && (storedModel === SMART_MODEL || openRouterModelIds[storedModel])) setModel(storedModel);
+    try {
+      const storedMode = localStorage.getItem("technova-workspace-mode");
+      const storedTier = localStorage.getItem("technova-workspace-tier");
+      if (storedMode === "chat" || storedMode === "create") setMode(storedMode);
+      if (isChatTier(storedTier)) setTier(storedTier);
+    } catch { /* storage blocked */ }
   }, []);
   function chooseMode(value: Mode) {
     setMode(value);
     savePref("technova-workspace-mode", value);
   }
-  function chooseModel(value: string) {
-    setModel(value);
-    savePref("technova-workspace-model", value);
-  }
-  function chooseMediaModel(value: string) {
-    const spec = findMediaModel(value);
-    if (!spec) return;
-    if (spec.kind === "image") { setImageModel(value); savePref("technova-image-model", value); }
-    else if (spec.kind === "video") { setVideoModel(value); savePref("technova-video-model", value); }
+  function chooseTier(value: ChatTier) {
+    setTier(value);
+    savePref("technova-workspace-tier", value);
   }
   function chooseKnowledgeBases(ids: string[]) {
     const next = ids.slice(0, 5);
@@ -177,16 +139,18 @@ function useWorkspaceChoice() {
       return !on;
     });
   }
-  return { mode, model: mode === "create" ? SMART_MODEL : model, imageModel, videoModel, musicModel: defaultMusicModel, research: mode === "chat" && research, toggleResearch, kbIds, chooseKnowledgeBases, chooseMode, chooseModel, chooseMediaModel, copy };
+  return { mode, tier, research: mode === "chat" && research, toggleResearch, kbIds, chooseKnowledgeBases, chooseMode, chooseTier, copy };
 }
 
 function ChoiceControls({ choice }: { choice: ReturnType<typeof useWorkspaceChoice> }) {
-  const [filter, setFilter] = useState("");
-  const [modelOpen, setModelOpen] = useState(false);
   const [modeOpen, setModeOpen] = useState(false);
-  const { mode, model, chooseMode, chooseModel, copy, imageModel, videoModel, chooseMediaModel } = choice;
+  const { mode, tier, chooseMode, chooseTier, copy } = choice;
   const fr = copy.locale.startsWith("fr");
-  const q = filter.toLowerCase();
+  const plan = usePlanTier();
+  const price = (id: ChatTier) => {
+    const one = chatTierCredits(id, false, plan ?? 0), withFile = chatTierCredits(id, true, plan ?? 0);
+    return fr ? `${one} crédit${one > 1 ? "s" : ""} · ${withFile} avec fichier` : `${one} credit${one > 1 ? "s" : ""} · ${withFile} with a file`;
+  };
   return (
     <div className="flex min-w-0 items-center gap-1.5">
       <Popover open={modeOpen} onOpenChange={setModeOpen}>
@@ -233,135 +197,30 @@ function ChoiceControls({ choice }: { choice: ReturnType<typeof useWorkspaceChoi
           ))}
         </PopoverContent>
       </Popover>
-      {mode === "create" ? (
-        <span
-          title={copy.locale.startsWith("fr") ? "TechNova Smart choisit automatiquement le meilleur modèle au meilleur prix" : "TechNova Smart picks the best model at the best price automatically"}
-          className="inline-flex h-8 items-center gap-1.5 rounded-full px-2.5 text-[13px] text-muted-foreground"
-        >
-          <Zap className="size-3.5" strokeWidth={1.8} />
-          {SMART_MODEL}
-        </span>
-      ) : (
-      <Popover open={modelOpen} onOpenChange={setModelOpen}>
-        <PopoverTrigger asChild>
-          <Button
-            type="button"
-            variant="ghost"
-            size="sm"
-            aria-label={copy.chooseModel}
-            className="h-8 min-w-0 max-w-[150px] gap-1.5 rounded-full px-2.5 text-[13px] font-normal text-muted-foreground hover:bg-transparent hover:text-foreground sm:max-w-[210px]"
-          >
-            <Zap className="size-3.5 shrink-0" strokeWidth={1.8} />
-            <span className="truncate">{model}</span>
-            <ChevronDown className="size-3.5 shrink-0" />
-          </Button>
-        </PopoverTrigger>
-        <PopoverContent
-          align="start"
-          sideOffset={8}
-          className="w-[min(330px,calc(100vw-32px))] rounded-2xl border-border bg-popover p-0 shadow-soft"
-        >
-          <div className="border-b border-border p-3">
-            <div className="relative">
-              <Search className="absolute left-2.5 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground" />
-              <Input
-                autoFocus
-                value={filter}
-                onChange={(event) => setFilter(event.target.value)}
-                placeholder={copy.searchModels}
-                aria-label={copy.searchModels}
-                className="h-9 rounded-full pl-8 text-xs"
-              />
-            </div>
-          </div>
-          <div className="max-h-[min(420px,55vh)] overflow-y-auto p-1.5">
-            {SMART_MODEL.toLowerCase().includes(q) && (
-              <Button
-                type="button"
-                variant="ghost"
-                onClick={() => { chooseModel(SMART_MODEL); setModelOpen(false); setFilter(""); }}
-                className="mb-1 h-auto w-full justify-between rounded-xl px-2.5 py-2 text-left text-xs font-normal"
-              >
-                <span className="flex min-w-0 items-center gap-2">
-                  <Wand2 className="size-3.5 shrink-0 text-chat-glow" />
-                  <span className="min-w-0">
-                    <strong className="block">{SMART_MODEL} · Auto</strong>
-                    <small className="block text-[10px] text-muted-foreground">{fr ? "Choisit le modèle adapté au meilleur prix" : "Picks the right model at the best price"}</small>
-                  </span>
-                </span>
-                {model === SMART_MODEL && <Check className="size-3.5 text-chat-glow" />}
-              </Button>
-            )}
-            {modelGroups.map((group) => {
-              const matches = group.models.filter((item) =>
-                item.toLowerCase().includes(filter.toLowerCase()),
-              );
-              return matches.length ? (
-                <div key={group.id} className="mb-2">
-                  <p className="px-2.5 py-1.5 text-[10px] font-bold uppercase text-muted-foreground">
-                    {copy[group.id]}
-                  </p>
-                   {matches.map((item) => (
-                     <Button
-                      key={item}
-                      type="button"
-                      variant="ghost"
-                      onClick={() => {
-                        chooseModel(item);
-                        setModelOpen(false);
-                        setFilter("");
-                      }}
-                      className="h-8 w-full justify-between rounded-xl px-2.5 text-xs font-normal"
-                    >
-                      <span className="truncate">{item}</span>
-                      {item === model && <Check className="size-3.5 text-chat-glow" />}
-                    </Button>
-                  ))}
-                </div>
-              ) : null;
-            })}
-            {(["image", "video", "music"] as const).map((kind) => {
-              const matches = mediaModels.filter((m) => m.kind === kind && (m.label + " " + m.provider).toLowerCase().includes(q));
-              const selected = kind === "image" ? imageModel : kind === "video" ? videoModel : defaultMusicModel;
-              return matches.length ? (
-                <div key={kind} className="mb-2">
-                  <p className="px-2.5 py-1.5 text-[10px] font-bold uppercase text-muted-foreground">
-                    {kind === "image" ? (fr ? "Génération d’images" : "Image generation") : kind === "video" ? (fr ? "Génération de vidéos" : "Video generation") : (fr ? "Génération de musique" : "Music generation")}
-                  </p>
-                  {matches.map((m) => (
-                    <Button
-                      key={m.id}
-                      type="button"
-                      variant="ghost"
-                      onClick={() => chooseMediaModel(m.id)}
-                      className="h-auto min-h-8 w-full justify-between gap-2 rounded-xl px-2.5 py-1.5 text-xs font-normal"
-                    >
-                      <span className="flex min-w-0 items-center gap-2">
-                        {kind === "image" ? <ImageIcon className="size-3.5 shrink-0 text-muted-foreground" /> : kind === "video" ? <Film className="size-3.5 shrink-0 text-muted-foreground" /> : <Music className="size-3.5 shrink-0 text-muted-foreground" />}
-                        <span className="truncate">{m.label}</span>
-                        <span className="truncate text-[10px] text-muted-foreground">{m.provider}</span>
-                        {m.cheap && <span className="shrink-0 rounded-full bg-chat-glow/15 px-1.5 py-0.5 text-[9px] font-semibold text-chat-glow">{fr ? "Économique" : "Low cost"}</span>}
-                      </span>
-                      <span className="ml-auto flex shrink-0 items-center gap-1.5">
-                        {/* Price shown before generating: the full amount reserved (5 s for videos). */}
-                        <span className="text-[10px] tabular-nums text-muted-foreground">{mediaReserve(m, 5).toLocaleString(fr ? "fr-FR" : "en-US")} cr.{kind === "video" ? " / 5 s" : ""}</span>
-                        {m.id === selected && <Check className="size-3.5 shrink-0 text-chat-glow" />}
-                      </span>
-                    </Button>
-                  ))}
-                </div>
-              ) : null;
-            })}
-            <p className="px-2.5 pb-1 text-[10px] leading-relaxed text-muted-foreground">
-              {fr ? "Demandez « génère-moi une image… », « une vidéo… » ou « une chanson… » : le modèle coché est utilisé. Prix en crédits, réservés avant la création ; seul le coût réel est facturé." : "Ask “generate an image…”, “a video…” or “a song…”: the checked model is used. Prices in credits, reserved up front; only the real cost is charged."}
-            </p>
-            {!allModels.some((item) => item.toLowerCase().includes(q)) && !mediaModels.some((m) => (m.label + " " + m.provider).toLowerCase().includes(q)) && (
-              <p className="px-3 py-5 text-center text-xs text-muted-foreground">{copy.noModels}</p>
-            )}
-          </div>
-        </PopoverContent>
-      </Popover>
-      )}
+      {/* The three modes: the chosen one shows its name, the others only their symbol. */}
+      <div role="radiogroup" aria-label={fr ? "Mode de réponse" : "Answer mode"} className="flex items-center gap-0.5 rounded-full bg-muted/60 p-0.5">
+        {chatTierIds.map((id) => {
+          const t = chatTiers[id];
+          const active = tier === id;
+          const locked = id === "expert" && plan !== null && plan < EXPERT_MIN_TIER;
+          const label = fr ? t.fr : t.en;
+          return (
+            <button
+              key={id}
+              type="button"
+              role="radio"
+              aria-checked={active}
+              aria-label={label}
+              title={`${label} — ${fr ? t.hintFr : t.hintEn}\n${locked ? (fr ? "À partir du forfait Creator" : "From the Creator plan") : price(id)}`}
+              onClick={() => chooseTier(id)}
+              className={`flex h-7 items-center gap-1 rounded-full px-2 text-[12px] transition-colors ${active ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
+            >
+              <span aria-hidden="true">{t.emoji}</span>
+              {active && <span className="hidden sm:inline">{label}</span>}
+            </button>
+          );
+        })}
+      </div>
     </div>
   );
 }
@@ -1208,13 +1067,13 @@ export function ThreadPage({ threadId }: { threadId: string }) {
     const mediaRequest = choice.mode === "chat" && /\b(?:g[ée]n[èe]re(?:z)?(?:-moi)?|cr[ée]e(?:z)?(?:-moi)?|fais(?:-moi)?|fabrique(?:-moi)?|generate|create|make)\b[\s\S]{0,110}\b(?:image|photo|illustration|visuel|picture|image|video|vid[ée]o|clip|animation|musique|chanson|morceau|jingle|beat|music|song|track)\b/i.test(request);
     if (last?.role === "user" && mediaRequest) {
       const kind: MediaKind = /\b(?:musique|chanson|morceau|jingle|beat|music|song|track)\b/i.test(request) ? "music" : /\b(?:vid[ée]o|video|clip|animation)\b/i.test(request) ? "video" : "image";
-      const mediaModel = kind === "image" ? choice.imageModel : kind === "video" ? choice.videoModel : choice.musicModel;
+      const quality = /\b(?:hd|haute (?:qualit[ée]|d[ée]finition)|qualit[ée]|4k|high quality|quality|detailed|d[ée]taill[ée]e?)\b/i.test(request);
+      const mediaModel = kind === "image" ? (quality ? qualityImageModel : defaultImageModel) : kind === "video" ? (quality ? qualityVideoModel : defaultVideoModel) : defaultMusicModel;
       const aspectRatio = /\b(?:9:16|portrait|vertical|story|reel)\b/i.test(request) ? "9:16" : /\b(?:1:1|carr[ée]|square)\b/i.test(request) ? "1:1" : "16:9";
-      const duration = /\b(?:10\s*(?:s|sec|secondes?|seconds?))\b/i.test(request) ? "10" : "5";
       setThinking(true);
       try {
-        const id = await createMedia({ data: { threadId, kind, prompt: request, aspectRatio, model: mediaModel, ...(kind === "video" ? { duration } : {}) } });
-        const media: ChatMediaData = { id, kind, model: findMediaModel(mediaModel)?.label ?? "", prompt: request, status: "waiting", progress: null, urls: [], error: null };
+        const id = await createMedia({ data: { threadId, kind, prompt: request, aspectRatio, model: mediaModel, ...(kind === "video" ? { duration: "5" } : {}) } });
+        const media: ChatMediaData = { id, kind, model: mediaLabel(mediaModel, kind), prompt: request, status: "waiting", progress: null, urls: [], error: null };
         setMessages((prev) => [...prev, { id, role: "assistant", parts: [{ type: "data-media", data: media }] as unknown as UIMessage["parts"] }]);
       } catch (e) {
         const message = String((e as Error)?.message ?? e);
@@ -1286,7 +1145,7 @@ export function ThreadPage({ threadId }: { threadId: string }) {
           Authorization: `Bearer ${session.session?.access_token ?? ""}`,
         },
         body: JSON.stringify({
-          model: choice.model,
+          tier: choice.tier,
           mode: choice.mode,
           lang,
           ...(agent ? { agentId: agent.id } : {}),

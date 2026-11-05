@@ -2,9 +2,12 @@ import { createFileRoute } from "@tanstack/react-router";
 import { z } from "zod";
 import { openRouterModelIds } from "@/lib/chat-models";
 import { creditCost, estimateTokens } from "@/lib/model-pricing";
+import { chatTierCredits, chatTiers, EXPERT_MIN_TIER, PRO_TIER, type ChatTier } from "@/lib/chat-modes";
 
 const bodySchema = z.object({
-  model: z.string(),
+  // The chat composer sends one of the three modes; custom agents keep their own model.
+  tier: z.enum(["eclair", "equilibre", "expert"]).optional(),
+  model: z.string().optional(),
   mode: z.enum(["chat", "create"]),
   lang: z.enum(["fr", "en"]).optional(),
   agentId: z.string().uuid().optional(),
@@ -60,6 +63,27 @@ async function verifyUser(request: Request) {
 
 type InFile = { mediaType: string; filename: string; url: string };
 
+// Engine behind each mode (server only, never shown). Prices in credits per million tokens = USD × 1 200.
+type Engine = { id: string; input: number; output: number; maxTokens: number; vision: boolean; media: boolean };
+const engines = {
+  flashLite: { id: "google/gemini-3.1-flash-lite", input: 300, output: 1800, maxTokens: 1024, vision: true, media: true },
+  balanced: { id: "qwen/qwen3-235b-a22b-2507", input: 168, output: 960, maxTokens: 4096, vision: false, media: false },
+  balancedFiles: { id: "google/gemini-3.5-flash-lite", input: 360, output: 3000, maxTokens: 4096, vision: true, media: true },
+  expert: { id: "anthropic/claude-sonnet-5", input: 2400, output: 12000, maxTokens: 8192, vision: true, media: false },
+  expertPro: { id: "anthropic/claude-opus-5", input: 6000, output: 30000, maxTokens: 8192, vision: true, media: false },
+  expertMedia: { id: "google/gemini-3.5-flash", input: 1800, output: 10800, maxTokens: 8192, vision: true, media: true },
+} satisfies Record<string, Engine>;
+function engineFor(tier: ChatTier, planTier: number, needsVision: boolean, needsMedia: boolean): Engine {
+  if (tier === "eclair") return engines.flashLite;
+  if (tier === "equilibre") return needsVision || needsMedia ? engines.balancedFiles : engines.balanced;
+  if (needsMedia) return engines.expertMedia;
+  return planTier >= PRO_TIER ? engines.expertPro : engines.expert;
+}
+const engineCost = (e: Engine, inputTokens: number, outputTokens: number) => {
+  const raw = (inputTokens * e.input + outputTokens * e.output) / 1_000_000;
+  return raw > 0 ? Math.ceil(raw) : 0;
+};
+
 // TechNova Smart: picks the cheapest model that fits the request.
 function smartPick(text: string): string {
   const t = text.toLowerCase();
@@ -70,7 +94,7 @@ function smartPick(text: string): string {
   if (has(["sql", "supabase", "base de données", "database", "api", "backend", "fonction", "function", "bug", "erreur", "error", "code", "react", "python", "php", "javascript", "typescript", "script"])) return "DeepSeek V3";
   return "GPT-4o Mini";
 }
-const visionModels = new Set(["GPT-4o", "GPT-4o Mini", "Claude Sonnet 5", "Claude Haiku 4.5", "Gemini 2.5 Flash", "Gemini 2.5 Pro", "Mistral Large", "Gemma 3 12B"]);
+const visionModels = new Set(["GPT-4o", "GPT-4o Mini", "Claude Sonnet 5", "Claude Opus 5", "Claude Haiku 4.5", "Gemini 2.5 Flash", "Gemini 2.5 Pro", "Mistral Large", "Gemma 3 12B"]);
 const mediaModels = new Set(["Gemini 2.5 Flash", "Gemini 2.5 Pro"]);
 const reasoningModels = new Set(["DeepSeek R1"]);
 const audioFormats: Record<string, string> = { "audio/mpeg": "mp3", "audio/mp3": "mp3", "audio/wav": "wav", "audio/x-wav": "wav", "audio/webm": "webm", "audio/ogg": "ogg", "audio/mp4": "m4a", "audio/x-m4a": "m4a", "audio/aac": "aac", "audio/flac": "flac" };
@@ -120,13 +144,29 @@ export const Route = createFileRoute("/api/chat")({
           // Only Pro chooses the per-reply budget; other plans use the default.
           agent = tier < 3 ? { ...a, max_cost: DEFAULT_AGENT_BUDGET } : a;
         }
-        const chosen = agent ? agent.model : parsed.data.model;
-        if (tier < 1 && PREMIUM_CHAT_MODELS.has(chosen)) return planResponse(userId, "premium_models");
-        const picked = chosen === "TechNova Smart" ? smartPick(lastUser) : chosen;
-        const requested = tier < 1 ? (STARTER_SMART_FALLBACK[picked] ?? picked) : picked;
-        const model = (needsMedia && !mediaModels.has(requested)) || (needsVision && !visionModels.has(requested)) ? "Gemini 2.5 Flash" : requested;
-        const modelId = openRouterModelIds[model];
-        if (!modelId) return new Response("Model not available for chat", { status: 400 });
+        // Mode chosen in the composer (Éclair by default when an old client sends a model name).
+        const chatTier: ChatTier = parsed.data.tier ?? "eclair";
+        if (!agent && chatTier === "expert" && tier < EXPERT_MIN_TIER) return planResponse(userId, "expert_mode");
+        const hasFile = allFiles.length > 0 || (parsed.data.fileIds?.length ?? 0) > 0;
+        let model: string;
+        let modelId: string;
+        let engine: Engine | null = null;
+        if (agent) {
+          const chosen = agent.model;
+          if (tier < 1 && PREMIUM_CHAT_MODELS.has(chosen)) return planResponse(userId, "premium_models");
+          const picked = chosen === "TechNova Smart" ? smartPick(lastUser) : chosen;
+          const requested = tier < 1 ? (STARTER_SMART_FALLBACK[picked] ?? picked) : picked;
+          model = (needsMedia && !mediaModels.has(requested)) || (needsVision && !visionModels.has(requested)) ? "Gemini 2.5 Flash" : requested;
+          const id = openRouterModelIds[model];
+          if (!id) return new Response("Model not available for chat", { status: 400 });
+          modelId = id;
+        } else {
+          engine = engineFor(chatTier, tier, needsVision, needsMedia);
+          model = chatTiers[chatTier].fr; // what usage pages show: the mode, never the engine
+          modelId = engine.id;
+        }
+        // Fixed price of the mode for this message; a very long exchange costs its real price when that is higher.
+        const flat = engine ? chatTierCredits(chatTier, hasFile, tier) : 0;
         const apiKey = process.env["OPENROUTER_API_KEY"];
         if (!apiKey) return new Response("OpenRouter is not configured", { status: 500 });
         const startedAt = Date.now();
@@ -177,10 +217,10 @@ export const Route = createFileRoute("/api/chat")({
           : systemPrompts[parsed.data.mode] + toolContext + langRule;
         // Reasoning models think before answering: cap the thinking so it cannot eat the whole reply.
         const reasoning = reasoningModels.has(model);
-        const maxTokens = agent ? Math.min(4096, Math.max(128, agent.max_tokens)) : reasoning ? 2048 : 1024;
+        const maxTokens = agent ? Math.min(4096, Math.max(128, agent.max_tokens)) : engine ? engine.maxTokens : reasoning ? 2048 : 1024;
         const inputTokens = estimateTokens(systemPrompt + parsed.data.messages.map(m => m.content).join(" ")) + allFiles.reduce((sum, f) => sum + (f.mediaType.startsWith("image/") ? 1000 : f.mediaType === "application/pdf" ? 3000 : 8000), 0);
         // Hold the worst-case cost before calling the provider; the real cost is charged at the end.
-        const worst = creditCost(model, inputTokens, maxTokens);
+        const worst = engine ? Math.max(flat, engineCost(engine, inputTokens, maxTokens)) : creditCost(model, inputTokens, maxTokens);
         if (agent && worst > agent.max_cost) return new Response(`Cette demande dépasse le budget de l’agent (${worst} > ${agent.max_cost} crédits Technova). / This request exceeds the agent budget.`, { status: 402 });
         const { reserveCredits, settleCredits, releaseCredits } = await import("@/lib/credits.server");
         const reservation = worst > 0 ? await reserveCredits(userId, worst, model) : null;
@@ -192,7 +232,7 @@ export const Route = createFileRoute("/api/chat")({
           if (settled) return;
           settled = true;
           const outputTokens = estimateTokens(outputText);
-          const credits = creditCost(model, inputTokens, outputTokens);
+          const credits = engine ? Math.max(flat, engineCost(engine, inputTokens, outputTokens)) : creditCost(model, inputTokens, outputTokens);
           await supabaseAdmin.from("usage_logs").insert({ owner_id: userId, model: model, input_tokens: inputTokens, output_tokens: outputTokens, credits, latency_ms: Date.now() - startedAt });
           if (reservation) await settleCredits(reservation, credits);
         };

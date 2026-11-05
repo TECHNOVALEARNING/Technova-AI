@@ -7,6 +7,7 @@ export const modelCatalog: ModelInfo[] = [
   { name: "GPT-4o", provider: "OpenAI", input: 3000, output: 12000, kind: "chat" },
   { name: "GPT-4o Mini", provider: "OpenAI", input: 180, output: 720, kind: "chat" },
   { name: "Claude Sonnet 5", provider: "Anthropic", input: 2400, output: 12000, kind: "chat" },
+  { name: "Claude Opus 5", provider: "Anthropic", input: 6000, output: 30000, kind: "chat" },
   { name: "Claude Haiku 4.5", provider: "Anthropic", input: 1200, output: 6000, kind: "chat" },
   { name: "DeepSeek R1", provider: "DeepSeek", input: 600, output: 2581, kind: "chat" },
   { name: "DeepSeek V3", provider: "DeepSeek", input: 309, output: 1235, kind: "chat" },

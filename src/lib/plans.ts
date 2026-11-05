@@ -5,18 +5,18 @@ export type Tier = 0 | 1 | 2 | 3; // 0 Starter (or no purchase), 1 Essential, 2 
 export const PLAN_UPGRADE = "PLAN_UPGRADE_REQUIRED";
 
 export type PlanFeature =
-  | "premium_models" | "image_quota" | "video" | "site" | "site_limit" | "share" | "publish"
+  | "premium_models" | "expert_mode" | "image_quota" | "video" | "site" | "site_limit" | "share" | "publish"
   | "agents" | "agent_budget" | "api" | "github" | "supabase" | "usage_details";
 
 export const featureMinTier: Record<PlanFeature, Tier> = {
-  premium_models: 1, image_quota: 1, video: 2, site: 1, site_limit: 2, share: 1, publish: 2,
+  premium_models: 1, expert_mode: 2, image_quota: 1, video: 2, site: 1, site_limit: 2, share: 1, publish: 2,
   agents: 2, agent_budget: 3, api: 3, github: 3, supabase: 3, usage_details: 3,
 };
 
 /** Chat models outside the Starter plan ("Partiel"): the most expensive ones. */
-export const PREMIUM_CHAT_MODELS = new Set(["GPT-4o", "Claude Sonnet 5", "Gemini 2.5 Pro", "Mistral Large", "Hermes 3 405B", "DeepSeek R1"]);
+export const PREMIUM_CHAT_MODELS = new Set(["GPT-4o", "Claude Sonnet 5", "Claude Opus 5", "Gemini 2.5 Pro", "Mistral Large", "Hermes 3 405B", "DeepSeek R1"]);
 /** TechNova Smart stays available on Starter: premium picks fall back to the closest included model. */
-export const STARTER_SMART_FALLBACK: Record<string, string> = { "Gemini 2.5 Pro": "Gemini 2.5 Flash", "Claude Sonnet 5": "Claude Haiku 4.5", "GPT-4o": "GPT-4o Mini" };
+export const STARTER_SMART_FALLBACK: Record<string, string> = { "Gemini 2.5 Pro": "Gemini 2.5 Flash", "Claude Sonnet 5": "Claude Haiku 4.5", "Claude Opus 5": "Claude Haiku 4.5", "GPT-4o": "GPT-4o Mini" };
 /** Starter image quota ("Quota" in the table): images per rolling 24 hours. */
 export const STARTER_DAILY_IMAGES = 10;
 /** Essential builds one Studio website ("1 site"); Creator and Pro are unlimited. */
@@ -34,7 +34,8 @@ export const packNames = ["Starter", "Essential", "Creator", "Pro"] as const;
 export const packSlugs = ["starter", "essential", "creator", "pro"] as const;
 
 export const featureText: Record<PlanFeature, { fr: string; en: string }> = {
-  premium_models: { fr: "Ce modèle fait partie des modèles premium (GPT-4o, Claude Sonnet 5, Gemini 2.5 Pro…)", en: "This is a premium model (GPT-4o, Claude Sonnet 5, Gemini 2.5 Pro…)" },
+  premium_models: { fr: "Ce modèle premium", en: "This premium model" },
+  expert_mode: { fr: "Le mode Expert", en: "Expert mode" },
   image_quota: { fr: `Le forfait Starter inclut ${STARTER_DAILY_IMAGES} images par 24 heures`, en: `The Starter plan includes ${STARTER_DAILY_IMAGES} images per 24 hours` },
   video: { fr: "La génération vidéo", en: "Video generation" },
   site: { fr: "La création de sites web avec TechNova Studio", en: "Website creation with TechNova Studio" },
@@ -56,6 +57,7 @@ export function upgradeSentence(feature: PlanFeature, fr: boolean) {
   const what = featureText[feature][fr ? "fr" : "en"];
   if (feature === "image_quota") return fr ? `${what}. Passez à ${names} pour des images sans quota.` : `${what}. Upgrade to ${names} for unlimited images.`;
   if (feature === "site_limit") return fr ? `${what} sont inclus avec ${names}.` : `${what} come with ${names}.`;
-  if (feature === "premium_models") return fr ? `${what}, inclus à partir du forfait Essential.` : `${what}, included from the Essential plan.`;
+  if (feature === "premium_models") return fr ? `${what} est inclus à partir du forfait Essential.` : `${what} is included from the Essential plan.`;
+  if (feature === "expert_mode") return fr ? `${what} est inclus à partir du forfait Creator. Les forfaits Starter et Essential utilisent Éclair et Équilibré.` : `${what} is included from the Creator plan. Starter and Essential use Flash and Balanced.`;
   return fr ? `${what} est réservé(e) aux forfaits ${names}.` : `${what} is reserved for the ${names} plans.`;
 }

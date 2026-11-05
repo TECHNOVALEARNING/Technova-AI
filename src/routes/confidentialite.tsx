@@ -155,6 +155,7 @@ function PrivacyPage() {
         <Section id="conservation" n={6} title="Durées de conservation">
           <List items={[
             <><b>Compte</b> : pendant toute la relation, puis 3 ans au plus après votre dernière activité.</>,
+            <><b>Après une demande de suppression du compte</b> (Paramètres → Supprimer mon compte) : vos données sont conservées 30 jours, pendant lesquels une simple reconnexion annule la demande ; elles sont ensuite supprimées définitivement, crédits restants compris. Les pièces de facturation restent conservées pour la durée légale.</>,
             <><b>Conversations, fichiers, bases de connaissances, projets et agents</b> : jusqu'à ce que vous les supprimiez, ou jusqu'à la suppression de votre compte.</>,
             <><b>Images, vidéos et musiques générées</b> : conservées 14 jours sur nos serveurs, puis supprimées. Pensez à les télécharger.</>,
             <><b>Liens d'aperçu du Studio</b> : expirent après 30 jours.</>,
@@ -167,7 +168,7 @@ function PrivacyPage() {
 
         <Section id="droits" n={7} title="Vos droits">
           <p>Vous disposez des droits d'accès, de rectification, d'effacement, de limitation, d'opposition et de portabilité de vos données, ainsi que du droit de retirer votre consentement. Vous pouvez aussi définir des directives sur le sort de vos données après votre décès, lorsque la loi le prévoit.</p>
-          <p>Vous pouvez supprimer vous-même à tout moment vos conversations, fichiers, bases de connaissances et projets depuis votre espace. Pour toute autre demande, dont la suppression de votre compte, écrivez à {mail(CONTACT)}. Une vérification d'identité proportionnée pourra vous être demandée. Nous répondons sous 30 jours.</p>
+          <p>Vous pouvez supprimer vous-même à tout moment vos conversations, fichiers, bases de connaissances et projets depuis votre espace. Vous pouvez aussi supprimer votre compte depuis Paramètres (suppression définitive après un délai de 30 jours). Pour toute autre demande, écrivez à {mail(CONTACT)}. Une vérification d'identité proportionnée pourra vous être demandée. Nous répondons sous 30 jours.</p>
           <p>Si vous estimez que vos droits ne sont pas respectés, vous pouvez saisir l'<b>Autorité de Protection des Données à caractère Personnel (APDP)</b> du Bénin ou, si vous résidez dans l'Union européenne, l'autorité de protection des données de votre pays.</p>
           <div className="pt-1"><Button asChild className="rounded-full"><a href={`mailto:${CONTACT}?subject=${encodeURIComponent("Exercice de mes droits")}`}>Écrire au délégué à la protection des données</a></Button></div>
         </Section>

@@ -26,7 +26,8 @@ const img = (id: string, label: string, provider: string, size: SizeStyle, ratio
 const vid = (id: string, label: string, provider: string, size: SizeStyle, ratios: MediaRatio[], durationStyle: DurationStyle, durations: number[], extra?: Record<string, unknown>, cheap?: boolean): MediaModel =>
   ({ id, label, provider, kind: "video", size, ratios, durationStyle, durations, ...(extra ? { extra } : {}), ...(cheap ? { cheap } : {}) });
 
-export const mediaModels: MediaModel[] = [
+// Every engine kie.ai offers (kept for reference); the chat only sells the five fixed-price choices below.
+const kieEngines: MediaModel[] = [
   img("nano-banana-2-lite", "Nano Banana 2 Lite", "Google", "aspect_ratio", all5, undefined, true),
   img("nano-banana-2", "Nano Banana 2", "Google", "aspect_ratio", all5, { resolution: "1K" }),
   img("google/nano-banana", "Nano Banana", "Google", "aspect_ratio"),
@@ -79,11 +80,38 @@ export const mediaModels: MediaModel[] = [
   { id: "ai-music-api/generate", label: "Suno V6", provider: "Suno", kind: "music", size: "none", ratios: [] },
 ];
 
-/** Edits an existing image ("Modifier" on a generated image); not offered in the model pickers. */
-export const imageEditModel: MediaModel = { id: "google/nano-banana-edit", label: "Nano Banana Edit", provider: "Google", kind: "image", size: "aspect_ratio", ratios: all5 };
+/** The media choices sold in TechNova, at a fixed price (docs/prompt-v6.3.md §3). Engines are never shown. */
+export type MediaTier = "image_rapide" | "image_hd" | "video_fast" | "video_quality" | "musique";
+export const mediaTiers: Record<MediaTier, { engine: string; credits: number; fr: string; en: string }> = {
+  image_rapide: { engine: "seedream/5-flash-text-to-image", credits: 20, fr: "Image rapide", en: "Quick image" },
+  image_hd: { engine: "nano-banana-2", credits: 35, fr: "Image HD", en: "HD image" },
+  video_fast: { engine: "bytedance/seedance-2-fast", credits: 350, fr: "Vidéo rapide", en: "Quick video" },
+  video_quality: { engine: "kling-3.0-omni/text-to-video", credits: 1800, fr: "Vidéo qualité", en: "Quality video" },
+  musique: { engine: "ai-music-api/generate", credits: 130, fr: "Musique", en: "Music" },
+};
+/** Videos are 5-second clips at their fixed price. */
+export const MEDIA_VIDEO_SECONDS = 5;
 
-export const defaultImageModel = "nano-banana-2-lite";
-export const defaultVideoModel = "kling/v2-1-master-text-to-video";
+export const mediaModels: MediaModel[] = (Object.keys(mediaTiers) as MediaTier[]).map((tier) => {
+  const engine = kieEngines.find((m) => m.id === mediaTiers[tier].engine)!;
+  return { ...engine, label: mediaTiers[tier].fr, provider: "TechNova", cheap: tier === "image_rapide" || tier === "video_fast" };
+});
+
+/** Edits an existing image ("Modifier" on a generated image), priced like a quick image. */
+export const imageEditModel: MediaModel = { id: "google/nano-banana-edit", label: "Retouche d’image", provider: "TechNova", kind: "image", size: "aspect_ratio", ratios: all5 };
+const IMAGE_EDIT_CREDITS = 20;
+
+/** Name shown for a generation: its choice, or a plain kind for creations made before the fixed prices. */
+export function mediaLabel(modelId: string, kind: string): string {
+  const found = mediaModels.find((m) => m.id === modelId) ?? (modelId === imageEditModel.id ? imageEditModel : undefined);
+  if (found) return found.label;
+  return kind === "video" ? "Vidéo" : kind === "music" ? "Musique" : "Image";
+}
+
+export const defaultImageModel = mediaTiers.image_rapide.engine;
+export const defaultVideoModel = mediaTiers.video_fast.engine;
+export const qualityImageModel = mediaTiers.image_hd.engine;
+export const qualityVideoModel = mediaTiers.video_quality.engine;
 export const defaultMusicModel = "ai-music-api/generate";
 export const findMediaModel = (id: string) => mediaModels.find((m) => m.id === id) ?? (id === imageEditModel.id ? imageEditModel : undefined);
 
@@ -110,40 +138,10 @@ export function buildMediaInput(model: MediaModel, prompt: string, ratio: MediaR
   return { input, ratio: chosen ?? "auto", duration };
 }
 
-// TechNova pricing follows the chat rule: provider USD cost × 1 200 credits per dollar.
-// One kie.ai credit costs $0.005, so 1 kie credit = 6 TechNova credits.
-export const KIE_TO_TECHNOVA = 0.005 * 1200;
-
-// kie.ai credits per image or song request, or per second of video, for the settings sent by buildMediaInput.
-// From kie.ai's public price list (api.kie.ai/client/v1/model-pricing/page) on 2026-10-23.
-// Used to reserve credits up front; the final charge uses what kie.ai reports as consumed.
-const kieCost: Record<string, number> = {
-  "nano-banana-2-lite": 4, "nano-banana-2": 8, "google/nano-banana": 4, "google/nano-banana-edit": 4,
-  "google/imagen4-fast": 4, "google/imagen4": 8, "google/imagen4-ultra": 12,
-  "gpt-image-2-5-flare-text-to-image": 6, "gpt-image-2-5-sunburst-text-to-image": 6, "gpt-image-2-text-to-image": 6, "gpt-image/1.5-text-to-image": 4,
-  "seedream/5-flash-text-to-image": 3.24, "seedream/5-lite-text-to-image": 5.5, "seedream/5-pro-text-to-image": 14, "seedream/4.5-text-to-image": 6.5,
-  "bytedance/seedream-v4-text-to-image": 5, "bytedance/seedream": 3.5,
-  "flux-2/pro-text-to-image": 5, "flux-2/flex-text-to-image": 14,
-  "grok-imagine-image-2-0/text-to-image": 4, "grok-imagine/text-to-image": 5, "ideogram/v3-text-to-image": 10,
-  "qwen3/pro-text-to-image": 6.4, "qwen3/text-to-image": 4.8, "qwen2-1/text-to-image": 4, "qwen/text-to-image": 8, "z-image": 0.8,
-  // videos: per second
-  "kling-3.0-omni/text-to-video": 18, "kling/v3-turbo-text-to-video": 18, "kling-2.6/text-to-video": 11,
-  "kling/v2-5-turbo-text-to-video-pro": 8.4, "kling/v2-1-master-text-to-video": 32,
-  "bytedance/seedance-2-5": 63, "bytedance/seedance-2": 41, "bytedance/seedance-2-fast": 11.7, "bytedance/seedance-2-mini": 3.8,
-  "bytedance/v1-pro-text-to-video": 6, "bytedance/v1-lite-text-to-video": 4.5,
-  "grok-imagine/text-to-video": 4.5, "grok-imagine-video-1-5-preview": 4.5, "hailuo/02-text-to-video-pro": 9.5, "hailuo/02-text-to-video-standard": 5,
-  "ai-music-api/generate": 12,
-  "wan/2-7-text-to-video": 16, "wan/2-6-text-to-video": 14, "wan/2-5-text-to-video": 12, "wan/2-2-a14b-text-to-video-turbo": 8,
-};
-// Models missing from kie.ai's list (Seedance 1.5 Pro): conservative ceilings.
-const UNKNOWN_IMAGE = 20;
-const UNKNOWN_VIDEO_PER_SECOND = 40;
-// Length used when a model takes no duration parameter (Hailuo 02 Pro: 6 s, others: 5 s).
-const defaultSeconds: Record<string, number> = { "hailuo/02-text-to-video-pro": 6 };
-
-/** Credits held before a generation: the full kie.ai price for the chosen length, never an underestimate. */
-export function mediaReserve(model: MediaModel, seconds: number) {
-  const length = model.durationStyle === "none" || !model.durations?.length ? (defaultSeconds[model.id] ?? 5) : seconds;
-  const kie = model.kind === "video" ? (kieCost[model.id] ?? UNKNOWN_VIDEO_PER_SECOND) * length : (kieCost[model.id] ?? UNKNOWN_IMAGE);  // image or music: per request
-  return Math.ceil(kie * KIE_TO_TECHNOVA);
+/** Credits charged for one creation: the fixed price of its choice (a failed creation is refunded). */
+export function mediaReserve(model: MediaModel, _seconds?: number): number {
+  if (model.id === imageEditModel.id) return IMAGE_EDIT_CREDITS;
+  const tier = (Object.keys(mediaTiers) as MediaTier[]).find((t) => mediaTiers[t].engine === model.id);
+  if (!tier) throw new Error("Choix de création indisponible.");
+  return mediaTiers[tier].credits;
 }

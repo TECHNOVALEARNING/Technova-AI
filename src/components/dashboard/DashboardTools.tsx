@@ -10,6 +10,7 @@ import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
 import type { Tables } from "@/integrations/supabase/types";
 import { createApiKey } from "@/lib/api-keys.functions";
+import { requestAccountDeletion } from "@/lib/account.functions";
 import {
   completeSupabaseConnect,
   disconnectSupabase,
@@ -18,7 +19,8 @@ import {
   selectSupabaseProject,
   startSupabaseConnect,
 } from "@/lib/supabase-oauth.functions";
-import { modelCatalog } from "@/lib/model-pricing";
+import { chatTierCredits, chatTierIds, chatTiers, EXPERT_MIN_TIER, type ChatTier } from "@/lib/chat-modes";
+import { mediaTiers, type MediaTier } from "@/lib/media-models";
 import { upgradeFeatureOf, upgradeSentence } from "@/lib/plans";
 import { usePlanTier } from "@/lib/plan-client";
 import { savePref } from "@/lib/consent";
@@ -31,7 +33,7 @@ import supabaseLogo from "@/assets/supabase-logo.svg";
 
 const copy = {
   fr: {
-    modelsTitle: "Modèles", modelsSub: "Prix affichés en crédits TechNova par million de tokens.", input: "Entrée", output: "Sortie", chat: "Discuter", soon: "Bientôt disponible", free: "Gratuit",
+    modelsTitle: "Modes et tarifs", modelsSub: "Trois modes de réponse et des créations à prix fixe, en crédits TechNova.", input: "Entrée", output: "Sortie", chat: "Discuter", soon: "Bientôt disponible", free: "Gratuit",
     creditsTitle: "Crédits", creditsSub: "Rechargez et suivez votre solde de crédits.", balance: "Solde", credits: "crédits Technova", remaining: "de votre solde restant", currency: "Devise", buy: "Acheter des crédits", popular: "Populaire", bonus: "bonus", activity: "Activité récente", noActivity: "Aucune activité pour le moment.", included: "Offert à l'inscription",
     payNotice: "Paiement sécurisé par Technova PAY : Mobile Money (Orange, Wave, MTN, Moov) et carte bancaire.", testMode: "Mode test actif : aucun paiement réel n'est encaissé.", testBlocked: "Paiement de test refusé : le site est en production. Aucun crédit n'a été ajouté.",
     redirecting: "Redirection…", paySuccess: "Paiement confirmé : vos crédits Technova sont ajoutés.", payPending: "Paiement en attente de confirmation. Vos crédits seront ajoutés dès validation.", payCancelled: "Paiement annulé.", payError: "Le paiement n'a pas pu démarrer. Réessayez.",
@@ -47,7 +49,7 @@ const copy = {
     confirmPack: "Confirmez votre achat", oneTime: "Paiement unique, sans abonnement.", confirmPay: "Payer maintenant", cancel: "Annuler",
   },
   en: {
-    modelsTitle: "Models", modelsSub: "Prices shown in TechNova credits per million tokens.", input: "Input", output: "Output", chat: "Chat", soon: "Coming soon", free: "Free",
+    modelsTitle: "Modes and prices", modelsSub: "Three answer modes and fixed-price creations, in TechNova credits.", input: "Input", output: "Output", chat: "Chat", soon: "Coming soon", free: "Free",
     creditsTitle: "Credits", creditsSub: "Top up and track your credit balance.", balance: "Balance", credits: "Technova credits", remaining: "of your credit balance remaining", currency: "Currency", buy: "Buy credits", popular: "Popular", bonus: "bonus", activity: "Recent activity", noActivity: "No activity yet.", included: "Included at sign-up",
     payNotice: "Secure payment by Technova PAY: Mobile Money (Orange, Wave, MTN, Moov) and card.", testMode: "Test mode: no real payment is collected.", testBlocked: "Test payment refused: the site is in production. No credits were added.",
     redirecting: "Redirecting…", paySuccess: "Payment confirmed: your Technova credits were added.", payPending: "Payment awaiting confirmation. Credits will be added once validated.", payCancelled: "Payment cancelled.", payError: "Payment could not start. Please try again.",
@@ -120,15 +122,22 @@ function BalanceCard({ balance, totalIn, children }: { balance: number; totalIn:
   return <div className={card}><p className={eyebrow}>{c.balance.toUpperCase()}</p><p className="mt-2 font-display text-[32px] font-semibold leading-none">{balance.toLocaleString()} <span className="text-[14px] font-normal text-muted-foreground">{c.credits}</span></p>{children ?? <><div className="mt-5 h-1.5 overflow-hidden rounded-full bg-secondary"><div className="h-full rounded-full bg-primary transition-[width] duration-700" style={{ width: `${pct}%` }} /></div><p className="mt-2 text-[11.5px] text-muted-foreground">{pct}% {c.remaining}</p></>}</div>;
 }
 
+/** The three chat modes and the fixed-price creations (engines are never shown). */
 export function ModelsPage() {
-  const c = useCopy(); const navigate = useNavigate();
-  function open(name: string) { localStorage.setItem("technova-workspace-model", name); localStorage.setItem("technova-workspace-mode", "chat"); void navigate({ to: "/dashboard/chat" }); }
+  const c = useCopy(); const navigate = useNavigate(); const { lang } = useDashboard(); const fr = lang === "fr"; const plan = usePlanTier() ?? 0;
+  function open(tier: ChatTier) { savePref("technova-workspace-tier", tier); savePref("technova-workspace-mode", "chat"); void navigate({ to: "/dashboard/chat" }); }
+  const cr = (n: number) => `${n.toLocaleString(fr ? "fr-FR" : "en-US")} ${fr ? "crédits" : "credits"}`;
   return <div><PageHead title={c.modelsTitle} sub={c.modelsSub} />
-    <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">{modelCatalog.map(m => <div key={m.name} className={`${card} flex flex-col`}>
-      <div className="flex items-center gap-3"><span className="grid size-9 place-items-center rounded-full bg-secondary text-[11px] font-bold text-primary">{m.provider.slice(0, 2).toUpperCase()}</span><div className="min-w-0"><p className="truncate text-[14px] font-semibold">{m.name}</p><p className="text-[11.5px] text-muted-foreground">{m.provider}</p></div>{m.input === 0 && m.kind === "chat" && <span className="ml-auto rounded-full bg-secondary px-2 py-0.5 text-[10px] font-semibold text-primary">{c.free}</span>}</div>
-      <div className="mt-4 grid grid-cols-2 border-t border-border pt-4 text-[12px]"><div><p className="text-muted-foreground">{c.input}</p><p className="mt-0.5 font-medium">{m.input.toLocaleString()} cr./M</p></div><div><p className="text-muted-foreground">{c.output}</p><p className="mt-0.5 font-medium">{m.output.toLocaleString()} cr./M</p></div></div>
-      {m.kind === "chat" ? <Button variant="outline" className="mt-4 h-9 w-full rounded-full text-[12.5px]" onClick={() => open(m.name)}><MessageSquare className="size-4" />{c.chat}</Button> : <Button variant="outline" disabled className="mt-4 h-9 w-full rounded-full text-[12.5px]"><Sparkles className="size-4" />{c.soon}</Button>}
-    </div>)}</div></div>;
+    <div className="grid gap-4 md:grid-cols-3">{chatTierIds.map(id => { const t = chatTiers[id]; const locked = id === "expert" && plan < EXPERT_MIN_TIER; return <div key={id} className={`${card} flex flex-col`}>
+      <div className="flex items-center gap-3"><span className="grid size-10 place-items-center rounded-full bg-secondary text-[18px]" aria-hidden="true">{t.emoji}</span><div className="min-w-0"><p className="text-[15px] font-semibold">{fr ? t.fr : t.en}</p><p className="text-[11.5px] text-muted-foreground">{fr ? t.hintFr : t.hintEn}</p></div></div>
+      <div className="mt-4 grid grid-cols-2 border-t border-border pt-4 text-[12px]"><div><p className="text-muted-foreground">{fr ? "Par message" : "Per message"}</p><p className="mt-0.5 font-medium">{cr(chatTierCredits(id, false, plan))}</p></div><div><p className="text-muted-foreground">{fr ? "Avec un fichier" : "With a file"}</p><p className="mt-0.5 font-medium">{cr(chatTierCredits(id, true, plan))}</p></div></div>
+      {id === "expert" && <p className="mt-3 text-[11px] text-muted-foreground">{fr ? "Avec le forfait Pro, le même bouton utilise un moteur plus puissant (60 crédits, 65 avec fichier)." : "With the Pro plan, the same button uses a stronger engine (60 credits, 65 with a file)."}</p>}
+      <Button variant="outline" disabled={locked} className="mt-auto h-9 w-full rounded-full text-[12.5px] [&]:mt-4" onClick={() => open(id)}><MessageSquare className="size-4" />{locked ? (fr ? "À partir du forfait Creator" : "From the Creator plan") : c.chat}</Button>
+    </div>; })}</div>
+    <p className="mt-3 text-[11.5px] text-muted-foreground">{fr ? "Un échange très long (longue conversation, gros document) peut coûter un peu plus que ce prix de base." : "A very long exchange (long conversation, large document) can cost a little more than this base price."}</p>
+    <div className="mt-6 grid gap-3 sm:grid-cols-2 xl:grid-cols-5">{(Object.keys(mediaTiers) as MediaTier[]).map(k => <div key={k} className={card}><p className="text-[13px] font-semibold">{fr ? mediaTiers[k].fr : mediaTiers[k].en}</p><p className="mt-1 text-[12px] text-muted-foreground">{cr(mediaTiers[k].credits)}{k.startsWith("video") ? (fr ? " · 5 s" : " · 5 s") : ""}</p></div>)}</div>
+    <p className="mt-3 text-[11.5px] text-muted-foreground">{fr ? "Dans le chat, demandez « génère une image… », « une vidéo… » ou « une musique… ». Ajoutez « HD » ou « qualité » pour la version supérieure. Une création qui échoue est remboursée." : "In the chat, ask “generate an image…”, “a video…” or “a song…”. Add “HD” or “quality” for the higher version. A failed creation is refunded."}</p>
+  </div>;
 }
 
 function Packs({ cur }: { cur: ReturnType<typeof useCurrency> }) {
@@ -325,6 +334,41 @@ function SupabaseCard() {
   </section>;
 }
 
+/** "Supprimer mon compte": data kept 30 days (cancellable by signing in again), then deleted for good. */
+function DeleteAccountCard() {
+  const { lang } = useDashboard(); const fr = lang === "fr"; const navigate = useNavigate();
+  const request = useServerFn(requestAccountDeletion);
+  const [busy, setBusy] = useState(false);
+  async function remove() {
+    const ok = await confirmDialog({
+      title: fr ? "Supprimer votre compte ?" : "Delete your account?",
+      description: fr
+        ? "Vous serez déconnecté. Vos conversations, apps, fichiers et crédits sont conservés 30 jours : reconnectez-vous avant la fin de ce délai pour annuler. Ensuite, tout est supprimé définitivement, crédits restants compris."
+        : "You will be signed out. Your conversations, apps, files and credits are kept for 30 days: sign in again before then to cancel. After that, everything is deleted for good, remaining credits included.",
+      tone: "danger",
+      confirmLabel: fr ? "Supprimer mon compte" : "Delete my account",
+    });
+    if (!ok) return;
+    setBusy(true);
+    try {
+      const { purgeAfter } = await request();
+      const date = new Date(purgeAfter).toLocaleDateString(fr ? "fr-FR" : "en-US", { day: "numeric", month: "long", year: "numeric" });
+      toast.success(fr ? `Compte programmé pour suppression le ${date}.` : `Account scheduled for deletion on ${date}.`);
+      await supabase.auth.signOut();
+      void navigate({ to: "/" });
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : String(e));
+      setBusy(false);
+    }
+  }
+  return <section className={`${card} border-destructive/30`}>
+    <p className={`${eyebrow} text-destructive`}>{fr ? "ZONE SENSIBLE" : "DANGER ZONE"}</p>
+    <h2 className="mt-2 text-[15px] font-semibold">{fr ? "Supprimer mon compte" : "Delete my account"}</h2>
+    <p className="mt-1.5 max-w-2xl text-[12.5px] leading-relaxed text-muted-foreground">{fr ? "Vos données sont conservées 30 jours après la demande. Pendant ce délai, il suffit de vous reconnecter pour annuler. Passé ce délai, le compte et toutes ses données sont supprimés définitivement." : "Your data is kept for 30 days after the request. During that time, simply sign in again to cancel. After that, the account and all its data are deleted for good."}</p>
+    <Button variant="destructive" disabled={busy} className="mt-4 h-9 rounded-full px-5" onClick={() => void remove()}><Trash2 className="size-4" />{fr ? "Supprimer mon compte" : "Delete my account"}</Button>
+  </section>;
+}
+
 export function SettingsToolsPage() {
   const c = useCopy(); const { name, email, lang, setLang, theme, setTheme } = useDashboard(); const cur = useCurrency();
   const [value, setValue] = useState(name); const [busy, setBusy] = useState(false);
@@ -340,5 +384,6 @@ export function SettingsToolsPage() {
         <div><p className={eyebrow}>{c.theme.toUpperCase()}</p><div className="mt-3 flex gap-2"><button type="button" className={pill(theme === "light")} onClick={() => setTheme("light")}>{c.light}</button><button type="button" className={pill(theme === "dark")} onClick={() => setTheme("dark")}>{c.dark}</button></div></div>
       </div>
     </div>
-    <SupabaseCard /></div>;
+    <SupabaseCard />
+    <DeleteAccountCard /></div>;
 }

@@ -14,6 +14,7 @@ const textSpecs: Record<string, { context: string; caps: TextCap[] }> = {
   "GPT-4o": { context: "128K", caps: ["vision"] },
   "GPT-4o Mini": { context: "128K", caps: ["vision", "fast"] },
   "Claude Sonnet 5": { context: "1M", caps: ["reasoning", "coding", "vision", "long"] },
+  "Claude Opus 5": { context: "1M", caps: ["reasoning", "coding", "vision", "long"] },
   "Claude Haiku 4.5": { context: "200K", caps: ["reasoning", "vision", "fast"] },
   "DeepSeek R1": { context: "164K", caps: ["reasoning", "coding"] },
   "DeepSeek V3": { context: "164K", caps: ["coding"] },

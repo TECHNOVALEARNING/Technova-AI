@@ -2,7 +2,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
-import { buildMediaInput, defaultImageModel, defaultMusicModel, defaultVideoModel, findMediaModel, KIE_TO_TECHNOVA, mediaReserve, imageEditModel } from "@/lib/media-models";
+import { buildMediaInput, defaultImageModel, defaultMusicModel, defaultVideoModel, findMediaModel, mediaLabel, mediaReserve, imageEditModel, MEDIA_VIDEO_SECONDS } from "@/lib/media-models";
 
 const createInput = z.object({
   kind: z.enum(["image", "video", "music"]),
@@ -77,7 +77,7 @@ export const createMediaGeneration = createServerFn({ method: "POST" })
       }
     }
     const model = spec.id;
-    const built = buildMediaInput(spec, data.prompt, data.aspectRatio, Number(data.duration ?? "5"));
+    const built = buildMediaInput(spec, data.prompt, data.aspectRatio, MEDIA_VIDEO_SECONDS);
     if (editing) {
       // The source must be a finished image of this account, still within its 14-day retention.
       const { data: source } = await context.supabase.from("media_generations")
@@ -138,7 +138,7 @@ export const refreshMediaGeneration = createServerFn({ method: "POST" })
       // Past the 14-day retention the files are gone: say so instead of serving dead provider links.
       const expired = row.status === "success" && !!row.expires_at && new Date(row.expires_at).getTime() < Date.now();
       const urls = expired ? [] : archived ?? (row.status === "success" ? row.result_urls : []);
-      return { id: row.id, kind: row.kind, model: findMediaModel(row.model)?.label ?? row.model, prompt: row.prompt, status: row.status, urls, error: row.error, expired };
+      return { id: row.id, kind: row.kind, model: mediaLabel(row.model, row.kind), prompt: row.prompt, status: row.status, urls, error: row.error, expired };
     }
     const result = await kie(`recordInfo?taskId=${encodeURIComponent(row.task_id)}`);
     const state = result["state"];
@@ -172,14 +172,13 @@ export const refreshMediaGeneration = createServerFn({ method: "POST" })
         .eq("id", row.id).eq("settled", false).select("reserved_credits");
       const reserved = claimed?.[0]?.reserved_credits ?? 0;
       if (claimed?.length && reserved > 0) {
-        const consumed = Number(result["creditsConsumed"]);
-        const charged = state === "fail" ? 0
-          : Number.isFinite(consumed) && consumed > 0 ? Math.min(reserved, Math.ceil(consumed * KIE_TO_TECHNOVA)) : reserved;
+        // Fixed price: a success costs what was reserved, a failure is fully refunded.
+        const charged = state === "fail" ? 0 : reserved;
         await supabaseAdmin.from("media_generations").update({ charged_credits: charged }).eq("id", row.id);
-        if (charged > 0) await supabaseAdmin.from("usage_logs").insert({ owner_id: context.userId, model: `Média · ${findMediaModel(row.model)?.label ?? row.kind}`, input_tokens: 0, output_tokens: 0, credits: charged, latency_ms: 0 });
+        if (charged > 0) await supabaseAdmin.from("usage_logs").insert({ owner_id: context.userId, model: `Média · ${mediaLabel(row.model, row.kind)}`, input_tokens: 0, output_tokens: 0, credits: charged, latency_ms: 0 });
         if (reserved - charged > 0) await supabaseAdmin.from("credit_transactions").insert({
           owner_id: context.userId, amount: reserved - charged, kind: "refund",
-          label: `${findMediaModel(row.model)?.label ?? row.model} (${state === "fail" ? "échec remboursé" : "ajustement"})`,
+          label: `${mediaLabel(row.model, row.kind)} (${state === "fail" ? "échec remboursé" : "ajustement"})`,
         });
       }
     }
@@ -192,7 +191,7 @@ export const refreshMediaGeneration = createServerFn({ method: "POST" })
         if (signed?.length) urls = signed;
       }
     }
-    const media = { id: row.id, kind: row.kind, model: findMediaModel(row.model)?.label ?? row.model, prompt: row.prompt, status: state, progress, urls, error: state === "fail" ? String(result["failMsg"] || "La création a échoué.") : null };
+    const media = { id: row.id, kind: row.kind, model: mediaLabel(row.model, row.kind), prompt: row.prompt, status: state, progress, urls, error: state === "fail" ? String(result["failMsg"] || "La création a échoué.") : null };
     const { error: partError } = await context.supabase.from("chat_messages").update({ parts: [{ type: "data-media", data: media }] })
       .eq("thread_id", data.threadId).eq("sdk_id", row.id);
     if (partError) throw new Error(partError.message);

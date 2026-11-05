@@ -436,6 +436,12 @@ export type Database = {
         }
         Relationships: []
       }
+      account_deletions: {
+        Row: { purge_after: string; requested_at: string; user_id: string }
+        Insert: { purge_after?: string; requested_at?: string; user_id: string }
+        Update: { purge_after?: string; requested_at?: string; user_id?: string }
+        Relationships: []
+      }
       account_suspensions: {
         Row: { created_at: string; reason: string; suspended_by: string | null; user_id: string }
         Insert: { created_at?: string; reason?: string; suspended_by?: string | null; user_id: string }

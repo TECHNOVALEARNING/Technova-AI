@@ -15,6 +15,7 @@ import { dashboardLooks, defaultLook, lookMode, storedLook, type DashboardLook }
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 
 import { ThreadItem } from "./ThreadItem";
+import { PendingDeletionBanner } from "./PendingDeletionBanner";
 import { DashboardContext, type Thread } from "./dashboard-context";
 export { useDashboard, type Thread } from "./dashboard-context";
 
@@ -183,7 +184,7 @@ export function DashboardLayout({ children }: { children: ReactNode }) {
           <span className="flex shrink-0 items-center gap-1.5 border-r border-border px-3.5 text-[9.5px] font-medium uppercase tracking-[0.16em] text-muted-foreground"><span className="size-1.5 rounded-full bg-foreground/60" />{lang === "fr" ? "Sites à visiter" : "Sites to visit"}</span>
           <div className="min-w-0 flex-1 overflow-hidden [mask-image:linear-gradient(90deg,transparent,black_6%,black_94%,transparent)]"><div className="dashboard-marquee-track flex w-max items-center gap-9 whitespace-nowrap px-6 text-[11px] text-muted-foreground">{[0, 1, 2, 3].map((copy) => <span key={copy} className="contents" aria-hidden={copy > 0 ? true : undefined}>{marqueeItems.map((site) => <a key={site} href={`https://${site}/`} target="_blank" rel="noopener noreferrer" tabIndex={copy > 0 ? -1 : undefined} className="inline-flex items-center gap-1.5 transition-colors hover:text-foreground"><Globe2 className="size-3.5" strokeWidth={1.6} />{site}</a>)}</span>)}</div></div>
         </div></div>}
-        <main className="relative z-10 mx-auto min-h-[calc(100svh-92px)] lg:min-h-[calc(100svh-76px)] w-full max-w-[1640px] px-4 pb-8 pt-6 sm:px-6 lg:px-3 lg:pb-4">{error && <div role="alert" className="mb-5 flex items-center justify-between border-l-2 border-destructive bg-secondary px-4 py-3 text-sm"><span>{error}</span><Button variant="ghost" size="sm" onClick={() => void reload()}>{t.retry}</Button></div>}<div key={pathname} className="dashboard-page-enter">{children}</div></main>
+        <main className="relative z-10 mx-auto min-h-[calc(100svh-92px)] lg:min-h-[calc(100svh-76px)] w-full max-w-[1640px] px-4 pb-8 pt-6 sm:px-6 lg:px-3 lg:pb-4">{error && <div role="alert" className="mb-5 flex items-center justify-between border-l-2 border-destructive bg-secondary px-4 py-3 text-sm"><span>{error}</span><Button variant="ghost" size="sm" onClick={() => void reload()}>{t.retry}</Button></div>}<PendingDeletionBanner fr={lang === "fr"} /><div key={pathname} className="dashboard-page-enter">{children}</div></main>
       </div>
     </div>
   </DashboardContext.Provider>;
