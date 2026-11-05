@@ -429,6 +429,23 @@ function MessageActionsRow({ text }: { text: string }) {
   );
 }
 
+/** Types `text` one character at a time (restarts when `run` or the text changes); instant with reduced motion. */
+function useTypewriter(text: string, run: number) {
+  const [shown, setShown] = useState(text);
+  useEffect(() => {
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) { setShown(text); return; }
+    let i = 0;
+    setShown("");
+    const id = window.setInterval(() => {
+      i += 1;
+      setShown(text.slice(0, i) + (i < text.length ? "▍" : ""));
+      if (i >= text.length) window.clearInterval(id);
+    }, 38);
+    return () => window.clearInterval(id);
+  }, [text, run]);
+  return shown;
+}
+
 function ChatComposer({
   choice,
   onSubmit,
@@ -468,6 +485,10 @@ function ChatComposer({
   const [reading, setReading] = useState(false);
   // The send button appears once there is something to send (the mic stays alone otherwise).
   const [hasText, setHasText] = useState(false);
+  // The placeholder writes itself on arrival and again when the pointer comes over the empty box.
+  const fullPlaceholder = editing ? (lang === "fr" ? "Ex. : rends le ciel plus orangé, ajoute un logo…" : "E.g. make the sky more orange, add a logo…") : mode === "chat" ? copy.chatPlaceholder : copy.createPlaceholder;
+  const [typeRun, setTypeRun] = useState(0);
+  const typedPlaceholder = useTypewriter(fullPlaceholder, typeRun);
   const fileInput = useRef<HTMLInputElement>(null);
   const updateDoc = (key: string, patch: Partial<ComposerDoc>) => setDocs((all) => all.map((d) => (d.key === key ? { ...d, ...patch } : d)));
   async function pick(list: FileList | null) {
@@ -527,7 +548,8 @@ function ChatComposer({
           ref={textareaRef}
           autoFocus
           disabled={disabled}
-          placeholder={editing ? (lang === "fr" ? "Ex. : rends le ciel plus orangé, ajoute un logo…" : "E.g. make the sky more orange, add a logo…") : mode === "chat" ? copy.chatPlaceholder : copy.createPlaceholder}
+          placeholder={typedPlaceholder}
+          onMouseEnter={() => { if (!hasText) setTypeRun((n) => n + 1); }}
           onChange={(e) => setHasText(e.currentTarget.value.trim().length > 0)}
           className="min-h-[76px] max-h-48 px-5 pt-4 text-[15px]"
         />
@@ -740,9 +762,9 @@ export function ChatListPage() {
             <div className="mt-4"><StarterIdeas choice={choice} inputRef={composerRef} /></div>
           </div>
         </section>
-        <section className="chat-library relative mx-auto w-full max-w-[920px] rounded-2xl border border-border/70 bg-card/85 p-3.5 shadow-soft backdrop-blur-xl sm:px-4">
+        <section className="chat-library relative mx-auto w-full max-w-[1220px] rounded-[22px] border border-border/70 bg-card/85 p-4 shadow-soft backdrop-blur-xl sm:px-7 sm:py-6">
           <div className="flex items-center gap-3">
-            <h2 className="min-w-0 flex-1 truncate text-[13px] font-medium">{choice.copy.library}</h2>
+            <h2 className="min-w-0 flex-1 truncate text-[17px] font-semibold tracking-tight sm:text-[19px]">{choice.copy.library}</h2>
             <div className="relative hidden w-44 sm:block">
               <Search className="absolute left-2.5 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground" />
               <Input
@@ -753,31 +775,31 @@ export function ChatListPage() {
                 className="h-7 rounded-full border-transparent bg-background/60 pl-8 text-[11.5px] shadow-none"
               />
             </div>
-            <span className="shrink-0 text-[11px] tabular-nums text-muted-foreground">
+            <span className="shrink-0 text-[12px] tabular-nums text-muted-foreground">
               {threads.length} {choice.copy.saved}
             </span>
           </div>
           {/* The three latest (more while searching); the full history stays in the sidebar. */}
-          <div className="mt-2.5 grid gap-2 sm:grid-cols-3">
+          <div className="mt-4 grid gap-3 sm:grid-cols-3">
             {filtered.slice(0, query ? 6 : 3).map((thread) => (
               <Link
                 key={thread.id}
                 to="/dashboard/chat/$threadId"
                 params={{ threadId: thread.id }}
-                className="group flex min-w-0 items-center gap-2 rounded-xl border border-border bg-background/60 px-3 py-2 transition-colors hover:border-foreground/20"
+                className="group flex min-w-0 items-center gap-3 rounded-2xl border border-border bg-background/60 px-4 py-3.5 transition-colors hover:border-foreground/20"
               >
-                <MessageCircle className="size-3.5 shrink-0 text-muted-foreground" strokeWidth={1.6} />
+                <MessageCircle className="size-[18px] shrink-0 text-muted-foreground" strokeWidth={1.6} />
                 <span className="min-w-0 flex-1">
-                  <strong className="block truncate text-[12px] font-medium">{thread.title}</strong>
-                  <small className="text-[10px] text-muted-foreground">
+                  <strong className="block truncate text-[15px] font-medium">{thread.title}</strong>
+                  <small className="text-[13px] text-muted-foreground">
                     {new Date(thread.updated_at).toLocaleDateString(choice.copy.locale)}
                   </small>
                 </span>
-                <ArrowRight className="size-3.5 shrink-0 text-muted-foreground/60 transition-transform group-hover:translate-x-0.5" strokeWidth={1.6} />
+                <ArrowRight className="size-4 shrink-0 text-muted-foreground/70 transition-transform group-hover:translate-x-0.5" strokeWidth={1.6} />
               </Link>
             ))}
             {filtered.length === 0 && (
-              <p className="py-2 text-[11.5px] text-muted-foreground sm:col-span-3">
+              <p className="py-2 text-[13px] text-muted-foreground sm:col-span-3">
                 {query ? t.noResults : t.noChats}
               </p>
             )}
