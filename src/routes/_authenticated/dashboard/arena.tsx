@@ -1,7 +1,9 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, redirect } from "@tanstack/react-router";
 import { ArenaPage } from "@/components/dashboard/ArenaPage";
 
 export const Route = createFileRoute("/_authenticated/dashboard/arena")({
+  // Arena is hidden from the site for now.
+  beforeLoad: () => { throw redirect({ to: "/dashboard/chat", replace: true }); },
   head: () => ({ meta: [
     { title: "Arena | TechNova AI Hub" },
     { name: "description", content: "Comparez deux modèles d'IA sur la même question et votez pour la meilleure réponse." },

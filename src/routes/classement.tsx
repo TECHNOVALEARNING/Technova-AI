@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, redirect } from "@tanstack/react-router";
 import { ArrowRight, Swords, Trophy } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Nav, Footer, PageHero, useReveal, useSiteLang } from "@/components/site/SiteChrome";
@@ -6,6 +6,8 @@ import { getPublicRanking } from "@/lib/leaderboard.functions";
 import type { SiteLang } from "@/lib/i18n";
 
 export const Route = createFileRoute("/classement")({
+  // Arena is hidden from the site for now: the ranking page sends visitors home.
+  beforeLoad: () => { throw redirect({ to: "/", replace: true }); },
   loader: () => getPublicRanking(),
   head: () => ({ meta: [
     { title: "Classement des modèles d'IA — TechNova Arena" },

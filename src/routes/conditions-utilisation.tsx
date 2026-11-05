@@ -104,7 +104,7 @@ function TermsPage() {
             "le chat avec plusieurs modèles, dont TechNova Smart qui choisit automatiquement un modèle adapté, la recherche web et l'analyse de fichiers ;",
             "la génération d'images, de vidéos et de musique, et la modification d'images ;",
             "TechNova Studio, qui crée des sites et applications à partir d'une description, après validation d'un plan par vous, et leur publication ;",
-            "les bases de connaissances, les agents personnalisés, l'Arena et le Registry de designs ;",
+            "les bases de connaissances, les agents personnalisés et le Registry de designs ;",
             "l'API, utilisable avec des clés API personnelles ;",
             "les connexions facultatives à GitHub, Google Drive, Notion ou à votre propre projet Supabase.",
           ]} />

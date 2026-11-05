@@ -2,7 +2,7 @@ import { createContext, useCallback, useContext, useEffect, useState, type React
 import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import { savePref } from "@/lib/consent";
 import { planKeyOf, planLabels, usePlan } from "@/lib/plan-client";
-import { BookMarked, Bot, Library, Plug, ShieldAlert, Swords } from "lucide-react";
+import { BookMarked, Bot, ChevronUp, Library, Plug, ShieldAlert } from "lucide-react";
 import { getMyRole } from "@/lib/admin.functions";
 import { Activity, ArrowLeft, Check, Palette, Crown, Bell, BookOpen, Boxes, ChevronDown, Code2, CreditCard, Diamond, Gift, Globe2, LayoutDashboard, LogOut, Menu, MessageCircle, Moon, PanelLeftClose, PanelLeftOpen, Search, Settings2, Sun, Wallet, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -18,10 +18,10 @@ import { ThreadItem } from "./ThreadItem";
 import { DashboardContext, type Thread } from "./dashboard-context";
 export { useDashboard, type Thread } from "./dashboard-context";
 
+// Arena is hidden from the site for now (its routes redirect).
 const links = [
   { key: "overview", to: "/dashboard", icon: LayoutDashboard },
   { key: "chat", to: "/dashboard/chat", icon: MessageCircle },
-  { key: "arena", to: "/dashboard/arena", icon: Swords },
   { key: "agents", to: "/dashboard/agents", icon: Bot },
   { key: "knowledge", to: "/dashboard/knowledge", icon: BookMarked },
   { key: "registry", to: "/dashboard/registry", icon: Library },
@@ -33,6 +33,8 @@ const links = [
   { key: "connections", to: "/dashboard/connexions", icon: Plug },
   { key: "settings", to: "/dashboard/settings", icon: Settings2 },
 ] as const;
+/** Always visible; the rest unfolds under "Plus" so the history gets the room. */
+const primaryKeys: readonly string[] = ["overview", "chat", "agents", "credits"];
 
 export function DashboardLayout({ children }: { children: ReactNode }) {
   const [lang, setLangState] = useState<Lang>("fr");
@@ -49,6 +51,7 @@ export function DashboardLayout({ children }: { children: ReactNode }) {
   const [noticeOpen, setNoticeOpen] = useState(false);
   const [accountOpen, setAccountOpen] = useState(false);
   const [collapsed, setCollapsed] = useState(false);
+  const [moreOpen, setMoreOpen] = useState(false);
   const [artifactWorkspaceOpen, setArtifactWorkspaceOpen] = useState(false);
   const [workspaceCollapsed, setWorkspaceCollapsed] = useState<boolean | null>(null);
   const navigate = useNavigate();
@@ -111,6 +114,9 @@ export function DashboardLayout({ children }: { children: ReactNode }) {
   const filtered = threads.filter(thread => thread.title.toLocaleLowerCase().includes(search.toLocaleLowerCase())).sort((a, b) => Number(b.pinned) - Number(a.pinned));
   const matchingSections = [...links, { key: "docs", to: "/dashboard/docs", icon: BookOpen } as const].filter(item => t[item.key].toLocaleLowerCase().includes(search.toLocaleLowerCase()));
   const initials = (name || email || "T").charAt(0).toUpperCase();
+  // The secondary links stay unfolded while one of them is the open page (and in the icon-only menu).
+  const onSecondary = !primaryKeys.includes(current) || pathname === "/dashboard/admin";
+  const showAll = mini || moreOpen || onSecondary;
   // Plan badge and avatar ring colours follow the highest pack bought (display only).
   const plan = usePlan();
   const planKey = plan ? planKeyOf(plan.tier, plan.paid) : null;
@@ -130,8 +136,13 @@ export function DashboardLayout({ children }: { children: ReactNode }) {
         </div>
         <div className="flex min-h-0 flex-1 flex-col px-3">
           <nav aria-label={t.navigation} className="shrink-0 space-y-px">
-            {links.map(item => <Link key={item.key} to={item.to} title={t[item.key]} aria-current={current === item.key ? "page" : undefined} className={`side-link flex h-8 items-center gap-2.5 rounded-lg px-2.5 text-[12.5px] font-medium transition-colors ${mini ? "lg:justify-center lg:px-0" : ""} ${current === item.key ? "is-active text-foreground" : "text-muted-foreground hover:text-foreground"}`}><item.icon className="size-[15px] shrink-0" strokeWidth={1.7} /><span className={mini ? "lg:hidden" : ""}>{t[item.key]}</span></Link>)}
-            {isAdmin && <Link to="/dashboard/admin" title="Administration" aria-current={pathname === "/dashboard/admin" ? "page" : undefined} className={`side-link flex h-8 items-center gap-2.5 rounded-lg px-2.5 text-[12.5px] font-medium transition-colors ${mini ? "lg:justify-center lg:px-0" : ""} ${pathname === "/dashboard/admin" ? "is-active text-foreground" : "text-muted-foreground hover:text-foreground"}`}><ShieldAlert className="size-[15px] shrink-0" strokeWidth={1.7} /><span className={mini ? "lg:hidden" : ""}>Administration</span></Link>}
+            {links.filter(item => showAll || primaryKeys.includes(item.key)).map(item => <Link key={item.key} to={item.to} title={t[item.key]} aria-current={current === item.key ? "page" : undefined} className={`side-link flex h-8 items-center gap-2.5 rounded-lg px-2.5 text-[12.5px] font-medium transition-colors ${mini ? "lg:justify-center lg:px-0" : ""} ${current === item.key ? "is-active text-foreground" : "text-muted-foreground hover:text-foreground"}`}><item.icon className="size-[15px] shrink-0" strokeWidth={1.7} /><span className={mini ? "lg:hidden" : ""}>{t[item.key]}</span></Link>)}
+            {isAdmin && showAll && <Link to="/dashboard/admin" title="Administration" aria-current={pathname === "/dashboard/admin" ? "page" : undefined} className={`side-link flex h-8 items-center gap-2.5 rounded-lg px-2.5 text-[12.5px] font-medium transition-colors ${mini ? "lg:justify-center lg:px-0" : ""} ${pathname === "/dashboard/admin" ? "is-active text-foreground" : "text-muted-foreground hover:text-foreground"}`}><ShieldAlert className="size-[15px] shrink-0" strokeWidth={1.7} /><span className={mini ? "lg:hidden" : ""}>Administration</span></Link>}
+            {!mini && !onSecondary && <button type="button" onClick={() => setMoreOpen(v => !v)} aria-expanded={moreOpen}
+              className="side-link flex h-8 w-full items-center gap-2.5 rounded-lg px-2.5 text-[12.5px] font-medium text-muted-foreground transition-colors hover:text-foreground">
+              {moreOpen ? <ChevronUp className="size-[15px] shrink-0" strokeWidth={1.7} /> : <ChevronDown className="size-[15px] shrink-0" strokeWidth={1.7} />}
+              <span>{moreOpen ? (lang === "fr" ? "Moins" : "Less") : (lang === "fr" ? "Plus" : "More")}</span>
+            </button>}
           </nav>
           <div className={`mt-5 flex min-h-0 flex-1 flex-col ${mini ? "lg:hidden" : ""}`}>
             <p className="shrink-0 px-2.5 pb-1.5 text-[11px] font-medium text-muted-foreground">{t.history}</p>
