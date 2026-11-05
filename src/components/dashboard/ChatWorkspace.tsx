@@ -59,9 +59,9 @@ import { chatWorkspaceText } from "@/lib/i18n";
 import { ACCEPT, INDEXED_FILE_TYPE, MAX_FILES, budgetFiles, indexedFileId, indexedFileUrl, isDirectAttachment, kindOf, mediaKey, pendingMedia, persistableParts, toFilePart, type ChatFilePart } from "@/lib/chat-attachments";
 import { ALL_ACCEPT, MAX_CHAT_DOCUMENTS, checkFile, formatsLabel } from "@/lib/file-types";
 import { fileErrorText, uploadAndIndex, type UploadPhase } from "@/lib/file-upload";
-import { chatTierCredits, chatTierIds, chatTiers, defaultChatChoice, EXPERT_MIN_TIER, isChatChoice, smartChoice, type ChatChoice, type ChatTier } from "@/lib/chat-modes";
+import { chatTierIds, chatTiers, defaultChatChoice, EXPERT_MIN_TIER, isChatChoice, smartChoice, type ChatChoice } from "@/lib/chat-modes";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faBolt, faBrain, faRobot, faScaleBalanced, faWandMagicSparkles } from "@fortawesome/free-solid-svg-icons";
+import { faBolt, faBrain, faScaleBalanced, faWandMagicSparkles } from "@fortawesome/free-solid-svg-icons";
 import { usePlanTier } from "@/lib/plan-client";
 import { cn } from "@/lib/utils";
 import { Shimmer } from "@/components/ai-elements/shimmer";
@@ -152,10 +152,6 @@ function ChoiceControls({ choice }: { choice: ReturnType<typeof useWorkspaceChoi
   const { mode, tier, chooseMode, chooseTier, copy } = choice;
   const fr = copy.locale.startsWith("fr");
   const plan = usePlanTier();
-  const price = (id: ChatTier) => {
-    const one = chatTierCredits(id, false, plan ?? 0), withFile = chatTierCredits(id, true, plan ?? 0);
-    return fr ? `${one} crédit${one > 1 ? "s" : ""} · ${withFile} avec fichier` : `${one} credit${one > 1 ? "s" : ""} · ${withFile} with a file`;
-  };
   return (
     <div className="flex min-w-0 items-center gap-1.5">
       <Popover open={modeOpen} onOpenChange={setModeOpen}>
@@ -211,7 +207,7 @@ function ChoiceControls({ choice }: { choice: ReturnType<typeof useWorkspaceChoi
             aria-label={fr ? "Choisir le mode de réponse" : "Choose the answer mode"}
             className="h-8 min-w-0 gap-1.5 rounded-full px-2.5 text-[13px] font-normal text-muted-foreground hover:bg-transparent hover:text-foreground"
           >
-            <FontAwesomeIcon icon={faRobot} fixedWidth aria-hidden className="size-3.5" />
+            <FontAwesomeIcon icon={faWandMagicSparkles} fixedWidth aria-hidden className="size-3.5" />
             <span className="truncate">{tier === "smart" ? smartChoice.fr : fr ? chatTiers[tier].fr : chatTiers[tier].en}</span>
             <ChevronDown className="size-3.5 shrink-0" />
           </Button>
@@ -222,7 +218,7 @@ function ChoiceControls({ choice }: { choice: ReturnType<typeof useWorkspaceChoi
             const locked = id === "expert" && plan !== null && plan < EXPERT_MIN_TIER;
             const name = smart ? smartChoice.fr : fr ? chatTiers[id].fr : chatTiers[id].en;
             const hint = smart ? (fr ? smartChoice.hintFr : smartChoice.hintEn) : fr ? chatTiers[id].hintFr : chatTiers[id].hintEn;
-            const note = smart ? (fr ? "Prix du mode choisi" : "Price of the chosen mode") : locked ? (fr ? "À partir du forfait Creator" : "From the Creator plan") : price(id);
+            const note = locked ? (fr ? "À partir du forfait Creator" : "From the Creator plan") : "";
             return (
               <Button
                 key={id}
@@ -235,7 +231,7 @@ function ChoiceControls({ choice }: { choice: ReturnType<typeof useWorkspaceChoi
                 <span className="min-w-0 flex-1 whitespace-normal">
                   <strong className="block text-xs">{name}</strong>
                   <small className="block text-[10px] font-normal text-muted-foreground">{hint}</small>
-                  <small className={`block text-[10px] font-normal ${locked ? "text-destructive" : "text-muted-foreground/80"}`}>{note}</small>
+                  {note && <small className="block text-[10px] font-normal text-destructive">{note}</small>}
                 </span>
                 {tier === id && <Check className="size-3.5 shrink-0 text-chat-glow" />}
               </Button>

@@ -5,13 +5,13 @@ export type ChatTier = "eclair" | "equilibre" | "expert";
 export const chatTierIds: readonly ChatTier[] = ["eclair", "equilibre", "expert"];
 /** What the composer sends: one of the three modes, or TechNova Smart, which picks the mode for each message. */
 export type ChatChoice = ChatTier | "smart";
-export const defaultChatChoice: ChatChoice = "smart";
+export const defaultChatChoice: ChatChoice = "eclair";
 export const smartChoice = { fr: "TechNova Smart", en: "TechNova Smart", hintFr: "Choisit le bon mode pour chaque demande", hintEn: "Picks the right mode for each request" };
 
 export const chatTiers: Record<ChatTier, { emoji: string; fr: string; en: string; hintFr: string; hintEn: string }> = {
-  eclair: { emoji: "⚡", fr: "Éclair", en: "Flash", hintFr: "Question rapide, idée, reformulation", hintEn: "Quick question, idea, rewording" },
-  equilibre: { emoji: "⚖️", fr: "Équilibré", en: "Balanced", hintFr: "Coder une page, analyser un PDF, corriger un bug", hintEn: "Code a page, analyse a PDF, fix a bug" },
-  expert: { emoji: "🧠", fr: "Expert", en: "Expert", hintFr: "App complète avec connexion, paiement MoMo, admin", hintEn: "Full app with sign-in, MoMo payment, admin" },
+  eclair: { emoji: "⚡", fr: "Éclair", en: "Flash", hintFr: "Réponse rapide", hintEn: "Quick answer" },
+  equilibre: { emoji: "⚖️", fr: "Équilibré", en: "Balanced", hintFr: "Réponses polyvalentes", hintEn: "Versatile answers" },
+  expert: { emoji: "🧠", fr: "Expert", en: "Expert", hintFr: "Réflexion plus profonde pour de meilleures réponses", hintEn: "Deeper thinking for better answers" },
 };
 
 /** Starter and Essential use Éclair and Équilibré; Expert opens from Creator, and Pro gets a stronger engine behind the same button. */
