@@ -723,9 +723,9 @@ export function ChatListPage() {
   return (
     <div className="chat-workspace chat-home relative -mx-4 -mt-6 min-h-[calc(100svh-92px)] lg:min-h-[calc(100svh-76px)] overflow-hidden sm:-mx-6 lg:-mx-7">
       <div className="relative mx-auto flex min-h-[calc(100svh-92px)] lg:min-h-[calc(100svh-76px)] max-w-[1330px] flex-col px-4 pb-8 sm:px-8 lg:px-12">
-        <section className="flex flex-1 flex-col items-center justify-center gap-6 py-12 sm:gap-7 sm:py-16">
+        <section className="flex flex-1 flex-col items-center justify-center gap-5 py-10 sm:gap-6 sm:py-12">
           <div className="text-center">
-            <h1 className="chat-greeting max-w-4xl text-balance text-3xl font-medium leading-tight tracking-tight sm:text-5xl">
+            <h1 className="chat-greeting text-balance text-2xl font-medium leading-tight tracking-tight sm:whitespace-nowrap sm:text-[32px]">
               <ChatGreeting choice={choice} />
             </h1>
           </div>
@@ -740,39 +740,35 @@ export function ChatListPage() {
             <div className="mt-4"><StarterIdeas choice={choice} inputRef={composerRef} /></div>
           </div>
         </section>
-        <section className="chat-library relative w-full rounded-2xl border border-border/70 bg-card/85 p-4 shadow-soft backdrop-blur-xl sm:p-6">
-          <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3">
-            <div className="min-w-0">
-              <p className="text-[10px] font-medium uppercase tracking-[0.12em] text-muted-foreground">
-                {choice.copy.libraryLabel}
-              </p>
-              <h2 className="mt-1 font-display text-base font-semibold">{choice.copy.library}</h2>
+        <section className="chat-library relative mx-auto w-full max-w-[920px] rounded-2xl border border-border/70 bg-card/85 p-3.5 shadow-soft backdrop-blur-xl sm:px-4">
+          <div className="flex items-center gap-3">
+            <h2 className="min-w-0 flex-1 truncate text-[13px] font-medium">{choice.copy.library}</h2>
+            <div className="relative hidden w-44 sm:block">
+              <Search className="absolute left-2.5 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground" />
+              <Input
+                value={query}
+                onChange={(event) => setQuery(event.target.value)}
+                placeholder={t.search}
+                aria-label={t.search}
+                className="h-7 rounded-full border-transparent bg-background/60 pl-8 text-[11.5px] shadow-none"
+              />
             </div>
-            <span className="text-xs tabular-nums text-muted-foreground">
+            <span className="shrink-0 text-[11px] tabular-nums text-muted-foreground">
               {threads.length} {choice.copy.saved}
             </span>
           </div>
-          <div className="relative mt-4 max-w-sm">
-            <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-            <Input
-              value={query}
-              onChange={(event) => setQuery(event.target.value)}
-              placeholder={t.search}
-              aria-label={t.search}
-              className="h-9 rounded-full bg-background/80 pl-9 text-xs"
-            />
-          </div>
-          <div className="mt-4 grid max-h-56 gap-2 overflow-y-auto sm:grid-cols-2 xl:grid-cols-3">
-            {filtered.map((thread) => (
+          {/* The three latest (more while searching); the full history stays in the sidebar. */}
+          <div className="mt-2.5 grid gap-2 sm:grid-cols-3">
+            {filtered.slice(0, query ? 6 : 3).map((thread) => (
               <Link
                 key={thread.id}
                 to="/dashboard/chat/$threadId"
                 params={{ threadId: thread.id }}
-                className="group flex min-w-0 items-center gap-2.5 rounded-xl border border-border bg-background/75 px-3.5 py-2.5 transition-colors hover:border-foreground/20"
+                className="group flex min-w-0 items-center gap-2 rounded-xl border border-border bg-background/60 px-3 py-2 transition-colors hover:border-foreground/20"
               >
                 <MessageCircle className="size-3.5 shrink-0 text-muted-foreground" strokeWidth={1.6} />
                 <span className="min-w-0 flex-1">
-                  <strong className="block truncate text-xs font-semibold">{thread.title}</strong>
+                  <strong className="block truncate text-[12px] font-medium">{thread.title}</strong>
                   <small className="text-[10px] text-muted-foreground">
                     {new Date(thread.updated_at).toLocaleDateString(choice.copy.locale)}
                   </small>
@@ -781,7 +777,7 @@ export function ChatListPage() {
               </Link>
             ))}
             {filtered.length === 0 && (
-              <p className="py-5 text-xs text-muted-foreground">
+              <p className="py-2 text-[11.5px] text-muted-foreground sm:col-span-3">
                 {query ? t.noResults : t.noChats}
               </p>
             )}

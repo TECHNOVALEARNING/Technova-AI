@@ -976,19 +976,23 @@ body:has(.dashboard-shell) :is([data-radix-popper-content-wrapper] > [data-state
 .starter-row::-webkit-scrollbar { display: none; }
 @media (min-width: 900px) { .starter-row { -webkit-mask-image: none; mask-image: none; } }
 
-/* Welcome orb: a still glass ball with a thin iridescent rim; inside, three colour masses drift and swirl
-   (Siri-like), under a glossy highlight. */
-.chat-orb { position: relative; display: grid; place-items: center; width: 84px; height: 84px; border-radius: 9999px; padding: 3px;
-  background: conic-gradient(from 210deg, oklch(.75 .14 300 / .9), oklch(.78 .12 200 / .9), oklch(.8 .14 150 / .8), oklch(.82 .12 60 / .8), oklch(.75 .14 300 / .9));
-  box-shadow: 0 10px 40px -10px oklch(.55 .2 300 / .55), 0 0 0 6px color-mix(in oklab, var(--foreground) 5%, transparent); }
-.chat-orb-ball { position: relative; width: 100%; height: 100%; overflow: hidden; border-radius: inherit; isolation: isolate;
-  background: radial-gradient(circle at 50% 60%, oklch(.32 .12 280), oklch(.14 .06 275) 70%); }
-.chat-orb-ball i { position: absolute; border-radius: 9999px; filter: blur(9px); mix-blend-mode: screen; }
+/* Welcome orb: a small 3D glass sphere, no ring or border. Inside, three colour masses drift and swirl
+   (Siri-like); a specular highlight, a darker lower rim and a soft cast shadow give the volume. */
+.chat-orb { position: relative; width: 52px; height: 52px; border-radius: 9999px;
+  filter: drop-shadow(0 10px 14px oklch(.35 .2 290 / .45)); }
+.chat-orb::after { content: ""; position: absolute; left: 18%; right: 18%; bottom: -12px; height: 8px; border-radius: 9999px;
+  background: oklch(0 0 0 / .35); filter: blur(5px); }
+.chat-orb-ball { position: relative; display: block; width: 100%; height: 100%; overflow: hidden; border-radius: inherit; isolation: isolate;
+  background: radial-gradient(circle at 40% 35%, oklch(.42 .14 285), oklch(.16 .07 275) 75%); }
+.chat-orb-ball i { position: absolute; border-radius: 9999px; filter: blur(7px); mix-blend-mode: screen; }
 .chat-orb-ball i:nth-child(1) { width: 75%; height: 75%; left: -10%; top: -5%; background: oklch(.68 .25 330); animation: orb-a 7s ease-in-out infinite; }
 .chat-orb-ball i:nth-child(2) { width: 70%; height: 70%; right: -15%; bottom: -10%; background: oklch(.62 .2 265); animation: orb-b 9s ease-in-out infinite; }
 .chat-orb-ball i:nth-child(3) { width: 55%; height: 55%; left: 22%; top: 30%; background: oklch(.75 .15 210); animation: orb-c 6s ease-in-out infinite; }
 .chat-orb-ball b { position: absolute; inset: 0; border-radius: inherit; z-index: 1;
-  background: radial-gradient(60% 40% at 35% 18%, oklch(1 0 0 / .55), transparent 70%), radial-gradient(circle at 50% 50%, transparent 58%, oklch(0 0 0 / .35)); }
+  background:
+    radial-gradient(28% 20% at 34% 22%, oklch(1 0 0 / .85), transparent 75%),
+    radial-gradient(60% 45% at 38% 28%, oklch(1 0 0 / .22), transparent 70%),
+    radial-gradient(circle at 50% 40%, transparent 52%, oklch(.08 .03 280 / .55) 100%); }
 @keyframes orb-a { 0%, 100% { transform: translate(0, 0) scale(1); } 33% { transform: translate(28%, 22%) scale(1.15); } 66% { transform: translate(8%, 40%) scale(.9); } }
 @keyframes orb-b { 0%, 100% { transform: translate(0, 0) scale(1); } 40% { transform: translate(-35%, -25%) scale(1.2); } 75% { transform: translate(-10%, -45%) scale(.95); } }
 @keyframes orb-c { 0%, 100% { transform: translate(0, 0) scale(1); } 30% { transform: translate(-30%, 20%) scale(.8); } 60% { transform: translate(25%, -25%) scale(1.25); } }
