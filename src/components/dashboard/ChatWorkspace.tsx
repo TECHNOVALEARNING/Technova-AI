@@ -59,7 +59,9 @@ import { chatWorkspaceText } from "@/lib/i18n";
 import { ACCEPT, INDEXED_FILE_TYPE, MAX_FILES, budgetFiles, indexedFileId, indexedFileUrl, isDirectAttachment, kindOf, mediaKey, pendingMedia, persistableParts, toFilePart, type ChatFilePart } from "@/lib/chat-attachments";
 import { ALL_ACCEPT, MAX_CHAT_DOCUMENTS, checkFile, formatsLabel } from "@/lib/file-types";
 import { fileErrorText, uploadAndIndex, type UploadPhase } from "@/lib/file-upload";
-import { chatTierCredits, chatTierIds, chatTiers, defaultChatTier, EXPERT_MIN_TIER, isChatTier, type ChatTier } from "@/lib/chat-modes";
+import { chatTierCredits, chatTierIds, chatTiers, defaultChatChoice, EXPERT_MIN_TIER, isChatChoice, smartChoice, type ChatChoice, type ChatTier } from "@/lib/chat-modes";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faBolt, faBrain, faRobot, faScaleBalanced, faWandMagicSparkles } from "@fortawesome/free-solid-svg-icons";
 import { usePlanTier } from "@/lib/plan-client";
 import { cn } from "@/lib/utils";
 import { Shimmer } from "@/components/ai-elements/shimmer";
@@ -106,7 +108,7 @@ function useWorkspaceChoice() {
   const copy = chatWorkspaceText[lang];
   const [mode, setMode] = useState<Mode>("chat");
   // One of the three modes (Éclair, Équilibré, Expert); the engine behind it is chosen on the server.
-  const [tier, setTier] = useState<ChatTier>(defaultChatTier);
+  const [tier, setTier] = useState<ChatChoice>(defaultChatChoice);
   // Deep Research stays on for the browser session until switched off (it costs more than a reply).
   const [research, setResearch] = useState(false);
   const [kbIds, setKbIds] = useState<string[]>([]);
@@ -117,14 +119,14 @@ function useWorkspaceChoice() {
       const storedMode = localStorage.getItem("technova-workspace-mode");
       const storedTier = localStorage.getItem("technova-workspace-tier");
       if (storedMode === "chat" || storedMode === "create") setMode(storedMode);
-      if (isChatTier(storedTier)) setTier(storedTier);
+      if (isChatChoice(storedTier)) setTier(storedTier);
     } catch { /* storage blocked */ }
   }, []);
   function chooseMode(value: Mode) {
     setMode(value);
     savePref("technova-workspace-mode", value);
   }
-  function chooseTier(value: ChatTier) {
+  function chooseTier(value: ChatChoice) {
     setTier(value);
     savePref("technova-workspace-tier", value);
   }
@@ -142,8 +144,11 @@ function useWorkspaceChoice() {
   return { mode, tier, research: mode === "chat" && research, toggleResearch, kbIds, chooseKnowledgeBases, chooseMode, chooseTier, copy };
 }
 
+const tierIcons = { eclair: faBolt, equilibre: faScaleBalanced, expert: faBrain, smart: faWandMagicSparkles } as const;
+
 function ChoiceControls({ choice }: { choice: ReturnType<typeof useWorkspaceChoice> }) {
   const [modeOpen, setModeOpen] = useState(false);
+  const [tierOpen, setTierOpen] = useState(false);
   const { mode, tier, chooseMode, chooseTier, copy } = choice;
   const fr = copy.locale.startsWith("fr");
   const plan = usePlanTier();
@@ -197,30 +202,47 @@ function ChoiceControls({ choice }: { choice: ReturnType<typeof useWorkspaceChoi
           ))}
         </PopoverContent>
       </Popover>
-      {/* The three modes: the chosen one shows its name, the others only their symbol. */}
-      <div role="radiogroup" aria-label={fr ? "Mode de réponse" : "Answer mode"} className="flex items-center gap-0.5 rounded-full bg-muted/60 p-0.5">
-        {chatTierIds.map((id) => {
-          const t = chatTiers[id];
-          const active = tier === id;
-          const locked = id === "expert" && plan !== null && plan < EXPERT_MIN_TIER;
-          const label = fr ? t.fr : t.en;
-          return (
-            <button
-              key={id}
-              type="button"
-              role="radio"
-              aria-checked={active}
-              aria-label={label}
-              title={`${label} — ${fr ? t.hintFr : t.hintEn}\n${locked ? (fr ? "À partir du forfait Creator" : "From the Creator plan") : price(id)}`}
-              onClick={() => chooseTier(id)}
-              className={`flex h-7 items-center gap-1 rounded-full px-2 text-[12px] transition-colors ${active ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
-            >
-              <span aria-hidden="true">{t.emoji}</span>
-              {active && <span className="hidden sm:inline">{label}</span>}
-            </button>
-          );
-        })}
-      </div>
+      <Popover open={tierOpen} onOpenChange={setTierOpen}>
+        <PopoverTrigger asChild>
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            aria-label={fr ? "Choisir le mode de réponse" : "Choose the answer mode"}
+            className="h-8 min-w-0 gap-1.5 rounded-full px-2.5 text-[13px] font-normal text-muted-foreground hover:bg-transparent hover:text-foreground"
+          >
+            <FontAwesomeIcon icon={faRobot} fixedWidth aria-hidden className="size-3.5" />
+            <span className="truncate">{tier === "smart" ? smartChoice.fr : fr ? chatTiers[tier].fr : chatTiers[tier].en}</span>
+            <ChevronDown className="size-3.5 shrink-0" />
+          </Button>
+        </PopoverTrigger>
+        <PopoverContent align="end" className="w-72 rounded-2xl border-border bg-popover p-1.5 shadow-soft">
+          {[...chatTierIds, "smart" as const].map((id) => {
+            const smart = id === "smart";
+            const locked = id === "expert" && plan !== null && plan < EXPERT_MIN_TIER;
+            const name = smart ? smartChoice.fr : fr ? chatTiers[id].fr : chatTiers[id].en;
+            const hint = smart ? (fr ? smartChoice.hintFr : smartChoice.hintEn) : fr ? chatTiers[id].hintFr : chatTiers[id].hintEn;
+            const note = smart ? (fr ? "Prix du mode choisi" : "Price of the chosen mode") : locked ? (fr ? "À partir du forfait Creator" : "From the Creator plan") : price(id);
+            return (
+              <Button
+                key={id}
+                type="button"
+                variant="ghost"
+                onClick={() => { chooseTier(id); setTierOpen(false); }}
+                className={`h-auto w-full justify-start gap-3 rounded-xl px-3 py-2.5 text-left ${smart ? "mt-1 border-t border-border/60 pt-3" : ""}`}
+              >
+                <FontAwesomeIcon icon={tierIcons[id]} fixedWidth aria-hidden className={`size-4 shrink-0 ${smart ? "text-chat-glow" : "text-muted-foreground"}`} />
+                <span className="min-w-0 flex-1 whitespace-normal">
+                  <strong className="block text-xs">{name}</strong>
+                  <small className="block text-[10px] font-normal text-muted-foreground">{hint}</small>
+                  <small className={`block text-[10px] font-normal ${locked ? "text-destructive" : "text-muted-foreground/80"}`}>{note}</small>
+                </span>
+                {tier === id && <Check className="size-3.5 shrink-0 text-chat-glow" />}
+              </Button>
+            );
+          })}
+        </PopoverContent>
+      </Popover>
     </div>
   );
 }

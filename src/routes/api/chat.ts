@@ -2,11 +2,11 @@ import { createFileRoute } from "@tanstack/react-router";
 import { z } from "zod";
 import { openRouterModelIds } from "@/lib/chat-models";
 import { creditCost, estimateTokens } from "@/lib/model-pricing";
-import { chatTierCredits, chatTiers, EXPERT_MIN_TIER, PRO_TIER, type ChatTier } from "@/lib/chat-modes";
+import { chatTierCredits, chatTiers, EXPERT_MIN_TIER, PRO_TIER, smartTier, type ChatTier } from "@/lib/chat-modes";
 
 const bodySchema = z.object({
   // The chat composer sends one of the three modes; custom agents keep their own model.
-  tier: z.enum(["eclair", "equilibre", "expert"]).optional(),
+  tier: z.enum(["eclair", "equilibre", "expert", "smart"]).optional(),
   model: z.string().optional(),
   mode: z.enum(["chat", "create"]),
   lang: z.enum(["fr", "en"]).optional(),
@@ -94,8 +94,8 @@ function smartPick(text: string): string {
   if (has(["sql", "supabase", "base de données", "database", "api", "backend", "fonction", "function", "bug", "erreur", "error", "code", "react", "python", "php", "javascript", "typescript", "script"])) return "DeepSeek V3";
   return "GPT-4o Mini";
 }
-const visionModels = new Set(["GPT-4o", "GPT-4o Mini", "Claude Sonnet 5", "Claude Opus 5", "Claude Haiku 4.5", "Gemini 2.5 Flash", "Gemini 2.5 Pro", "Mistral Large", "Gemma 3 12B"]);
-const mediaModels = new Set(["Gemini 2.5 Flash", "Gemini 2.5 Pro"]);
+const visionModels = new Set(["GPT-4o", "GPT-4o Mini", "Claude Sonnet 5", "Claude Opus 5", "Gemini 3.1 Flash Lite", "Gemini 3.5 Flash Lite", "Claude Haiku 4.5", "Gemini 2.5 Flash", "Gemini 2.5 Pro", "Mistral Large", "Gemma 3 12B"]);
+const mediaModels = new Set(["Gemini 2.5 Flash", "Gemini 2.5 Pro", "Gemini 3.1 Flash Lite", "Gemini 3.5 Flash Lite"]);
 const reasoningModels = new Set(["DeepSeek R1"]);
 const audioFormats: Record<string, string> = { "audio/mpeg": "mp3", "audio/mp3": "mp3", "audio/wav": "wav", "audio/x-wav": "wav", "audio/webm": "webm", "audio/ogg": "ogg", "audio/mp4": "m4a", "audio/x-m4a": "m4a", "audio/aac": "aac", "audio/flac": "flac" };
 
@@ -145,9 +145,10 @@ export const Route = createFileRoute("/api/chat")({
           agent = tier < 3 ? { ...a, max_cost: DEFAULT_AGENT_BUDGET } : a;
         }
         // Mode chosen in the composer (Éclair by default when an old client sends a model name).
-        const chatTier: ChatTier = parsed.data.tier ?? "eclair";
-        if (!agent && chatTier === "expert" && tier < EXPERT_MIN_TIER) return planResponse(userId, "expert_mode");
         const hasFile = allFiles.length > 0 || (parsed.data.fileIds?.length ?? 0) > 0;
+        const requestedTier = parsed.data.tier ?? "eclair";
+        const chatTier: ChatTier = requestedTier === "smart" ? smartTier(lastUser, hasFile, tier) : requestedTier;
+        if (!agent && chatTier === "expert" && tier < EXPERT_MIN_TIER) return planResponse(userId, "expert_mode");
         let model: string;
         let modelId: string;
         let engine: Engine | null = null;
@@ -162,7 +163,7 @@ export const Route = createFileRoute("/api/chat")({
           modelId = id;
         } else {
           engine = engineFor(chatTier, tier, needsVision, needsMedia);
-          model = chatTiers[chatTier].fr; // what usage pages show: the mode, never the engine
+          model = (requestedTier === "smart" ? "Smart · " : "") + chatTiers[chatTier].fr; // usage pages show the mode, never the engine
           modelId = engine.id;
         }
         // Fixed price of the mode for this message; a very long exchange costs its real price when that is higher.

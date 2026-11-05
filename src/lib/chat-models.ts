@@ -4,6 +4,9 @@ export const openRouterModelIds: Record<string, string> = {
   "GPT-4o Mini": "openai/gpt-4o-mini",
   "Claude Sonnet 5": "anthropic/claude-sonnet-5",
   "Claude Opus 5": "anthropic/claude-opus-5",
+  "Gemini 3.1 Flash Lite": "google/gemini-3.1-flash-lite",
+  "Gemini 3.5 Flash Lite": "google/gemini-3.5-flash-lite",
+  "Qwen3 235B": "qwen/qwen3-235b-a22b-2507",
   "Claude Haiku 4.5": "anthropic/claude-haiku-4.5",
   "DeepSeek R1": "deepseek/deepseek-r1-0528", // deepseek/deepseek-r1 was retired by OpenRouter
   "DeepSeek V3": "deepseek/deepseek-chat",
