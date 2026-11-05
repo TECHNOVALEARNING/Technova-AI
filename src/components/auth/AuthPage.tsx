@@ -153,6 +153,7 @@ export function AuthPage({ mode }: { mode: Mode }) {
           </form>
           <div className="mt-7 border-t border-border pt-6 text-center text-sm text-muted-foreground">{isSignup ? t.hasAccount : isLogin ? t.noAccount : null} <Link to={isSignup || !isLogin ? "/connexion" : "/inscription"} className="font-bold text-foreground underline underline-offset-4">{isSignup || !isLogin ? t.switchLogin : t.switchSignup}</Link></div>
           {isSignup && <p className="mt-4 text-center text-xs text-muted-foreground">{t.note}</p>}
+          {isSignup && <p className="mt-2 text-center text-[11px] leading-relaxed text-muted-foreground">{lang === "fr" ? <>En créant un compte, vous acceptez nos <a href="/conditions-utilisation" target="_blank" rel="noreferrer" className="font-medium text-foreground underline underline-offset-2">conditions d'utilisation</a> et notre <a href="/confidentialite" target="_blank" rel="noreferrer" className="font-medium text-foreground underline underline-offset-2">politique de confidentialité</a>.</> : <>By creating an account, you accept our <a href="/conditions-utilisation" target="_blank" rel="noreferrer" className="font-medium text-foreground underline underline-offset-2">terms of use</a> and our <a href="/confidentialite" target="_blank" rel="noreferrer" className="font-medium text-foreground underline underline-offset-2">privacy policy</a>.</>}</p>}
         </div>
       </section>
     </div>
