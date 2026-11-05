@@ -6,7 +6,7 @@ import { mediaModels, mediaReserve, type MediaKind } from "@/lib/media-models";
 
 export type TextCap = "reasoning" | "coding" | "vision" | "fast" | "long";
 export type ModeLabel = { fr: string; en: string; es: string; pt: string };
-export type PublicTextModel = { kind: "text"; name: string; provider: string; context: string; caps: TextCap[]; input: number; output: number; perMessage: number; mode?: ModeLabel };
+export type PublicTextModel = { kind: "text"; name: string; provider: string; context: string; caps: TextCap[]; input: number; output: number; perMessage: number; mode?: ModeLabel; soon?: boolean };
 export type PublicMediaModel = { kind: MediaKind; id: string; name: string; provider: string; credits: number; seconds?: number; perSecond?: number; cheap: boolean };
 export type PublicModel = PublicTextModel | PublicMediaModel;
 
@@ -55,7 +55,7 @@ export const textModels: PublicTextModel[] = [...Object.keys(openRouterModelIds)
   if (!price) return [];
   const spec = textSpecs[name] ?? { context: "—", caps: [] };
   const fixed = modePrices[name];
-  return [{ kind: "text" as const, name, provider: price.provider, context: spec.context, caps: spec.caps, input: price.input, output: price.output, perMessage: fixed ? fixed.credits : creditCost(name, TYPICAL_IN, TYPICAL_OUT), ...(fixed ? { mode: fixed.mode } : {}) }];
+  return [{ kind: "text" as const, name, provider: price.provider, context: spec.context, caps: spec.caps, input: price.input, output: price.output, perMessage: fixed ? fixed.credits : creditCost(name, TYPICAL_IN, TYPICAL_OUT), ...(fixed ? { mode: fixed.mode } : {}), ...(showcaseOnly.includes(name) ? { soon: true } : {}) }];
 });
 
 export const mediaCatalog: PublicMediaModel[] = mediaModels.map((m) => {
