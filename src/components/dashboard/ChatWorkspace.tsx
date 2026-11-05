@@ -713,8 +713,8 @@ export function ChatListPage() {
     void navigate({ to: "/dashboard/chat/$threadId", params: { threadId: data.id } });
   }
   return (
-    <div className="chat-workspace chat-home relative -mx-4 -mt-6 min-h-[calc(100svh-92px)] lg:min-h-[calc(100svh-44px)] overflow-hidden sm:-mx-6 lg:-mx-7">
-      <div className="relative mx-auto flex min-h-[calc(100svh-92px)] lg:min-h-[calc(100svh-44px)] max-w-[1330px] flex-col px-4 pb-8 sm:px-8 lg:px-12">
+    <div className="chat-workspace chat-home relative -mx-4 -mt-6 min-h-[calc(100svh-92px)] lg:min-h-[calc(100svh-76px)] overflow-hidden sm:-mx-6 lg:-mx-7">
+      <div className="relative mx-auto flex min-h-[calc(100svh-92px)] lg:min-h-[calc(100svh-76px)] max-w-[1330px] flex-col px-4 pb-8 sm:px-8 lg:px-12">
         <section className="flex flex-1 flex-col items-center justify-center gap-7 py-12 sm:gap-8 sm:py-16">
           <div className="text-center">
             <h1 className="max-w-2xl font-display text-3xl font-semibold leading-tight sm:text-4xl">
@@ -1345,7 +1345,7 @@ export function ThreadPage({ threadId }: { threadId: string }) {
     requestAnimationFrame(() => inputRef.current?.focus());
   }
   return (
-    <div className="relative -mx-4 -mt-6 flex h-[calc(100svh-80px)] min-h-[480px] overflow-hidden sm:-mx-6 lg:-mx-7 lg:h-[calc(100svh-32px)]">
+    <div className="relative -mx-4 -mt-6 flex h-[calc(100svh-80px)] min-h-[480px] overflow-hidden sm:-mx-6 lg:-mx-7 lg:h-[calc(100svh-64px)]">
     <div className={cn("chat-thread relative flex min-w-0 flex-1 flex-col overflow-hidden", artifactIsOpen && "lg:min-w-[320px] lg:max-w-[560px] lg:basis-[480px] max-lg:hidden")}>
       <div className="relative z-10 grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3 px-4 py-2.5 sm:px-5">
         <div className="min-w-0">

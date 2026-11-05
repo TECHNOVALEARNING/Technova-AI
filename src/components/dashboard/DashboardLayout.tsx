@@ -36,7 +36,7 @@ const links = [
 
 export function DashboardLayout({ children }: { children: ReactNode }) {
   const [lang, setLangState] = useState<Lang>("fr");
-  const [look, setLookState] = useState<DashboardLook>("light");
+  const [look, setLookState] = useState<DashboardLook>(defaultLook.light);
   const theme = lookMode(look);
   const [themeOpen, setThemeOpen] = useState(false);
   const [threads, setThreads] = useState<Thread[]>([]);
@@ -120,9 +120,9 @@ export function DashboardLayout({ children }: { children: ReactNode }) {
   const marqueeItems = ["technovalearning.com", "beninbeyond.com", "dukaio.com"];
 
   return <DashboardContext.Provider value={{ lang, t, theme, setLang, setTheme, setArtifactWorkspaceOpen: setWorkspaceOpen, threads, reload, createThread, name, email, error }}>
-    <div className={`dashboard-shell look-${look} flex min-h-svh overflow-x-clip bg-background text-foreground`}>
+    <div className={`dashboard-shell look-${look} flex min-h-svh overflow-x-clip bg-background text-foreground lg:gap-3 lg:p-4`}>
       {mobileOpen && <div className="fixed inset-0 z-40 bg-ink/50 lg:hidden" onClick={() => setMobileOpen(false)} />}
-      <aside className={`dashboard-sidebar sidebar-glass fixed inset-y-0 left-0 z-50 flex w-[224px] flex-col border-r border-border bg-card transition-[width,transform] duration-200 lg:sticky ${mini ? "lg:w-[60px]" : ""} lg:top-0 lg:h-svh ${mobileOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"}`}>
+      <aside className={`dashboard-sidebar sidebar-glass fixed inset-y-0 left-0 z-50 flex w-[224px] flex-col border-r border-border bg-card transition-[width,transform] duration-200 lg:sticky lg:overflow-hidden lg:rounded-[22px] lg:border ${mini ? "lg:w-[64px]" : "lg:w-60"} lg:top-4 lg:h-[calc(100svh-2rem)] ${mobileOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"}`}>
         <div className={`flex h-14 shrink-0 items-center justify-between ${mini ? "lg:justify-center lg:px-0" : ""} px-5`}>
           <Link to="/dashboard" className={`font-display text-[15px] font-bold tracking-[0.14em] text-foreground ${mini ? "lg:hidden" : ""}`}>TECHNOVA</Link>
           <Button variant="ghost" size="icon-sm" className="hidden rounded-lg text-muted-foreground lg:inline-flex" onClick={toggleCollapsed} aria-label={effectiveCollapsed ? (lang === "fr" ? "Déplier le menu" : "Expand menu") : (lang === "fr" ? "Replier le menu" : "Collapse menu")} title={effectiveCollapsed ? (lang === "fr" ? "Déplier le menu" : "Expand menu") : (lang === "fr" ? "Replier le menu" : "Collapse menu")}>{effectiveCollapsed ? <PanelLeftOpen className="size-4" /> : <PanelLeftClose className="size-4" />}</Button>
@@ -168,11 +168,11 @@ export function DashboardLayout({ children }: { children: ReactNode }) {
       <div className="dashboard-content relative isolate min-w-0 flex-1">
         {!isThread && <div className={`dashboard-wallpaper pointer-events-none fixed inset-0 z-0 overflow-hidden`} aria-hidden="true"><img src={media.cloudBackground} alt="" className="h-full w-full scale-105 object-cover" /><span className="wallpaper-glow wallpaper-glow-1" /><span className="wallpaper-glow wallpaper-glow-2" /><span className="wallpaper-glow wallpaper-glow-3" /></div>}
         <header className="sticky top-0 z-30 flex h-12 items-center justify-between border-b border-border bg-card/95 px-3 backdrop-blur-xl lg:hidden"><Button variant="ghost" size="icon-sm" aria-label={t.menu} onClick={() => setMobileOpen(true)}><Menu className="size-5" /></Button><Link to="/dashboard" className="font-display text-[14px] font-bold">TechNova</Link><span className={`plan-ring plan-${planKey ?? "free"}`}><span className="grid size-7 place-items-center rounded-full bg-card text-[11px] font-bold text-foreground">{initials}</span></span></header>
-        {!isThread && <div className="relative z-10 px-4 pt-3 sm:px-6 lg:px-7"><div className="dashboard-marquee mx-auto flex h-8 max-w-[1640px] items-center overflow-hidden rounded-full border border-border bg-card">
+        {!isThread && <div className="relative z-10 px-4 pt-3 sm:px-6 lg:px-0 lg:pt-0"><div className="dashboard-marquee mx-auto flex h-8 max-w-[1640px] lg:h-9 items-center overflow-hidden rounded-full border border-border bg-card">
           <span className="flex shrink-0 items-center gap-1.5 border-r border-border px-3.5 text-[9.5px] font-medium uppercase tracking-[0.16em] text-muted-foreground"><span className="size-1.5 rounded-full bg-foreground/60" />{lang === "fr" ? "Sites à visiter" : "Sites to visit"}</span>
           <div className="min-w-0 flex-1 overflow-hidden [mask-image:linear-gradient(90deg,transparent,black_6%,black_94%,transparent)]"><div className="dashboard-marquee-track flex w-max items-center gap-9 whitespace-nowrap px-6 text-[11px] text-muted-foreground">{[0, 1, 2, 3].map((copy) => <span key={copy} className="contents" aria-hidden={copy > 0 ? true : undefined}>{marqueeItems.map((site) => <a key={site} href={`https://${site}/`} target="_blank" rel="noopener noreferrer" tabIndex={copy > 0 ? -1 : undefined} className="inline-flex items-center gap-1.5 transition-colors hover:text-foreground"><Globe2 className="size-3.5" strokeWidth={1.6} />{site}</a>)}</span>)}</div></div>
         </div></div>}
-        <main className="relative z-10 mx-auto min-h-[calc(100svh-92px)] lg:min-h-[calc(100svh-44px)] w-full max-w-[1640px] px-4 pb-8 pt-6 sm:px-6 lg:px-7">{error && <div role="alert" className="mb-5 flex items-center justify-between border-l-2 border-destructive bg-secondary px-4 py-3 text-sm"><span>{error}</span><Button variant="ghost" size="sm" onClick={() => void reload()}>{t.retry}</Button></div>}<div key={pathname} className="dashboard-page-enter">{children}</div></main>
+        <main className="relative z-10 mx-auto min-h-[calc(100svh-92px)] lg:min-h-[calc(100svh-76px)] w-full max-w-[1640px] px-4 pb-8 pt-6 sm:px-6 lg:px-3 lg:pb-4">{error && <div role="alert" className="mb-5 flex items-center justify-between border-l-2 border-destructive bg-secondary px-4 py-3 text-sm"><span>{error}</span><Button variant="ghost" size="sm" onClick={() => void reload()}>{t.retry}</Button></div>}<div key={pathname} className="dashboard-page-enter">{children}</div></main>
       </div>
     </div>
   </DashboardContext.Provider>;

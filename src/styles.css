@@ -794,10 +794,10 @@ html, body, * { scrollbar-width: none; }
 .wallpaper-glow-3 { right: 18%; top: 8%; width: 35vw; height: 45vh; background: color-mix(in oklab, var(--foreground) 20%, transparent); filter: blur(120px); }
 @keyframes look-glow { 0%, 100% { opacity: .35; transform: none; } 33% { opacity: .75; transform: translate(-18%, 12%) scale(1.25); } 66% { opacity: .5; transform: translate(12%, -8%) scale(.9); } }
 @keyframes look-drift { 0%, 100% { transform: scale(1.15); } 25% { transform: scale(1.3) translate(-5%, 3%) rotate(1deg); } 50% { transform: scale(1.22) translate(3%, -2%); } 75% { transform: scale(1.32) translate(-3%, -3%) rotate(-1deg); } }
-:is(.look-brume, .look-soie, .look-ardoise, .look-amethyste, .look-cobalt, .look-reverbere, .look-apple, .look-pastel, .look-sable) .wallpaper-glow { display: block; }
-.dashboard-shell:is(.look-brume, .look-soie, .look-ardoise, .look-amethyste, .look-cobalt, .look-reverbere, .look-apple, .look-pastel, .look-sable) .dashboard-wallpaper { background: var(--background); }
-.dashboard-shell:is(.look-brume, .look-soie, .look-ardoise, .look-amethyste, .look-cobalt, .look-reverbere, .look-apple, .look-pastel, .look-sable) .dashboard-wallpaper::before { display: block; inset: 0; filter: blur(40px); animation: look-drift 24s ease-in-out infinite; background: var(--look-wallpaper); opacity: var(--look-wallpaper-opacity, 1); }
-.dashboard-shell:is(.look-brume, .look-soie, .look-ardoise, .look-amethyste, .look-cobalt, .look-reverbere, .look-apple, .look-pastel, .look-sable) .dashboard-wallpaper::after { display: block; background: var(--look-veil); }
+:is(.look-brume, .look-soie, .look-ardoise, .look-amethyste, .look-cobalt, .look-reverbere, .look-apple, .look-pastel, .look-papier, .look-givre, .look-ivoire) .wallpaper-glow { display: block; }
+.dashboard-shell:is(.look-brume, .look-soie, .look-ardoise, .look-amethyste, .look-cobalt, .look-reverbere, .look-apple, .look-pastel, .look-papier, .look-givre, .look-ivoire) .dashboard-wallpaper { background: var(--background); }
+.dashboard-shell:is(.look-brume, .look-soie, .look-ardoise, .look-amethyste, .look-cobalt, .look-reverbere, .look-apple, .look-pastel, .look-papier, .look-givre, .look-ivoire) .dashboard-wallpaper::before { display: block; inset: 0; filter: blur(40px); animation: look-drift 24s ease-in-out infinite; background: var(--look-wallpaper); opacity: var(--look-wallpaper-opacity, 1); }
+.dashboard-shell:is(.look-brume, .look-soie, .look-ardoise, .look-amethyste, .look-cobalt, .look-reverbere, .look-apple, .look-pastel, .look-papier, .look-givre, .look-ivoire) .dashboard-wallpaper::after { display: block; background: var(--look-veil); }
 .dark .dashboard-shell.look-brume .dashboard-content, .dark .dashboard-shell.look-soie .dashboard-content, .dark .dashboard-shell.look-ardoise .dashboard-content, .dark .dashboard-shell.look-amethyste .dashboard-content, .dark .dashboard-shell.look-cobalt .dashboard-content, .dark .dashboard-shell.look-reverbere .dashboard-content {
   --background: oklch(.12 0 0); --foreground: oklch(.96 0 0); --card-foreground: oklch(.96 0 0); --muted-foreground: oklch(.72 0 0); --border: oklch(1 0 0 / .1);
   --look-glass: oklch(.22 0 0 / .38); --look-glass-edge: oklch(1 0 0 / .12); --look-glass-shine: oklch(1 0 0 / .12);
@@ -875,11 +875,11 @@ html, body, * { scrollbar-width: none; }
 /* Composer on the new looks: the look's glass and a slowly turning rainbow edge. */
 @property --siri-angle { syntax: "<angle>"; inherits: false; initial-value: 0deg; }
 @keyframes siri-spin { to { --siri-angle: 360deg; } }
-.dashboard-shell:is(.look-brume, .look-soie, .look-ardoise, .look-amethyste, .look-cobalt, .look-reverbere, .look-apple, .look-pastel, .look-sable):not(:has(.chat-thread)) .chat-composer {
+.dashboard-shell:is(.look-brume, .look-soie, .look-ardoise, .look-amethyste, .look-cobalt, .look-reverbere, .look-apple, .look-pastel, .look-papier, .look-givre, .look-ivoire):not(:has(.chat-thread)) .chat-composer {
   position: relative; background: var(--look-glass) !important; border-color: var(--look-glass-edge); border-radius: 28px;
   backdrop-filter: blur(40px) saturate(1.8); -webkit-backdrop-filter: blur(40px) saturate(1.8);
   box-shadow: inset 0 1px 0 var(--look-glass-shine), var(--look-glass-shadow) !important; }
-.dashboard-shell:is(.look-brume, .look-soie, .look-ardoise, .look-amethyste, .look-cobalt, .look-reverbere, .look-apple, .look-pastel, .look-sable):not(:has(.chat-thread)) .chat-composer::before {
+.dashboard-shell:is(.look-brume, .look-soie, .look-ardoise, .look-amethyste, .look-cobalt, .look-reverbere, .look-apple, .look-pastel, .look-papier, .look-givre, .look-ivoire):not(:has(.chat-thread)) .chat-composer::before {
   content: ""; position: absolute; inset: -1.5px; border-radius: inherit; padding: 1.5px; pointer-events: none; opacity: .55;
   background: conic-gradient(from var(--siri-angle), oklch(.75 .15 250 / .7), oklch(.7 .2 330 / .7), oklch(.8 .15 60 / .6), oklch(.75 .15 180 / .7), oklch(.75 .15 250 / .7));
   -webkit-mask: linear-gradient(#000 0 0) content-box exclude, linear-gradient(#000 0 0); mask: linear-gradient(#000 0 0) content-box exclude, linear-gradient(#000 0 0);
@@ -896,17 +896,6 @@ html, body, * { scrollbar-width: none; }
 .dark .dashboard-shell.look-soie .sidebar-glass::after { background: radial-gradient(70% 28% at 30% 0%, oklch(1 0 0 / .16), transparent 70%), radial-gradient(90% 35% at 100% 100%, oklch(.6 .08 240 / .22), transparent 70%); background-size: 100% 200%; animation: soie-light 14s ease-in-out infinite alternate; }
 @keyframes soie-light { from { background-position: 0 0, 0 0; } to { background-position: 0 100%, 0 0; } }
 
-/* Sable (light): warm sand and cream with a soft peach light, matte glass. */
-.dashboard-shell.look-sable .dashboard-content {
-  --background: oklch(.95 .015 75); --foreground: oklch(.25 .02 60); --card-foreground: oklch(.25 .02 60); --muted-foreground: oklch(.5 .025 60);
-  --look-glass: oklch(1 .01 80 / .42); --look-glass-edge: oklch(1 0 0 / .7); --look-glass-shine: oklch(1 0 0 / .85);
-  --look-glass-shadow: 0 20px 60px -24px oklch(.45 .06 60 / .28); --look-veil: oklch(.97 .012 80 / .35);
-  --look-blob-1: oklch(.86 .08 55 / .55); --look-blob-2: oklch(.9 .06 95 / .5); --look-wallpaper:
-    radial-gradient(55% 45% at 80% 15%, oklch(.88 .07 55 / .9), transparent 70%),
-    radial-gradient(50% 45% at 15% 80%, oklch(.9 .05 90 / .9), transparent 70%),
-    radial-gradient(40% 35% at 50% 50%, oklch(.97 .02 80), transparent 70%),
-    linear-gradient(160deg, #f6efe4, #ead9c4 60%, #e2cbb0); }
-.dashboard-shell.look-sable .wallpaper-glow-3 { background: oklch(1 .02 80 / .5); }
 @media (prefers-reduced-motion: reduce) { .dark .dashboard-shell.look-soie .sidebar-glass::after { animation: none; } }
 
 /* Picture looks (dark): Ardoise, Améthyste, Cobalt, Réverbère show their wallpaper (public/media/themes) sharp,
@@ -931,8 +920,8 @@ html, body, * { scrollbar-width: none; }
 
 /* Readability on every look: the glass frosts more (stronger blur, fuller fill, calmer saturation) so text never
    fights the wallpaper; picture looks also soften their image slightly behind the content. */
-.dashboard-shell:is(.look-brume, .look-soie, .look-ardoise, .look-amethyste, .look-cobalt, .look-reverbere, .look-apple, .look-pastel, .look-sable):not(:has(.chat-thread)) main :is(.bg-card, .bg-card\/95, .bg-card\/90, .bg-card\/85, .bg-card\/80, .bg-card\/70).border:not(.chat-composer, .chat-composer *, .border .border),
-.dashboard-shell:is(.look-brume, .look-soie, .look-ardoise, .look-amethyste, .look-cobalt, .look-reverbere, .look-apple, .look-pastel, .look-sable) .dashboard-marquee {
+.dashboard-shell:is(.look-brume, .look-soie, .look-ardoise, .look-amethyste, .look-cobalt, .look-reverbere, .look-apple, .look-pastel, .look-papier, .look-givre, .look-ivoire):not(:has(.chat-thread)) main :is(.bg-card, .bg-card\/95, .bg-card\/90, .bg-card\/85, .bg-card\/80, .bg-card\/70).border:not(.chat-composer, .chat-composer *, .border .border),
+.dashboard-shell:is(.look-brume, .look-soie, .look-ardoise, .look-amethyste, .look-cobalt, .look-reverbere, .look-apple, .look-pastel, .look-papier, .look-givre, .look-ivoire) .dashboard-marquee {
   backdrop-filter: blur(40px) saturate(1.25); -webkit-backdrop-filter: blur(40px) saturate(1.25); }
 .dark .dashboard-shell.look-brume .dashboard-content { --look-glass: oklch(.17 0 0 / .6); }
 .dark .dashboard-shell.look-soie .dashboard-content { --look-glass: oklch(.15 .012 250 / .6); }
@@ -942,11 +931,44 @@ html, body, * { scrollbar-width: none; }
 .dark .dashboard-shell.look-reverbere .dashboard-content { --look-glass: oklch(.14 0 0 / .62); }
 .dashboard-shell.look-apple .dashboard-content { --look-glass: oklch(1 0 0 / .62); }
 .dashboard-shell.look-pastel .dashboard-content { --look-glass: oklch(1 0 0 / .5); }
-.dashboard-shell.look-sable .dashboard-content { --look-glass: oklch(1 .01 80 / .6); }
 .dashboard-shell:is(.look-ardoise, .look-amethyste, .look-cobalt, .look-reverbere) .dashboard-wallpaper::before { filter: blur(3px); }
 /* Starter chips and composer controls: frosted pills that read on any background. */
 .dashboard-shell[class*="look-"] .starter-chip { background: var(--look-glass, oklch(1 0 0 / .6)); border-color: var(--look-glass-edge, oklch(1 0 0 / .7));
   backdrop-filter: blur(24px) saturate(1.25); -webkit-backdrop-filter: blur(24px) saturate(1.25); box-shadow: inset 0 1px 0 var(--look-glass-shine, oklch(1 0 0 / .8)); }
 .dashboard-shell[class*="look-"] .starter-chip:hover { background: color-mix(in oklab, var(--look-glass, oklch(1 0 0 / .6)), var(--foreground) 8%); }
-.dashboard-shell:is(.look-brume, .look-soie, .look-ardoise, .look-amethyste, .look-cobalt, .look-reverbere, .look-apple, .look-pastel, .look-sable):not(:has(.chat-thread)) .chat-composer {
+.dashboard-shell:is(.look-brume, .look-soie, .look-ardoise, .look-amethyste, .look-cobalt, .look-reverbere, .look-apple, .look-pastel, .look-papier, .look-givre, .look-ivoire):not(:has(.chat-thread)) .chat-composer {
   backdrop-filter: blur(48px) saturate(1.25); -webkit-backdrop-filter: blur(48px) saturate(1.25); }
+
+/* Light looks from the dashboard mockup: Papier (white paper), Givre (lavender frost), Ivoire (warm ivory). Plain
+   background with two slow colour glows under a light veil; glass panels a little fuller than the mockup. */
+.dashboard-shell:is(.look-papier, .look-givre, .look-ivoire) .dashboard-content {
+  --foreground: oklch(.2 0 0); --card-foreground: oklch(.2 0 0); --muted-foreground: oklch(.48 0 0);
+  --look-glass: oklch(1 0 0 / .62); --look-glass-edge: oklch(1 0 0 / .75); --look-glass-shine: oklch(1 0 0 / .9);
+  --look-glass-shadow: 0 20px 60px -24px oklch(.3 0 0 / .22); --look-veil: oklch(1 0 0 / .1); --look-wallpaper: none; }
+.dashboard-shell.look-papier .dashboard-content { --background: oklch(.985 0 0); --look-blob-1: oklch(.88 .02 250 / .6); --look-blob-2: oklch(.9 .02 60 / .55); }
+.dashboard-shell.look-givre .dashboard-content { --background: oklch(.96 .015 260); --foreground: oklch(.25 .06 265); --card-foreground: oklch(.25 .06 265);
+  --look-blob-1: oklch(.75 .15 285 / .55); --look-blob-2: oklch(.82 .12 210 / .55); }
+.dashboard-shell.look-ivoire .dashboard-content { --background: oklch(.95 .02 85); --foreground: oklch(.27 .02 60); --card-foreground: oklch(.27 .02 60);
+  --look-blob-1: oklch(.85 .06 75 / .6); --look-blob-2: oklch(.82 .06 150 / .45); }
+
+/* Floating sidebar (desktop), as in the mockup: a rounded frosted card inset from the window edges. */
+@media (min-width: 1024px) {
+  .dashboard-shell .dashboard-sidebar.sidebar-glass { border-color: oklch(1 0 0 / .75); background: color-mix(in oklab, oklch(1 0 0) 58%, transparent);
+    backdrop-filter: blur(40px) saturate(1.6); -webkit-backdrop-filter: blur(40px) saturate(1.6);
+    box-shadow: 0 20px 60px -24px oklch(.3 0 0 / .22), inset 0 1px 0 oklch(1 0 0 / .9); }
+  .dark .dashboard-shell .dashboard-sidebar.sidebar-glass { border-color: oklch(1 0 0 / .1); background: color-mix(in oklab, oklch(.16 0 0) 62%, transparent);
+    box-shadow: 0 20px 60px -20px oklch(0 0 0 / .6), inset 0 1px 0 oklch(1 0 0 / .08); }
+  .dark .dashboard-shell.look-soie .dashboard-sidebar.sidebar-glass { border-color: oklch(1 0 0 / .1); }
+  .dashboard-shell .dashboard-sidebar.sidebar-glass::after { background: linear-gradient(180deg, transparent 40%, color-mix(in oklab, var(--background) 35%, transparent)); }
+}
+
+/* Menus and dialogs over the dashboard (theme menu, chat mode and model pickers, keyword menus): frosted but almost
+   opaque, so the page behind never competes with their text. Portaled, so keyed on the page holding the dashboard. */
+body:has(.dashboard-shell) :is([data-radix-popper-content-wrapper] > [data-state]:not([data-state$="-open"]), [role="dialog"], [role="alertdialog"]) {
+  background-color: color-mix(in oklab, var(--popover) 96%, transparent);
+  backdrop-filter: blur(28px) saturate(1.4); -webkit-backdrop-filter: blur(28px) saturate(1.4);
+  border-color: color-mix(in oklab, var(--border) 85%, transparent);
+  box-shadow: 0 24px 60px -24px oklch(0 0 0 / .35), inset 0 1px 0 oklch(1 0 0 / .5); }
+.dark body:has(.dashboard-shell) :is([data-radix-popper-content-wrapper] > [data-state]:not([data-state$="-open"]), [role="dialog"], [role="alertdialog"]) {
+  background-color: color-mix(in oklab, oklch(.19 0 0) 96%, transparent); color: oklch(.96 0 0);
+  box-shadow: 0 24px 60px -20px oklch(0 0 0 / .7), inset 0 1px 0 oklch(1 0 0 / .06); }
