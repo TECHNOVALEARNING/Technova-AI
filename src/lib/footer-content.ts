@@ -18,6 +18,6 @@ export const footerGroups: (Omit<Item, "href"> & { links: Item[] })[] = [
     { fr: "Conditions d’utilisation", en: "Terms of use", es: "Condiciones de uso", pt: "Termos de uso", href: "/conditions-utilisation" }, { fr: "Politique de confidentialité", en: "Privacy policy", es: "Política de privacidad", pt: "Política de privacidade", href: "/confidentialite" }, { fr: "Politique de cookies", en: "Cookie policy", es: "Política de cookies", pt: "Política de cookies", href: "/cookies" }, { fr: "Mentions légales", en: "Legal notice", es: "Aviso legal", pt: "Aviso legal" }, { fr: "RGPD", en: "GDPR", es: "RGPD", pt: "RGPD", href: "https://www.edpb.europa.eu/topics/key-gdpr-concepts/data-subject-rights_en" },
   ] },
   { fr: "TechNova écosystème", en: "TechNova ecosystem", es: "Ecosistema TechNova", pt: "Ecossistema TechNova", links: [
-    same("Technova Learning", "https://www.technovalearning.com/"), same("Technova Apps"), same("Technova Connect"),
+    same("Technova Learning", "https://www.technovalearning.com/"), same("Technova Apps", "https://www.technovalearning.com/apps"), same("Technova Connect"),
   ] },
 ];
