@@ -66,7 +66,7 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faBolt, faBrain, faScaleBalanced, faWandMagicSparkles } from "@fortawesome/free-solid-svg-icons";
 import { usePlanTier } from "@/lib/plan-client";
 import { cn } from "@/lib/utils";
-import { Shimmer } from "@/components/ai-elements/shimmer";
+import { ThinkingLine } from "./ThinkingSpinner";
 import { ArtifactPanel, StudioPlan, StudioQuestions, StudioTimeline } from "./Studio";
 import { parseBuild, type StudioBuild, type StudioData, type StudioPlanData } from "@/lib/studio";
 import { featureMinTier, packSlugs, upgradeFeatureOf, upgradeSentence, type PlanFeature } from "@/lib/plans";
@@ -1427,7 +1427,7 @@ export function ThreadPage({ threadId }: { threadId: string }) {
             {thinking && (
               <Message from="assistant">
                 <MessageContent className="bg-transparent px-0">
-                  {activity ? <StudioTimeline build={activity} lang={lang} onOpen={() => { setActivityView((v) => v + 1); setShowArtifact(true); }} /> : <Shimmer>{researchStatus || (lang === "fr" ? "Réflexion en cours…" : "Thinking…")}</Shimmer>}
+                  {activity ? <StudioTimeline build={activity} lang={lang} onOpen={() => { setActivityView((v) => v + 1); setShowArtifact(true); }} /> : <ThinkingLine fr={lang === "fr"} label={researchStatus || undefined} />}
                 </MessageContent>
               </Message>
             )}

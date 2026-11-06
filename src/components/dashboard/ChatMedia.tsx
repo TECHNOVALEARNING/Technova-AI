@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { createPortal } from "react-dom";
+import { ThinkingLine } from "./ThinkingSpinner";
 import { AlertCircle, Download, Loader2, Pencil, X } from "lucide-react";
 
 export type ChatMediaData = {
@@ -21,7 +22,7 @@ const copyFor = (kind: ChatMediaData["kind"], fr: boolean) => ({
   music: { creating: fr ? "Création de la musique" : "Creating music", label: fr ? "Musique" : "Music" },
 })[kind];
 
-/** Field of dots on black, lit by a slow drifting blue glow (canvas, one frame per display refresh). */
+/** Even field of blue dots with a slow wave of light running through it (canvas, follows light/dark). */
 function DotField() {
   const ref = useRef<HTMLCanvasElement>(null);
   useEffect(() => {
@@ -38,21 +39,16 @@ function DotField() {
     };
     const draw = (time: number) => {
       const t = time / 1000;
+      const dark = document.documentElement.classList.contains("dark");
       ctx.clearRect(0, 0, w, h);
-      const gap = 16;
-      // Two soft light sources wander slowly across the field.
-      const a = { x: w * (0.45 + 0.22 * Math.sin(t * 0.35)), y: h * (0.5 + 0.18 * Math.cos(t * 0.28)) };
-      const b = { x: w * (0.6 + 0.2 * Math.cos(t * 0.22 + 1.3)), y: h * (0.55 + 0.2 * Math.sin(t * 0.31 + 0.7)) };
-      const ra = Math.min(w, h) * 0.26, rb = Math.min(w, h) * 0.2;
-      for (let y = gap / 2; y < h; y += gap) {
-        for (let x = gap / 2; x < w; x += gap) {
-          const ia = Math.exp(-((x - a.x) ** 2 + (y - a.y) ** 2) / (ra * ra));
-          const ib = Math.exp(-((x - b.x) ** 2 + (y - b.y) ** 2) / (rb * rb)) * 0.8;
-          const twinkle = 0.75 + 0.25 * Math.sin(t * 2.2 + x * 0.37 + y * 0.53);
-          const glow = Math.min(1, (ia + ib) * twinkle);
-          if (glow < 0.04) { ctx.fillStyle = "rgba(255,255,255,0.07)"; ctx.fillRect(x - 0.6, y - 0.6, 1.2, 1.2); continue; }
-          ctx.fillStyle = `rgba(${Math.round(40 + 60 * glow)},${Math.round(90 + 80 * glow)},255,${0.12 + 0.75 * glow})`;
-          ctx.beginPath(); ctx.arc(x, y, 0.7 + 0.8 * glow, 0, Math.PI * 2); ctx.fill();
+      const gap = 15, pad = 12;
+      const cx = w * (0.5 + 0.3 * Math.sin(t * 0.32)), cy = h * (0.5 + 0.25 * Math.cos(t * 0.27)), r = Math.min(w, h) * 0.35;
+      for (let y = pad; y <= h - pad; y += gap) {
+        for (let x = pad; x <= w - pad; x += gap) {
+          const glow = Math.exp(-((x - cx) ** 2 + (y - cy) ** 2) / (r * r)) * (0.8 + 0.2 * Math.sin(t * 2 + x * 0.3 + y * 0.4));
+          const alpha = (dark ? 0.32 : 0.5) + (dark ? 0.55 : 0.45) * glow;
+          ctx.fillStyle = dark ? `rgba(${110 + 40 * glow},${140 + 50 * glow},255,${alpha})` : `rgba(${100 - 40 * glow},${135 - 35 * glow},${215 + 30 * glow},${alpha})`;
+          ctx.beginPath(); ctx.arc(x, y, 1.35 + 0.5 * glow, 0, Math.PI * 2); ctx.fill();
         }
       }
       if (!still) frame = requestAnimationFrame(draw);
@@ -73,13 +69,14 @@ function GenerationStage({ data, lang }: { data: ChatMediaData; lang: "fr" | "en
   // Real progress when the service reports it; otherwise the time spent so far (never an invented percentage).
   const [elapsed, setElapsed] = useState(0);
   useEffect(() => { const start = Date.now(); const id = window.setInterval(() => setElapsed(Math.floor((Date.now() - start) / 1000)), 1000); return () => window.clearInterval(id); }, []);
-  const badge = progress !== null ? `${progress}%` : elapsed < 60 ? `${elapsed} s` : `${Math.floor(elapsed / 60)} min ${String(elapsed % 60).padStart(2, "0")}`;
+  const badge = progress !== null ? `${progress} %` : elapsed < 60 ? `${elapsed} s` : `${Math.floor(elapsed / 60)} min ${String(elapsed % 60).padStart(2, "0")}`;
   const shape = data.kind === "image" ? "aspect-square" : data.kind === "video" ? "aspect-video" : "aspect-[16/7]";
-  return <div role="status" aria-label={`${text.creating}${progress === null ? "" : ` — ${progress}%`}`}
-    className={`relative w-full max-w-[460px] overflow-hidden rounded-2xl bg-black ${shape}`}>
-    <DotField />
-    <p className="absolute left-5 top-4 text-[15px] font-normal text-white/90">{text.creating}</p>
-    <span className="absolute bottom-4 right-4 rounded-full bg-white/10 px-3.5 py-1.5 text-[13px] font-semibold tabular-nums text-[#4f8cff] backdrop-blur">{badge}</span>
+  return <div className="flex w-full max-w-[460px] flex-col gap-3">
+    <ThinkingLine fr={fr} />
+    <div role="img" aria-label={`${text.creating}${progress === null ? "" : ` — ${progress} %`}`} className={`relative w-full overflow-hidden rounded-2xl bg-[#f7f7f8] dark:bg-[#0a0a0c] ${shape}`}>
+      <DotField />
+      <span className="absolute bottom-3 right-3 rounded-full border border-black/10 bg-white px-4 py-1.5 text-[15px] font-medium tabular-nums text-[#1f5fbf] shadow-md dark:border-white/10 dark:bg-white/10 dark:text-[#7aa7ff]">{badge}</span>
+    </div>
   </div>;
 }
 

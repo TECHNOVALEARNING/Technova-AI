@@ -517,6 +517,18 @@ body { font-family: var(--font-sans); }
 html, body, * { scrollbar-width: none; }
 .chat-thread + [role="separator"] + div { min-width: 0; }
 ::-webkit-scrollbar { display: none; width: 0; height: 0; }
+/* Dashboard content (not the sidebar): a visible thin scrollbar so everyone sees the page scrolls. */
+html:has(.dashboard-shell), .dashboard-shell main * { scrollbar-width: thin; scrollbar-color: color-mix(in oklab, var(--foreground) 26%, transparent) transparent; }
+html:has(.dashboard-shell)::-webkit-scrollbar, .dashboard-shell main *::-webkit-scrollbar { display: block; width: 10px; height: 10px; }
+html:has(.dashboard-shell)::-webkit-scrollbar-thumb, .dashboard-shell main *::-webkit-scrollbar-thumb { border: 3px solid transparent; border-radius: 999px; background: color-mix(in oklab, var(--foreground) 26%, transparent) padding-box; }
+html:has(.dashboard-shell)::-webkit-scrollbar-thumb:hover, .dashboard-shell main *::-webkit-scrollbar-thumb:hover { background: color-mix(in oklab, var(--foreground) 42%, transparent) padding-box; }
+html:has(.dashboard-shell)::-webkit-scrollbar-track, .dashboard-shell main *::-webkit-scrollbar-track { background: transparent; }
+.dashboard-shell main .starter-row { scrollbar-width: none; }
+.dashboard-shell main .starter-row::-webkit-scrollbar { display: none; }
+/* Thinking indicator: the rays step round like a classic activity spinner. */
+.thinking-spinner { animation: thinking-turn 1s steps(12) infinite; }
+@keyframes thinking-turn { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) { .thinking-spinner { animation-duration: 3s; } }
 
 .auth-shell { box-shadow: var(--shadow-lift); }
 .auth-visual { background: var(--secondary); }
