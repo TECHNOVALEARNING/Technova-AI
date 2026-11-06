@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { pageHead } from "@/lib/seo";
 import type { ReactNode } from "react";
 import { Ban, CreditCard, EyeOff, FileLock2, Lock, Send } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -7,13 +8,7 @@ import { tr } from "@/lib/i18n";
 
 // Privacy policy of TechNova AI Hub. The French text is the authoritative version.
 export const Route = createFileRoute("/confidentialite")({
-  head: () => ({ meta: [
-    { title: "Politique de confidentialité — TechNova AI Hub" },
-    { name: "description", content: "Quelles données TechNova AI Hub traite, pourquoi, avec qui, combien de temps, et comment exercer vos droits." },
-    { property: "og:title", content: "Politique de confidentialité — TechNova AI Hub" },
-    { property: "og:description", content: "Nous collectons le minimum et protégeons le maximum : la politique de confidentialité de TechNova AI Hub, en langage clair." },
-    { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary_large_image" },
-  ] }),
+  head: () => pageHead({ path: "/confidentialite", title: "Politique de confidentialité — TechNova AI Hub", description: "Quelles données TechNova AI Hub traite, pourquoi, avec qui, combien de temps, et comment exercer vos droits.", ogDescription: "Nous collectons le minimum et protégeons le maximum : la politique de confidentialité de TechNova AI Hub, en langage clair." }),
   component: PrivacyPage,
 });
 

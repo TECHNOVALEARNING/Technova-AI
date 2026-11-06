@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { pageHead } from "@/lib/seo";
 import type { ReactNode } from "react";
 import { Ban, Cookie, EyeOff, SlidersHorizontal } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -8,13 +9,7 @@ import { openCookieSettings } from "@/lib/consent";
 // Cookie policy of TechNova AI Hub. The French text is the authoritative version, like the privacy policy.
 // Keep the tables in sync with src/lib/consent.ts (PREFERENCE_KEYS) and the storage the app really writes.
 export const Route = createFileRoute("/cookies")({
-  head: () => ({ meta: [
-    { title: "Politique de cookies — TechNova AI Hub" },
-    { name: "description", content: "Quels cookies et quel stockage local TechNova AI Hub utilise, à quoi ils servent, combien de temps ils sont conservés et comment changer vos choix." },
-    { property: "og:title", content: "Politique de cookies — TechNova AI Hub" },
-    { property: "og:description", content: "Aucun cookie publicitaire ni de mesure d'audience : le détail du stockage utilisé par TechNova AI Hub." },
-    { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary_large_image" },
-  ] }),
+  head: () => pageHead({ path: "/cookies", title: "Politique de cookies — TechNova AI Hub", description: "Quels cookies et quel stockage local TechNova AI Hub utilise, à quoi ils servent, combien de temps ils sont conservés et comment changer vos choix.", ogDescription: "Aucun cookie publicitaire ni de mesure d'audience : le détail du stockage utilisé par TechNova AI Hub." }),
   component: CookiePolicyPage,
 });
 

@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { pageHead, breadcrumbLd } from "@/lib/seo";
 import { ArrowRight, Compass, Globe2, HeartHandshake, Linkedin, Sparkles, Target } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ActionText, Footer, Nav, PageHero, useSiteLang } from "@/components/site/SiteChrome";
@@ -7,13 +8,7 @@ import { allPublicModels } from "@/lib/public-models";
 import registryManifest from "../../drizzle/registry/manifest.json";
 
 export const Route = createFileRoute("/a-propos")({
-  head: () => ({ meta: [
-    { title: "À propos — TechNova AI Hub" },
-    { name: "description", content: "La vision, la mission et l'équipe de TechNova AI Hub : les meilleurs modèles d'IA réunis dans un seul espace pour apprendre, créer et développer." },
-    { property: "og:title", content: "À propos — TechNova AI Hub" },
-    { property: "og:description", content: "Ouvert au monde : la vision, la mission et l'équipe de TechNova AI Hub." },
-    { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary_large_image" },
-  ] }),
+  head: () => pageHead({ path: "/a-propos", title: "À propos — TechNova AI Hub", description: "La vision, la mission et l'équipe de TechNova AI Hub : les meilleurs modèles d'IA réunis dans un seul espace pour apprendre, créer et développer.", ogDescription: "Ouvert au monde : la vision, la mission et l'équipe de TechNova AI Hub.", jsonLd: [breadcrumbLd("À propos", "/a-propos")] }),
   component: AboutPage,
 });
 

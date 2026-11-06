@@ -1,14 +1,8 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { pageHead } from "@/lib/seo";
 import { AuthPage } from "@/components/auth/AuthPage";
 
 export const Route = createFileRoute("/connexion")({
-  head: () => ({ meta: [
-    { title: "Connexion | TechNova AI Hub" },
-    { name: "description", content: "Retrouvez votre espace TechNova AI Hub et accédez à vos outils d'intelligence artificielle." },
-    { property: "og:title", content: "Connexion | TechNova AI Hub" },
-    { property: "og:description", content: "Retrouvez votre espace TechNova AI Hub et vos outils d'intelligence artificielle." },
-    { property: "og:type", content: "website" },
-    { name: "twitter:card", content: "summary_large_image" },
-  ] }),
+  head: () => pageHead({ path: "/connexion", title: "Connexion | TechNova AI Hub", description: "Retrouvez votre espace TechNova AI Hub et accédez à vos outils d'intelligence artificielle.", ogDescription: "Retrouvez votre espace TechNova AI Hub et vos outils d'intelligence artificielle." }),
   component: () => <AuthPage mode="login" />,
 });

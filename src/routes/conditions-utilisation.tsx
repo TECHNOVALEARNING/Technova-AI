@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { pageHead } from "@/lib/seo";
 import type { ReactNode } from "react";
 import { BadgeCheck, Coins, FileLock2, Scale, ShieldCheck, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -8,13 +9,7 @@ import { tr } from "@/lib/i18n";
 // Terms of use of TechNova AI Hub. The French text is the authoritative version; it follows how the service
 // actually works (prepaid credits, server-side billing, plan gates, retention) — update it when those change.
 export const Route = createFileRoute("/conditions-utilisation")({
-  head: () => ({ meta: [
-    { title: "Conditions d'utilisation — TechNova AI Hub" },
-    { name: "description", content: "Les règles d'utilisation de TechNova AI Hub : compte, crédits Technova, paiements, contenus générés, usages interdits et responsabilités." },
-    { property: "og:title", content: "Conditions d'utilisation — TechNova AI Hub" },
-    { property: "og:description", content: "Ce que vous pouvez attendre de TechNova AI Hub, et ce que nous attendons de vous, en langage clair." },
-    { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary_large_image" },
-  ] }),
+  head: () => pageHead({ path: "/conditions-utilisation", title: "Conditions d'utilisation — TechNova AI Hub", description: "Les règles d'utilisation de TechNova AI Hub : compte, crédits Technova, paiements, contenus générés, usages interdits et responsabilités.", ogDescription: "Ce que vous pouvez attendre de TechNova AI Hub, et ce que nous attendons de vous, en langage clair." }),
   component: TermsPage,
 });
 

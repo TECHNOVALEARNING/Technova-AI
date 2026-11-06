@@ -1,20 +1,12 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { pageHead, breadcrumbLd } from "@/lib/seo";
 import { Nav, Footer, PageHero, useReveal, useSiteLang } from "@/components/site/SiteChrome";
 import { CodeBlock } from "@/components/site/CodeBlock";
 import type { SiteLang } from "@/lib/i18n";
 import { useApiBase, withApiBase } from "@/lib/site-pages";
 
 export const Route = createFileRoute("/documentation")({
-  head: () => ({
-    meta: [
-      { title: "Documentation — TechNova AI Hub" },
-      { name: "description", content: "Démarrage rapide, authentification, chat completions, modèles, crédits, codes d'erreur et limites de l'API TechNova." },
-      { property: "og:title", content: "Documentation — TechNova AI Hub" },
-      { property: "og:description", content: "Tout pour brancher l'IA à votre produit, de la première requête à la production." },
-      { property: "og:type", content: "website" },
-      { name: "twitter:card", content: "summary_large_image" },
-    ],
-  }),
+  head: () => pageHead({ path: "/documentation", title: "Documentation — TechNova AI Hub", description: "Démarrage rapide, authentification, chat completions, modèles, crédits, codes d'erreur et limites de l'API TechNova.", ogDescription: "Tout pour brancher l'IA à votre produit, de la première requête à la production.", jsonLd: [breadcrumbLd("Documentation", "/documentation")] }),
   component: DocsPage,
 });
 

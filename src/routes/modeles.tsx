@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { pageHead, breadcrumbLd } from "@/lib/seo";
 import { useMemo, useState } from "react";
 import { ArrowRight, AudioLines, Clapperboard, Image as ImageIcon, MessageSquareText, Search, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -7,13 +8,7 @@ import type { SiteLang } from "@/lib/i18n";
 import { allPublicModels, mediaCatalog, textModels, type PublicModel, type TextCap } from "@/lib/public-models";
 
 export const Route = createFileRoute("/modeles")({
-  head: () => ({ meta: [
-    { title: "Modèles IA disponibles et prix en crédits — TechNova AI Hub" },
-    { name: "description", content: "GPT, Claude, Gemini, DeepSeek, Nano Banana, Kling, Seedance, Suno… Tous les modèles disponibles sur TechNova pour écrire, coder, créer des images, des vidéos et de la musique, avec leur prix en crédits." },
-    { property: "og:title", content: "Modèles IA disponibles — TechNova AI Hub" },
-    { property: "og:description", content: "Texte, images, vidéos et musique : les modèles disponibles sur TechNova et leur prix en crédits." },
-    { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary_large_image" },
-  ] }),
+  head: () => pageHead({ path: "/modeles", title: "Modèles IA disponibles et prix en crédits — TechNova AI Hub", description: "GPT, Claude, Gemini, Qwen et plus : les modèles d'IA de TechNova pour écrire, coder et analyser, avec images, vidéos et musique à prix fixe, en crédits Technova.", ogTitle: "Modèles IA disponibles — TechNova AI Hub", ogDescription: "Texte, code, images, vidéos et musique : les modèles disponibles sur TechNova et leur prix en crédits.", jsonLd: [breadcrumbLd("Modèles IA", "/modeles")] }),
   component: ModelsPage,
 });
 

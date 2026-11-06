@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { pageHead, appLd, faqLd, organizationLd, websiteLd } from "@/lib/seo";
 import { useEffect, useRef, useState, type CSSProperties, type ReactNode } from "react";
 import {
   ArrowRight, ArrowUpRight, Check, Plus, Minus, Sparkles, Globe, LogIn, Menu, Zap, Boxes, WalletCards, UserRoundPlus, Play, X,
@@ -22,16 +23,7 @@ import { RoutingSection } from "@/components/site/RoutingSection";
 import { PricingContent } from "@/components/site/PricingContent";
 
 export const Route = createFileRoute("/")({
-  head: () => ({
-    meta: [
-      { title: "TechNova AI Hub | 60+ modèles d'IA pour apprendre, créer et développer" },
-      { name: "description", content: "GPT, Claude, Gemini, DeepSeek et 60+ modèles d'IA sur une seule plateforme. Sans abonnement, paiement Mobile Money." },
-      { property: "og:title", content: "TechNova AI Hub | Tous les modèles d'IA en un seul hub" },
-      { property: "og:description", content: "60+ modèles d'IA, une seule API, crédits sans expiration, paiement en FCFA." },
-      { property: "og:type", content: "website" },
-      { name: "twitter:card", content: "summary_large_image" },
-    ],
-  }),
+  head: () => pageHead({ path: "/", title: "TechNova AI Hub — GPT, Claude, Gemini et plus en un seul hub IA", description: "Discutez, codez, créez images, vidéos et musique avec GPT, Claude, Gemini et les meilleurs modèles d'IA. Sans abonnement, crédits sans expiration, paiement Mobile Money.", ogTitle: "TechNova AI Hub | Tous les modèles d'IA en un seul hub", ogDescription: "Les meilleurs modèles d'IA, une seule API, crédits sans expiration, paiement en FCFA par Mobile Money ou carte.", jsonLd: [organizationLd, websiteLd, appLd, faqLd], preloadImage: media.heroPoster }),
   component: Index,
 });
 
@@ -76,7 +68,7 @@ function Hero({ t }: { t: T }) {
       <div className="relative z-10 mx-auto w-full max-w-6xl text-center md:text-left">
         <div className="animate-fade-in"><Tag dark>{t.hero.badge}</Tag></div>
         <h1 className="mt-5 animate-fade-in font-display text-5xl font-semibold leading-[1.05] tracking-tight md:max-w-2xl md:text-7xl">
-          <span className="text-hero-gradient">{t.hero.title1}</span>
+          <span className="text-hero-gradient">{t.hero.title1}</span>{" "}
           <br />
           <span className="text-hero-gradient">{t.hero.title2}</span>
         </h1>

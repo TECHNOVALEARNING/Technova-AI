@@ -1,4 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { pageHead, breadcrumbLd } from "@/lib/seo";
 import { useState } from "react";
 import { ArrowRight, Boxes, Route as RouteIcon, BarChart3, ShieldCheck, Check, MessageCircle, FileText, Code2, Languages } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -7,16 +8,7 @@ import { CodeBlock } from "@/components/site/CodeBlock";
 import { codeSamples, useApiBase, withApiBase } from "@/lib/site-pages";
 
 export const Route = createFileRoute("/developpeurs")({
-  head: () => ({
-    meta: [
-      { title: "Développeurs — API TechNova AI" },
-      { name: "description", content: "Une seule clé API TechNova : OpenRouter pour le texte, KIE.ai pour les images et vidéos. Exemples JavaScript, Python, PHP et cURL." },
-      { property: "og:title", content: "Développeurs — API TechNova AI" },
-      { property: "og:description", content: "Une API unifiée pour des centaines de modèles d'IA, conçue pour intégrer l'IA dans vos produits." },
-      { property: "og:type", content: "website" },
-      { name: "twitter:card", content: "summary_large_image" },
-    ],
-  }),
+  head: () => pageHead({ path: "/developpeurs", title: "Développeurs — API TechNova AI", description: "Une seule clé API TechNova pour intégrer GPT, Claude, Gemini et les meilleurs modèles de texte et de code à vos produits. Exemples JavaScript, Python, PHP et cURL.", ogDescription: "Une API unifiée pour les meilleurs modèles d'IA, facturée en crédits, conçue pour intégrer l'IA à vos produits.", jsonLd: [breadcrumbLd("Développeurs", "/developpeurs")] }),
   component: DevPage,
 });
 
