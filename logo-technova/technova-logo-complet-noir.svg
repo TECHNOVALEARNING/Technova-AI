@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1512" height="248" viewBox="0 0 1512 248"><defs><style>@font-face{font-family:'Sora';font-weight:700;src:url(data:font/truetype;base64,d09GMgABAAAAAAS4ABAAAAAACKQAAARdAAEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAGhYbgXocKAZgP1NUQVQqAGwRCAqFJIQjCxYAATYCJAMoBCAFg1QHIAwHG/UGyMSHp9N6g6AzwV1WmoJOs06KKZhGbBeCcjD+yZraMsYDCSEf+AqAktFWWbata8cKhSY1YybchLV7wO4W3EI3KAAK8EkaFAMy5yUAhzCkgNbqBolQeU3D/UQIbB3qr2jz2Ib6IQ9wy8KChjw5GhxAVrNaA3SQdNB9TL6NkL/G6SAfQ0EuUdxf2TL5llyalJVwNRoMpBhAhojQEfAzWT/DsSxAx+EfkkCHIuQgDSGDYCwnr76RPAJNfoWU/ApZsUfuKMmvwj+9j1ZtjkCEWENMQqwcj9xoO30ekil6Ll0HYKB3nGpBClUEndkMsrZy30Cs79Ab9GXYDAE1zN3/3wfY600Fy4p0ZzpAeoU1grw5dHTmeoIe5XAOp84I24qslD5/ZmmAaeRlGodY4HmvBm+BAQ0BxShFGfrBABE16JeyIv2z5CtymVwiF8l5coocI0f3dkXvpEARAjUp5LwdNd7VOPX2aRAKhhFYPB4a71RPlmU5NoLVv1vVuSPLchaKn3eJmnKRm3se3JRXr/h5L14Ak58/1xaKIsWjVaaW+tUSFW9UNnMt/bmBTbW1ymrT3JdEhaKmvKr9smpu49OX3Nznj59j8osnL/h5r2r55zDLS3iWo5SwCxa1hGdVf6iBUoKXKF18lIRnFW4ulh2KmPz085p5r569oqa8HPYfIOFZN6UG38I35/BZRr7J+8eygvABvYVMQWjo40yIGmiIz0ofEBWliw+Kiy4zREy2UQ7bMpPbNH6l9qR2aEHyzWQof3wT9NebvXecaVPE607N8eRZvVNmYbPGskBb3x4ztaCzNnZ6g2dukdGyqn/DVFntDk8vfXBy8sDg+O5iWmp3UT9YSBnk7M8VbZcb6qav1qMysDnQcXbh7IKE2VGzI0NmZ81GTGB7YHxge6BnxGL/YlQGlBoxJNmxNqD2XopDGstSrbE9YVp+Z23SdJNnSVFr65Ii4ueTp2s75ydOM7Yv1ZpXp1WGHupVlZTaWzxYEZyWVhF8sJeYmtSr6lBFKD4xbje2D1hUuAi/vPdmzyFHpX3oVsf2h28eKn4pry5d+3KOUZ33m5xhvswrv8M6RlGXZF1ekvb/H7J/sAcpkF5gvAPxJM6WdCbt/+ezf1zBj+IYC2oYFZSMgFi6EpWMgErGi0qmFbG0G53pT9EJTyfv5GCFDBUfyYoOzFQpDhOvZoANgio24nSEPTrvYeDT4t0OBlGY7GChgd8hQXeIDik0KLGrkAGFh/pgCQDpcDfVwgYXHHBiuDU6HO0YhhwkspeGwYKhcKEdwyk2QUHgPV4koA1D4UAiDNBhEKqST5kQjxK0wQsramDjsIY3tcEPASlIQJJByVJhqfi3cqGHAXqUIXc4yqMK2VJIt2MMNgI5NsXlJCQjGwJEOGGjlqZiy6GzDW7YYGmWLsaI1WJV/GHro1aedsCl3DQCZiTAgjb49oNCBaODlQzY15oejugvEBU2kfVIgd5+miIzDrMLAAA=) format('truetype');}</style></defs><svg x="24" y="24" width="200" height="200" viewBox="0 0 64 64">
+  <defs>
+    <linearGradient id="iris" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#f7b6d2"/>
+      <stop offset="0.5" stop-color="#a9d3f5"/>
+      <stop offset="1" stop-color="#f3e08a"/>
+    </linearGradient>
+  </defs>
+  <rect width="64" height="64" rx="14" fill="#14161a"/>
+  <path d="M16 18h32v8H36v22h-8V26H16z" fill="#f7f7f7"/>
+  <circle cx="48" cy="46" r="5" fill="url(#iris)"/>
+</svg><text x="280" y="182.4" font-family="Sora, sans-serif" font-weight="700" font-size="160" letter-spacing="35.2" fill="#0b0b0c">TECH<tspan fill-opacity="0.6">NOVA</tspan></text></svg>
