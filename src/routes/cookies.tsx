@@ -21,6 +21,8 @@ type Row = [name: string, purpose: string, duration: string];
 const necessary: Row[] = [
   ["sb-…-auth-token", "Garder votre session de connexion ouverte et la sécuriser (jetons Supabase Auth).", "Jusqu'à la déconnexion"],
   ["technova-consent", "Mémoriser vos choix en matière de cookies, pour ne pas vous les redemander à chaque page.", "6 mois"],
+  ["technova-site-lang, technova-dashboard-lang", "Garder la langue que vous avez choisie pour le site et le tableau de bord.", "Jusqu'au prochain choix"],
+  ["technova-dashboard-theme", "Garder le thème du tableau de bord que vous avez choisi (Brume, Soie, Graphite, Obsidienne, Réverbère, Apple, Pastel, Papier, Givre ou Ciel).", "Jusqu'au prochain choix"],
   ["tn-pending-pack", "Retenir le pack choisi avant la connexion, pour reprendre l'achat ensuite.", "Jusqu'au paiement"],
   ["technova-supabase-oauth-state", "Protéger la connexion à votre propre projet Supabase contre la falsification de requête.", "Quelques minutes"],
   ["technova-active-agent", "Ouvrir le chat avec l'agent que vous venez de choisir.", "Jusqu'au prochain choix"],
@@ -29,8 +31,6 @@ const necessary: Row[] = [
 ];
 
 const preferences: Row[] = [
-  ["technova-site-lang, technova-dashboard-lang", "Langue du site et du tableau de bord.", "6 mois maximum"],
-  ["technova-dashboard-theme", "Thème du tableau de bord (Brume, Soie, Graphite, Obsidienne, Réverbère, Apple, Pastel, Papier, Givre ou Ciel).", "6 mois maximum"],
   ["technova-sidebar-collapsed, tn-artifact-width", "Menu réduit et largeur du panneau des fichiers générés.", "6 mois maximum"],
   ["technova-workspace-mode, technova-workspace-tier", "Mode du chat (Chat ou Créer) et mode de réponse choisi (Éclair, Équilibré ou Expert).", "6 mois maximum"],
   ["technova-chat-kbs", "Bases de connaissances sélectionnées dans le chat.", "6 mois maximum"],
@@ -95,7 +95,7 @@ function CookiePolicyPage() {
       </Section>
 
       <Section id="necessaires" n={3} title="Cookies strictement nécessaires">
-        <p>Ils sont indispensables au fonctionnement du site et à sa sécurité. Ils sont exemptés de consentement : ils ne peuvent pas être désactivés depuis nos réglages, mais vous pouvez les effacer depuis votre navigateur, ce qui vous déconnectera.</p>
+        <p>Ils sont indispensables au fonctionnement du site et à sa sécurité, ou retiennent un réglage d'interface que vous avez vous-même choisi (langue, thème). Ils sont exemptés de consentement : ils ne peuvent pas être désactivés depuis nos réglages, mais vous pouvez les effacer depuis votre navigateur, ce qui vous déconnectera.</p>
         <Table rows={necessary} />
       </Section>
 

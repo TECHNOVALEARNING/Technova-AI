@@ -11,9 +11,13 @@ export const CONSENT_MAX_AGE = 182 * 86_400_000;
 export const CONSENT_EVENT = "technova:consent";
 export const OPEN_CONSENT_EVENT = "technova:open-cookie-settings";
 
-/** Browser-stored preferences, removed when preferences are refused. */
+/** Interface choices the person makes explicitly (language, theme): kept without consent, as the CNIL allows
+ *  for interface customisation the user asks for — otherwise a refresh would undo the choice. */
+export const EXPLICIT_CHOICE_KEYS = ["technova-site-lang", "technova-dashboard-lang", "technova-dashboard-theme"] as const;
+
+/** Other browser-stored preferences, removed when preferences are refused. */
 export const PREFERENCE_KEYS = [
-  "technova-site-lang", "technova-dashboard-lang", "technova-dashboard-theme", "technova-sidebar-collapsed",
+  "technova-sidebar-collapsed",
   "technova-currency", "technova-workspace-mode", "technova-workspace-tier", "technova-workspace-model", "technova-image-model",
   "technova-video-model", "technova-chat-kbs", "tn-artifact-width", "technova-install-dismissed",
 ] as const;
@@ -40,8 +44,8 @@ export function saveConsent(preferences: boolean) {
 export const preferencesAllowed = () => readConsent()?.preferences === true;
 
 /** Remembers a preference only with consent; otherwise it lasts for this visit only. */
-export function savePref(key: (typeof PREFERENCE_KEYS)[number], value: string) {
-  if (!preferencesAllowed()) return;
+export function savePref(key: (typeof PREFERENCE_KEYS)[number] | (typeof EXPLICIT_CHOICE_KEYS)[number], value: string) {
+  if (!(EXPLICIT_CHOICE_KEYS as readonly string[]).includes(key) && !preferencesAllowed()) return;
   try { window.localStorage.setItem(key, value); } catch { /* storage blocked */ }
 }
 

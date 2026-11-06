@@ -21,6 +21,8 @@ import {
 } from "@/lib/supabase-oauth.functions";
 import { chatTierCredits, chatTierIds, chatTiers, EXPERT_MIN_TIER, type ChatTier } from "@/lib/chat-modes";
 import { mediaTiers, type MediaTier } from "@/lib/media-models";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faBolt, faBrain, faFilm, faImage, faMusic, faScaleBalanced } from "@fortawesome/free-solid-svg-icons";
 import { upgradeFeatureOf, upgradeSentence } from "@/lib/plans";
 import { usePlanTier } from "@/lib/plan-client";
 import { savePref } from "@/lib/consent";
@@ -122,6 +124,8 @@ function BalanceCard({ balance, totalIn, children }: { balance: number; totalIn:
   return <div className={card}><p className={eyebrow}>{c.balance.toUpperCase()}</p><p className="mt-2 font-display text-[32px] font-semibold leading-none">{balance.toLocaleString()} <span className="text-[14px] font-normal text-muted-foreground">{c.credits}</span></p>{children ?? <><div className="mt-5 h-1.5 overflow-hidden rounded-full bg-secondary"><div className="h-full rounded-full bg-primary transition-[width] duration-700" style={{ width: `${pct}%` }} /></div><p className="mt-2 text-[11.5px] text-muted-foreground">{pct}% {c.remaining}</p></>}</div>;
 }
 
+const modeIcons = { eclair: faBolt, equilibre: faScaleBalanced, expert: faBrain } as const;
+
 /** The three chat modes and the fixed-price creations (engines are never shown). */
 export function ModelsPage() {
   const c = useCopy(); const navigate = useNavigate(); const { lang } = useDashboard(); const fr = lang === "fr"; const plan = usePlanTier() ?? 0;
@@ -129,13 +133,13 @@ export function ModelsPage() {
   const cr = (n: number) => `${n.toLocaleString(fr ? "fr-FR" : "en-US")} ${fr ? "crédits" : "credits"}`;
   return <div><PageHead title={c.modelsTitle} sub={c.modelsSub} />
     <div className="grid gap-4 md:grid-cols-3">{chatTierIds.map(id => { const t = chatTiers[id]; const locked = id === "expert" && plan < EXPERT_MIN_TIER; return <div key={id} className={`${card} flex flex-col`}>
-      <div className="flex items-center gap-3"><span className="grid size-10 place-items-center rounded-full bg-secondary text-[18px]" aria-hidden="true">{t.emoji}</span><div className="min-w-0"><p className="text-[15px] font-semibold">{fr ? t.fr : t.en}</p><p className="text-[11.5px] text-muted-foreground">{fr ? t.hintFr : t.hintEn}</p></div></div>
+      <div className="flex items-center gap-3"><span className="grid size-10 place-items-center rounded-full bg-secondary text-foreground" aria-hidden="true"><FontAwesomeIcon icon={modeIcons[id]} fixedWidth className="size-4" /></span><div className="min-w-0"><p className="text-[15px] font-semibold">{fr ? t.fr : t.en}</p><p className="text-[11.5px] text-muted-foreground">{fr ? t.hintFr : t.hintEn}</p></div></div>
       <div className="mt-4 grid grid-cols-2 border-t border-border pt-4 text-[12px]"><div><p className="text-muted-foreground">{fr ? "Par message" : "Per message"}</p><p className="mt-0.5 font-medium">{cr(chatTierCredits(id, false, plan))}</p></div><div><p className="text-muted-foreground">{fr ? "Avec un fichier" : "With a file"}</p><p className="mt-0.5 font-medium">{cr(chatTierCredits(id, true, plan))}</p></div></div>
       {id === "expert" && <p className="mt-3 text-[11px] text-muted-foreground">{fr ? "Avec le forfait Pro, le même bouton utilise un moteur plus puissant (60 crédits, 65 avec fichier)." : "With the Pro plan, the same button uses a stronger engine (60 credits, 65 with a file)."}</p>}
       <Button variant="outline" disabled={locked} className="mt-auto h-9 w-full rounded-full text-[12.5px] [&]:mt-4" onClick={() => open(id)}><MessageSquare className="size-4" />{locked ? (fr ? "À partir du forfait Creator" : "From the Creator plan") : c.chat}</Button>
     </div>; })}</div>
     <p className="mt-3 text-[11.5px] text-muted-foreground">{fr ? "Un échange très long (longue conversation, gros document) peut coûter un peu plus que ce prix de base." : "A very long exchange (long conversation, large document) can cost a little more than this base price."}</p>
-    <div className="mt-6 grid gap-3 sm:grid-cols-2 xl:grid-cols-5">{(Object.keys(mediaTiers) as MediaTier[]).map(k => <div key={k} className={card}><p className="text-[13px] font-semibold">{fr ? mediaTiers[k].fr : mediaTiers[k].en}</p><p className="mt-1 text-[12px] text-muted-foreground">{cr(mediaTiers[k].credits)}{k.startsWith("video") ? (fr ? " · 5 s" : " · 5 s") : ""}</p></div>)}</div>
+    <div className="mt-6 grid gap-3 sm:grid-cols-2 xl:grid-cols-5">{(Object.keys(mediaTiers) as MediaTier[]).map(k => <div key={k} className={card}><p className="flex items-center gap-2 text-[13px] font-semibold"><FontAwesomeIcon icon={k.startsWith("image") ? faImage : k.startsWith("video") ? faFilm : faMusic} fixedWidth aria-hidden className="size-3.5 text-muted-foreground" />{fr ? mediaTiers[k].fr : mediaTiers[k].en}</p><p className="mt-1 text-[12px] text-muted-foreground">{cr(mediaTiers[k].credits)}{k.startsWith("video") ? (fr ? " · 5 s" : " · 5 s") : ""}</p></div>)}</div>
     <p className="mt-3 text-[11.5px] text-muted-foreground">{fr ? "Dans le chat, demandez « génère une image… », « une vidéo… » ou « une musique… ». Ajoutez « HD » ou « qualité » pour la version supérieure. Une création qui échoue est remboursée." : "In the chat, ask “generate an image…”, “a video…” or “a song…”. Add “HD” or “quality” for the higher version. A failed creation is refunded."}</p>
   </div>;
 }
