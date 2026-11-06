@@ -30,7 +30,7 @@ const bodySchema = z.object({
 });
 
 const systemPrompts = {
-  chat: "You are TechNova AI, a helpful, precise assistant. Answer in the user's language. Use Markdown when it improves readability.",
+  chat: "You are TechNova AI, a helpful, precise assistant. Answer in the user's language. Use Markdown when it improves readability. TechNova AI Hub itself generates images, videos and music right in this chat: never say you are a text-only AI or that you cannot create images, and never send the user to another tool (Midjourney, DALL-E…). If the user asks for an image, video or song, tell them to write their request starting with « Génère une image… », « Génère une vidéo… » or « Génère une musique… » so TechNova creates it, and offer a refined description they can reuse.",
   create:
     "You are TechNova Studio, an expert product designer and full-stack engineer. In this conversational step, chat briefly and helpfully. NEVER output full files or long code blocks here: projects are generated in the TechNova project panel. If the user wants something built, invite them to describe it (e.g. « Crée-moi un site pour… ») so the studio starts. Answer in the user's language.",
 };
@@ -66,7 +66,7 @@ type InFile = { mediaType: string; filename: string; url: string };
 // Engine behind each mode (server only, never shown). Prices in credits per million tokens = USD × 1 200.
 type Engine = { id: string; input: number; output: number; maxTokens: number; vision: boolean; media: boolean };
 const engines = {
-  flashLite: { id: "google/gemini-3.1-flash-lite", input: 300, output: 1800, maxTokens: 1024, vision: true, media: true },
+  flashLite: { id: "google/gemini-2.5-flash-lite", input: 120, output: 480, maxTokens: 1024, vision: true, media: true },
   balanced: { id: "qwen/qwen3-235b-a22b-2507", input: 168, output: 960, maxTokens: 4096, vision: false, media: false },
   balancedFiles: { id: "google/gemini-3.5-flash-lite", input: 360, output: 3000, maxTokens: 4096, vision: true, media: true },
   expert: { id: "anthropic/claude-sonnet-5", input: 2400, output: 12000, maxTokens: 8192, vision: true, media: false },
@@ -94,8 +94,8 @@ function smartPick(text: string): string {
   if (has(["sql", "supabase", "base de données", "database", "api", "backend", "fonction", "function", "bug", "erreur", "error", "code", "react", "python", "php", "javascript", "typescript", "script"])) return "DeepSeek V3";
   return "GPT-4o Mini";
 }
-const visionModels = new Set(["GPT-4o", "GPT-4o Mini", "Claude Sonnet 5", "Claude Opus 5", "Gemini 3.1 Flash Lite", "Gemini 3.5 Flash Lite", "Claude Haiku 4.5", "Gemini 2.5 Flash", "Gemini 2.5 Pro", "Mistral Large", "Gemma 3 12B"]);
-const mediaModels = new Set(["Gemini 2.5 Flash", "Gemini 2.5 Pro", "Gemini 3.1 Flash Lite", "Gemini 3.5 Flash Lite"]);
+const visionModels = new Set(["GPT-4o", "GPT-4o Mini", "Claude Sonnet 5", "Claude Opus 5", "Gemini 2.5 Flash Lite", "Gemini 3.5 Flash Lite", "Claude Haiku 4.5", "Gemini 2.5 Flash", "Gemini 2.5 Pro", "Mistral Large", "Gemma 3 12B"]);
+const mediaModels = new Set(["Gemini 2.5 Flash", "Gemini 2.5 Pro", "Gemini 2.5 Flash Lite", "Gemini 3.5 Flash Lite"]);
 const reasoningModels = new Set(["DeepSeek R1"]);
 const audioFormats: Record<string, string> = { "audio/mpeg": "mp3", "audio/mp3": "mp3", "audio/wav": "wav", "audio/x-wav": "wav", "audio/webm": "webm", "audio/ogg": "ogg", "audio/mp4": "m4a", "audio/x-m4a": "m4a", "audio/aac": "aac", "audio/flac": "flac" };
 
@@ -227,14 +227,20 @@ export const Route = createFileRoute("/api/chat")({
         const reservation = worst > 0 ? await reserveCredits(userId, worst, model) : null;
         if (worst > 0 && !reservation) return new Response("Crédits insuffisants — rechargez votre solde dans Crédits. / Not enough credits.", { status: 402 });
         let outputText = "";
+        let billed: { input: number; output: number; reasoning: number; costUsd: number | null } | null = null;
         let settled = false;
         // Charges what was actually generated, once — at the end of the stream or when the client disconnects.
         const settle = async () => {
           if (settled) return;
           settled = true;
-          const outputTokens = estimateTokens(outputText);
-          const credits = engine ? Math.max(flat, engineCost(engine, inputTokens, outputTokens)) : creditCost(model, inputTokens, outputTokens);
-          await supabaseAdmin.from("usage_logs").insert({ owner_id: userId, model: model, input_tokens: inputTokens, output_tokens: outputTokens, credits, latency_ms: Date.now() - startedAt });
+          const inTokens = billed?.input || inputTokens;
+          const outTokens = billed ? billed.output : estimateTokens(outputText);
+          // Charge what the provider billed (1 200 credits per USD), never less than the mode's fixed price.
+          const realCredits = billed?.costUsd != null ? Math.ceil(billed.costUsd * 1200) : engine ? engineCost(engine, inTokens, outTokens) : creditCost(model, inTokens, outTokens);
+          const credits = engine ? Math.max(flat, realCredits) : billed?.costUsd != null ? Math.max(1, realCredits) : realCredits;
+          await supabaseAdmin.from("usage_logs").insert({ owner_id: userId, model: model, input_tokens: inTokens, output_tokens: outTokens, credits, latency_ms: Date.now() - startedAt });
+          // Admin-only record of the engine behind the mode and its real cost (never readable from the browser).
+          await supabaseAdmin.from("chat_engine_costs").insert({ owner_id: userId, mode: model, engine: modelId, input_tokens: inTokens, output_tokens: outTokens, reasoning_tokens: billed?.reasoning ?? 0, cost_usd: billed?.costUsd ?? null, credits });
           if (reservation) await settleCredits(reservation, credits);
         };
         const abandon = async () => {
@@ -256,6 +262,7 @@ export const Route = createFileRoute("/api/chat")({
             model: modelId,
             stream: true,
             max_tokens: maxTokens,
+            usage: { include: true },
             ...(reasoning ? { reasoning: { max_tokens: Math.floor(maxTokens / 2) } } : {}),
             messages: [{ role: "system", content: systemPrompt }, ...parsed.data.messages.map(m => (m.files?.length && m.role === "user" ? { role: m.role, content: toParts(m.content, m.files) } : { role: m.role, content: m.content }))],
           }),
@@ -298,6 +305,10 @@ export const Route = createFileRoute("/api/chat")({
                   if (json.error) {
                     controller.enqueue(encoder.encode(`\n\n⚠️ ${json.error.message ?? "Error"}`));
                     continue;
+                  }
+                  if (json.usage) {
+                    const u = json.usage as { prompt_tokens?: number; completion_tokens?: number; cost?: number; completion_tokens_details?: { reasoning_tokens?: number } };
+                    billed = { input: u.prompt_tokens ?? 0, output: u.completion_tokens ?? 0, reasoning: u.completion_tokens_details?.reasoning_tokens ?? 0, costUsd: typeof u.cost === "number" ? u.cost : null };
                   }
                   const delta = json.choices?.[0]?.delta?.content;
                   if (delta) { outputText += delta; controller.enqueue(encoder.encode(delta)); }

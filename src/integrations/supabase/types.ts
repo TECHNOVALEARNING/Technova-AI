@@ -508,6 +508,12 @@ export type Database = {
         }
         Relationships: []
       }
+      chat_engine_costs: {
+        Row: { cost_usd: number | null; created_at: string; credits: number; engine: string; id: number; input_tokens: number; mode: string; output_tokens: number; owner_id: string | null; reasoning_tokens: number }
+        Insert: { cost_usd?: number | null; created_at?: string; credits?: number; engine: string; id?: never; input_tokens?: number; mode: string; output_tokens?: number; owner_id?: string | null; reasoning_tokens?: number }
+        Update: { cost_usd?: number | null; created_at?: string; credits?: number; engine?: string; id?: never; input_tokens?: number; mode?: string; output_tokens?: number; owner_id?: string | null; reasoning_tokens?: number }
+        Relationships: []
+      }
       chat_messages: {
         Row: {
           created_at: string
@@ -1397,6 +1403,10 @@ export type Database = {
         Returns: { balance: number; created_at: string; credits_30d: number; display_name: string; email: string; id: string; is_admin: boolean; last_sign_in_at: string | null; paid_xof: number; requests_30d: number; suspended: boolean }[]
       }
       admin_count_users: { Args: { _search?: string }; Returns: number }
+      admin_engine_usage: {
+        Args: { _days?: number }
+        Returns: { mode: string; engine: string; replies: number; input_tokens: number; output_tokens: number; reasoning_tokens: number; cost_usd: number; credits: number }[]
+      }
       admin_credit_totals: { Args: never; Returns: { consumed: number; distributed: number; granted: number; purchased: number }[] }
       admin_revenue: { Args: never; Returns: { buyers: number; failed_30d: number; paid_30d: number; pending_30d: number; revenue_30d: number; revenue_today: number; revenue_total: number }[] }
       match_document_chunks: {

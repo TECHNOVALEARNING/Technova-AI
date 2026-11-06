@@ -3,6 +3,8 @@ import { confirmDialog } from "@/components/ConfirmHost";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import {
+  History,
+  Share,
   ArrowRight,
   Check,
   ChevronDown,
@@ -291,6 +293,27 @@ function VoiceButton({ inputRef }: { inputRef?: React.RefObject<HTMLTextAreaElem
   );
 }
 
+/** Under a prompt you sent: send it again, copy it, share it, or put it back in the box to change it. */
+function UserMessageActions({ text, onRetry, onEdit, disabled }: { text: string; onRetry: () => void; onEdit: () => void; disabled?: boolean }) {
+  const { lang } = useDashboard();
+  const fr = lang === "fr";
+  const [copied, setCopied] = useState(false);
+  if (!text) return null;
+  const share = async () => {
+    try { if (navigator.share) { await navigator.share({ text }); return; } } catch { return; }
+    await navigator.clipboard.writeText(text); setCopied(true); setTimeout(() => setCopied(false), 1500);
+  };
+  const btn = "grid size-7 place-items-center rounded-md text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground disabled:opacity-40";
+  return (
+    <div className="-mt-3 flex items-center justify-end gap-0.5 opacity-70 transition-opacity hover:opacity-100">
+      <button type="button" disabled={disabled} aria-label={fr ? "Renvoyer" : "Send again"} title={fr ? "Renvoyer" : "Send again"} onClick={onRetry} className={btn}><History className="size-3.5" /></button>
+      <button type="button" aria-label={fr ? "Copier" : "Copy"} title={fr ? "Copier" : "Copy"} onClick={() => { void navigator.clipboard.writeText(text); setCopied(true); setTimeout(() => setCopied(false), 1500); }} className={btn}>{copied ? <Check className="size-3.5" /> : <Copy className="size-3.5" />}</button>
+      <button type="button" aria-label={fr ? "Partager" : "Share"} title={fr ? "Partager" : "Share"} onClick={() => void share()} className={btn}><Share className="size-3.5" /></button>
+      <button type="button" disabled={disabled} aria-label={fr ? "Modifier" : "Edit"} title={fr ? "Modifier" : "Edit"} onClick={onEdit} className={btn}><Pencil className="size-3.5" /></button>
+    </div>
+  );
+}
+
 function MessageActionsRow({ text }: { text: string }) {
   const { lang } = useDashboard();
   const [copied, setCopied] = useState(false);
@@ -395,6 +418,9 @@ function ChatComposer({
   const attachLabel = lang === "fr" ? `Joindre des fichiers (${formatsLabel}, code)` : `Attach files (${formatsLabel}, code)`;
   return (
     <div className="w-full">
+      <p className="mb-1.5 text-center text-[11px] text-muted-foreground">
+        {lang === "fr" ? "TechNova AI Hub peut faire des erreurs. Vérifiez les informations importantes." : "TechNova AI Hub can make mistakes. Check important information."}
+      </p>
       <PromptInput
         onSubmit={async ({ text }) => {
           const readyDocs = docs.filter((d) => d.phase === "ready" && d.fileId);
@@ -1082,7 +1108,7 @@ export function ThreadPage({ threadId }: { threadId: string }) {
       finally { setThinking(false); }
       return;
     }
-    const mediaRequest = choice.mode === "chat" && /\b(?:g[ée]n[èe]re(?:z)?(?:-moi)?|cr[ée]e(?:z)?(?:-moi)?|fais(?:-moi)?|fabrique(?:-moi)?|generate|create|make)\b[\s\S]{0,110}\b(?:image|photo|illustration|visuel|picture|image|video|vid[ée]o|clip|animation|musique|chanson|morceau|jingle|beat|music|song|track)\b/i.test(request);
+    const mediaRequest = choice.mode === "chat" && /(?:^|[^\p{L}])(?:g[ée]n[éèe]r\p{L}*|cr[ée]+\p{L}*|fai[st]\p{L}*|faire|fabriqu\p{L}*|dessin\p{L}*|produi[rst]\p{L}*|r[ée]alis\p{L}*|compos\p{L}*|imagin\p{L}*|generat\p{L}*|create|make|draw|design)(?![\p{L}])[\s\S]{0,110}?(?:^|[^\p{L}])(?:image|images|photo|photos|illustration|visuel|portrait|affiche|logo|picture|vid[ée]o|vid[ée]os|clip|animation|musique|chanson|morceau|jingle|beat|music|song|track)(?![\p{L}])/iu.test(request);
     if (last?.role === "user" && mediaRequest) {
       const kind: MediaKind = /\b(?:musique|chanson|morceau|jingle|beat|music|song|track)\b/i.test(request) ? "music" : /\b(?:vid[ée]o|video|clip|animation)\b/i.test(request) ? "video" : "image";
       const quality = /\b(?:hd|haute (?:qualit[ée]|d[ée]finition)|qualit[ée]|4k|high quality|quality|detailed|d[ée]taill[ée]e?)\b/i.test(request);
@@ -1391,6 +1417,11 @@ export function ThreadPage({ threadId }: { threadId: string }) {
                   )}
                 </MessageContent>
                 {message.role === "assistant" && <MessageActionsRow text={message.parts.map(p => p.type === "text" ? p.text : "").join("")} />}
+                {message.role === "user" && (() => {
+                  const text = message.parts.map(p => p.type === "text" ? p.text : "").join("");
+                  return <UserMessageActions text={text} disabled={busy || loading} onRetry={() => void addNote(text)}
+                    onEdit={() => { const el = inputRef.current; if (!el) return; setTextareaValue(el, text); el.focus(); el.setSelectionRange(text.length, text.length); }} />;
+                })()}
               </Message>
             ))}
             {thinking && (

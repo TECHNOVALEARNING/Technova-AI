@@ -274,6 +274,13 @@
       "when": 1794470400000,
       "tag": "0038_account_deletion",
       "breakpoints": true
+    },
+    {
+      "idx": 39,
+      "version": "7",
+      "when": 1794556800000,
+      "tag": "0039_engine_costs",
+      "breakpoints": true
     }
   ]
 }

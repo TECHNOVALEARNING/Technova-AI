@@ -74,6 +74,17 @@ export function AdminOverview({ fr }: { fr: boolean }) {
       </div>
     </div>
 
+    <div className={card}>
+      <h3 className="text-sm font-semibold">{fr ? "Coût réel par mode et moteur (30 jours)" : "Real cost by mode and engine (30 days)"}</h3>
+      <p className="mt-1 text-xs text-muted-foreground">{fr ? "Moteur réellement utilisé derrière chaque mode (Smart compris), tokens facturés par le fournisseur (réflexion cachée comprise) et coût réel, comparés aux crédits facturés. 1 crédit ≈ 1 FCFA, 1 $ ≈ 600 FCFA." : "Engine actually used behind each mode (Smart included), tokens billed by the provider (hidden reasoning included) and real cost, against the credits charged. 1 credit ≈ 1 FCFA, $1 ≈ 600 FCFA."}</p>
+      {o.engines === null ? <p className="mt-3 text-xs text-destructive">{fr ? "Lancez la migration 0039_engine_costs.sql dans Supabase pour activer ce suivi." : "Run migration 0039_engine_costs.sql in Supabase to enable this report."}</p> :
+      <div className="mt-2 overflow-x-auto"><table className="w-full text-sm"><thead><tr><th className={th}>Mode</th><th className={th}>{fr ? "Moteur" : "Engine"}</th><th className={th}>{fr ? "Réponses" : "Replies"}</th><th className={th}>{fr ? "Tokens entrée / sortie" : "Tokens in / out"}</th><th className={th}>{fr ? "dont réflexion" : "of which reasoning"}</th><th className={th}>{fr ? "Coût réel" : "Real cost"}</th><th className={th}>{fr ? "Facturé" : "Charged"}</th><th className={th}>{fr ? "Marge" : "Margin"}</th></tr></thead>
+        <tbody>{o.engines.length === 0 ? <tr><td colSpan={8} className="p-3 text-muted-foreground">{fr ? "Aucune réponse enregistrée pour l'instant." : "No replies recorded yet."}</td></tr> : o.engines.map((e) => {
+          const costXof = e.costUsd * 600; const m = e.credits > 0 ? Math.round((1 - costXof / e.credits) * 100) : null;
+          return <tr key={e.mode + e.engine} className="border-t border-border"><td className="p-3">{e.mode}</td><td className="p-3 font-mono text-xs">{e.engine}</td><td className="p-3 tabular-nums">{n(e.replies)}</td><td className="p-3 tabular-nums">{n(e.input)} / {n(e.output)}</td><td className="p-3 tabular-nums">{n(e.reasoning)}</td><td className="p-3 tabular-nums">{e.costUsd.toLocaleString(loc, { maximumFractionDigits: 4 })} $ <span className="text-muted-foreground">≈ {n(Math.round(costXof))} FCFA</span></td><td className="p-3 tabular-nums">{n(e.credits)} cr.</td><td className={`p-3 font-semibold tabular-nums ${m !== null && m < 30 ? "text-destructive" : ""}`}>{m === null ? "—" : `${m} %`}</td></tr>;
+        })}</tbody></table></div>}
+    </div>
+
     {stats && <div className={card}>
       <h3 className="text-sm font-semibold">{fr ? "Consommation par modèle (30 jours)" : "Usage by model (30 days)"}</h3>
       <div className="mt-2 overflow-x-auto"><table className="w-full text-sm"><thead><tr><th className={th}>{fr ? "Modèle" : "Model"}</th><th className={th}>{fr ? "Appels" : "Calls"}</th><th className={th}>Tokens</th><th className={th}>{fr ? "Crédits" : "Credits"}</th></tr></thead>

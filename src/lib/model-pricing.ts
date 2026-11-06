@@ -10,7 +10,7 @@ export const modelCatalog: ModelInfo[] = [
   { name: "Claude Opus 5", provider: "Anthropic", input: 6000, output: 30000, kind: "chat" },
   { name: "GPT-6 Astra", provider: "OpenAI", input: 12000, output: 60000, kind: "chat" },
   { name: "Gemini 4 Argon", provider: "Google", input: 2400, output: 12000, kind: "chat" },
-  { name: "Gemini 3.1 Flash Lite", provider: "Google", input: 300, output: 1800, kind: "chat" },
+  { name: "Gemini 2.5 Flash Lite", provider: "Google", input: 120, output: 480, kind: "chat" },
   { name: "Gemini 3.5 Flash Lite", provider: "Google", input: 360, output: 3000, kind: "chat" },
   { name: "Qwen3 235B", provider: "Alibaba", input: 168, output: 960, kind: "chat" },
   { name: "Claude Haiku 4.5", provider: "Anthropic", input: 1200, output: 6000, kind: "chat" },

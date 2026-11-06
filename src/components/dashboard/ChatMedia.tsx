@@ -1,5 +1,6 @@
-import { useRef, useState, type ReactNode } from "react";
-import { AlertCircle, Download, Film, Image as ImageIcon, Loader2, Music, Pencil, Play } from "lucide-react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
+import { createPortal } from "react-dom";
+import { AlertCircle, Download, Film, Image as ImageIcon, Loader2, Music, Pencil, Play, X } from "lucide-react";
 
 export type ChatMediaData = {
   id: string;
@@ -104,6 +105,7 @@ export function ChatMedia({ data, lang, onBroken, onEdit }: { data: ChatMediaDat
   const retried = useRef(new Set<string>());
   const broken = (url: string) => { if (retried.current.has(url)) return; retried.current.add(url); onBroken?.(data.id); };
   const [saving, setSaving] = useState<string | null>(null);
+  const [zoomed, setZoomed] = useState<string | null>(null);
   const urls = Array.isArray(data.urls) ? data.urls.filter((url) => typeof url === "string" && url.startsWith("https://")) : [];
   const pending = !["success", "fail"].includes(data.status);
   if (pending) return <div className="my-2 w-full max-w-[490px] overflow-hidden rounded-md border border-border bg-card shadow-soft"><GenerationStage data={data} lang={lang} /></div>;
@@ -122,7 +124,9 @@ export function ChatMedia({ data, lang, onBroken, onEdit }: { data: ChatMediaDat
         ? <audio src={url} controls preload="metadata" className="w-full" onError={() => broken(url)} />
         : data.kind === "video"
           ? <video src={url} controls playsInline preload="metadata" className="max-h-[520px] w-full rounded-2xl bg-black object-contain" onError={() => broken(url)} />
-          : <img src={url} alt={`${label} ${index + 1}`} className="max-h-[520px] w-auto max-w-full rounded-2xl" onError={() => broken(url)} />}
+          : <button type="button" onClick={() => setZoomed(url)} aria-label={fr ? "Agrandir l’image" : "Enlarge image"} className="block cursor-zoom-in rounded-2xl focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring">
+              <img src={url} alt={`${label} ${index + 1}`} className="max-h-[520px] w-auto max-w-full rounded-2xl" onError={() => broken(url)} />
+            </button>}
       <figcaption className="mt-1.5 flex items-center gap-0.5">
         <IconAction label={fr ? "Télécharger" : "Download"} onClick={() => { setSaving(url); void downloadFile(url, data.kind, data.id, index).finally(() => setSaving(null)); }}>
           {saving === url ? <Loader2 className="size-4 animate-spin" /> : <Download className="size-4" />}{fr ? "Télécharger" : "Download"}
@@ -132,5 +136,25 @@ export function ChatMedia({ data, lang, onBroken, onEdit }: { data: ChatMediaDat
         </IconAction>}
       </figcaption>
     </figure>)}
+    {zoomed && <ImageViewer url={zoomed} alt={label} fr={fr} onClose={() => setZoomed(null)} onDownload={() => void downloadFile(zoomed, data.kind, data.id, urls.indexOf(zoomed))} />}
   </div>;
+}
+
+/** Full-screen view of a generated image, like other AI apps: click outside or press Esc to close. */
+function ImageViewer({ url, alt, fr, onClose, onDownload }: { url: string; alt: string; fr: boolean; onClose: () => void; onDownload: () => void }) {
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") onClose(); };
+    window.addEventListener("keydown", onKey);
+    const overflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => { window.removeEventListener("keydown", onKey); document.body.style.overflow = overflow; };
+  }, [onClose]);
+  // Rendered on <body> so it covers the whole dashboard (sidebar included).
+  return createPortal(<div role="dialog" aria-modal="true" aria-label={alt} onClick={onClose} className="fixed inset-0 z-[100] flex items-center justify-center bg-black/85 p-4 backdrop-blur-sm">
+    <div className="absolute right-4 top-4 flex gap-2" onClick={(e) => e.stopPropagation()}>
+      <button type="button" onClick={onDownload} aria-label={fr ? "Télécharger" : "Download"} title={fr ? "Télécharger" : "Download"} className="grid size-10 place-items-center rounded-full bg-white/10 text-white transition-colors hover:bg-white/20"><Download className="size-5" /></button>
+      <button type="button" onClick={onClose} autoFocus aria-label={fr ? "Fermer" : "Close"} title={fr ? "Fermer" : "Close"} className="grid size-10 place-items-center rounded-full bg-white/10 text-white transition-colors hover:bg-white/20"><X className="size-5" /></button>
+    </div>
+    <img src={url} alt={alt} onClick={(e) => e.stopPropagation()} className="max-h-[92svh] max-w-[94vw] cursor-default rounded-xl object-contain shadow-2xl" />
+  </div>, document.body);
 }

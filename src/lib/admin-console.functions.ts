@@ -39,10 +39,11 @@ export const getAdminOverview = createServerFn({ method: "GET" })
   .handler(async ({ context }) => {
     await requireAdmin(context);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const [revenue, credits, balances] = await Promise.all([
+    const [revenue, credits, balances, engineUsage] = await Promise.all([
       supabaseAdmin.rpc("admin_revenue"),
       supabaseAdmin.rpc("admin_credit_totals"),
       providerBalances(),
+      supabaseAdmin.rpc("admin_engine_usage", { _days: 30 }),
     ]);
     const r = revenue.data?.[0]; const c = credits.data?.[0];
     // Provider cost of consumed credits: prices are set at 1 200 credits per US dollar.
@@ -51,6 +52,8 @@ export const getAdminOverview = createServerFn({ method: "GET" })
       revenue: { total: r?.revenue_total ?? 0, d30: r?.revenue_30d ?? 0, today: r?.revenue_today ?? 0, paid30: r?.paid_30d ?? 0, pending30: r?.pending_30d ?? 0, failed30: r?.failed_30d ?? 0, buyers: r?.buyers ?? 0 },
       credits: { distributed: c?.distributed ?? 0, consumed: c?.consumed ?? 0, purchased: c?.purchased ?? 0, granted: c?.granted ?? 0, consumedUsd },
       balances,
+      // Engine behind each chat mode with its real cost (null until migration 0039 is applied).
+      engines: engineUsage.error ? null : (engineUsage.data ?? []).map((e) => ({ mode: e.mode, engine: e.engine, replies: Number(e.replies), input: Number(e.input_tokens), output: Number(e.output_tokens), reasoning: Number(e.reasoning_tokens), costUsd: Number(e.cost_usd), credits: Number(e.credits) })),
     };
   });
 

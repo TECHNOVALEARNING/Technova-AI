@@ -18,7 +18,7 @@ const textSpecs: Record<string, { context: string; caps: TextCap[] }> = {
   "Claude Opus 5": { context: "1M", caps: ["reasoning", "coding", "vision", "long"] },
   "GPT-6 Astra": { context: "1M", caps: ["reasoning", "coding", "vision", "long"] },
   "Gemini 4 Argon": { context: "1M", caps: ["reasoning", "coding", "vision", "long"] },
-  "Gemini 3.1 Flash Lite": { context: "1M", caps: ["vision", "fast", "long"] },
+  "Gemini 2.5 Flash Lite": { context: "1M", caps: ["vision", "fast", "long"] },
   "Gemini 3.5 Flash Lite": { context: "1M", caps: ["vision", "fast", "long"] },
   "Qwen3 235B": { context: "262K", caps: ["reasoning", "coding"] },
   "Claude Haiku 4.5": { context: "200K", caps: ["reasoning", "vision", "fast"] },
@@ -40,7 +40,7 @@ const TYPICAL_IN = 1000, TYPICAL_OUT = 700;
 
 /** Engines behind the chat modes: their card shows the mode's fixed price per message (src/lib/chat-modes.ts). */
 const modePrices: Record<string, { credits: number; mode: ModeLabel }> = {
-  "Gemini 3.1 Flash Lite": { credits: 1, mode: { fr: "Mode Éclair", en: "Flash mode", es: "Modo Relámpago", pt: "Modo Relâmpago" } },
+  "Gemini 2.5 Flash Lite": { credits: 1, mode: { fr: "Mode Éclair", en: "Flash mode", es: "Modo Relámpago", pt: "Modo Relâmpago" } },
   "Qwen3 235B": { credits: 3, mode: { fr: "Mode Équilibré", en: "Balanced mode", es: "Modo Equilibrado", pt: "Modo Equilibrado" } },
   "Gemini 3.5 Flash Lite": { credits: 4, mode: { fr: "Mode Équilibré avec fichier", en: "Balanced mode with a file", es: "Modo Equilibrado con archivo", pt: "Modo Equilibrado com arquivo" } },
   "Claude Sonnet 5": { credits: 25, mode: { fr: "Mode Expert · Creator", en: "Expert mode · Creator", es: "Modo Experto · Creator", pt: "Modo Especialista · Creator" } },
