@@ -1,4 +1,5 @@
 import { useEffect, useState, type ReactNode } from "react";
+import { afterSignInPath } from "@/lib/public-pricing";
 import { useNavigate } from "@tanstack/react-router";
 import { ArrowLeft, ArrowRight, Building2, Check, Globe, LoaderCircle, Sparkles, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -43,7 +44,7 @@ export function OnboardingPage() {
       const { data } = await supabase.auth.getUser();
       if (!data.user) return;
       const { data: profile } = await supabase.from("profiles").select("onboarded_at").eq("id", data.user.id).maybeSingle();
-      if (profile?.onboarded_at) { markOnboarded(); void navigate({ to: "/dashboard", replace: true }); }
+      if (profile?.onboarded_at) { markOnboarded(); void navigate({ to: afterSignInPath(), replace: true }); }
     })();
   }, [navigate]);
 
@@ -69,7 +70,7 @@ export function OnboardingPage() {
     setBusy(false);
     if (error) { setFailure(fr ? "Enregistrement impossible. Réessayez." : "Could not save. Please try again."); return; }
     markOnboarded();
-    void navigate({ to: "/dashboard", replace: true });
+    void navigate({ to: afterSignInPath(), replace: true });
   }
 
   const titles: Record<number, [string, string, string, string]> = {

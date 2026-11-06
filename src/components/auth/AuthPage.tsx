@@ -1,4 +1,5 @@
 import { useEffect, useState, type FormEvent } from "react";
+import { afterSignInPath } from "@/lib/public-pricing";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { ArrowLeft, ArrowRight, Eye, EyeOff, Globe, LoaderCircle, Sparkles } from "lucide-react";
 import { z } from "zod";
@@ -45,7 +46,7 @@ export function AuthPage({ mode }: { mode: Mode }) {
     }
     const check = async () => {
       const { data } = await supabase.auth.getUser();
-      if (data.user) navigate({ to: "/dashboard", replace: true });
+      if (data.user) navigate({ to: afterSignInPath(), replace: true });
     };
     void check();
     return undefined;
@@ -91,12 +92,12 @@ export function AuthPage({ mode }: { mode: Mode }) {
       if (isSignup) {
         const { data: result, error } = await supabase.auth.signUp({ email, password, options: { emailRedirectTo: `${window.location.origin}/connexion`, data: { display_name: name } } });
         if (error) throw error;
-        if (result.session) navigate({ to: "/dashboard" });
+        if (result.session) navigate({ to: afterSignInPath() });
         else setMessage(t.preview);
       } else if (isLogin) {
         const { error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;
-        navigate({ to: "/dashboard" });
+        navigate({ to: afterSignInPath() });
       } else if (isReset) {
         if (!recovery) { setFailure(t.invalidLink); return; }
         const { error } = await supabase.auth.updateUser({ password });

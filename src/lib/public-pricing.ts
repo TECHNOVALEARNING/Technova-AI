@@ -11,6 +11,11 @@ export const fallbackPacks = [
 ];
 export type PublicPack = (typeof fallbackPacks)[number];
 export const PENDING_PACK_KEY = "tn-pending-pack";
+/** Where a sign-in lands: AI Chat, or Credits when a pack was chosen before signing in (to finish the purchase). */
+export function afterSignInPath(): "/dashboard/chat" | "/dashboard/credits" {
+  try { if (localStorage.getItem(PENDING_PACK_KEY)) return "/dashboard/credits"; } catch { /* storage blocked */ }
+  return "/dashboard/chat";
+}
 
 type Copy = { tagline: string; perks: { icon: IconDefinition; text: string }[] };
 
