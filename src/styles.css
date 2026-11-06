@@ -578,41 +578,6 @@ html, body, * { scrollbar-width: none; }
 .dashboard-page-enter { animation: dashboard-page-in 260ms cubic-bezier(0.22, 1, 0.36, 1) both; }
 @media (prefers-reduced-motion: reduce) { .dashboard-page-enter { animation: none; } }
 
-/* Chat media creation: a quiet dot field for images and a framed sequence for video. */
-.media-generation { --media-accent: var(--chat-glow); overflow: hidden; }
-.media-generation-top { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 15px 18px; border-bottom: 1px solid var(--border); }
-.media-generation-icon { display: grid; width: 32px; height: 32px; flex: none; place-items: center; border-radius: 6px; color: var(--media-accent); background: color-mix(in oklab, var(--media-accent) 11%, var(--card)); }
-.media-generation-live { display: inline-flex; flex: none; align-items: center; gap: 6px; color: var(--muted-foreground); font-size: 9px; font-weight: 700; letter-spacing: .08em; }
-.media-generation-live-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--media-accent); animation: media-pulse 2s ease-in-out infinite; }
-.media-generation-canvas { position: relative; display: grid; min-height: 214px; place-items: center; overflow: hidden; background: color-mix(in oklab, var(--card) 85%, var(--secondary)); }
-.media-generation-image::before { content: ""; position: absolute; inset: 0; background: radial-gradient(ellipse at center, color-mix(in oklab, var(--media-accent) 5%, transparent), transparent 65%); }
-.media-generation-dots { display: grid; grid-template-columns: repeat(19, 1fr); gap: 7px; width: min(76%, 323px); padding-block: 20px; }
-.media-generation-dots > span { width: 3px; height: 3px; border-radius: 50%; background: var(--media-accent); animation: media-breathe 3.6s ease-in-out infinite alternate; }
-.media-generation-video { min-height: 235px; padding: 22px 34px 26px; background: linear-gradient(145deg, color-mix(in oklab, var(--secondary) 55%, var(--card)), var(--card)); }
-.media-generation-video-frame { position: relative; display: grid; width: min(100%, 330px); aspect-ratio: 16 / 8; place-items: center; overflow: hidden; border: 1px solid color-mix(in oklab, var(--media-accent) 28%, var(--border)); background: repeating-linear-gradient(90deg, transparent 0 30px, color-mix(in oklab, var(--media-accent) 7%, transparent) 30px 31px), repeating-linear-gradient(0deg, transparent 0 30px, color-mix(in oklab, var(--media-accent) 7%, transparent) 30px 31px); }
-.media-generation-corner { position: absolute; z-index: 2; width: 17px; height: 17px; border-color: var(--media-accent); border-style: solid; }
-.media-generation-corner-tl { top: 8px; left: 8px; border-width: 1px 0 0 1px; }
-.media-generation-corner-tr { top: 8px; right: 8px; border-width: 1px 1px 0 0; }
-.media-generation-corner-bl { bottom: 8px; left: 8px; border-width: 0 0 1px 1px; }
-.media-generation-corner-br { bottom: 8px; right: 8px; border-width: 0 1px 1px 0; }
-.media-generation-video-orbit { display: grid; width: 58px; height: 58px; place-items: center; border: 1px solid color-mix(in oklab, var(--media-accent) 56%, transparent); border-radius: 50%; color: var(--media-accent); box-shadow: 0 0 0 11px color-mix(in oklab, var(--media-accent) 7%, transparent), 0 0 0 22px color-mix(in oklab, var(--media-accent) 4%, transparent); animation: media-pulse 3s ease-in-out infinite; }
-.media-generation-video-scan { position: absolute; inset: 0 auto 0 -30%; width: 26%; transform: skewX(-18deg); background: linear-gradient(90deg, transparent, color-mix(in oklab, var(--media-accent) 12%, transparent), transparent); animation: media-scan 4s ease-in-out infinite; }
-.media-generation-filmstrip { position: absolute; bottom: 12px; display: flex; gap: 5px; }
-.media-generation-filmstrip span { width: 17px; height: 3px; border-radius: 2px; background: var(--media-accent); animation: media-breathe 1.7s ease-in-out infinite alternate; }
-.media-generation-bottom { display: grid; gap: 8px; padding: 15px 18px 16px; border-top: 1px solid var(--border); }
-.media-generation-track { height: 4px; overflow: hidden; border-radius: 5px; background: color-mix(in oklab, var(--media-accent) 12%, var(--secondary)); }
-.media-generation-track > span { display: block; height: 100%; border-radius: inherit; background: var(--media-accent); transition: width .5s ease; }
-.media-generation-track-indeterminate > span { width: 32%; animation: media-track 2.3s ease-in-out infinite; }
-@keyframes media-breathe { from { opacity: .25; } to { opacity: 1; } }
-@keyframes media-pulse { 50% { opacity: .45; } }
-@keyframes media-scan { to { left: 120%; } }
-@keyframes media-track { from { transform: translateX(-110%); } to { transform: translateX(325%); } }
-@media (prefers-reduced-motion: reduce) {
-  .media-generation-dots > span, .media-generation-live-dot, .media-generation-video-orbit, .media-generation-video-scan, .media-generation-filmstrip span, .media-generation-track-indeterminate > span { animation: none; }
-  .media-generation-video-scan { display: none; }
-  .media-generation-track-indeterminate > span { width: 32%; transform: none; }
-}
-
 /* Landing install invitation: slides up once, static for reduced-motion users. */
 @keyframes install-in { from { opacity: 0; transform: translateY(16px) scale(0.98); } to { opacity: 1; transform: none; } }
 .install-prompt { animation: install-in 0.45s cubic-bezier(0.2, 0.8, 0.2, 1) both; }

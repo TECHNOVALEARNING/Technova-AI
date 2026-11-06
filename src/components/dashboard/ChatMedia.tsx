@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { createPortal } from "react-dom";
-import { AlertCircle, Download, Film, Image as ImageIcon, Loader2, Music, Pencil, Play, X } from "lucide-react";
+import { AlertCircle, Download, Loader2, Pencil, X } from "lucide-react";
 
 export type ChatMediaData = {
   id: string;
@@ -15,62 +15,71 @@ export type ChatMediaData = {
   expired?: boolean;
 };
 
-const dots = Array.from({ length: 19 * 11 }, (_, index) => {
-  const x = index % 19;
-  const y = Math.floor(index / 19);
-  const center = Math.exp(-(((x - 9) / 6.8) ** 2 + ((y - 5) / 3.9) ** 2));
-  const ripple = (Math.sin(x * .84 + y * .7) + 1) / 2;
-  return Math.max(.13, Math.min(1, center * (.5 + ripple * .5)));
-});
-
 const copyFor = (kind: ChatMediaData["kind"], fr: boolean) => ({
-  image: { title: fr ? "Génération d’image" : "Image generation", step: fr ? "Création de votre image" : "Creating your image", shaping: fr ? "Votre image prend forme" : "Your image is taking shape", label: "Image" },
-  video: { title: fr ? "Génération vidéo" : "Video generation", step: fr ? "Composition de la séquence" : "Composing your scene", shaping: fr ? "Votre vidéo prend forme" : "Your video is taking shape", label: fr ? "Vidéo" : "Video" },
-  music: { title: fr ? "Génération musicale" : "Music generation", step: fr ? "Composition de votre morceau" : "Composing your track", shaping: fr ? "Votre morceau prend forme (environ 1 min)" : "Your track is taking shape (about 1 min)", label: fr ? "Musique" : "Music" },
+  image: { creating: fr ? "Création de l’image" : "Creating image", label: "Image" },
+  video: { creating: fr ? "Création de la vidéo" : "Creating video", label: fr ? "Vidéo" : "Video" },
+  music: { creating: fr ? "Création de la musique" : "Creating music", label: fr ? "Musique" : "Music" },
 })[kind];
 
-function KindIcon({ kind, className }: { kind: ChatMediaData["kind"]; className: string }) {
-  return kind === "video" ? <Film className={className} /> : kind === "music" ? <Music className={className} /> : <ImageIcon className={className} />;
+/** Field of dots on black, lit by a slow drifting blue glow (canvas, one frame per display refresh). */
+function DotField() {
+  const ref = useRef<HTMLCanvasElement>(null);
+  useEffect(() => {
+    const canvas = ref.current;
+    const ctx = canvas?.getContext("2d");
+    if (!canvas || !ctx) return;
+    const still = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    let w = 0, h = 0, frame = 0;
+    const resize = () => {
+      const dpr = Math.min(window.devicePixelRatio || 1, 2);
+      w = canvas.clientWidth; h = canvas.clientHeight;
+      canvas.width = Math.round(w * dpr); canvas.height = Math.round(h * dpr);
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    };
+    const draw = (time: number) => {
+      const t = time / 1000;
+      ctx.clearRect(0, 0, w, h);
+      const gap = 16;
+      // Two soft light sources wander slowly across the field.
+      const a = { x: w * (0.45 + 0.22 * Math.sin(t * 0.35)), y: h * (0.5 + 0.18 * Math.cos(t * 0.28)) };
+      const b = { x: w * (0.6 + 0.2 * Math.cos(t * 0.22 + 1.3)), y: h * (0.55 + 0.2 * Math.sin(t * 0.31 + 0.7)) };
+      const ra = Math.min(w, h) * 0.26, rb = Math.min(w, h) * 0.2;
+      for (let y = gap / 2; y < h; y += gap) {
+        for (let x = gap / 2; x < w; x += gap) {
+          const ia = Math.exp(-((x - a.x) ** 2 + (y - a.y) ** 2) / (ra * ra));
+          const ib = Math.exp(-((x - b.x) ** 2 + (y - b.y) ** 2) / (rb * rb)) * 0.8;
+          const twinkle = 0.75 + 0.25 * Math.sin(t * 2.2 + x * 0.37 + y * 0.53);
+          const glow = Math.min(1, (ia + ib) * twinkle);
+          if (glow < 0.04) { ctx.fillStyle = "rgba(255,255,255,0.07)"; ctx.fillRect(x - 0.6, y - 0.6, 1.2, 1.2); continue; }
+          ctx.fillStyle = `rgba(${Math.round(40 + 60 * glow)},${Math.round(90 + 80 * glow)},255,${0.12 + 0.75 * glow})`;
+          ctx.beginPath(); ctx.arc(x, y, 0.7 + 0.8 * glow, 0, Math.PI * 2); ctx.fill();
+        }
+      }
+      if (!still) frame = requestAnimationFrame(draw);
+    };
+    resize();
+    const observer = new ResizeObserver(() => { resize(); if (still) draw(0); });
+    observer.observe(canvas);
+    frame = requestAnimationFrame(draw);
+    return () => { cancelAnimationFrame(frame); observer.disconnect(); };
+  }, []);
+  return <canvas ref={ref} className="absolute inset-0 h-full w-full" aria-hidden="true" />;
 }
 
 function GenerationStage({ data, lang }: { data: ChatMediaData; lang: "fr" | "en" }) {
-  const isVideo = data.kind === "video";
-  const text = copyFor(data.kind, lang === "fr");
-  const progress = typeof data.progress === "number" && Number.isFinite(data.progress) && data.progress >= 0 && data.progress <= 100 ? data.progress : null;
-  const step = data.status === "waiting" || data.status === "queuing" ? (lang === "fr" ? "En attente de démarrage" : "Waiting to start") :
-    text.step;
-  return <div className="media-generation" role="status" aria-label={`${step}${progress == null ? "" : ` — ${progress}%`}`}>
-    <div className="media-generation-top">
-      <div className="flex min-w-0 items-center gap-2.5">
-        <span className="media-generation-icon"><KindIcon kind={data.kind} className="size-4" /></span>
-        <div className="min-w-0">
-          <p className="text-[11px] font-semibold text-foreground">{text.title}</p>
-          <p className="text-[10px] text-muted-foreground">{data.model ? `${data.model} · ` : ""}{step}</p>
-        </div>
-      </div>
-      <span className="media-generation-live"><span className="media-generation-live-dot" />{lang === "fr" ? "EN COURS" : "IN PROGRESS"}</span>
-    </div>
-    <div className={`media-generation-canvas ${isVideo ? "media-generation-video" : "media-generation-image"}`} aria-hidden="true">
-      {isVideo ? <>
-        <div className="media-generation-video-frame">
-          <span className="media-generation-corner media-generation-corner-tl" /><span className="media-generation-corner media-generation-corner-tr" />
-          <span className="media-generation-corner media-generation-corner-bl" /><span className="media-generation-corner media-generation-corner-br" />
-          <div className="media-generation-video-orbit"><Play className="size-6 fill-current" /></div>
-          <div className="media-generation-video-scan" />
-        </div>
-        <div className="media-generation-filmstrip">{Array.from({ length: 9 }, (_, i) => <span key={i} style={{ animationDelay: `${i * 130}ms` }} />)}</div>
-      </> : <div className="media-generation-dots">{dots.map((strength, i) => <span key={i} style={{ opacity: strength, transform: `scale(${.4 + strength * .6})`, animationDelay: `${(i % 19) * 28 + Math.floor(i / 19) * 38}ms` }} />)}</div>}
-    </div>
-    <div className="media-generation-bottom">
-      <div className="flex items-center justify-between gap-3 text-xs">
-        <span className="font-medium text-foreground">{text.shaping}</span>
-        {progress !== null && <span className="tabular-nums font-semibold text-chat-glow">{progress}%</span>}
-      </div>
-      <div className={`media-generation-track ${progress === null ? "media-generation-track-indeterminate" : ""}`} role={progress === null ? undefined : "progressbar"} aria-valuenow={progress ?? undefined} aria-valuemin={progress === null ? undefined : 0} aria-valuemax={progress === null ? undefined : 100} aria-label={lang === "fr" ? "Progression" : "Progress"}>
-        <span style={progress === null ? undefined : { width: `${progress}%` }} />
-      </div>
-      <p className="text-[10px] text-muted-foreground">{progress === null ? (lang === "fr" ? "Le temps de création varie selon la demande · progression non communiquée" : "Creation time varies · progress not reported") : (lang === "fr" ? "Progression communiquée par le service de génération" : "Progress reported by the generation service")}</p>
-    </div>
+  const fr = lang === "fr";
+  const text = copyFor(data.kind, fr);
+  const progress = typeof data.progress === "number" && Number.isFinite(data.progress) && data.progress >= 0 && data.progress <= 100 ? Math.round(data.progress) : null;
+  // Real progress when the service reports it; otherwise the time spent so far (never an invented percentage).
+  const [elapsed, setElapsed] = useState(0);
+  useEffect(() => { const start = Date.now(); const id = window.setInterval(() => setElapsed(Math.floor((Date.now() - start) / 1000)), 1000); return () => window.clearInterval(id); }, []);
+  const badge = progress !== null ? `${progress}%` : elapsed < 60 ? `${elapsed} s` : `${Math.floor(elapsed / 60)} min ${String(elapsed % 60).padStart(2, "0")}`;
+  const shape = data.kind === "image" ? "aspect-square" : data.kind === "video" ? "aspect-video" : "aspect-[16/7]";
+  return <div role="status" aria-label={`${text.creating}${progress === null ? "" : ` — ${progress}%`}`}
+    className={`relative w-full max-w-[460px] overflow-hidden rounded-2xl bg-black ${shape}`}>
+    <DotField />
+    <p className="absolute left-5 top-4 text-[15px] font-normal text-white/90">{text.creating}</p>
+    <span className="absolute bottom-4 right-4 rounded-full bg-white/10 px-3.5 py-1.5 text-[13px] font-semibold tabular-nums text-[#4f8cff] backdrop-blur">{badge}</span>
   </div>;
 }
 
@@ -108,7 +117,7 @@ export function ChatMedia({ data, lang, onBroken, onEdit }: { data: ChatMediaDat
   const [zoomed, setZoomed] = useState<string | null>(null);
   const urls = Array.isArray(data.urls) ? data.urls.filter((url) => typeof url === "string" && url.startsWith("https://")) : [];
   const pending = !["success", "fail"].includes(data.status);
-  if (pending) return <div className="my-2 w-full max-w-[490px] overflow-hidden rounded-md border border-border bg-card shadow-soft"><GenerationStage data={data} lang={lang} /></div>;
+  if (pending) return <div className="my-2 w-full"><GenerationStage data={data} lang={lang} /></div>;
   if (data.status !== "success" || !urls.length) {
     return <p className="my-2 flex items-start gap-2 text-sm text-muted-foreground">
       <AlertCircle className={`mt-0.5 size-4 shrink-0 ${data.status === "fail" ? "text-destructive" : ""}`} />
