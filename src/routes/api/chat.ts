@@ -268,6 +268,8 @@ export const Route = createFileRoute("/api/chat")({
           const message =
             upstream.status === 402
               ? "Le service de modèles est momentanément indisponible (solde du fournisseur épuisé). / The model provider is out of balance."
+              : upstream.status === 401 || upstream.status === 403
+                ? "Le service de modèles est mal configuré (clé du fournisseur refusée). L'équipe TechNova doit vérifier la clé. / The model provider key was refused."
               : upstream.status === 429
                 ? "Trop de requêtes, réessayez dans un instant. / Rate limited, try again shortly."
                 : "Le modèle n'a pas pu répondre, réessayez. / The model could not answer.";

@@ -22,7 +22,8 @@ async function providerBalances() {
     try { const r = await fetch(url, { headers: { Authorization: `Bearer ${key}` }, signal: AbortSignal.timeout(6000) }); return r.ok ? await r.json() : null; } catch { return null; }
   };
   const [or, kie] = await Promise.all([
-    get("https://openrouter.ai/api/v1/credits", process.env["OPENROUTER_API_KEY"]) as Promise<{ data?: { total_credits?: number; total_usage?: number } } | null>,
+    // /credits needs a management key; the chat needs a regular key (a management key cannot generate).
+    get("https://openrouter.ai/api/v1/credits", process.env["OPENROUTER_MANAGEMENT_KEY"] ?? process.env["OPENROUTER_API_KEY"]) as Promise<{ data?: { total_credits?: number; total_usage?: number } } | null>,
     get("https://api.kie.ai/api/v1/chat/credit", process.env["KIE_API_KEY"]) as Promise<{ data?: number } | null>,
   ]);
   return {
