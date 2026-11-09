@@ -620,7 +620,7 @@ html:has(.dashboard-shell)::-webkit-scrollbar-track, .dashboard-shell main *::-w
 .sidebar-glass::before { content: ""; position: absolute; inset: 0; z-index: 0; pointer-events: none; opacity: .13;
   background: linear-gradient(165deg, var(--iris-1), var(--iris-2) 50%, var(--iris-3));
   -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='56' height='56' viewBox='0 0 56 56'%3E%3Cg fill='none' stroke='black' stroke-width='1.5' stroke-linejoin='round'%3E%3Cpath d='M0 12 L12 0 L24 12 L36 0 L48 12 L56 4'/%3E%3Cpath d='M0 44 L12 32 L24 44 L36 32 L48 44 L56 36'/%3E%3Cpath d='M28 17 L39 28 L28 39 L17 28 Z'/%3E%3Cpath d='M28 22 L34 28 L28 34 L22 28 Z'/%3E%3Cpath d='M0 28 H10 M46 28 H56'/%3E%3C/g%3E%3Cg fill='black'%3E%3Ccircle cx='28' cy='28' r='1.8'/%3E%3Crect x='3' y='49' width='4' height='4'/%3E%3Crect x='15' y='49' width='4' height='4'/%3E%3Crect x='27' y='49' width='4' height='4'/%3E%3Crect x='39' y='49' width='4' height='4'/%3E%3Crect x='51' y='49' width='4' height='4'/%3E%3Cpath d='M6 20 l3 3 l-3 3 l-3 -3 Z'/%3E%3Cpath d='M50 20 l3 3 l-3 3 l-3 -3 Z'/%3E%3C/g%3E%3C/svg%3E") repeat; mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='56' height='56' viewBox='0 0 56 56'%3E%3Cg fill='none' stroke='black' stroke-width='1.5' stroke-linejoin='round'%3E%3Cpath d='M0 12 L12 0 L24 12 L36 0 L48 12 L56 4'/%3E%3Cpath d='M0 44 L12 32 L24 44 L36 32 L48 44 L56 36'/%3E%3Cpath d='M28 17 L39 28 L28 39 L17 28 Z'/%3E%3Cpath d='M28 22 L34 28 L28 34 L22 28 Z'/%3E%3Cpath d='M0 28 H10 M46 28 H56'/%3E%3C/g%3E%3Cg fill='black'%3E%3Ccircle cx='28' cy='28' r='1.8'/%3E%3Crect x='3' y='49' width='4' height='4'/%3E%3Crect x='15' y='49' width='4' height='4'/%3E%3Crect x='27' y='49' width='4' height='4'/%3E%3Crect x='39' y='49' width='4' height='4'/%3E%3Crect x='51' y='49' width='4' height='4'/%3E%3Cpath d='M6 20 l3 3 l-3 3 l-3 -3 Z'/%3E%3Cpath d='M50 20 l3 3 l-3 3 l-3 -3 Z'/%3E%3C/g%3E%3C/svg%3E") repeat; -webkit-mask-size: 56px; mask-size: 56px; }
-.dark .sidebar-glass::before { opacity: .128; }
+.dark .sidebar-glass::before { opacity: .05; }
 .sidebar-glass::after { content: ""; position: absolute; inset: 0; z-index: 0; pointer-events: none; background: linear-gradient(180deg, transparent 0%, color-mix(in oklab, var(--background) 55%, transparent) 70%); }
 .sidebar-glass > * { position: relative; z-index: 1; }
 
@@ -1074,3 +1074,11 @@ body:has(.dashboard-shell) :is([role="dialog"], [role="alertdialog"]) {
   .dark .dashboard-shell.look-abysse .dashboard-sidebar.sidebar-glass { background: color-mix(in oklab, oklch(.22 .012 252) 88%, transparent); }
   .dark .dashboard-shell.look-amethyste .dashboard-sidebar.sidebar-glass { background: color-mix(in oklab, oklch(.08 0 0) 90%, transparent); }
 }
+
+/* Apple (light): the light grey of apple.com (#ECECF0 page, between #F5F5F7 and #E8E8ED) instead of near
+   white, with the colour glows kept faint, so the white glass panels stand out as on Apple's site. */
+.dashboard-shell.look-apple .dashboard-content {
+  --background: #ececf0; --look-veil: rgb(236 236 240 / .7); --look-wallpaper-opacity: .2;
+  --look-blob-1: oklch(.85 .05 250 / .35); --look-blob-2: oklch(.88 .04 50 / .3);
+  --look-glass: oklch(1 0 0 / .72); }
+.dashboard-shell.look-apple .wallpaper-glow-3 { display: none; }
