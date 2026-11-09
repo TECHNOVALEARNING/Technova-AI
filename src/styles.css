@@ -607,7 +607,7 @@ html:has(.dashboard-shell)::-webkit-scrollbar-track, .dashboard-shell main *::-w
 .sidebar-glass::before { content: ""; position: absolute; inset: 0; z-index: 0; pointer-events: none; opacity: .13;
   background: linear-gradient(165deg, var(--iris-1), var(--iris-2) 50%, var(--iris-3));
   -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='56' height='56' viewBox='0 0 56 56'%3E%3Cg fill='none' stroke='black' stroke-width='1.5' stroke-linejoin='round'%3E%3Cpath d='M0 12 L12 0 L24 12 L36 0 L48 12 L56 4'/%3E%3Cpath d='M0 44 L12 32 L24 44 L36 32 L48 44 L56 36'/%3E%3Cpath d='M28 17 L39 28 L28 39 L17 28 Z'/%3E%3Cpath d='M28 22 L34 28 L28 34 L22 28 Z'/%3E%3Cpath d='M0 28 H10 M46 28 H56'/%3E%3C/g%3E%3Cg fill='black'%3E%3Ccircle cx='28' cy='28' r='1.8'/%3E%3Crect x='3' y='49' width='4' height='4'/%3E%3Crect x='15' y='49' width='4' height='4'/%3E%3Crect x='27' y='49' width='4' height='4'/%3E%3Crect x='39' y='49' width='4' height='4'/%3E%3Crect x='51' y='49' width='4' height='4'/%3E%3Cpath d='M6 20 l3 3 l-3 3 l-3 -3 Z'/%3E%3Cpath d='M50 20 l3 3 l-3 3 l-3 -3 Z'/%3E%3C/g%3E%3C/svg%3E") repeat; mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='56' height='56' viewBox='0 0 56 56'%3E%3Cg fill='none' stroke='black' stroke-width='1.5' stroke-linejoin='round'%3E%3Cpath d='M0 12 L12 0 L24 12 L36 0 L48 12 L56 4'/%3E%3Cpath d='M0 44 L12 32 L24 44 L36 32 L48 44 L56 36'/%3E%3Cpath d='M28 17 L39 28 L28 39 L17 28 Z'/%3E%3Cpath d='M28 22 L34 28 L28 34 L22 28 Z'/%3E%3Cpath d='M0 28 H10 M46 28 H56'/%3E%3C/g%3E%3Cg fill='black'%3E%3Ccircle cx='28' cy='28' r='1.8'/%3E%3Crect x='3' y='49' width='4' height='4'/%3E%3Crect x='15' y='49' width='4' height='4'/%3E%3Crect x='27' y='49' width='4' height='4'/%3E%3Crect x='39' y='49' width='4' height='4'/%3E%3Crect x='51' y='49' width='4' height='4'/%3E%3Cpath d='M6 20 l3 3 l-3 3 l-3 -3 Z'/%3E%3Cpath d='M50 20 l3 3 l-3 3 l-3 -3 Z'/%3E%3C/g%3E%3C/svg%3E") repeat; -webkit-mask-size: 56px; mask-size: 56px; }
-.dark .sidebar-glass::before { opacity: .16; }
+.dark .sidebar-glass::before { opacity: .128; }
 .sidebar-glass::after { content: ""; position: absolute; inset: 0; z-index: 0; pointer-events: none; background: linear-gradient(180deg, transparent 0%, color-mix(in oklab, var(--background) 55%, transparent) 70%); }
 .sidebar-glass > * { position: relative; z-index: 1; }
 
@@ -739,9 +739,12 @@ html:has(.dashboard-shell)::-webkit-scrollbar-track, .dashboard-shell main *::-w
   --muted-foreground: oklch(.52 .03 250); --secondary: oklch(.95 .015 245); --muted: oklch(.95 .012 245);
   --accent: oklch(.93 .03 245); --border: oklch(.9 .015 245); --input: oklch(.9 .015 245);
 }
-.dashboard-wallpaper { background: oklch(.94 .02 245); }
+/* Ciel: premium soft frosted backdrop on warm ivory (#F8F7F5). The colour image underneath is blurred (50px)
+   and covered by a diffuse ivory veil that is almost pure at the top and lets the image breathe toward the
+   bottom, with a light haze and a faint ambient shade: no edge, no line. */
+.dashboard-wallpaper { background: #F8F7F5; box-shadow: inset 0 -140px 180px -100px rgb(110 100 90 / .07); }
 .dashboard-wallpaper img { opacity: 0; }
-.dashboard-wallpaper::before { content: ""; position: absolute; inset: -12%; filter: blur(70px) saturate(1.15);
+.dashboard-wallpaper::before { content: ""; position: absolute; inset: -12%; filter: blur(50px) saturate(1.05);
   background:
     repeating-radial-gradient(ellipse 140% 70% at 0% 110%, oklch(.62 .15 255 / .32) 0 5%, transparent 9% 15%),
     radial-gradient(55% 45% at 82% 8%, oklch(.6 .16 256 / .85), transparent 70%),
@@ -749,7 +752,11 @@ html:has(.dashboard-shell)::-webkit-scrollbar-track, .dashboard-shell main *::-w
     radial-gradient(65% 50% at 68% 62%, oklch(.56 .17 258 / .7), transparent 70%),
     radial-gradient(55% 45% at 12% 95%, oklch(.72 .12 240 / .75), transparent 70%),
     linear-gradient(160deg, oklch(.96 .01 240), oklch(.82 .07 250)); }
-.dashboard-wallpaper::after { content: ""; position: absolute; inset: 0; background: oklch(1 0 0 / .3); }
+.dashboard-wallpaper::after { content: ""; position: absolute; inset: 0;
+  background:
+    radial-gradient(120% 55% at 50% 0%, rgb(255 255 255 / .55), transparent 75%),
+    radial-gradient(90% 60% at 50% 110%, rgb(255 255 255 / .12), transparent 70%),
+    linear-gradient(180deg, rgb(248 247 245 / .97) 0%, rgb(248 247 245 / .9) 28%, rgb(248 247 245 / .82) 60%, rgb(248 247 245 / .75) 100%); }
 .dark .dashboard-wallpaper::before, .dark .dashboard-wallpaper::after { display: none; }
 .dashboard-shell:not(:has(.chat-thread)) .chat-composer { background: oklch(1 0 0 / .85); border-color: oklch(1 0 0 / .7);
   backdrop-filter: blur(24px) saturate(1.6); -webkit-backdrop-filter: blur(24px) saturate(1.6);
@@ -771,11 +778,11 @@ html:has(.dashboard-shell)::-webkit-scrollbar-track, .dashboard-shell main *::-w
 .wallpaper-glow-3 { right: 18%; top: 8%; width: 35vw; height: 45vh; background: color-mix(in oklab, var(--foreground) 20%, transparent); filter: blur(120px); }
 @keyframes look-glow { 0%, 100% { opacity: .35; transform: none; } 33% { opacity: .75; transform: translate(-18%, 12%) scale(1.25); } 66% { opacity: .5; transform: translate(12%, -8%) scale(.9); } }
 @keyframes look-drift { 0%, 100% { transform: scale(1.15); } 25% { transform: scale(1.3) translate(-5%, 3%) rotate(1deg); } 50% { transform: scale(1.22) translate(3%, -2%); } 75% { transform: scale(1.32) translate(-3%, -3%) rotate(-1deg); } }
-:is(.look-brume, .look-soie, .look-graphite, .look-obsidienne, .look-reverbere, .look-apple, .look-pastel, .look-papier, .look-givre) .wallpaper-glow { display: block; }
-.dashboard-shell:is(.look-brume, .look-soie, .look-graphite, .look-obsidienne, .look-reverbere, .look-apple, .look-pastel, .look-papier, .look-givre) .dashboard-wallpaper { background: var(--background); }
-.dashboard-shell:is(.look-brume, .look-soie, .look-graphite, .look-obsidienne, .look-reverbere, .look-apple, .look-pastel, .look-papier, .look-givre) .dashboard-wallpaper::before { display: block; inset: 0; filter: blur(40px); animation: look-drift 24s ease-in-out infinite; background: var(--look-wallpaper); opacity: var(--look-wallpaper-opacity, 1); }
-.dashboard-shell:is(.look-brume, .look-soie, .look-graphite, .look-obsidienne, .look-reverbere, .look-apple, .look-pastel, .look-papier, .look-givre) .dashboard-wallpaper::after { display: block; background: var(--look-veil); }
-.dark .dashboard-shell.look-brume .dashboard-content, .dark .dashboard-shell.look-soie .dashboard-content, .dark .dashboard-shell.look-graphite .dashboard-content, .dark .dashboard-shell.look-obsidienne .dashboard-content, .dark .dashboard-shell.look-reverbere .dashboard-content {
+:is(.look-brume, .look-soie, .look-graphite, .look-obsidienne, .look-crepuscule, .look-abysse, .look-amethyste, .look-apple, .look-pastel, .look-azur, .look-givre) .wallpaper-glow { display: block; }
+.dashboard-shell:is(.look-brume, .look-soie, .look-graphite, .look-obsidienne, .look-crepuscule, .look-abysse, .look-amethyste, .look-apple, .look-pastel, .look-azur, .look-givre) .dashboard-wallpaper { background: var(--background); }
+.dashboard-shell:is(.look-brume, .look-soie, .look-graphite, .look-obsidienne, .look-crepuscule, .look-abysse, .look-amethyste, .look-apple, .look-pastel, .look-azur, .look-givre) .dashboard-wallpaper::before { display: block; inset: 0; filter: blur(40px); animation: look-drift 24s ease-in-out infinite; background: var(--look-wallpaper); opacity: var(--look-wallpaper-opacity, 1); }
+.dashboard-shell:is(.look-brume, .look-soie, .look-graphite, .look-obsidienne, .look-crepuscule, .look-abysse, .look-amethyste, .look-apple, .look-pastel, .look-azur, .look-givre) .dashboard-wallpaper::after { display: block; background: var(--look-veil); }
+.dark .dashboard-shell.look-brume .dashboard-content, .dark .dashboard-shell.look-soie .dashboard-content, .dark .dashboard-shell.look-graphite .dashboard-content, .dark .dashboard-shell.look-obsidienne .dashboard-content, .dark .dashboard-shell.look-crepuscule .dashboard-content, .dark .dashboard-shell.look-abysse .dashboard-content, .dark .dashboard-shell.look-amethyste .dashboard-content {
   --background: oklch(.12 0 0); --foreground: oklch(.96 0 0); --card-foreground: oklch(.96 0 0); --muted-foreground: oklch(.72 0 0); --border: oklch(1 0 0 / .1);
   --look-glass: oklch(.22 0 0 / .38); --look-glass-edge: oklch(1 0 0 / .12); --look-glass-shine: oklch(1 0 0 / .12);
   --look-glass-shadow: 0 20px 60px -20px oklch(0 0 0 / .6); --look-veil: oklch(.08 0 0 / .35); }
@@ -852,7 +859,7 @@ html:has(.dashboard-shell)::-webkit-scrollbar-track, .dashboard-shell main *::-w
 /* Composer on the new looks: the look's glass and a slowly turning rainbow edge. */
 @property --siri-angle { syntax: "<angle>"; inherits: false; initial-value: 0deg; }
 @keyframes siri-spin { to { --siri-angle: 360deg; } }
-.dashboard-shell:is(.look-brume, .look-soie, .look-graphite, .look-obsidienne, .look-reverbere, .look-apple, .look-pastel, .look-papier, .look-givre):not(:has(.chat-thread)) .chat-composer {
+.dashboard-shell:is(.look-brume, .look-soie, .look-graphite, .look-obsidienne, .look-crepuscule, .look-abysse, .look-amethyste, .look-apple, .look-pastel, .look-azur, .look-givre):not(:has(.chat-thread)) .chat-composer {
   position: relative; background: var(--look-glass) !important; border-color: var(--look-glass-edge); border-radius: 28px;
   backdrop-filter: blur(40px) saturate(1.8); -webkit-backdrop-filter: blur(40px) saturate(1.8);
   box-shadow: inset 0 1px 0 var(--look-glass-shine), var(--look-glass-shadow) !important; }
@@ -876,42 +883,28 @@ html:has(.dashboard-shell)::-webkit-scrollbar-track, .dashboard-shell main *::-w
 
 @media (prefers-reduced-motion: reduce) { .dark .dashboard-shell.look-soie .sidebar-glass::after { animation: none; } }
 
-/* Picture looks (dark): Ardoise, Améthyste, Cobalt, Réverbère show their wallpaper (public/media/themes) sharp,
-   slowly panning, under a dark veil so text stays readable; panels take a tint drawn from each picture. */
-.dashboard-shell.look-reverbere .dashboard-wallpaper::before {
-  filter: none; background: var(--look-image) center / cover no-repeat; animation: look-pan 40s ease-in-out infinite alternate; }
-@keyframes look-pan { from { transform: scale(1.04) translate(0, 0); } to { transform: scale(1.1) translate(-1.5%, -1%); } }
-.dashboard-shell.look-reverbere .wallpaper-glow-3 { opacity: .5; }
-.dark .dashboard-shell.look-reverbere .dashboard-content { --look-image: url("/media/themes/reverbere.webp"); --background: oklch(.08 0 0);
-  --look-glass: oklch(.2 0 0 / .36); --look-glass-edge: oklch(1 0 0 / .12); --look-veil: oklch(.05 0 0 / .2);
-  --look-blob-1: oklch(1 0 0 / .06); --look-blob-2: oklch(1 0 0 / .04); }
-@media (prefers-reduced-motion: reduce) { .dashboard-shell.look-reverbere .dashboard-wallpaper::before { animation: none; } }
-
 /* Readability on every look: the glass frosts more (stronger blur, fuller fill, calmer saturation) so text never
    fights the wallpaper; picture looks also soften their image slightly behind the content. */
-.dashboard-shell:is(.look-brume, .look-soie, .look-graphite, .look-obsidienne, .look-reverbere, .look-apple, .look-pastel, .look-papier, .look-givre):not(:has(.chat-thread)) main :is(.bg-card, .bg-card\/95, .bg-card\/90, .bg-card\/85, .bg-card\/80, .bg-card\/70).border:not(.chat-composer, .chat-composer *, .border .border),
-.dashboard-shell:is(.look-brume, .look-soie, .look-graphite, .look-obsidienne, .look-reverbere, .look-apple, .look-pastel, .look-papier, .look-givre) .dashboard-marquee {
+.dashboard-shell:is(.look-brume, .look-soie, .look-graphite, .look-obsidienne, .look-crepuscule, .look-abysse, .look-amethyste, .look-apple, .look-pastel, .look-azur, .look-givre):not(:has(.chat-thread)) main :is(.bg-card, .bg-card\/95, .bg-card\/90, .bg-card\/85, .bg-card\/80, .bg-card\/70).border:not(.chat-composer, .chat-composer *, .border .border),
+.dashboard-shell:is(.look-brume, .look-soie, .look-graphite, .look-obsidienne, .look-crepuscule, .look-abysse, .look-amethyste, .look-apple, .look-pastel, .look-azur, .look-givre) .dashboard-marquee {
   backdrop-filter: blur(40px) saturate(1.25); -webkit-backdrop-filter: blur(40px) saturate(1.25); }
 .dark .dashboard-shell.look-brume .dashboard-content { --look-glass: oklch(.17 0 0 / .6); }
 .dark .dashboard-shell.look-soie .dashboard-content { --look-glass: oklch(.15 .012 250 / .6); }
-.dark .dashboard-shell.look-reverbere .dashboard-content { --look-glass: oklch(.14 0 0 / .62); }
 .dashboard-shell.look-apple .dashboard-content { --look-glass: oklch(1 0 0 / .62); }
 .dashboard-shell.look-pastel .dashboard-content { --look-glass: oklch(1 0 0 / .5); }
-.dashboard-shell.look-reverbere .dashboard-wallpaper::before { filter: blur(3px); }
 /* Starter chips and composer controls: frosted pills that read on any background. */
 .dashboard-shell[class*="look-"] .starter-chip { background: var(--look-glass, oklch(1 0 0 / .6)); border-color: var(--look-glass-edge, oklch(1 0 0 / .7));
   backdrop-filter: blur(24px) saturate(1.25); -webkit-backdrop-filter: blur(24px) saturate(1.25); box-shadow: inset 0 1px 0 var(--look-glass-shine, oklch(1 0 0 / .8)); }
 .dashboard-shell[class*="look-"] .starter-chip:hover { background: color-mix(in oklab, var(--look-glass, oklch(1 0 0 / .6)), var(--foreground) 8%); }
-.dashboard-shell:is(.look-brume, .look-soie, .look-graphite, .look-obsidienne, .look-reverbere, .look-apple, .look-pastel, .look-papier, .look-givre):not(:has(.chat-thread)) .chat-composer {
+.dashboard-shell:is(.look-brume, .look-soie, .look-graphite, .look-obsidienne, .look-crepuscule, .look-abysse, .look-amethyste, .look-apple, .look-pastel, .look-azur, .look-givre):not(:has(.chat-thread)) .chat-composer {
   backdrop-filter: blur(48px) saturate(1.25); -webkit-backdrop-filter: blur(48px) saturate(1.25); }
 
-/* Light looks from the dashboard mockup: Papier (white paper) and Givre (lavender frost). Plain
+/* Light look from the dashboard mockup: Givre (lavender frost). Plain
    background with two slow colour glows under a light veil; glass panels a little fuller than the mockup. */
-.dashboard-shell:is(.look-papier, .look-givre) .dashboard-content {
+.dashboard-shell.look-givre .dashboard-content {
   --foreground: oklch(.2 0 0); --card-foreground: oklch(.2 0 0); --muted-foreground: oklch(.48 0 0);
   --look-glass: oklch(1 0 0 / .62); --look-glass-edge: oklch(1 0 0 / .75); --look-glass-shine: oklch(1 0 0 / .9);
   --look-glass-shadow: 0 20px 60px -24px oklch(.3 0 0 / .22); --look-veil: oklch(1 0 0 / .1); --look-wallpaper: none; }
-.dashboard-shell.look-papier .dashboard-content { --background: oklch(.985 0 0); --look-blob-1: oklch(.88 .02 250 / .6); --look-blob-2: oklch(.9 .02 60 / .55); }
 .dashboard-shell.look-givre .dashboard-content { --background: oklch(.96 .015 260); --foreground: oklch(.25 .06 265); --card-foreground: oklch(.25 .06 265);
   --look-blob-1: oklch(.75 .15 285 / .55); --look-blob-2: oklch(.82 .12 210 / .55); }
 
@@ -1011,3 +1004,59 @@ body:has(.dashboard-shell) :is([role="dialog"], [role="alertdialog"]) {
 .dark body:has(.dashboard-shell) :is([role="dialog"], [role="alertdialog"]) {
   background-image: linear-gradient(180deg, oklch(1 0 0 / .07), transparent 60%);
   box-shadow: inset 0 1px 0 oklch(1 0 0 / .1), 0 0 0 .5px oklch(1 0 0 / .08), 0 30px 80px -20px oklch(0 0 0 / .75); }
+/* Ciel on ivory: ambient shadows turn warm and neutral instead of blue. */
+.dashboard-shell.look-light .dashboard-content { --look-glass-shadow: 0 30px 70px -30px rgb(90 80 70 / .2); }
+
+/* Azur (light) and Crépuscule (dark), from the ivory-haze dashboard mockup: a sky gradient (light) or a night
+   gradient with a blue and an amber glow (dark) under white haze, glass panels at 55%, warm ambient shadows,
+   espresso (light) or amber (dark) primary. */
+.dashboard-shell:is(.look-azur, .look-crepuscule, .look-abysse, .look-amethyste) .dashboard-content { --look-blob-1: transparent; --look-blob-2: transparent; }
+.dashboard-shell:is(.look-azur, .look-crepuscule, .look-abysse, .look-amethyste) .wallpaper-glow-3 { display: none; }
+.dashboard-shell:is(.look-azur, .look-crepuscule, .look-abysse, .look-amethyste) .dashboard-wallpaper::before { filter: none; animation: none; transform: none; }
+.dashboard-shell.look-azur .dashboard-content {
+  --background: oklch(.975 .003 75); --foreground: oklch(.129 .042 264.7); --card-foreground: oklch(.129 .042 264.7); --muted-foreground: oklch(.554 .046 257.4);
+  --primary: oklch(.32 .02 60); --primary-foreground: oklch(.984 .003 247.9);
+  --look-wallpaper: radial-gradient(60% 50% at 18% 8%, oklch(1 0 0 / .62), transparent 70%), radial-gradient(55% 45% at 88% 92%, oklch(.72 .05 250 / .22), transparent 72%),
+    radial-gradient(45% 35% at 8% 95%, oklch(.9 .02 240 / .18), transparent 70%),
+    linear-gradient(170deg, oklch(.72 .11 240) 0%, oklch(.82 .08 230) 25%, oklch(.89 .05 225) 55%, oklch(.95 .025 220) 78%, oklch(.99 .005 220) 100%);
+  --look-veil: transparent; --look-glass: oklch(1 0 0 / .55); --look-glass-edge: oklch(1 0 0 / .6); --look-glass-shine: oklch(1 0 0 / .85);
+  --look-glass-shadow: 0 20px 60px -20px oklch(.4 .03 60 / .18), 0 2px 8px -2px oklch(.4 .03 60 / .06); }
+.dark .dashboard-shell.look-crepuscule .dashboard-content {
+  --background: oklch(.14 .015 255); --foreground: oklch(.984 .003 247.9); --card-foreground: oklch(.984 .003 247.9); --muted-foreground: oklch(.704 .04 256.8);
+  --primary: oklch(.8 .12 65); --primary-foreground: oklch(.18 .02 60);
+  --look-wallpaper: radial-gradient(70% 50% at 15% 0, oklch(.4 .09 240 / .55), transparent 70%), radial-gradient(60% 45% at 90% 75%, oklch(.5 .13 50 / .35), transparent 70%),
+    linear-gradient(180deg, oklch(.16 .03 250), oklch(.12 .01 255));
+  --look-veil: transparent; --look-glass: oklch(.2 .02 255 / .6); --look-glass-edge: oklch(1 0 0 / .1); --look-glass-shine: oklch(1 0 0 / .06);
+  --look-glass-shadow: 0 24px 70px -20px oklch(0 0 0 / .6); }
+
+/* Abysse (dark, first reference image): deep slate-navy with a cold blue-teal light falling from the top,
+   near-opaque dark cards with a fine edge and deep shadows, plain composer edge, white send button, blue-teal orb. */
+.dark .dashboard-shell.look-abysse .dashboard-content {
+  --background: oklch(.2 .014 252); --foreground: oklch(.96 .005 250); --card-foreground: oklch(.96 .005 250); --muted-foreground: oklch(.7 .015 250);
+  --primary: oklch(.97 0 0); --primary-foreground: oklch(.18 .01 250);
+  --look-wallpaper: radial-gradient(55% 40% at 58% 0%, oklch(.55 .08 215 / .65), transparent 72%), radial-gradient(35% 32% at 22% 0%, oklch(.45 .03 250 / .55), transparent 70%),
+    radial-gradient(40% 30% at 80% 8%, oklch(.38 .06 240 / .5), transparent 70%), linear-gradient(180deg, oklch(.25 .02 240), oklch(.2 .014 252) 45%, oklch(.19 .012 255));
+  --look-veil: transparent; --look-glass: oklch(.23 .012 255 / .9); --look-glass-edge: oklch(1 0 0 / .1); --look-glass-shine: oklch(1 0 0 / .07);
+  --look-glass-shadow: 0 22px 44px -18px oklch(0 0 0 / .75); }
+.dark .dashboard-shell.look-abysse .dashboard-sidebar.sidebar-glass { background: color-mix(in oklab, oklch(.22 .012 252) 92%, transparent); border-color: oklch(1 0 0 / .08); }
+.dashboard-shell.look-abysse .chat-composer::before { animation: none; opacity: 1; background: linear-gradient(180deg, oklch(1 0 0 / .16), oklch(1 0 0 / .05)); }
+.dashboard-shell.look-abysse .chat-orb-ball i:nth-child(1) { background: oklch(.72 .15 220); }
+.dashboard-shell.look-abysse .chat-orb-ball i:nth-child(2) { background: oklch(.55 .18 255); }
+.dashboard-shell.look-abysse .chat-orb-ball i:nth-child(3) { background: oklch(.8 .17 160); }
+
+/* Améthyste (dark, second reference image): black sidebar, plum-black content with a violet glow at the top,
+   dark glass cards, a violet composer edge, purple send button and a violet orb. */
+.dark .dashboard-shell.look-amethyste .dashboard-content {
+  --background: oklch(.13 .018 320); --foreground: oklch(.96 .005 320); --card-foreground: oklch(.96 .005 320); --muted-foreground: oklch(.72 .02 320);
+  --primary: oklch(.6 .2 305); --primary-foreground: oklch(.99 0 0);
+  --look-wallpaper: radial-gradient(70% 45% at 50% 0%, oklch(.36 .09 322 / .75), transparent 72%), radial-gradient(45% 35% at 88% 6%, oklch(.3 .07 300 / .5), transparent 70%),
+    linear-gradient(180deg, oklch(.2 .045 320), oklch(.14 .02 320) 55%, oklch(.12 .015 320));
+  --look-veil: transparent; --look-glass: oklch(.15 .015 320 / .82); --look-glass-edge: oklch(1 0 0 / .09); --look-glass-shine: oklch(1 0 0 / .06);
+  --look-glass-shadow: 0 22px 50px -20px oklch(0 0 0 / .7); }
+.dark .dashboard-shell.look-amethyste .dashboard-sidebar.sidebar-glass { background: color-mix(in oklab, oklch(.08 0 0) 94%, transparent); border-color: oklch(1 0 0 / .06); }
+.dashboard-shell.look-amethyste .chat-composer::before { animation: none; opacity: 1; background: linear-gradient(180deg, oklch(.78 .12 320 / .6), oklch(.55 .12 300 / .15)); }
+.dashboard-shell.look-amethyste .chat-orb-ball i:nth-child(1) { background: oklch(.62 .22 305); }
+.dashboard-shell.look-amethyste .chat-orb-ball i:nth-child(2) { background: oklch(.48 .2 285); }
+.dashboard-shell.look-amethyste .chat-orb-ball i:nth-child(3) { background: oklch(.78 .14 325); }
+/* As in their reference images, Abysse and Améthyste keep the sidebar plain (no textile pattern). */
+.dashboard-shell:is(.look-abysse, .look-amethyste) .sidebar-glass::before { display: none; }
