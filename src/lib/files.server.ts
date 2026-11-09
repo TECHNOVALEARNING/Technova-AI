@@ -167,7 +167,7 @@ async function openRouterMedia(instruction: string, part: unknown): Promise<{ te
   const res = await fetch("https://openrouter.ai/api/v1/chat/completions", {
     method: "POST",
     headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json", "X-Title": "TechNova AI Hub" },
-    body: JSON.stringify({ model: MEDIA_MODEL, max_tokens: 6000, messages: [{ role: "user", content: [{ type: "text", text: instruction }, part] }] }),
+    body: JSON.stringify({ model: MEDIA_MODEL, provider: { data_collection: "deny" }, max_tokens: 6000, messages: [{ role: "user", content: [{ type: "text", text: instruction }, part] }] }),
     signal: AbortSignal.timeout(180_000),
   }).catch(() => null);
   // 402: the provider account balance is too low for this media type (audio/video need a minimum balance).
@@ -295,7 +295,7 @@ export async function embed(texts: string[]): Promise<{ vectors: number[][]; usd
     const res = await fetch("https://openrouter.ai/api/v1/embeddings", {
       method: "POST",
       headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json", "X-Title": "TechNova AI Hub" },
-      body: JSON.stringify({ model: EMBED_MODEL, input: batch }),
+      body: JSON.stringify({ model: EMBED_MODEL, input: batch, provider: { data_collection: "deny" } }),
       signal: AbortSignal.timeout(60_000),
     }).catch(() => null);
     if (!res?.ok) throw new FileRejected("embed_failed", false);

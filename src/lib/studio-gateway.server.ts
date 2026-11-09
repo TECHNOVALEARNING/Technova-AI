@@ -16,6 +16,13 @@ export function studioStream(request: Request | null, system: string, messages: 
     baseURL: "https://openrouter.ai/api/v1",
     apiKey,
     headers: { "X-Title": "TechNova AI Hub", ...(appUrl ? { "HTTP-Referer": appUrl } : {}) },
+    // Privacy promise on the landing page: only providers that neither store prompts nor train on them.
+    fetch: (input, init) => {
+      if (typeof init?.body === "string") {
+        try { init = { ...init, body: JSON.stringify({ ...JSON.parse(init.body), provider: { data_collection: "deny" } }) }; } catch { /* not JSON: send as is */ }
+      }
+      return fetch(input, init);
+    },
   });
   // Stream errors (402, 429…) surface later as a generic "no output" error; keep the real one.
   let providerError: unknown = null;

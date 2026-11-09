@@ -30,6 +30,8 @@ export async function orComplete(o: OrOptions): Promise<OrResult> {
       messages: o.messages,
       max_tokens: o.maxTokens,
       usage: { include: true },
+      // Privacy promise on the landing page: only providers that neither store prompts nor train on them.
+      provider: { data_collection: "deny" },
       ...(o.temperature !== undefined ? { temperature: o.temperature } : {}),
       ...(o.webResults ? { plugins: [{ id: "web", max_results: o.webResults }] } : {}),
     }),

@@ -19,7 +19,7 @@ function DocsHub() {
   const { lang } = useDashboard(); const fr = lang !== "en";
   const external = [
     { href: "/documentation", icon: BookOpen, title: fr ? "Documentation de l'API" : "API documentation", text: fr ? "Authentification, requêtes, modèles, erreurs et limites." : "Authentication, requests, models, errors and limits." },
-    { href: "/developpeurs", icon: Code2, title: fr ? "Exemples de code" : "Code examples", text: fr ? "JavaScript, Python, PHP et cURL prêts à copier." : "Ready-to-copy JavaScript, Python, PHP and cURL." },
+    { href: "/documentation#exemples", icon: Code2, title: fr ? "Exemples de code" : "Code examples", text: fr ? "JavaScript, Python, PHP et cURL prêts à copier." : "Ready-to-copy JavaScript, Python, PHP and cURL." },
   ];
   const internal = [
     { to: "/dashboard/api" as const, icon: KeyRound, title: fr ? "Clés API" : "API keys", text: fr ? "Créez et supprimez vos clés." : "Create and delete your keys." },

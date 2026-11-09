@@ -263,6 +263,8 @@ export const Route = createFileRoute("/api/chat")({
             stream: true,
             max_tokens: maxTokens,
             usage: { include: true },
+            // Privacy promise on the landing page: only providers that neither store prompts nor train on them.
+            provider: { data_collection: "deny" },
             ...(reasoning ? { reasoning: { max_tokens: Math.floor(maxTokens / 2) } } : {}),
             messages: [{ role: "system", content: systemPrompt }, ...parsed.data.messages.map(m => (m.files?.length && m.role === "user" ? { role: m.role, content: toParts(m.content, m.files) } : { role: m.role, content: m.content }))],
           }),

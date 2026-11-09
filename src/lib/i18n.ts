@@ -23,11 +23,14 @@ export const content = {
     why: {
       tag: "Pourquoi TechNova",
       title: "Pourquoi nous choisir ?",
-      sub: "Tout ce qu'il faut pour créer avec l'IA, sans friction.",
+      sub: "Tout ce qu'il faut pour créer avec l'IA sans friction, et rester maître de vos données.",
       items: [
         { t: "Ultra rapide", d: "Réponses instantanées et routage intelligent vers le meilleur modèle." },
         { t: "Tous les modèles", d: "OpenAI, Anthropic, Google, Meta, Mistral, DeepSeek… au même endroit." },
         { t: "Paiement local et sécurisé", d: "MTN, Moov, Orange Money, Wave et cartes bancaires. Crédits activés en quelques secondes." },
+        { t: "Conformité au RGPD", d: "Vos données sont traitées conformément au RGPD de l'UE, avec des garanties appropriées et une minimisation des données." },
+        { t: "Aucun entraînement de modèle", d: "Votre contenu n'est jamais utilisé pour entraîner des modèles : il sert uniquement à vous fournir le service." },
+        { t: "Aucune donnée conservée par les fournisseurs d'IA", d: "Vos requêtes passent uniquement par des fournisseurs qui ne conservent pas vos prompts. Aucun historique n'est stocké de leur côté." },
       ],
     },
     services: {
@@ -138,11 +141,14 @@ export const content = {
     why: {
       tag: "Why TechNova",
       title: "Why choose us?",
-      sub: "Everything you need to build with AI, without friction.",
+      sub: "Everything you need to build with AI without friction, while staying in control of your data.",
       items: [
         { t: "Lightning fast", d: "Instant answers and smart routing to the best model for the job." },
         { t: "Every model", d: "OpenAI, Anthropic, Google, Meta, Mistral, DeepSeek… in one place." },
         { t: "Local & secure payments", d: "MTN, Moov, Orange Money, Wave and bank cards. Credits activated in seconds." },
+        { t: "GDPR compliant", d: "Your data is processed in line with the EU GDPR, with appropriate safeguards and data minimisation." },
+        { t: "No model training", d: "Your content is never used to train models: it is only processed to provide the service." },
+        { t: "AI providers keep no data", d: "Your requests only go through providers that do not keep your prompts. No history is stored on their side." },
       ],
     },
     services: {
@@ -253,11 +259,14 @@ export const content = {
     why: {
       tag: "Por qué TechNova",
       title: "¿Por qué elegirnos?",
-      sub: "Todo lo necesario para crear con IA, sin fricción.",
+      sub: "Todo lo necesario para crear con IA sin fricción, y mantener el control de tus datos.",
       items: [
         { t: "Ultrarrápido", d: "Respuestas instantáneas y enrutamiento inteligente hacia el mejor modelo." },
         { t: "Todos los modelos", d: "OpenAI, Anthropic, Google, Meta, Mistral, DeepSeek… en un solo lugar." },
         { t: "Pago local y seguro", d: "MTN, Moov, Orange Money, Wave y tarjetas bancarias. Créditos activados en segundos." },
+        { t: "Conformidad con el RGPD", d: "Tus datos se tratan conforme al RGPD de la UE, con garantías adecuadas y minimización de datos." },
+        { t: "Sin entrenamiento de modelos", d: "Tu contenido nunca se usa para entrenar modelos: solo se procesa para prestarte el servicio." },
+        { t: "Los proveedores de IA no guardan datos", d: "Tus solicitudes solo pasan por proveedores que no conservan tus prompts. No se guarda ningún historial de su lado." },
       ],
     },
     services: {
@@ -368,11 +377,14 @@ export const content = {
     why: {
       tag: "Por que a TechNova",
       title: "Por que nos escolher?",
-      sub: "Tudo o que é preciso para criar com IA, sem atrito.",
+      sub: "Tudo o que é preciso para criar com IA sem atrito, mantendo o controle dos seus dados.",
       items: [
         { t: "Ultrarrápido", d: "Respostas instantâneas e roteamento inteligente para o melhor modelo." },
         { t: "Todos os modelos", d: "OpenAI, Anthropic, Google, Meta, Mistral, DeepSeek… num só lugar." },
         { t: "Pagamento local e seguro", d: "MTN, Moov, Orange Money, Wave e cartões bancários. Créditos ativados em segundos." },
+        { t: "Conformidade com o RGPD", d: "Os seus dados são tratados de acordo com o RGPD da UE, com garantias adequadas e minimização de dados." },
+        { t: "Nenhum treino de modelos", d: "O seu conteúdo nunca é usado para treinar modelos: só é processado para lhe prestar o serviço." },
+        { t: "Os provedores de IA não guardam dados", d: "As suas solicitações só passam por provedores que não guardam os seus prompts. Nenhum histórico é armazenado do lado deles." },
       ],
     },
     services: {

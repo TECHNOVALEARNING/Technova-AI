@@ -3,10 +3,10 @@ const same = (label: string, href?: string): Item => ({ fr: label, en: label, es
 
 export const footerGroups: (Omit<Item, "href"> & { links: Item[] })[] = [
   { fr: "Produit", en: "Product", es: "Producto", pt: "Produto", links: [
-    { fr: "Modèles IA", en: "AI models", es: "Modelos de IA", pt: "Modelos de IA", href: "/modeles" }, { fr: "Crédits Technova", en: "Technova credits", es: "Créditos Technova", pt: "Créditos Technova", href: "/dashboard/credits" }, same("API", "/developpeurs"), { fr: "Tarifs", en: "Pricing", es: "Precios", pt: "Preços", href: "/tarifs" }, { fr: "Intégrations", en: "Integrations", es: "Integraciones", pt: "Integrações", href: "/dashboard/connexions" },
+    { fr: "Modèles IA", en: "AI models", es: "Modelos de IA", pt: "Modelos de IA", href: "/modeles" }, { fr: "Crédits Technova", en: "Technova credits", es: "Créditos Technova", pt: "Créditos Technova", href: "/dashboard/credits" }, same("API", "/documentation"), { fr: "Tarifs", en: "Pricing", es: "Precios", pt: "Preços", href: "/tarifs" }, { fr: "Intégrations", en: "Integrations", es: "Integraciones", pt: "Integrações", href: "/dashboard/connexions" },
   ] },
   { fr: "Développeurs", en: "Developers", es: "Desarrolladores", pt: "Desenvolvedores", links: [
-    { fr: "Documentation API", en: "API documentation", es: "Documentación de la API", pt: "Documentação da API", href: "/documentation" }, { fr: "Référence API", en: "API reference", es: "Referencia de la API", pt: "Referência da API", href: "/developpeurs" }, { fr: "Exemples", en: "Examples", es: "Ejemplos", pt: "Exemplos", href: "/developpeurs" },
+    { fr: "Documentation API", en: "API documentation", es: "Documentación de la API", pt: "Documentação da API", href: "/documentation" }, { fr: "Référence API", en: "API reference", es: "Referencia de la API", pt: "Referência da API", href: "/documentation#chat" }, { fr: "Exemples", en: "Examples", es: "Ejemplos", pt: "Exemplos", href: "/documentation#exemples" },
   ] },
   { fr: "Entreprise", en: "Company", es: "Empresa", pt: "Empresa", links: [
     { fr: "À propos", en: "About", es: "Acerca de", pt: "Sobre", href: "/a-propos" }, same("Blog", "/blog"), same("support@technovaihub.com", "mailto:support@technovaihub.com"),

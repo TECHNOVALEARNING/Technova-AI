@@ -71,7 +71,7 @@ export const Route = createFileRoute("/api/ai/chat")({
           method: "POST",
           signal: AbortSignal.timeout(120_000),
           headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json", "X-Title": "TechNova AI Hub API" },
-          body: JSON.stringify({ model: openRouterModelIds[name], messages: d.messages, max_tokens: maxTokens, usage: { include: true }, ...(d.temperature !== undefined ? { temperature: d.temperature } : {}) }),
+          body: JSON.stringify({ model: openRouterModelIds[name], messages: d.messages, max_tokens: maxTokens, usage: { include: true }, provider: { data_collection: "deny" }, ...(d.temperature !== undefined ? { temperature: d.temperature } : {}) }),
         }).catch(() => null);
         if (!upstream?.ok) {
           await releaseCredits(reservation);

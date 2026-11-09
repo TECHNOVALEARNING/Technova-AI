@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { pageHead, appLd, faqLd, organizationLd, websiteLd } from "@/lib/seo";
 import { useEffect, useRef, useState, type CSSProperties, type ReactNode } from "react";
 import {
-  ArrowRight, ArrowUpRight, Check, Plus, Minus, Sparkles, Globe, LogIn, Menu, Zap, Boxes, WalletCards, UserRoundPlus, Play, X,
+  ArrowRight, ArrowUpRight, Check, Plus, Minus, Sparkles, Globe, LogIn, Menu, Zap, Boxes, WalletCards, ShieldCheck, Lock, ServerOff, UserRoundPlus, Play, X,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import heroOrb from "@/assets/hero-orb.jpg";
@@ -231,7 +231,7 @@ function DrawIcon({ icon: Icon, className, strokeWidth }: { icon: typeof Zap; cl
 }
 
 function Why({ t }: { t: T }) {
-  const icons = [Zap, Boxes, WalletCards];
+  const icons = [Zap, Boxes, WalletCards, ShieldCheck, Lock, ServerOff];
   return (
     <section id="why" className="px-4 py-6 sm:py-8">
       <Heading tag={t.why.tag} title={t.why.title} sub={t.why.sub} />
