@@ -1,7 +1,7 @@
 import { useEffect, useState, type ReactNode } from "react";
 import { afterSignInPath } from "@/lib/public-pricing";
 import { useNavigate } from "@tanstack/react-router";
-import { ArrowLeft, ArrowRight, Building2, Check, Globe, LoaderCircle, Sparkles, User } from "lucide-react";
+import { ArrowLeft, ArrowRight, Building2, Check, Globe, LoaderCircle, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
@@ -81,16 +81,16 @@ export function OnboardingPage() {
   const [tFr, tEn, sFr, sEn] = titles[step]!;
 
   return <main className="auth-layout min-h-svh bg-background text-foreground lg:grid lg:place-items-center lg:px-6 lg:py-6">
-    <div className="auth-shell mx-auto grid w-full max-w-[1120px] overflow-hidden border border-border bg-card lg:min-h-[min(780px,calc(100svh-48px))] lg:grid-cols-2">
-      <section className="auth-visual relative hidden min-h-[520px] flex-col justify-between overflow-hidden p-10 lg:flex xl:p-12" aria-label="TechNova AI Hub">
+    <div className="auth-shell mx-auto grid w-full max-w-[940px] overflow-hidden lg:min-h-[min(620px,calc(100svh-48px))] lg:grid-cols-2">
+      <section className="auth-visual relative hidden min-h-[480px] flex-col justify-between overflow-hidden p-9 lg:flex" aria-label="TechNova AI Hub">
         <img src={artifact} alt="" width={1024} height={1280} className="auth-artifact absolute inset-0 h-full w-full object-cover" />
         <span className="relative z-10 w-fit font-display text-lg font-bold text-foreground">TECH<span className="opacity-60">NOVA</span></span>
         <div className="relative z-10 max-w-[420px]">
-          <span className="mb-4 inline-flex items-center gap-2 text-[11px] font-bold uppercase text-muted-foreground"><Sparkles className="size-4" />{fr ? "Bienvenue" : "Welcome"}</span>
-          <h2 className="font-display text-3xl font-semibold leading-[1.2] xl:text-4xl">{fr ? "Encore trois questions et votre espace est prêt." : "Three more questions and your workspace is ready."}</h2>
+          <span className="mb-4 inline-flex items-center gap-2 text-[11px] font-bold uppercase text-muted-foreground"><img src="/favicon.svg" alt="" width={16} height={16} className="size-4 rounded-[4px]" />{fr ? "Bienvenue" : "Welcome"}</span>
+          <h2 className="font-display text-[28px] font-semibold leading-[1.2]">{fr ? "Encore trois questions et votre espace est prêt." : "Three more questions and your workspace is ready."}</h2>
         </div>
       </section>
-      <section className="flex min-w-0 flex-col px-5 pb-9 pt-5 sm:px-10 lg:px-12 lg:py-8 xl:px-16">
+      <section className="flex min-w-0 flex-col px-5 pb-9 pt-5 sm:px-10 lg:px-10 lg:py-7">
         <div className="flex items-center justify-between gap-4">
           {step > 2 ? <button type="button" onClick={() => setStep(step - 1)} className="inline-flex items-center gap-2 text-xs font-semibold text-muted-foreground hover:text-foreground"><ArrowLeft className="size-4" />{fr ? "Retour" : "Back"}</button> : <span />}
           <Button type="button" variant="ghost" size="sm" onClick={() => setLang(fr ? "en" : "fr")} className="gap-2 rounded-full border border-border px-3 text-xs font-bold"><Globe className="size-4" />{fr ? "EN" : "FR"}</Button>

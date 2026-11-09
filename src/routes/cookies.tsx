@@ -22,7 +22,7 @@ const necessary: Row[] = [
   ["sb-…-auth-token", "Garder votre session de connexion ouverte et la sécuriser (jetons Supabase Auth).", "Jusqu'à la déconnexion"],
   ["technova-consent", "Mémoriser vos choix en matière de cookies, pour ne pas vous les redemander à chaque page.", "6 mois"],
   ["technova-site-lang, technova-dashboard-lang", "Garder la langue que vous avez choisie pour le site et le tableau de bord.", "Jusqu'au prochain choix"],
-  ["technova-dashboard-theme", "Garder le thème du tableau de bord que vous avez choisi (Brume, Soie, Graphite, Obsidienne, Réverbère, Apple, Pastel, Papier, Givre ou Ciel).", "Jusqu'au prochain choix"],
+  ["technova-dashboard-theme", "Garder le thème du tableau de bord que vous avez choisi (Brume, Soie, Crépuscule, Abysse, Améthyste, Apple, Pastel, Azur ou Givre).", "Jusqu'au prochain choix"],
   ["tn-pending-pack", "Retenir le pack choisi avant la connexion, pour reprendre l'achat ensuite.", "Jusqu'au paiement"],
   ["technova-supabase-oauth-state", "Protéger la connexion à votre propre projet Supabase contre la falsification de requête.", "Quelques minutes"],
   ["technova-active-agent", "Ouvrir le chat avec l'agent que vous venez de choisir.", "Jusqu'au prochain choix"],

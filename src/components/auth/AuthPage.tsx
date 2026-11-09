@@ -1,7 +1,7 @@
 import { useEffect, useState, type FormEvent } from "react";
 import { afterSignInPath } from "@/lib/public-pricing";
 import { Link, useNavigate } from "@tanstack/react-router";
-import { ArrowLeft, ArrowRight, Eye, EyeOff, Globe, LoaderCircle, Sparkles } from "lucide-react";
+import { ArrowLeft, ArrowRight, Eye, EyeOff, Globe, LoaderCircle } from "lucide-react";
 import { z } from "zod";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -119,35 +119,35 @@ export function AuthPage({ mode }: { mode: Mode }) {
   const title = isSignup ? t.signupTitle : isLogin ? t.loginTitle : isReset ? t.newPasswordTitle : t.resetTitle;
   const sub = isSignup ? t.signupSub : isLogin ? t.loginSub : isReset ? t.newPasswordSub : t.resetSub;
   return <main className="auth-layout min-h-svh bg-background px-0 py-0 text-foreground lg:grid lg:place-items-center lg:px-6 lg:py-6">
-    <div className="auth-shell mx-auto grid w-full max-w-[1120px] overflow-hidden border border-border bg-card lg:min-h-[min(780px,calc(100svh-48px))] lg:grid-cols-2">
-      <section className="auth-visual relative hidden min-h-[520px] flex-col justify-between overflow-hidden p-10 lg:flex xl:p-12" aria-label="TechNova AI Hub">
+    <div className="auth-shell mx-auto grid w-full max-w-[940px] overflow-hidden lg:min-h-[min(620px,calc(100svh-48px))] lg:grid-cols-2">
+      <section className="auth-visual relative hidden min-h-[480px] flex-col justify-between overflow-hidden p-9 lg:flex" aria-label="TechNova AI Hub">
         <img src={artifact} alt="" width={1024} height={1280} className="auth-artifact absolute inset-0 h-full w-full object-cover" />
         <Link to="/" className="relative z-10 w-fit font-display text-lg font-bold text-foreground" aria-label="TechNova — accueil">TECH<span className="opacity-60">NOVA</span><span className="ml-2 align-top text-[10px] font-medium text-muted-foreground">AI HUB</span></Link>
         <div className="relative z-10 max-w-[420px]">
-          <span className="mb-4 inline-flex items-center gap-2 text-[11px] font-bold uppercase text-muted-foreground"><Sparkles className="size-4" />{t.visualTag}</span>
-          <h2 className="font-display text-3xl font-semibold leading-[1.2] text-foreground xl:text-4xl">{t.visualTitle}</h2>
+          <span className="mb-4 inline-flex items-center gap-2 text-[11px] font-bold uppercase text-muted-foreground"><img src="/favicon.svg" alt="" width={16} height={16} className="size-4 rounded-[4px]" />{t.visualTag}</span>
+          <h2 className="font-display text-[28px] font-semibold leading-[1.2] text-foreground">{t.visualTitle}</h2>
           <p className="mt-3 max-w-sm text-sm leading-relaxed text-muted-foreground">{t.visualSub}</p>
         </div>
       </section>
-      <section className="flex min-w-0 flex-col px-5 pb-9 pt-5 sm:px-10 lg:px-12 lg:py-8 xl:px-16">
+      <section className="flex min-w-0 flex-col px-5 pb-9 pt-5 sm:px-10 lg:px-10 lg:py-7">
         <div className="flex items-center justify-between gap-4">
           <Link to="/" className="inline-flex items-center gap-2 text-xs font-semibold text-muted-foreground hover:text-foreground"><ArrowLeft className="size-4" />{t.back}</Link>
           <Button type="button" variant="ghost" size="sm" onClick={() => setLang(lang === "fr" ? "en" : "fr")} aria-label={lang === "fr" ? "Switch to English" : "Passer en français"} className="gap-2 rounded-full border border-border px-3 text-xs font-bold"><Globe className="size-4" />{lang === "fr" ? "EN" : "FR"}</Button>
         </div>
-        <div className="mx-auto flex w-full max-w-[400px] flex-1 flex-col justify-center py-8 lg:py-5">
+        <div className="mx-auto flex w-full max-w-[360px] flex-1 flex-col justify-center py-8 lg:py-4">
           <Link to="/" className="mb-7 w-fit font-display text-lg font-bold lg:hidden">TECH<span className="opacity-60">NOVA</span></Link>
           <div className="mb-6">
             <p className="mb-3 text-[11px] font-bold uppercase text-muted-foreground">TECHNOVA / {isSignup ? t.signup : isLogin ? t.login : t.password}</p>
-            <h1 className="font-display text-[29px] font-semibold leading-tight sm:text-3xl">{title}</h1>
+            <h1 className="font-display text-[26px] font-semibold leading-tight">{title}</h1>
             <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{sub}</p>
           </div>
-          {(isSignup || isLogin) && <><Button type="button" variant="outline" disabled={busy || !ready} onClick={handleGoogle} className="auth-google h-12 w-full gap-3 font-semibold"><GoogleMark />{t.google}</Button><div className="my-5 flex items-center gap-4 text-[11px] font-semibold text-muted-foreground"><span className="h-px flex-1 bg-border" />{t.orEmail}<span className="h-px flex-1 bg-border" /></div></>}
+          {(isSignup || isLogin) && <><Button type="button" variant="outline" disabled={busy || !ready} onClick={handleGoogle} className="auth-google h-11 w-full gap-3 font-semibold"><GoogleMark />{t.google}</Button><div className="my-5 flex items-center gap-4 text-[11px] font-semibold text-muted-foreground"><span className="h-px flex-1 bg-border" />{t.orEmail}<span className="h-px flex-1 bg-border" /></div></>}
           <form noValidate method="post" onSubmit={handleSubmit} className="space-y-4">
             {isSignup && <div className="space-y-1.5"><Label htmlFor="auth-name">{t.name}</Label><Input id="auth-name" name="name" autoComplete="name" placeholder={t.namePlaceholder} maxLength={100} aria-invalid={!!errors.name} onChange={() => clear("name")} className="auth-input" />{errors.name && <p className="text-xs text-destructive">{errors.name}</p>}</div>}
             {!isReset && <div className="space-y-1.5"><Label htmlFor="auth-email">{t.email}</Label><Input id="auth-email" name="email" type="email" autoComplete="email" placeholder={t.emailPlaceholder} maxLength={255} aria-invalid={!!errors.email} onChange={() => clear("email")} className="auth-input" />{errors.email && <p className="text-xs text-destructive">{errors.email}</p>}</div>}
-            {mode !== "forgot" && <div className="space-y-1.5"><div className="flex items-center justify-between gap-2"><Label htmlFor="auth-password">{t.password}</Label>{isLogin && <Link to="/mot-de-passe-oublie" className="text-xs font-semibold text-muted-foreground underline-offset-4 hover:text-foreground hover:underline">{t.forgot}</Link>}</div><div className="relative"><Input id="auth-password" name="password" type={visible ? "text" : "password"} autoComplete={isLogin ? "current-password" : "new-password"} maxLength={128} aria-invalid={!!errors.password} onChange={() => clear("password")} className="auth-input pr-12" /><Button type="button" variant="ghost" size="icon" className="absolute right-1 top-1 size-10 text-muted-foreground" onClick={() => setVisible(!visible)} aria-label={visible ? t.hidePassword : t.showPassword} title={t.eye}>{visible ? <EyeOff className="size-4" /> : <Eye className="size-4" />}</Button></div>{errors.password ? <p className="text-xs text-destructive">{errors.password}</p> : (isSignup || isReset) && <p className="text-xs text-muted-foreground">{t.passwordHint}</p>}</div>}
+            {mode !== "forgot" && <div className="space-y-1.5"><div className="flex items-center justify-between gap-2"><Label htmlFor="auth-password">{t.password}</Label>{isLogin && <Link to="/mot-de-passe-oublie" className="text-xs font-semibold text-muted-foreground underline-offset-4 hover:text-foreground hover:underline">{t.forgot}</Link>}</div><div className="relative"><Input id="auth-password" name="password" type={visible ? "text" : "password"} autoComplete={isLogin ? "current-password" : "new-password"} maxLength={128} aria-invalid={!!errors.password} onChange={() => clear("password")} className="auth-input pr-12" /><Button type="button" variant="ghost" size="icon" className="absolute right-1 top-0.5 size-10 text-muted-foreground" onClick={() => setVisible(!visible)} aria-label={visible ? t.hidePassword : t.showPassword} title={t.eye}>{visible ? <EyeOff className="size-4" /> : <Eye className="size-4" />}</Button></div>{errors.password ? <p className="text-xs text-destructive">{errors.password}</p> : (isSignup || isReset) && <p className="text-xs text-muted-foreground">{t.passwordHint}</p>}</div>}
             {(isSignup || isReset) && <div className="space-y-1.5"><Label htmlFor="auth-confirm">{t.confirm}</Label><Input id="auth-confirm" name="confirm" type={visible ? "text" : "password"} autoComplete="new-password" maxLength={128} aria-invalid={!!errors.confirm} onChange={() => clear("confirm")} className="auth-input" />{errors.confirm && <p className="text-xs text-destructive">{errors.confirm}</p>}</div>}
-            <Button type="submit" disabled={!ready || busy || (isReset && !recovery)} className="auth-submit mt-2 h-12 w-full gap-2 text-sm font-bold">{busy ? <LoaderCircle className="size-4 animate-spin" /> : null}{busy ? t.working : isSignup ? t.submitSignup : isLogin ? t.submitLogin : isReset ? t.savePassword : t.resetSubmit}{!busy && <ArrowRight className="size-4" />}</Button>
+            <Button type="submit" disabled={!ready || busy || (isReset && !recovery)} className="auth-submit mt-2 h-11 w-full gap-2 text-sm font-bold">{busy ? <LoaderCircle className="size-4 animate-spin" /> : null}{busy ? t.working : isSignup ? t.submitSignup : isLogin ? t.submitLogin : isReset ? t.savePassword : t.resetSubmit}{!busy && <ArrowRight className="size-4" />}</Button>
             {message && <p role="status" className="border-l-2 border-foreground bg-secondary px-4 py-3 text-sm leading-relaxed">{message}</p>}
             {failure && <p role="alert" className="text-sm text-destructive">{failure}</p>}
             {isReset && !recovery && !message && <p role="alert" className="text-sm text-destructive">{t.invalidLink}</p>}
