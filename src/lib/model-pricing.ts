@@ -1,4 +1,6 @@
 // TechNova credit prices per million tokens (input / output).
+import { extraModels } from "@/lib/openrouter-catalog";
+
 export type ModelInfo = { name: string; provider: string; input: number; output: number; kind: "chat" | "visual" };
 
 // Chat prices in TechNova credits per million tokens = OpenRouter USD price × 1 200
@@ -23,7 +25,6 @@ export const modelCatalog: ModelInfo[] = [
   { name: "Mistral Large", provider: "Mistral AI", input: 2400, output: 7200, kind: "chat" },
   { name: "Qwen 2.5 72B", provider: "Alibaba", input: 432, output: 480, kind: "chat" },
   { name: "Qwen 2.5 Coder 32B", provider: "Alibaba", input: 792, output: 1200, kind: "chat" },
-  { name: "Hermes 3 405B", provider: "NousResearch", input: 1200, output: 1200, kind: "chat" },
   { name: "Gemma 3 12B", provider: "Google", input: 60, output: 180, kind: "chat" },
   { name: "FLUX 1.1 Pro", provider: "Black Forest Labs", input: 0, output: 0, kind: "visual" },
   { name: "FLUX Schnell", provider: "Black Forest Labs", input: 0, output: 0, kind: "visual" },
@@ -31,6 +32,7 @@ export const modelCatalog: ModelInfo[] = [
   { name: "Ideogram V3", provider: "KIE.ai", input: 0, output: 0, kind: "visual" },
   { name: "Kling 2.1 Master Vidéo", provider: "KIE.ai", input: 0, output: 0, kind: "visual" },
   { name: "ByteDance Seedance Vidéo", provider: "KIE.ai", input: 0, output: 0, kind: "visual" },
+  ...extraModels.map((m) => ({ name: m.name, provider: m.provider, input: m.input, output: m.output, kind: "chat" as const })),
 ];
 
 export function creditCost(model: string, inputTokens: number, outputTokens: number) {

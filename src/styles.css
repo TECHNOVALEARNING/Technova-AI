@@ -791,21 +791,16 @@ html:has(.dashboard-shell)::-webkit-scrollbar-track, .dashboard-shell main *::-w
 .wallpaper-glow-3 { right: 18%; top: 8%; width: 35vw; height: 45vh; background: color-mix(in oklab, var(--foreground) 20%, transparent); filter: blur(120px); }
 @keyframes look-glow { 0%, 100% { opacity: .35; transform: none; } 33% { opacity: .75; transform: translate(-18%, 12%) scale(1.25); } 66% { opacity: .5; transform: translate(12%, -8%) scale(.9); } }
 @keyframes look-drift { 0%, 100% { transform: scale(1.15); } 25% { transform: scale(1.3) translate(-5%, 3%) rotate(1deg); } 50% { transform: scale(1.22) translate(3%, -2%); } 75% { transform: scale(1.32) translate(-3%, -3%) rotate(-1deg); } }
-:is(.look-brume, .look-soie, .look-crepuscule, .look-abysse, .look-amethyste, .look-apple, .look-pastel, .look-azur, .look-givre) .wallpaper-glow { display: block; }
-.dashboard-shell:is(.look-brume, .look-soie, .look-crepuscule, .look-abysse, .look-amethyste, .look-apple, .look-pastel, .look-azur, .look-givre) .dashboard-wallpaper { background: var(--background); }
-.dashboard-shell:is(.look-brume, .look-soie, .look-crepuscule, .look-abysse, .look-amethyste, .look-apple, .look-pastel, .look-azur, .look-givre) .dashboard-wallpaper::before { display: block; inset: 0; filter: blur(40px); animation: look-drift 24s ease-in-out infinite; background: var(--look-wallpaper); opacity: var(--look-wallpaper-opacity, 1); }
-.dashboard-shell:is(.look-brume, .look-soie, .look-crepuscule, .look-abysse, .look-amethyste, .look-apple, .look-pastel, .look-azur, .look-givre) .dashboard-wallpaper::after { display: block; background: var(--look-veil); }
+:is(.look-brume, .look-soie, .look-crepuscule, .look-abysse, .look-amethyste, .look-pastel, .look-azur, .look-givre) .wallpaper-glow { display: block; }
+.dashboard-shell:is(.look-brume, .look-soie, .look-crepuscule, .look-abysse, .look-amethyste, .look-pastel, .look-azur, .look-givre) .dashboard-wallpaper { background: var(--background); }
+.dashboard-shell:is(.look-brume, .look-soie, .look-crepuscule, .look-abysse, .look-amethyste, .look-pastel, .look-azur, .look-givre) .dashboard-wallpaper::before { display: block; inset: 0; filter: blur(40px); animation: look-drift 24s ease-in-out infinite; background: var(--look-wallpaper); opacity: var(--look-wallpaper-opacity, 1); }
+.dashboard-shell:is(.look-brume, .look-soie, .look-crepuscule, .look-abysse, .look-amethyste, .look-pastel, .look-azur, .look-givre) .dashboard-wallpaper::after { display: block; background: var(--look-veil); }
 .dark .dashboard-shell.look-brume .dashboard-content, .dark .dashboard-shell.look-soie .dashboard-content, .dark .dashboard-shell.look-crepuscule .dashboard-content, .dark .dashboard-shell.look-abysse .dashboard-content, .dark .dashboard-shell.look-amethyste .dashboard-content {
   --background: oklch(.12 0 0); --foreground: oklch(.96 0 0); --card-foreground: oklch(.96 0 0); --muted-foreground: oklch(.72 0 0); --border: oklch(1 0 0 / .1);
   --look-glass: oklch(.22 0 0 / .38); --look-glass-edge: oklch(1 0 0 / .12); --look-glass-shine: oklch(1 0 0 / .12);
   --look-glass-shadow: 0 20px 60px -20px oklch(0 0 0 / .6); --look-veil: oklch(.08 0 0 / .35); }
 .dark .dashboard-shell.look-soie .dashboard-content { --background: oklch(.1 .01 250); --look-glass: oklch(.18 .01 250 / .35); --look-veil: oklch(.06 .01 250 / .25);
   --look-blob-1: oklch(.55 .08 240 / .3); --look-blob-2: oklch(.6 .1 50 / .25); }
-.dashboard-shell.look-apple .dashboard-content {
-  --background: oklch(.97 .002 286); --foreground: oklch(.2 0 0); --card-foreground: oklch(.2 0 0); --muted-foreground: oklch(.48 0 0);
-  --look-glass: oklch(1 0 0 / .45); --look-glass-edge: oklch(1 0 0 / .7); --look-glass-shine: oklch(1 0 0 / .9);
-  --look-glass-shadow: 0 20px 60px -24px oklch(.3 0 0 / .25); --look-veil: oklch(.96 .002 286 / .55); --look-wallpaper-opacity: .4;
-  --look-blob-1: oklch(.8 .1 250 / .7); --look-blob-2: oklch(.86 .09 50 / .6); }
 .dashboard-shell.look-pastel .dashboard-content {
   --background: oklch(.86 .03 240); --foreground: oklch(.22 .02 250); --card-foreground: oklch(.22 .02 250); --muted-foreground: oklch(.42 .02 250);
   --look-glass: oklch(1 0 0 / .28); --look-glass-edge: oklch(1 0 0 / .6); --look-glass-shine: oklch(1 0 0 / .8);
@@ -833,24 +828,6 @@ html:has(.dashboard-shell)::-webkit-scrollbar-track, .dashboard-shell main *::-w
     radial-gradient(34% 34% at 62.5% 87.5%, #080b10, transparent 72%),
     radial-gradient(34% 34% at 87.5% 87.5%, #070a0f, transparent 72%),
     #0c1016; }
-.dashboard-shell.look-apple .dashboard-content { --look-wallpaper:
-    radial-gradient(34% 34% at 12.5% 12.5%, #fdfdfb, transparent 72%),
-    radial-gradient(34% 34% at 37.5% 12.5%, #fcfcfa, transparent 72%),
-    radial-gradient(34% 34% at 62.5% 12.5%, #ecedeb, transparent 72%),
-    radial-gradient(34% 34% at 87.5% 12.5%, #f7f7f5, transparent 72%),
-    radial-gradient(34% 34% at 12.5% 37.5%, #fcfcfa, transparent 72%),
-    radial-gradient(34% 34% at 37.5% 37.5%, #f6f7f5, transparent 72%),
-    radial-gradient(34% 34% at 62.5% 37.5%, #d9dad8, transparent 72%),
-    radial-gradient(34% 34% at 87.5% 37.5%, #e9e9e7, transparent 72%),
-    radial-gradient(34% 34% at 12.5% 62.5%, #fbfbf9, transparent 72%),
-    radial-gradient(34% 34% at 37.5% 62.5%, #f3f3f1, transparent 72%),
-    radial-gradient(34% 34% at 62.5% 62.5%, #d9dad8, transparent 72%),
-    radial-gradient(34% 34% at 87.5% 62.5%, #f1f2f0, transparent 72%),
-    radial-gradient(34% 34% at 12.5% 87.5%, #f9f9f7, transparent 72%),
-    radial-gradient(34% 34% at 37.5% 87.5%, #f3f4f1, transparent 72%),
-    radial-gradient(34% 34% at 62.5% 87.5%, #e7e7e5, transparent 72%),
-    radial-gradient(34% 34% at 87.5% 87.5%, #fbfbf9, transparent 72%),
-    #f1f1f3; }
 .dashboard-shell.look-pastel .dashboard-content { --look-wallpaper:
     radial-gradient(34% 34% at 12.5% 12.5%, #7a9cba, transparent 72%),
     radial-gradient(34% 34% at 37.5% 12.5%, #b1c3d4, transparent 72%),
@@ -872,7 +849,7 @@ html:has(.dashboard-shell)::-webkit-scrollbar-track, .dashboard-shell main *::-w
 /* Composer on the new looks: the look's glass and a slowly turning rainbow edge. */
 @property --siri-angle { syntax: "<angle>"; inherits: false; initial-value: 0deg; }
 @keyframes siri-spin { to { --siri-angle: 360deg; } }
-.dashboard-shell:is(.look-brume, .look-soie, .look-crepuscule, .look-abysse, .look-amethyste, .look-apple, .look-pastel, .look-azur, .look-givre):not(:has(.chat-thread)) .chat-composer {
+.dashboard-shell:is(.look-brume, .look-soie, .look-crepuscule, .look-abysse, .look-amethyste, .look-pastel, .look-azur, .look-givre):not(:has(.chat-thread)) .chat-composer {
   position: relative; background: var(--look-glass) !important; border-color: var(--look-glass-edge); border-radius: 28px;
   backdrop-filter: blur(40px) saturate(1.8); -webkit-backdrop-filter: blur(40px) saturate(1.8);
   box-shadow: inset 0 1px 0 var(--look-glass-shine), var(--look-glass-shadow) !important; }
@@ -898,18 +875,17 @@ html:has(.dashboard-shell)::-webkit-scrollbar-track, .dashboard-shell main *::-w
 
 /* Readability on every look: the glass frosts more (stronger blur, fuller fill, calmer saturation) so text never
    fights the wallpaper; picture looks also soften their image slightly behind the content. */
-.dashboard-shell:is(.look-brume, .look-soie, .look-crepuscule, .look-abysse, .look-amethyste, .look-apple, .look-pastel, .look-azur, .look-givre):not(:has(.chat-thread)) main :is(.bg-card, .bg-card\/95, .bg-card\/90, .bg-card\/85, .bg-card\/80, .bg-card\/70).border:not(.chat-composer, .chat-composer *, .border .border),
-.dashboard-shell:is(.look-brume, .look-soie, .look-crepuscule, .look-abysse, .look-amethyste, .look-apple, .look-pastel, .look-azur, .look-givre) .dashboard-marquee {
+.dashboard-shell:is(.look-brume, .look-soie, .look-crepuscule, .look-abysse, .look-amethyste, .look-pastel, .look-azur, .look-givre):not(:has(.chat-thread)) main :is(.bg-card, .bg-card\/95, .bg-card\/90, .bg-card\/85, .bg-card\/80, .bg-card\/70).border:not(.chat-composer, .chat-composer *, .border .border),
+.dashboard-shell:is(.look-brume, .look-soie, .look-crepuscule, .look-abysse, .look-amethyste, .look-pastel, .look-azur, .look-givre) .dashboard-marquee {
   backdrop-filter: blur(40px) saturate(1.25); -webkit-backdrop-filter: blur(40px) saturate(1.25); }
 .dark .dashboard-shell.look-brume .dashboard-content { --look-glass: oklch(.17 0 0 / .6); }
 .dark .dashboard-shell.look-soie .dashboard-content { --look-glass: oklch(.15 .012 250 / .6); }
-.dashboard-shell.look-apple .dashboard-content { --look-glass: oklch(1 0 0 / .62); }
 .dashboard-shell.look-pastel .dashboard-content { --look-glass: oklch(1 0 0 / .5); }
 /* Starter chips and composer controls: frosted pills that read on any background. */
 .dashboard-shell[class*="look-"] .starter-chip { background: var(--look-glass, oklch(1 0 0 / .6)); border-color: var(--look-glass-edge, oklch(1 0 0 / .7));
   backdrop-filter: blur(24px) saturate(1.25); -webkit-backdrop-filter: blur(24px) saturate(1.25); box-shadow: inset 0 1px 0 var(--look-glass-shine, oklch(1 0 0 / .8)); }
 .dashboard-shell[class*="look-"] .starter-chip:hover { background: color-mix(in oklab, var(--look-glass, oklch(1 0 0 / .6)), var(--foreground) 8%); }
-.dashboard-shell:is(.look-brume, .look-soie, .look-crepuscule, .look-abysse, .look-amethyste, .look-apple, .look-pastel, .look-azur, .look-givre):not(:has(.chat-thread)) .chat-composer {
+.dashboard-shell:is(.look-brume, .look-soie, .look-crepuscule, .look-abysse, .look-amethyste, .look-pastel, .look-azur, .look-givre):not(:has(.chat-thread)) .chat-composer {
   backdrop-filter: blur(48px) saturate(1.25); -webkit-backdrop-filter: blur(48px) saturate(1.25); }
 
 /* Light look from the dashboard mockup: Givre (lavender frost). Plain
@@ -1040,13 +1016,6 @@ body:has(.dashboard-shell) :is([data-radix-popper-content-wrapper] > [data-state
   .dark .dashboard-shell.look-amethyste .dashboard-sidebar.sidebar-glass { background: color-mix(in oklab, oklch(.08 0 0) 90%, transparent); }
 }
 
-/* Apple (light): the light grey of apple.com (#ECECF0 page, between #F5F5F7 and #E8E8ED) instead of near
-   white, with the colour glows kept faint, so the white glass panels stand out as on Apple's site. */
-.dashboard-shell.look-apple .dashboard-content {
-  --background: #ececf0; --look-veil: rgb(236 236 240 / .7); --look-wallpaper-opacity: .2;
-  --look-blob-1: oklch(.85 .05 250 / .35); --look-blob-2: oklch(.88 .04 50 / .3);
-  --look-glass: oklch(1 0 0 / .72); }
-.dashboard-shell.look-apple .wallpaper-glow-3 { display: none; }
 
 /* Dashboard glass = the ivory-haze mockup's glass, on every look: a flat frosted panel (55% fill, 40px blur,
    150% saturation, soft ambient shadow, no border, no rim or sheen), and elements inside a panel on a fuller

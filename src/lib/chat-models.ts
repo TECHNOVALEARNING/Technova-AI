@@ -1,5 +1,8 @@
+import { extraModels } from "@/lib/openrouter-catalog";
+
 // Display name -> OpenRouter model id. Only text/chat/code models are routed through OpenRouter.
-export const openRouterModelIds: Record<string, string> = {
+// Core models (chat modes, Smart, Arena) first; the generated extra catalogue adds the other no-retention models.
+export const coreModelIds: Record<string, string> = {
   "GPT-4o": "openai/gpt-4o",
   "GPT-4o Mini": "openai/gpt-4o-mini",
   "Claude Sonnet 5": "anthropic/claude-sonnet-5",
@@ -16,7 +19,8 @@ export const openRouterModelIds: Record<string, string> = {
   "Mistral Large": "mistralai/mistral-large",
   "Qwen 2.5 Coder 32B": "qwen/qwen-2.5-coder-32b-instruct",
   "Qwen 2.5 72B": "qwen/qwen-2.5-72b-instruct",
-  "Hermes 3 405B": "nousresearch/hermes-3-llama-3.1-405b",
   "Llama 3.1 8B": "meta-llama/llama-3.1-8b-instruct",
   "Gemma 3 12B": "google/gemma-3-12b-it",
 };
+
+export const openRouterModelIds: Record<string, string> = { ...coreModelIds, ...Object.fromEntries(extraModels.map((m) => [m.name, m.id])) };

@@ -5,12 +5,12 @@ import { upgradeFeatureOf, upgradeSentence } from "@/lib/plans";
 import { Textarea } from "@/components/ui/textarea";
 import { MessageResponse } from "@/components/ai-elements/message";
 import { useDashboard } from "./DashboardLayout";
-import { openRouterModelIds } from "@/lib/chat-models";
+import { coreModelIds } from "@/lib/chat-models";
 import { getArenaLeaderboard, runArena, voteArena } from "@/lib/arena.functions";
 
 type Battle = { battleId: string; answerA: string; answerB: string; credits: number; models: { a: string; b: string } | null };
 type Row = { model: string; battles: number; wins: number; ties: number };
-const models = Object.keys(openRouterModelIds);
+const models = Object.keys(coreModelIds);
 
 export function ArenaPage() {
   const { lang } = useDashboard();

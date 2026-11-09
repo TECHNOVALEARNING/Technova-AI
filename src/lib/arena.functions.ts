@@ -1,14 +1,14 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
-import { openRouterModelIds } from "@/lib/chat-models";
+import { coreModelIds } from "@/lib/chat-models";
 
 // Arena: one prompt, two models. "Random" pairs are blind (names revealed after the vote)
 // and are the only ones counted in the public ranking. Both answers are billed like chat replies.
 
 const ARENA_MAX_TOKENS = 1024;
 const RANDOM = "random";
-const models = Object.keys(openRouterModelIds);
+const models = Object.keys(coreModelIds);
 
 export const runArena = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
@@ -42,7 +42,7 @@ export const runArena = createServerFn({ method: "POST" })
     const reservation = worst > 0 ? await reserveCredits(context.userId, worst, `Arena · ${a} vs ${b}`) : null;
     if (worst > 0 && !reservation) throw new Error(fr ? `Crédits insuffisants : ce duel demande jusqu'à ${worst} crédits.` : `Not enough credits: this battle needs up to ${worst} credits.`);
 
-    const ask = (model: string) => orComplete({ model: openRouterModelIds[model]!, maxTokens: ARENA_MAX_TOKENS, messages: [{ role: "system", content: system }, { role: "user", content: data.prompt }] });
+    const ask = (model: string) => orComplete({ model: coreModelIds[model]!, maxTokens: ARENA_MAX_TOKENS, messages: [{ role: "system", content: system }, { role: "user", content: data.prompt }] });
     const [ra, rb] = await Promise.allSettled([ask(a), ask(b)]);
     const cost = (model: string, r: PromiseSettledResult<{ inputTokens: number; outputTokens: number }>) =>
       r.status === "fulfilled" ? creditCost(model, r.value.inputTokens || inputTokens, r.value.outputTokens) : 0;

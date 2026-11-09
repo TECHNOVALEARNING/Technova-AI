@@ -4,10 +4,10 @@ export const content = {
   fr: {
     nav: { features: "Avantages", services: "Services", pricing: "Tarifs", faq: "FAQ", models: "Modèles", ranking: "Classement", blog: "Blog", docs: "Documentation", developers: "Développeurs", about: "À propos", cta: "Commencer", login: "Connexion", account: "Mon compte", menu: "Ouvrir le menu", close: "Fermer le menu", language: "Langue" },
     hero: {
-      badge: "60+ modèles d'IA · Un seul hub",
+      badge: "200+ modèles d'IA · Un seul hub",
       title1: "L'intelligence artificielle",
       title2: "sans limites",
-      sub: "Accédez à GPT, Claude, Gemini, DeepSeek et plus de 60 modèles depuis une seule plateforme. Payez par Mobile Money et par carte bancaire.",
+      sub: "Accédez à GPT, Claude, Gemini, DeepSeek et plus de 200 modèles depuis une seule plateforme. Payez par Mobile Money et par carte bancaire.",
       primary: "Commencer gratuitement",
       secondary: "Explorer les modèles",
       note: "50 crédits Technova offerts · Sans carte bancaire",
@@ -19,7 +19,7 @@ export const content = {
       play: "Lire la vidéo TechNova",
       close: "Fermer la vidéo",
     },
-    stats: ["60+ MODÈLES", "0 ABONNEMENT", "FCFA · USD · EUR", "1 SEULE API", "CRÉDITS À VIE"],
+    stats: ["200+ MODÈLES", "0 ABONNEMENT", "FCFA · USD · EUR", "1 SEULE API", "CRÉDITS À VIE"],
     why: {
       tag: "Pourquoi TechNova",
       title: "Pourquoi nous choisir ?",
@@ -51,7 +51,7 @@ export const content = {
       steps: [
         { t: "Créez votre compte", d: "Inscription gratuite, 50 crédits Technova offerts immédiatement." },
         { t: "Rechargez votre compte", d: "Mobile Money ou carte bancaire. Vos crédits n'expirent jamais." },
-        { t: "Choisissez un modèle", d: "Chat, image, vidéo ou code : plus de 60 modèles disponibles." },
+        { t: "Choisissez un modèle", d: "Chat, image, vidéo ou code : plus de 200 modèles disponibles." },
         { t: "Créez sans limites", d: "Utilisez l'interface ou intégrez l'API à vos produits." },
       ],
     },
@@ -106,7 +106,7 @@ export const content = {
       back: "Retour à l'accueil", login: "Connexion", signup: "Inscription", visualTag: "TECHNOVA / AI HUB",
       visualTitle: "Toutes les intelligences. Un seul espace.", visualSub: "Créez, explorez et avancez à votre rythme.",
       loginTitle: "Heureux de vous revoir.", loginSub: "Retrouvez votre espace de création TechNova.",
-      signupTitle: "Commencez ici.", signupSub: "Un compte pour explorer plus de 60 modèles d'IA.",
+      signupTitle: "Commencez ici.", signupSub: "Un compte pour explorer plus de 200 modèles d'IA.",
       name: "Nom complet", namePlaceholder: "Votre nom", email: "Adresse e-mail", emailPlaceholder: "vous@exemple.com",
       password: "Mot de passe", confirm: "Confirmer le mot de passe", passwordHint: "8 caractères minimum",
       showPassword: "Afficher le mot de passe", hidePassword: "Masquer le mot de passe",
@@ -122,10 +122,10 @@ export const content = {
   en: {
     nav: { features: "Benefits", services: "Services", pricing: "Pricing", faq: "FAQ", models: "Models", ranking: "Leaderboard", blog: "Blog", docs: "Docs", developers: "Developers", about: "About", cta: "Get started", login: "Sign in", account: "My account", menu: "Open menu", close: "Close menu", language: "Language" },
     hero: {
-      badge: "60+ AI models · One hub",
+      badge: "200+ AI models · One hub",
       title1: "Artificial intelligence",
       title2: "without limits",
-      sub: "Access GPT, Claude, Gemini, DeepSeek and 60+ models from one platform. Pay by Mobile Money and bank card.",
+      sub: "Access GPT, Claude, Gemini, DeepSeek and 200+ models from one platform. Pay by Mobile Money and bank card.",
       primary: "Start for free",
       secondary: "Explore models",
       note: "50 free Technova credits · No credit card",
@@ -137,7 +137,7 @@ export const content = {
       play: "Play TechNova video",
       close: "Close video",
     },
-    stats: ["60+ MODELS", "0 SUBSCRIPTION", "FCFA · USD · EUR", "ONE API", "LIFETIME CREDITS"],
+    stats: ["200+ MODELS", "0 SUBSCRIPTION", "FCFA · USD · EUR", "ONE API", "LIFETIME CREDITS"],
     why: {
       tag: "Why TechNova",
       title: "Why choose us?",
@@ -169,7 +169,7 @@ export const content = {
       steps: [
         { t: "Create your account", d: "Free sign-up, 50 Technova credits instantly." },
         { t: "Top up your account", d: "Mobile Money or bank card. Credits never expire." },
-        { t: "Pick a model", d: "Chat, image, video or code: 60+ models available." },
+        { t: "Pick a model", d: "Chat, image, video or code: 200+ models available." },
         { t: "Build without limits", d: "Use the app or plug the API into your products." },
       ],
     },
@@ -224,7 +224,7 @@ export const content = {
       back: "Back to home", login: "Sign in", signup: "Sign up", visualTag: "TECHNOVA / AI HUB",
       visualTitle: "Every intelligence. One place.", visualSub: "Create, explore and move forward at your own pace.",
       loginTitle: "Good to see you again.", loginSub: "Return to your TechNova creative space.",
-      signupTitle: "Start here.", signupSub: "One account to explore 60+ AI models.",
+      signupTitle: "Start here.", signupSub: "One account to explore 200+ AI models.",
       name: "Full name", namePlaceholder: "Your name", email: "Email address", emailPlaceholder: "you@example.com",
       password: "Password", confirm: "Confirm password", passwordHint: "At least 8 characters",
       showPassword: "Show password", hidePassword: "Hide password",
@@ -240,10 +240,10 @@ export const content = {
   es: {
     nav: { features: "Ventajas", services: "Servicios", pricing: "Precios", faq: "FAQ", models: "Modelos", ranking: "Clasificación", blog: "Blog", docs: "Documentación", developers: "Desarrolladores", about: "Acerca de", cta: "Empezar", login: "Iniciar sesión", account: "Mi cuenta", menu: "Abrir el menú", close: "Cerrar el menú", language: "Idioma" },
     hero: {
-      badge: "60+ modelos de IA · Un solo hub",
+      badge: "200+ modelos de IA · Un solo hub",
       title1: "La inteligencia artificial",
       title2: "sin límites",
-      sub: "Accede a GPT, Claude, Gemini, DeepSeek y más de 60 modelos desde una sola plataforma. Paga con Mobile Money y tarjeta bancaria.",
+      sub: "Accede a GPT, Claude, Gemini, DeepSeek y más de 200 modelos desde una sola plataforma. Paga con Mobile Money y tarjeta bancaria.",
       primary: "Empezar gratis",
       secondary: "Explorar los modelos",
       note: "50 créditos Technova de regalo · Sin tarjeta bancaria",
@@ -255,7 +255,7 @@ export const content = {
       play: "Reproducir el vídeo de TechNova",
       close: "Cerrar el vídeo",
     },
-    stats: ["60+ MODELOS", "0 SUSCRIPCIONES", "FCFA · USD · EUR", "1 SOLA API", "CRÉDITOS DE POR VIDA"],
+    stats: ["200+ MODELOS", "0 SUSCRIPCIONES", "FCFA · USD · EUR", "1 SOLA API", "CRÉDITOS DE POR VIDA"],
     why: {
       tag: "Por qué TechNova",
       title: "¿Por qué elegirnos?",
@@ -287,7 +287,7 @@ export const content = {
       steps: [
         { t: "Crea tu cuenta", d: "Registro gratuito, 50 créditos Technova al instante." },
         { t: "Recarga tu cuenta", d: "Mobile Money o tarjeta bancaria. Tus créditos nunca caducan." },
-        { t: "Elige un modelo", d: "Chat, imagen, vídeo o código: más de 60 modelos disponibles." },
+        { t: "Elige un modelo", d: "Chat, imagen, vídeo o código: más de 200 modelos disponibles." },
         { t: "Crea sin límites", d: "Usa la interfaz o integra la API en tus productos." },
       ],
     },
@@ -342,7 +342,7 @@ export const content = {
       back: "Volver al inicio", login: "Iniciar sesión", signup: "Registrarse", visualTag: "TECHNOVA / AI HUB",
       visualTitle: "Todas las inteligencias. Un solo espacio.", visualSub: "Crea, explora y avanza a tu ritmo.",
       loginTitle: "Qué bueno verte de nuevo.", loginSub: "Vuelve a tu espacio creativo TechNova.",
-      signupTitle: "Empieza aquí.", signupSub: "Una cuenta para explorar más de 60 modelos de IA.",
+      signupTitle: "Empieza aquí.", signupSub: "Una cuenta para explorar más de 200 modelos de IA.",
       name: "Nombre completo", namePlaceholder: "Tu nombre", email: "Correo electrónico", emailPlaceholder: "tu@ejemplo.com",
       password: "Contraseña", confirm: "Confirmar la contraseña", passwordHint: "Mínimo 8 caracteres",
       showPassword: "Mostrar la contraseña", hidePassword: "Ocultar la contraseña",
@@ -358,10 +358,10 @@ export const content = {
   pt: {
     nav: { features: "Vantagens", services: "Serviços", pricing: "Preços", faq: "FAQ", models: "Modelos", ranking: "Ranking", blog: "Blog", docs: "Documentação", developers: "Desenvolvedores", about: "Sobre", cta: "Começar", login: "Entrar", account: "Minha conta", menu: "Abrir o menu", close: "Fechar o menu", language: "Idioma" },
     hero: {
-      badge: "60+ modelos de IA · Um só hub",
+      badge: "200+ modelos de IA · Um só hub",
       title1: "A inteligência artificial",
       title2: "sem limites",
-      sub: "Acesse GPT, Claude, Gemini, DeepSeek e mais de 60 modelos numa única plataforma. Pague com Mobile Money e cartão bancário.",
+      sub: "Acesse GPT, Claude, Gemini, DeepSeek e mais de 200 modelos numa única plataforma. Pague com Mobile Money e cartão bancário.",
       primary: "Começar grátis",
       secondary: "Explorar os modelos",
       note: "50 créditos Technova oferecidos · Sem cartão bancário",
@@ -373,7 +373,7 @@ export const content = {
       play: "Reproduzir o vídeo da TechNova",
       close: "Fechar o vídeo",
     },
-    stats: ["60+ MODELOS", "0 ASSINATURAS", "FCFA · USD · EUR", "1 ÚNICA API", "CRÉDITOS VITALÍCIOS"],
+    stats: ["200+ MODELOS", "0 ASSINATURAS", "FCFA · USD · EUR", "1 ÚNICA API", "CRÉDITOS VITALÍCIOS"],
     why: {
       tag: "Por que a TechNova",
       title: "Por que nos escolher?",
@@ -405,7 +405,7 @@ export const content = {
       steps: [
         { t: "Crie sua conta", d: "Cadastro gratuito, 50 créditos Technova na hora." },
         { t: "Recarregue sua conta", d: "Mobile Money ou cartão bancário. Seus créditos nunca expiram." },
-        { t: "Escolha um modelo", d: "Chat, imagem, vídeo ou código: mais de 60 modelos disponíveis." },
+        { t: "Escolha um modelo", d: "Chat, imagem, vídeo ou código: mais de 200 modelos disponíveis." },
         { t: "Crie sem limites", d: "Use a interface ou integre a API aos seus produtos." },
       ],
     },
@@ -460,7 +460,7 @@ export const content = {
       back: "Voltar ao início", login: "Entrar", signup: "Cadastrar", visualTag: "TECHNOVA / AI HUB",
       visualTitle: "Todas as inteligências. Um só espaço.", visualSub: "Crie, explore e avance no seu ritmo.",
       loginTitle: "Que bom ver você de novo.", loginSub: "Volte ao seu espaço criativo TechNova.",
-      signupTitle: "Comece aqui.", signupSub: "Uma conta para explorar mais de 60 modelos de IA.",
+      signupTitle: "Comece aqui.", signupSub: "Uma conta para explorar mais de 200 modelos de IA.",
       name: "Nome completo", namePlaceholder: "Seu nome", email: "E-mail", emailPlaceholder: "voce@exemplo.com",
       password: "Senha", confirm: "Confirmar a senha", passwordHint: "Mínimo de 8 caracteres",
       showPassword: "Mostrar a senha", hidePassword: "Ocultar a senha",

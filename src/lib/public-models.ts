@@ -1,6 +1,7 @@
 // Models actually available in TechNova, with their price in TechNova credits (1 credit ≈ 1 FCFA).
 // Text prices come from model-pricing.ts, media prices from media-models.ts: one source of truth.
 import { openRouterModelIds } from "@/lib/chat-models";
+import { extraModels } from "@/lib/openrouter-catalog";
 import { creditCost, modelCatalog } from "@/lib/model-pricing";
 import { mediaModels, mediaReserve, type MediaKind } from "@/lib/media-models";
 
@@ -30,7 +31,6 @@ const textSpecs: Record<string, { context: string; caps: TextCap[] }> = {
   "Mistral Large": { context: "128K", caps: ["coding"] },
   "Qwen 2.5 Coder 32B": { context: "33K", caps: ["coding"] },
   "Qwen 2.5 72B": { context: "33K", caps: [] },
-  "Hermes 3 405B": { context: "131K", caps: ["long"] },
   "Llama 3.1 8B": { context: "131K", caps: ["fast"] },
   "Gemma 3 12B": { context: "131K", caps: ["vision", "fast"] },
 };
@@ -53,7 +53,8 @@ const showcaseOnly = ["GPT-6 Astra", "Gemini 4 Argon"];
 export const textModels: PublicTextModel[] = [...Object.keys(openRouterModelIds), ...showcaseOnly].flatMap((name) => {
   const price = modelCatalog.find((m) => m.name === name);
   if (!price) return [];
-  const spec = textSpecs[name] ?? { context: "—", caps: [] };
+  const extra = extraModels.find((m) => m.name === name);
+  const spec = textSpecs[name] ?? (extra ? { context: extra.context, caps: extra.caps } : { context: "—", caps: [] });
   const fixed = modePrices[name];
   return [{ kind: "text" as const, name, provider: price.provider, context: spec.context, caps: spec.caps, input: price.input, output: price.output, perMessage: fixed ? fixed.credits : creditCost(name, TYPICAL_IN, TYPICAL_OUT), ...(fixed ? { mode: fixed.mode } : {}), ...(showcaseOnly.includes(name) ? { soon: true } : {}) }];
 });

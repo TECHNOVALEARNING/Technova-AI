@@ -1,3 +1,4 @@
+import { extraModels } from "@/lib/openrouter-catalog";
 // Plan limits shared by browser and server (the /tarifs comparison table, minus the development section).
 // A plan is the highest pack an account has bought; the server always re-checks (src/lib/plan.server.ts).
 
@@ -13,8 +14,8 @@ export const featureMinTier: Record<PlanFeature, Tier> = {
   agents: 2, agent_budget: 3, api: 3, github: 3, supabase: 3, usage_details: 3,
 };
 
-/** Chat models outside the Starter plan ("Partiel"): the most expensive ones. */
-export const PREMIUM_CHAT_MODELS = new Set(["GPT-4o", "Claude Sonnet 5", "Claude Opus 5", "Gemini 2.5 Pro", "Mistral Large", "Hermes 3 405B", "DeepSeek R1"]);
+/** Chat models outside the Starter plan ("Partiel"): the most expensive ones (extra catalogue: 6 000+ credits per million output tokens). */
+export const PREMIUM_CHAT_MODELS = new Set(["GPT-4o", "Claude Sonnet 5", "Claude Opus 5", "Gemini 2.5 Pro", "Mistral Large", "DeepSeek R1", ...extraModels.filter((m) => m.output >= 6000).map((m) => m.name)]);
 /** TechNova Smart stays available on Starter: premium picks fall back to the closest included model. */
 export const STARTER_SMART_FALLBACK: Record<string, string> = { "Gemini 2.5 Pro": "Gemini 2.5 Flash", "Claude Sonnet 5": "Claude Haiku 4.5", "Claude Opus 5": "Claude Haiku 4.5", "GPT-4o": "GPT-4o Mini" };
 /** Starter image quota ("Quota" in the table): images per rolling 24 hours. */
