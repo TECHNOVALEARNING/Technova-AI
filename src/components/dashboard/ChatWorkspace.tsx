@@ -1100,7 +1100,7 @@ export function ThreadPage({ threadId }: { threadId: string }) {
       setThinking(true);
       try {
         const id = await createMedia({ data: { threadId, kind: "image", prompt: request, aspectRatio: "1:1", sourceId: editing.id } });
-        const media: ChatMediaData = { id, kind: "image", model: imageEditModel.label, prompt: request, status: "waiting", progress: null, urls: [], error: null };
+        const media: ChatMediaData = { id, kind: "image", model: imageEditModel.label, prompt: request, ratio: "1:1", status: "waiting", progress: null, urls: [], error: null };
         setMessages((prev) => [...prev, { id, role: "assistant", parts: [{ type: "data-media", data: media }] as unknown as UIMessage["parts"] }]);
       } catch (e) {
         await failWith(String((e as Error)?.message ?? e));
@@ -1117,7 +1117,7 @@ export function ThreadPage({ threadId }: { threadId: string }) {
       setThinking(true);
       try {
         const id = await createMedia({ data: { threadId, kind, prompt: request, aspectRatio, model: mediaModel, ...(kind === "video" ? { duration: "5" } : {}) } });
-        const media: ChatMediaData = { id, kind, model: mediaLabel(mediaModel, kind), prompt: request, status: "waiting", progress: null, urls: [], error: null };
+        const media: ChatMediaData = { id, kind, model: mediaLabel(mediaModel, kind), prompt: request, ratio: aspectRatio, status: "waiting", progress: null, urls: [], error: null };
         setMessages((prev) => [...prev, { id, role: "assistant", parts: [{ type: "data-media", data: media }] as unknown as UIMessage["parts"] }]);
       } catch (e) {
         const message = String((e as Error)?.message ?? e);

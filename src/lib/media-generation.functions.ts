@@ -113,7 +113,7 @@ export const createMediaGeneration = createServerFn({ method: "POST" })
       aspect_ratio: aspectRatio, duration: built.duration === null ? null : String(built.duration), reserved_credits: reserve,
     }).select("id").single();
     if (error || !row) throw new Error(`La création a démarré, mais son suivi n’a pas pu être enregistré : ${error?.message ?? "unknown"}`);
-    const part = { type: "data-media", data: { id: row.id, kind: data.kind, model: spec.label, prompt: data.prompt, status: "waiting", progress: null, urls: [], error: null } };
+    const part = { type: "data-media", data: { id: row.id, kind: data.kind, model: spec.label, prompt: data.prompt, ratio: aspectRatio, status: "waiting", progress: null, urls: [], error: null } };
     const { error: messageError } = await context.supabase.from("chat_messages").insert({
       thread_id: data.threadId, sdk_id: row.id, role: "assistant", parts: [part],
     });
@@ -129,7 +129,7 @@ export const refreshMediaGeneration = createServerFn({ method: "POST" })
       .select("sdk_id").eq("thread_id", data.threadId).eq("sdk_id", data.id).eq("role", "assistant").maybeSingle();
     if (messageError || !message) throw new Error("Création introuvable dans cette conversation.");
     const { data: row, error } = await context.supabase.from("media_generations")
-      .select("id,task_id,status,kind,model,prompt,result_urls,error,archived_paths,expires_at").eq("id", data.id).eq("owner_id", context.userId).single();
+      .select("id,task_id,status,kind,model,prompt,aspect_ratio,result_urls,error,archived_paths,expires_at").eq("id", data.id).eq("owner_id", context.userId).single();
     if (error || !row) throw new Error("Création introuvable.");
     if (["success", "fail"].includes(row.status)) {
       // Serve archived copies (14-day retention) through short-lived signed URLs when available.
@@ -138,7 +138,7 @@ export const refreshMediaGeneration = createServerFn({ method: "POST" })
       // Past the 14-day retention the files are gone: say so instead of serving dead provider links.
       const expired = row.status === "success" && !!row.expires_at && new Date(row.expires_at).getTime() < Date.now();
       const urls = expired ? [] : archived ?? (row.status === "success" ? row.result_urls : []);
-      return { id: row.id, kind: row.kind, model: mediaLabel(row.model, row.kind), prompt: row.prompt, status: row.status, urls, error: row.error, expired };
+      return { id: row.id, kind: row.kind, model: mediaLabel(row.model, row.kind), prompt: row.prompt, ratio: row.aspect_ratio, status: row.status, urls, error: row.error, expired };
     }
     const result = await kie(`recordInfo?taskId=${encodeURIComponent(row.task_id)}`);
     const state = result["state"];
@@ -191,7 +191,7 @@ export const refreshMediaGeneration = createServerFn({ method: "POST" })
         if (signed?.length) urls = signed;
       }
     }
-    const media = { id: row.id, kind: row.kind, model: mediaLabel(row.model, row.kind), prompt: row.prompt, status: state, progress, urls, error: state === "fail" ? String(result["failMsg"] || "La création a échoué.") : null };
+    const media = { id: row.id, kind: row.kind, model: mediaLabel(row.model, row.kind), prompt: row.prompt, ratio: row.aspect_ratio, status: state, progress, urls, error: state === "fail" ? String(result["failMsg"] || "La création a échoué.") : null };
     const { error: partError } = await context.supabase.from("chat_messages").update({ parts: [{ type: "data-media", data: media }] })
       .eq("thread_id", data.threadId).eq("sdk_id", row.id);
     if (partError) throw new Error(partError.message);

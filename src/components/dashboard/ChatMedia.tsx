@@ -8,6 +8,8 @@ export type ChatMediaData = {
   kind: "image" | "video" | "music";
   model?: string;
   prompt: string;
+  /** Requested aspect ratio ("16:9", "9:16", "1:1"…): the frame in progress takes the shape of the coming image. */
+  ratio?: string | null;
   status: string;
   progress?: number | null;
   urls: string[];
@@ -43,8 +45,11 @@ function DotField() {
       ctx.clearRect(0, 0, w, h);
       const gap = 15, pad = 12;
       const cx = w * (0.5 + 0.3 * Math.sin(t * 0.32)), cy = h * (0.5 + 0.25 * Math.cos(t * 0.27)), r = Math.min(w, h) * 0.35;
-      for (let y = pad; y <= h - pad; y += gap) {
-        for (let x = pad; x <= w - pad; x += gap) {
+      for (let gy = pad; gy <= h - pad; gy += gap) {
+        for (let gx = pad; gx <= w - pad; gx += gap) {
+          // Each dot sways on a slow wave, so the whole field visibly moves.
+          const x = gx + 2.6 * Math.sin(t * 1.1 + gy * 0.045 + gx * 0.012);
+          const y = gy + 2.6 * Math.cos(t * 0.9 + gx * 0.045 - gy * 0.01);
           const glow = Math.exp(-((x - cx) ** 2 + (y - cy) ** 2) / (r * r)) * (0.8 + 0.2 * Math.sin(t * 2 + x * 0.3 + y * 0.4));
           const alpha = (dark ? 0.32 : 0.5) + (dark ? 0.55 : 0.45) * glow;
           ctx.fillStyle = dark ? `rgba(${110 + 40 * glow},${140 + 50 * glow},255,${alpha})` : `rgba(${100 - 40 * glow},${135 - 35 * glow},${215 + 30 * glow},${alpha})`;
@@ -70,10 +75,12 @@ function GenerationStage({ data, lang }: { data: ChatMediaData; lang: "fr" | "en
   const [elapsed, setElapsed] = useState(0);
   useEffect(() => { const start = Date.now(); const id = window.setInterval(() => setElapsed(Math.floor((Date.now() - start) / 1000)), 1000); return () => window.clearInterval(id); }, []);
   const badge = progress !== null ? `${progress} %` : elapsed < 60 ? `${elapsed} s` : `${Math.floor(elapsed / 60)} min ${String(elapsed % 60).padStart(2, "0")}`;
-  const shape = data.kind === "image" ? "aspect-square" : data.kind === "video" ? "aspect-video" : "aspect-[16/7]";
-  return <div className="flex w-full max-w-[460px] flex-col gap-3">
+  // Same frame as the coming image or video: its requested ratio, up to 520 px wide and 520 px high.
+  const [rw, rh] = data.kind === "music" ? [16, 7] : (/^(\d+):(\d+)$/.exec(data.ratio ?? "") ?? ["", data.kind === "video" ? "16" : "1", data.kind === "video" ? "9" : "1"]).slice(1).map(Number) as [number, number];
+  const frameWidth = Math.min(520, Math.round((520 * rw) / rh));
+  return <div className="flex w-full flex-col gap-3" style={{ maxWidth: frameWidth }}>
     <ThinkingLine fr={fr} />
-    <div role="img" aria-label={`${text.creating}${progress === null ? "" : ` — ${progress} %`}`} className={`relative w-full overflow-hidden rounded-2xl bg-[#f7f7f8] dark:bg-[#0a0a0c] ${shape}`}>
+    <div role="img" aria-label={`${text.creating}${progress === null ? "" : ` — ${progress} %`}`} className="relative w-full overflow-hidden rounded-2xl bg-[#f7f7f8] dark:bg-[#0a0a0c]" style={{ aspectRatio: `${rw} / ${rh}` }}>
       <DotField />
       <span className="absolute bottom-3 right-3 rounded-full border border-black/10 bg-white px-4 py-1.5 text-[15px] font-medium tabular-nums text-[#1f5fbf] shadow-md dark:border-white/10 dark:bg-white/10 dark:text-[#7aa7ff]">{badge}</span>
     </div>
