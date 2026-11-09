@@ -1,7 +1,17 @@
 // Server-only credit reservations: hold the worst-case cost before calling a provider,
 // then charge the real cost (the rest returns to the balance) or release on failure.
 
+export const ACCOUNT_SUSPENDED = "Compte suspendu. / Account suspended.";
+
+/** A suspended account may still hold a valid session for up to an hour: nothing billable runs for it. */
+export async function assertNotSuspended(ownerId: string) {
+  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+  const { data } = await supabaseAdmin.from("account_suspensions").select("user_id").eq("user_id", ownerId).maybeSingle();
+  if (data) throw new Error(ACCOUNT_SUSPENDED);
+}
+
 export async function reserveCredits(ownerId: string, amount: number, label: string): Promise<string | null> {
+  await assertNotSuspended(ownerId);
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
   const { data, error } = await supabaseAdmin.rpc("reserve_credits_v2", { _owner: ownerId, _amount: amount, _label: label });
   if (error) throw new Error(`reserve_credits_v2: ${error.message}`);

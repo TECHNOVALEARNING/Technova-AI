@@ -283,7 +283,9 @@ export const Route = createFileRoute("/api/chat")({
           return new Response(message, { status: upstream.status || 502 });
         }
 
-        request.signal.addEventListener("abort", () => { void (outputText ? settle() : abandon()); }, { once: true });
+        // A reply stopped by the visitor is still billed (at least the mode price): the provider already charged for the
+        // prompt and any hidden reasoning, so aborting early must never make a reply free.
+        request.signal.addEventListener("abort", () => { void settle(); }, { once: true });
 
         // Convert OpenRouter SSE into a plain text stream of answer deltas.
         const decoder = new TextDecoder();

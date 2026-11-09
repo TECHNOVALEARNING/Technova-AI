@@ -94,6 +94,8 @@ export const createMediaGeneration = createServerFn({ method: "POST" })
     }
     const aspectRatio = built.ratio;
     const reserve = mediaReserve(spec, built.duration ?? 5);
+    const { assertNotSuspended } = await import("@/lib/credits.server");
+    await assertNotSuspended(context.userId);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data: ok, error: reserveError } = await supabaseAdmin.rpc("reserve_credits", { _owner: context.userId, _amount: reserve, _label: spec.label });
     if (reserveError) throw new Error(reserveError.message);

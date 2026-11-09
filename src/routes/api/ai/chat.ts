@@ -60,29 +60,32 @@ export const Route = createFileRoute("/api/ai/chat")({
         }
         const maxTokens = d.max_tokens ?? 1024;
         const estimatedIn = estimateTokens(d.messages.map((m) => m.content).join(" "));
-        const { data: ledger } = await supabaseAdmin.from("credit_transactions").select("amount").eq("owner_id", ownerId);
-        const balance = (ledger ?? []).reduce((sum, row) => sum + row.amount, 0);
-        const worst = creditCost(name, estimatedIn, maxTokens);
-        if (worst > 0 && balance < worst) return fail(402, "insufficient_credits", "Not enough credits for this request.");
+        // Hold the worst case before calling the provider: parallel requests cannot spend the same credits twice.
+        const worst = Math.max(1, creditCost(name, estimatedIn, maxTokens));
+        const { reserveCredits, settleCredits, releaseCredits } = await import("@/lib/credits.server");
+        const reservation = await reserveCredits(ownerId, worst, `API · ${name}`);
+        if (!reservation) return fail(402, "insufficient_credits", "Not enough credits for this request.");
 
         const startedAt = Date.now();
         const upstream = await fetch("https://openrouter.ai/api/v1/chat/completions", {
           method: "POST",
-          signal: AbortSignal.any([request.signal, AbortSignal.timeout(120_000)]),
+          signal: AbortSignal.timeout(120_000),
           headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json", "X-Title": "TechNova AI Hub API" },
-          body: JSON.stringify({ model: openRouterModelIds[name], messages: d.messages, max_tokens: maxTokens, ...(d.temperature !== undefined ? { temperature: d.temperature } : {}) }),
+          body: JSON.stringify({ model: openRouterModelIds[name], messages: d.messages, max_tokens: maxTokens, usage: { include: true }, ...(d.temperature !== undefined ? { temperature: d.temperature } : {}) }),
         }).catch(() => null);
         if (!upstream?.ok) {
+          await releaseCredits(reservation);
           console.error("OpenRouter API error", upstream?.status, (await upstream?.text().catch(() => ""))?.slice(0, 300));
           return fail(502, "upstream_error", "The model could not answer. Try again.");
         }
-        const out = (await upstream.json()) as { choices?: { message?: { content?: string }; finish_reason?: string }[]; usage?: { prompt_tokens?: number; completion_tokens?: number } };
+        const out = (await upstream.json().catch(() => ({}))) as { choices?: { message?: { content?: string }; finish_reason?: string }[]; usage?: { prompt_tokens?: number; completion_tokens?: number; cost?: number } };
         const content = out.choices?.[0]?.message?.content ?? "";
         const inputTokens = out.usage?.prompt_tokens ?? estimatedIn;
         const outputTokens = out.usage?.completion_tokens ?? estimateTokens(content);
-        const credits = creditCost(name, inputTokens, outputTokens);
+        // Real provider cost when reported (hidden reasoning included), else the catalogue price of the tokens.
+        const credits = Math.max(1, typeof out.usage?.cost === "number" ? Math.ceil(out.usage.cost * 1200) : creditCost(name, inputTokens, outputTokens));
         await supabaseAdmin.from("usage_logs").insert({ owner_id: ownerId, model: name, input_tokens: inputTokens, output_tokens: outputTokens, credits, latency_ms: Date.now() - startedAt });
-        if (credits > 0) await supabaseAdmin.from("credit_transactions").insert({ owner_id: ownerId, amount: -credits, kind: "usage", label: `API · ${name}` });
+        await settleCredits(reservation, credits);
 
         const response = {
           id: `tn_${crypto.randomUUID()}`,

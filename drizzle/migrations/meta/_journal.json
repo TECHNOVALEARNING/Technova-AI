@@ -281,6 +281,13 @@
       "when": 1794556800000,
       "tag": "0039_engine_costs",
       "breakpoints": true
+    },
+    {
+      "idx": 40,
+      "version": "7",
+      "when": 1794816000000,
+      "tag": "0040_welcome_bonus_confirmed",
+      "breakpoints": true
     }
   ]
 }
