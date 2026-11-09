@@ -83,8 +83,8 @@ const kieEngines: MediaModel[] = [
 /** The media choices sold in TechNova, at a fixed price (docs/prompt-v6.3.md §3). Engines are never shown. */
 export type MediaTier = "image_rapide" | "image_hd" | "video_fast" | "video_quality" | "musique";
 export const mediaTiers: Record<MediaTier, { engine: string; credits: number; fr: string; en: string }> = {
-  image_rapide: { engine: "seedream/5-flash-text-to-image", credits: 20, fr: "Image rapide", en: "Quick image" },
-  image_hd: { engine: "nano-banana-2", credits: 35, fr: "Image HD", en: "HD image" },
+  image_rapide: { engine: "seedream/5-flash-text-to-image", credits: 35, fr: "Image rapide", en: "Quick image" },
+  image_hd: { engine: "nano-banana-2", credits: 50, fr: "Image HD", en: "HD image" },
   video_fast: { engine: "bytedance/seedance-2-fast", credits: 350, fr: "Vidéo rapide", en: "Quick video" },
   video_quality: { engine: "kling-3.0-omni/text-to-video", credits: 1800, fr: "Vidéo qualité", en: "Quality video" },
   musique: { engine: "ai-music-api/generate", credits: 130, fr: "Musique", en: "Music" },
@@ -99,7 +99,7 @@ export const mediaModels: MediaModel[] = (Object.keys(mediaTiers) as MediaTier[]
 
 /** Edits an existing image ("Modifier" on a generated image), priced like a quick image. */
 export const imageEditModel: MediaModel = { id: "google/nano-banana-edit", label: "Retouche d’image", provider: "TechNova", kind: "image", size: "aspect_ratio", ratios: all5 };
-const IMAGE_EDIT_CREDITS = 20;
+const IMAGE_EDIT_CREDITS = 35;
 
 /** Name shown for a generation: its choice, or a plain kind for creations made before the fixed prices. */
 export function mediaLabel(modelId: string, kind: string): string {

@@ -45,8 +45,8 @@ Autres coûts :
 
 | Action | Crédits |
 |---|---|
-| Image rapide | 20 |
-| Image HD | 35 |
+| Image rapide | 35 |
+| Image HD | 50 |
 | Vidéo rapide | 350 |
 | Vidéo qualité | 1 800 |
 | Musique | 130 |
