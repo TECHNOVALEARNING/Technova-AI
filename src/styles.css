@@ -1057,5 +1057,20 @@ body:has(.dashboard-shell) :is([role="dialog"], [role="alertdialog"]) {
 .dashboard-shell.look-amethyste .chat-orb-ball i:nth-child(1) { background: oklch(.62 .22 305); }
 .dashboard-shell.look-amethyste .chat-orb-ball i:nth-child(2) { background: oklch(.48 .2 285); }
 .dashboard-shell.look-amethyste .chat-orb-ball i:nth-child(3) { background: oklch(.78 .14 325); }
-/* As in their reference images, Abysse and Améthyste keep the sidebar plain (no textile pattern). */
-.dashboard-shell:is(.look-abysse, .look-amethyste) .sidebar-glass::before { display: none; }
+
+/* Phones: a grid cell never grows wider than its column because of a long title or label (it truncates or
+   wraps instead), so dashboard panels never spill past the screen and get cut by the shell. */
+.dashboard-content main .grid > * { min-width: 0; }
+.dashboard-content main { overflow-wrap: break-word; }
+
+/* Phones and tablets: the sidebar opens over the page, so it is real frosted glass, a fuller tint with a
+   strong blur, and what lies behind it is only a soft blur, never readable (every look keeps its own tint). */
+@media (max-width: 1023.98px) {
+  .dashboard-shell .dashboard-sidebar.sidebar-glass { background: color-mix(in oklab, oklch(.985 0 0) 82%, transparent);
+    backdrop-filter: blur(48px) saturate(1.8); -webkit-backdrop-filter: blur(48px) saturate(1.8); }
+  .dark .dashboard-shell .dashboard-sidebar.sidebar-glass { background: color-mix(in oklab, oklch(.17 0 0) 84%, transparent); }
+  .dark .dashboard-shell.look-soie .dashboard-sidebar.sidebar-glass { background: color-mix(in oklab, oklch(.14 .014 250) 84%, transparent);
+    backdrop-filter: blur(48px) saturate(1.8); -webkit-backdrop-filter: blur(48px) saturate(1.8); }
+  .dark .dashboard-shell.look-abysse .dashboard-sidebar.sidebar-glass { background: color-mix(in oklab, oklch(.22 .012 252) 88%, transparent); }
+  .dark .dashboard-shell.look-amethyste .dashboard-sidebar.sidebar-glass { background: color-mix(in oklab, oklch(.08 0 0) 90%, transparent); }
+}

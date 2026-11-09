@@ -138,9 +138,9 @@ export function UsagePage() {
         </div>)}</div> : <p className="py-14 text-center text-[12.5px] text-muted-foreground">{c.none}</p>}
       </div>
       <div className={card}><p className={eyebrow}>{c.byModel.toUpperCase()}</p>
-        {!detailed ? lockedNote : view.models.length ? <table className="mt-3 w-full text-[12px]"><thead className="text-muted-foreground"><tr><th className="py-1.5 text-left font-medium">{c.model}</th><th className="text-right font-medium">{c.requests}</th><th className="text-right font-medium">{c.credits}</th><th className="text-right font-medium">{c.share}</th></tr></thead>
+        {!detailed ? lockedNote : view.models.length ? <div className="mt-3 overflow-x-auto"><table className="w-full text-[12px]"><thead className="text-muted-foreground"><tr><th className="py-1.5 text-left font-medium">{c.model}</th><th className="text-right font-medium">{c.requests}</th><th className="text-right font-medium">{c.credits}</th><th className="text-right font-medium">{c.share}</th></tr></thead>
           <tbody>{view.models.slice(0, 8).map((m) => <tr key={m.model} className="border-t border-border"><td className="max-w-[140px] truncate py-2"><button type="button" className="truncate hover:underline" onClick={() => { setModel(m.model); setPage(1); }}>{m.model}</button></td><td className="text-right tabular-nums">{n(m.requests)}</td><td className="text-right tabular-nums">{n(m.credits)}</td><td className="text-right tabular-nums text-muted-foreground">{view.totals.credits ? Math.round((m.credits / view.totals.credits) * 100) : 0} %</td></tr>)}</tbody>
-        </table> : <p className="py-14 text-center text-[12.5px] text-muted-foreground">{rows ? c.none : c.loading}</p>}
+        </table></div> : <p className="py-14 text-center text-[12.5px] text-muted-foreground">{rows ? c.none : c.loading}</p>}
       </div>
     </div>
 
