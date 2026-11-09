@@ -140,7 +140,12 @@ export const refreshMediaGeneration = createServerFn({ method: "POST" })
       // Past the 14-day retention the files are gone: say so instead of serving dead provider links.
       const expired = row.status === "success" && !!row.expires_at && new Date(row.expires_at).getTime() < Date.now();
       const urls = expired ? [] : archived ?? (row.status === "success" ? row.result_urls : []);
-      return { id: row.id, kind: row.kind, model: mediaLabel(row.model, row.kind), prompt: row.prompt, ratio: row.aspect_ratio, status: row.status, urls, error: row.error, expired };
+      const done = { id: row.id, kind: row.kind, model: mediaLabel(row.model, row.kind), prompt: row.prompt, ratio: row.aspect_ratio, status: row.status, urls, error: row.error, expired };
+      if (archived?.length || expired) {
+        await context.supabase.from("chat_messages").update({ parts: [{ type: "data-media", data: done }] })
+          .eq("thread_id", data.threadId).eq("sdk_id", row.id);
+      }
+      return done;
     }
     const result = await kie(`recordInfo?taskId=${encodeURIComponent(row.task_id)}`);
     const state = result["state"];

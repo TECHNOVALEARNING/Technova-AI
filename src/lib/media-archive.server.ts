@@ -1,5 +1,5 @@
 // Server-only: archives kie.ai results into private storage for 14 days,
-// serves them through short-lived signed URLs, and purges expired files.
+// serves them through signed URLs valid until the end of that retention, and purges expired files.
 
 const BUCKET = "media-files";
 const KEEP_DAYS = 14;
@@ -52,7 +52,10 @@ export async function signedMediaUrls(row: { id: string; archived_paths: unknown
     await supabaseAdmin.from("media_generations").update({ archived_paths: [] }).eq("id", row.id);
     return [];
   }
-  const { data } = await supabaseAdmin.storage.from(BUCKET).createSignedUrls(paths, 6 * 3600);
+  // The link is saved in the conversation: it must live as long as the file (until expires_at), not a few hours.
+  const until = row.expires_at ? new Date(row.expires_at).getTime() : Date.now() + KEEP_DAYS * 24 * 3600 * 1000;
+  const seconds = Math.max(3600, Math.min(KEEP_DAYS * 24 * 3600, Math.floor((until - Date.now()) / 1000)));
+  const { data } = await supabaseAdmin.storage.from(BUCKET).createSignedUrls(paths, seconds);
   const urls = (data ?? []).map((entry) => entry.signedUrl).filter((u): u is string => typeof u === "string" && u.length > 0);
   return urls.length ? urls : null;
 }

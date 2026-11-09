@@ -851,6 +851,13 @@ export function ThreadPage({ threadId }: { threadId: string }) {
   // Finished media are served through signed links that expire: they are re-signed once per visit
   // (and again when a file fails to load); unfinished ones are polled every 5 seconds.
   const signedMedia = useRef(new Set<string>());
+  // Shown for a while after a creation finishes: generated files are only kept 14 days.
+  const [retentionNotice, setRetentionNotice] = useState(0);
+  useEffect(() => {
+    if (!retentionNotice) return;
+    const timer = window.setTimeout(() => setRetentionNotice(0), 15000);
+    return () => window.clearTimeout(timer);
+  }, [retentionNotice]);
   const [mediaRetry, setMediaRetry] = useState(0);
   const reloadMedia = useCallback((id: string) => { signedMedia.current.delete(id); setMediaRetry((n) => n + 1); }, []);
   // "Modifier" on a generated image: the next message is sent to the image edit model with that image.
@@ -874,13 +881,19 @@ export function ThreadPage({ threadId }: { threadId: string }) {
     let active = true;
     const timer = window.setTimeout(() => {
       unsigned.forEach((id) => signedMedia.current.add(id));
-      void Promise.allSettled([...pending, ...unsigned].map((id) => refreshMedia({ data: { id, threadId } }))).then((results) => {
-        if (!active) return;
+      const ids = [...pending, ...unsigned];
+      void Promise.allSettled(ids.map((id) => refreshMedia({ data: { id, threadId } }))).then((results) => {
         for (const [i, result] of results.entries()) {
-          // Re-signing an old file quietly keeps its previous link; only a running creation reports errors.
-          if (result.status === "rejected") { if (i < pending.length) setError(String(result.reason?.message ?? result.reason)); continue; }
+          // Re-signing an old file quietly keeps its previous link (and may be retried); only a running creation reports errors.
+          if (result.status === "rejected") {
+            if (i >= pending.length) signedMedia.current.delete(ids[i]!);
+            else if (active) setError(String(result.reason?.message ?? result.reason));
+            continue;
+          }
           const data = result.value;
           if (!data) continue;
+          // Applied even when the list changed meanwhile: the update targets this message by id only.
+          if (i < pending.length && data.status === "success") setRetentionNotice(Date.now());
           setMessages((prev) => prev.map((message) => message.id === data.id
             ? { ...message, parts: [{ type: "data-media", data }] as unknown as UIMessage["parts"] } : message));
         }
@@ -1349,6 +1362,18 @@ export function ThreadPage({ threadId }: { threadId: string }) {
         <div className="relative z-10 mx-auto mt-2 flex w-full max-w-3xl items-center gap-2 px-4 text-xs">
           <span className="rounded-full border border-primary/40 bg-primary/10 px-3 py-1 font-medium text-foreground">{lang === "en" ? "Agent" : "Agent"} · {agent.name}</span>
           <button type="button" onClick={clearAgent} className="text-muted-foreground underline-offset-2 hover:underline">{lang === "en" ? "Stop using" : "Retirer"}</button>
+        </div>
+      )}
+      {retentionNotice > 0 && (
+        <div role="status" className="relative z-10 mx-auto mt-2 flex w-full max-w-3xl justify-center px-4">
+          <p className="flex items-center gap-2 rounded-2xl border border-orange-500/30 bg-orange-500/15 py-1.5 pl-3.5 pr-1.5 text-[12px] font-medium text-orange-800 backdrop-blur-md dark:text-orange-200">
+            {lang === "en"
+              ? "Generated images, videos and music are kept for 14 days only. Download them before they disappear."
+              : "Les images, vidéos et musiques générées sont conservées 14 jours seulement. Téléchargez-les avant qu’elles ne disparaissent."}
+            <button type="button" onClick={() => setRetentionNotice(0)} aria-label={lang === "en" ? "Close" : "Fermer"} className="grid size-6 shrink-0 place-items-center rounded-full hover:bg-orange-500/20">
+              <X className="size-3.5" />
+            </button>
+          </p>
         </div>
       )}
       {error && (
