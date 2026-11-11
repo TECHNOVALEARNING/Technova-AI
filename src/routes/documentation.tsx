@@ -1,17 +1,22 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState, type ReactNode } from "react";
-import { ArrowRight, Boxes, Route as RouteIcon, BarChart3, ShieldCheck, Check, MessageCircle, FileText, Code2, Languages } from "lucide-react";
+import { ArrowRight, Boxes, Route as RouteIcon, BarChart3, ShieldCheck, Check, MessageCircle, FileText, Code2, Languages, Download } from "lucide-react";
 import { pageHead, breadcrumbLd } from "@/lib/seo";
 import { Button } from "@/components/ui/button";
 import { Nav, Footer, PageHero, Heading, R, ActionText, useReveal, useSiteLang } from "@/components/site/SiteChrome";
 import { CodeBlock } from "@/components/site/CodeBlock";
-import type { SiteLang } from "@/lib/i18n";
+import { featureGuideBlocks } from "@/components/site/FeatureGuides";
+import { featureGuideBlocks2 } from "@/components/site/FeatureGuides2";
+import { isSiteLang, type SiteLang } from "@/lib/i18n";
+import { DOC_DATE, DOC_VERSION, docPdfPath } from "@/lib/docs-version";
 import { codeSamples, useApiBase, withApiBase } from "@/lib/site-pages";
 
 // Documentation and developer guide on one page: API reference, code examples, use cases and the
 // production checklist (the former /developpeurs page redirects here).
 export const Route = createFileRoute("/documentation")({
   head: () => pageHead({ path: "/documentation", title: "Documentation & API — TechNova AI Hub", description: "Démarrage rapide, exemples JavaScript, Python, PHP et cURL, authentification, chat completions, modèles, crédits, codes d'erreur et limites de l'API TechNova.", ogDescription: "Une seule clé API pour les meilleurs modèles d'IA : tout pour l'intégrer à votre produit, de la première requête à la production.", jsonLd: [breadcrumbLd("Documentation", "/documentation")] }),
+  // ?pdf=1&lang=fr renders the printable version (cover, contents, every section) used to build the PDFs.
+  validateSearch: (s: Record<string, unknown>): { pdf?: 1; lang?: SiteLang } => ({ ...(s["pdf"] === 1 || s["pdf"] === "1" ? { pdf: 1 as const } : {}), ...(isSiteLang(s["lang"]) ? { lang: s["lang"] } : {}) }),
   component: DocsPage,
 });
 
@@ -75,7 +80,7 @@ const docs: Record<SiteLang, { tag: string; title: string; sub: string; toc: str
 const devTxt = {
   fr: {
     bpToc: "Mise en production", tag: "Développeurs", title: "Une API. Des possibilités infinies.", sub: "Une seule clé TechNova pour intégrer GPT, Claude, Gemini, DeepSeek et les meilleurs modèles de texte et de code à vos produits, facturés en crédits.", docs: "Lire la documentation", models: "Voir les modèles",
-    stats: ["Une seule clé API", "15 modèles de texte", "Facturation au token", "Clés hachées et révocables"],
+    stats: ["Une seule clé API", "200+ modèles de texte", "Facturation au token", "Clés hachées et révocables"],
     exTag: "Exemples", exTitle: "Votre première requête.",
     feTag: "Expérience développeur", feTitle: "Pensée pour les développeurs.",
     features: [["Une seule API", "Le même format de requête pour tous les modèles de texte."], ["Coût transparent", "Chaque réponse indique les crédits exacts débités."], ["Suivi d'usage", "Requêtes, tokens et crédits par modèle dans votre tableau de bord."], ["Clés protégées", "Clés stockées sous forme hachée, révocables à tout moment."]],
@@ -88,7 +93,7 @@ const devTxt = {
   },
   en: {
     bpToc: "Going to production", tag: "Developers", title: "One API. Infinite possibilities.", sub: "One TechNova key to bring GPT, Claude, Gemini, DeepSeek and the best text and code models into your products, billed in credits.", docs: "Read the docs", models: "Explore models",
-    stats: ["One API key", "15 text models", "Per-token billing", "Hashed, revocable keys"],
+    stats: ["One API key", "200+ text models", "Per-token billing", "Hashed, revocable keys"],
     exTag: "Examples", exTitle: "Your first request.",
     feTag: "Developer experience", feTitle: "Built for developers.",
     features: [["One API", "The same request format for every text model."], ["Transparent cost", "Every response states the exact credits charged."], ["Usage tracking", "Requests, tokens and credits per model in your dashboard."], ["Protected keys", "Keys stored hashed, revocable at any time."]],
@@ -101,7 +106,7 @@ const devTxt = {
   },
   es: {
     bpToc: "Paso a producción", tag: "Desarrolladores", title: "Una API. Posibilidades infinitas.", sub: "Una sola clave TechNova para integrar GPT, Claude, Gemini, DeepSeek y los mejores modelos de texto y código en tus productos, facturados en créditos.", docs: "Leer la documentación", models: "Ver los modelos",
-    stats: ["Una sola clave API", "15 modelos de texto", "Facturación por token", "Claves cifradas y revocables"],
+    stats: ["Una sola clave API", "200+ modelos de texto", "Facturación por token", "Claves cifradas y revocables"],
     exTag: "Ejemplos", exTitle: "Tu primera solicitud.",
     feTag: "Experiencia del desarrollador", feTitle: "Pensada para desarrolladores.",
     features: [["Una sola API", "El mismo formato de petición para todos los modelos de texto."], ["Coste transparente", "Cada respuesta indica los créditos exactos cobrados."], ["Seguimiento de uso", "Peticiones, tokens y créditos por modelo en tu panel."], ["Claves protegidas", "Claves guardadas cifradas, revocables en cualquier momento."]],
@@ -114,7 +119,7 @@ const devTxt = {
   },
   pt: {
     bpToc: "Ida para produção", tag: "Desenvolvedores", title: "Uma API. Possibilidades infinitas.", sub: "Uma única chave TechNova para integrar GPT, Claude, Gemini, DeepSeek e os melhores modelos de texto e código aos seus produtos, cobrados em créditos.", docs: "Ler a documentação", models: "Ver os modelos",
-    stats: ["Uma única chave de API", "15 modelos de texto", "Cobrança por token", "Chaves protegidas e revogáveis"],
+    stats: ["Uma única chave de API", "200+ modelos de texto", "Cobrança por token", "Chaves protegidas e revogáveis"],
     exTag: "Exemplos", exTitle: "Sua primeira solicitação.",
     feTag: "Experiência do desenvolvedor", feTitle: "Pensada para desenvolvedores.",
     features: [["Uma única API", "O mesmo formato de requisição para todos os modelos de texto."], ["Custo transparente", "Cada resposta indica os créditos exatos cobrados."], ["Acompanhamento de uso", "Requisições, tokens e créditos por modelo no seu painel."], ["Chaves protegidas", "Chaves guardadas de forma protegida, revogáveis a qualquer momento."]],
@@ -140,15 +145,29 @@ function DocCard({ id, n, title, children }: { id: string; n: number; title: str
   );
 }
 
+const pdfText = {
+  fr: { download: "Télécharger en PDF", version: "Version", date: "Mise à jour le", contents: "Sommaire", footer: "TechNova AI Hub · Documentation", intro: "Guide complet de la plateforme et de son API : démarrage, intégration, agents IA, connaissances, Registry, connexions et mise en production." },
+  en: { download: "Download as PDF", version: "Version", date: "Updated on", contents: "Contents", footer: "TechNova AI Hub · Documentation", intro: "Complete guide to the platform and its API: getting started, integration, AI agents, knowledge, Registry, connections and going to production." },
+  es: { download: "Descargar en PDF", version: "Versión", date: "Actualizado el", contents: "Índice", footer: "TechNova AI Hub · Documentación", intro: "Guía completa de la plataforma y su API: inicio, integración, agentes de IA, conocimiento, Registry, conexiones y paso a producción." },
+  pt: { download: "Baixar em PDF", version: "Versão", date: "Atualizado em", contents: "Sumário", footer: "TechNova AI Hub · Documentação", intro: "Guia completo da plataforma e da sua API: início, integração, agentes de IA, conhecimento, Registry, conexões e ida para produção." },
+} satisfies Record<SiteLang, unknown>;
+
 function DocsPage() {
-  const [lang, setLang] = useSiteLang();
+  const search = Route.useSearch();
+  const [siteLang, setLang] = useSiteLang();
+  const lang: SiteLang = search.pdf && search.lang ? search.lang : siteLang;
+  const printMode = search.pdf === 1;
   const d = docs[lang];
   const t = devTxt[lang];
-  const apiBase = useApiBase();
+  const liveApiBase = useApiBase();
+  // The PDF shows the production address, never the address of the machine that printed it.
+  const apiBase = search.pdf === 1 ? "https://www.technovaihub.com" : liveApiBase;
   const [tab, setTab] = useState(0);
   useReveal();
 
-  const examples = (
+  const examples = printMode
+    ? <div className="mt-5 space-y-4">{codeSamples.map((c) => <CodeBlock key={c.label} code={withApiBase(c.code, apiBase)} label={`POST /api/ai/chat · ${c.label}`} />)}</div>
+    : (
     <>
       <div className="mt-5 mb-3 flex flex-wrap gap-2">
         {codeSamples.map((c, i) => <button key={c.label} type="button" onClick={() => setTab(i)} className={`rounded-full px-4 py-2 text-sm transition ${tab === i ? "bg-ink text-ink-foreground shadow-soft" : "border border-border text-muted-foreground hover:text-foreground"}`}>{c.label}</button>)}
@@ -179,17 +198,25 @@ function DocsPage() {
     </> });
     if (s.id === "demarrage") blocks.push({ id: "exemples", title: t.exTag, body: <><p className="mt-3 leading-relaxed text-muted-foreground">{t.exTitle}</p>{examples}</> });
   }
+  // Feature guides: AI agents, knowledge bases and where they can be used.
+  { const [agents, knowledge, where] = featureGuideBlocks(lang); blocks.push(agents!, knowledge!, ...featureGuideBlocks2(lang), where!); }
   blocks.push({ id: "cas-usage", title: t.reTag, body: <><p className="mt-3 leading-relaxed text-muted-foreground">{t.reTitle}</p>{recipes}</> });
   blocks.push({ id: "production", title: t.bpToc, body: <><p className="mt-3 leading-relaxed text-muted-foreground">{t.bpTitle}</p>{checklist}</> });
+
+  const pt = pdfText[lang];
+  const dateLabel = new Date(`${DOC_DATE}T12:00:00Z`).toLocaleDateString({ fr: "fr-FR", en: "en-US", es: "es-ES", pt: "pt-BR" }[lang], { day: "numeric", month: "long", year: "numeric" });
+  if (printMode) return <PrintDocument lang={lang} title={d.title} intro={pt.intro} blocks={blocks} contents={pt.contents} versionLabel={`${pt.version} ${DOC_VERSION}`} dateLabel={`${pt.date} ${dateLabel}`} footer={pt.footer} />;
 
   return (
     <div className="min-h-screen overflow-x-clip bg-background text-foreground">
       <Nav lang={lang} setLang={setLang} />
-      <PageHero tag={d.tag} title={d.title} sub={`${t.sub} ${d.sub}`}>
+      <PageHero tag={d.tag} title={d.title} sub={`${t.sub} ${d.sub}`} shine>
         <div className="mt-7 flex flex-wrap gap-3">
           <Button asChild variant="pill" size="pill" className="action-pill action-pill-light px-6 py-3 text-sm font-semibold"><a href="#demarrage"><ActionText>{d.sections[0]!.title}</ActionText><ArrowRight className="size-4" /></a></Button>
           <Button asChild variant="pill" size="pill" className="action-pill action-pill-glass px-6 py-3 text-sm"><Link to="/modeles"><ActionText>{t.models}</ActionText></Link></Button>
+          <Button asChild variant="pill" size="pill" className="action-pill action-pill-glass px-6 py-3 text-sm"><a href={docPdfPath(lang)} download><Download className="size-4" /><ActionText>{pt.download}</ActionText></a></Button>
         </div>
+        <p className="mt-3 text-xs text-ink-foreground/55">PDF · {pt.version} {DOC_VERSION} · {dateLabel}</p>
         <div className="mt-8 flex flex-wrap gap-2">{t.stats.map((s) => <span key={s} className="rounded-full border border-ink-foreground/15 bg-ink-foreground/5 px-3 py-1 text-xs text-ink-foreground/75">{s}</span>)}</div>
       </PageHero>
 
@@ -227,4 +254,35 @@ function DocsPage() {
       <Footer lang={lang} />
     </div>
   );
+}
+
+/** Printable documentation (A4): a themed cover with the version, the contents, then every section on light
+ *  pages. Rendered at /documentation?pdf=1&lang=… and printed to PDF by scripts/build-docs-pdf.mjs. */
+function PrintDocument({ lang, title, intro, blocks, contents, versionLabel, dateLabel, footer }: { lang: SiteLang; title: string; intro: string; blocks: { id: string; title: string; body: ReactNode }[]; contents: string; versionLabel: string; dateLabel: string; footer: string }) {
+  return <div className="doc-print bg-white text-neutral-900" lang={lang}>
+    <section className="doc-cover relative flex flex-col justify-between overflow-hidden bg-ink p-14 text-ink-foreground">
+      <div className="pointer-events-none absolute -right-24 -top-24 size-[520px] rounded-full bg-[radial-gradient(circle_at_35%_30%,#f7b6d2,#a9d3f5_45%,#f3e08a_75%,transparent_76%)] opacity-70 blur-2xl" />
+      <div className="pointer-events-none absolute -bottom-40 -left-24 size-[460px] rounded-full bg-[radial-gradient(circle,color-mix(in_oklab,var(--iris-2)_55%,transparent),transparent_70%)] blur-2xl" />
+      <div className="relative flex items-center gap-3"><img src="/favicon.svg" alt="" className="size-12 rounded-xl" /><span className="font-display text-xl font-bold tracking-[0.14em]">TECHNOVA <span className="opacity-60">AI HUB</span></span></div>
+      <div className="relative">
+        <p className="text-sm uppercase tracking-[0.3em] text-ink-foreground/60">Documentation</p>
+        <h1 className="mt-4 max-w-2xl font-display text-6xl font-semibold leading-[1.02]"><span className="text-hero-gradient">{title}</span></h1>
+        <p className="mt-6 max-w-xl text-lg leading-relaxed text-ink-foreground/75">{intro}</p>
+      </div>
+      <div className="relative flex items-end justify-between gap-6 border-t border-ink-foreground/15 pt-6 text-sm text-ink-foreground/70">
+        <div><p className="font-semibold text-ink-foreground">{versionLabel}</p><p>{dateLabel}</p></div>
+        <p>www.technovaihub.com</p>
+      </div>
+    </section>
+    <section className="doc-page px-14 py-12">
+      <h2 className="font-display text-3xl font-semibold">{contents}</h2>
+      <ol className="mt-8 grid grid-cols-2 gap-x-10 gap-y-3">{blocks.map((b, i) => <li key={b.id} className="flex items-baseline gap-3 border-b border-neutral-200 pb-2 text-[15px]"><span className="font-mono text-xs text-neutral-500">{String(i + 1).padStart(2, "0")}</span><span className="font-medium">{b.title}</span></li>)}</ol>
+    </section>
+    {blocks.map((b, i) => <section key={b.id} className="doc-section px-14 pt-10 pb-4">
+      <div className="flex items-center gap-3 border-b border-neutral-200 pb-4"><span className="grid size-9 place-items-center rounded-xl bg-ink font-mono text-xs font-semibold text-ink-foreground">{String(i + 1).padStart(2, "0")}</span><h2 className="font-display text-3xl font-semibold tracking-tight">{b.title}</h2></div>
+      <div className="doc-body">{b.body}</div>
+    </section>)}
+    {/* Running footer on every page after the cover (CSS page margin box, Chrome 131+). */}
+    <style>{`@page { @bottom-center { content: "${footer} · ${versionLabel} · " counter(page); font: 9px Manrope, sans-serif; color: #8a8a8a; } }`}</style>
+  </div>;
 }

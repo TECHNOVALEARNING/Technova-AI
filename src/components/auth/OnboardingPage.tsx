@@ -2,6 +2,7 @@ import { useEffect, useState, type ReactNode } from "react";
 import { afterSignInPath } from "@/lib/public-pricing";
 import { useNavigate } from "@tanstack/react-router";
 import { ArrowLeft, ArrowRight, Building2, Check, Globe, LoaderCircle, User } from "lucide-react";
+import { Flag } from "@/components/site/Flag";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
@@ -93,7 +94,7 @@ export function OnboardingPage() {
       <section className="flex min-w-0 flex-col px-5 pb-9 pt-5 sm:px-10 lg:px-10 lg:py-7">
         <div className="flex items-center justify-between gap-4">
           {step > 2 ? <button type="button" onClick={() => setStep(step - 1)} className="inline-flex items-center gap-2 text-xs font-semibold text-muted-foreground hover:text-foreground"><ArrowLeft className="size-4" />{fr ? "Retour" : "Back"}</button> : <span />}
-          <Button type="button" variant="ghost" size="sm" onClick={() => setLang(fr ? "en" : "fr")} className="gap-2 rounded-full border border-border px-3 text-xs font-bold"><Globe className="size-4" />{fr ? "EN" : "FR"}</Button>
+          <Button type="button" variant="ghost" size="sm" onClick={() => setLang(fr ? "en" : "fr")} className="gap-2 rounded-full border border-border px-3 text-xs font-bold"><Flag code={fr ? "en" : "fr"} className="h-3.5 w-5" /></Button>
         </div>
         <div className="mx-auto flex w-full max-w-[440px] flex-1 flex-col justify-center py-8 lg:py-5">
           <div className="mb-6">

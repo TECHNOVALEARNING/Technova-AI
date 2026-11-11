@@ -1076,3 +1076,41 @@ body:has(.dashboard-shell) :is([data-radix-popper-content-wrapper] > [data-state
 .help-dot:nth-child(2) { animation-delay: .15s; } .help-dot:nth-child(3) { animation-delay: .3s; }
 @keyframes help-dot { 0%, 60%, 100% { opacity: .3; transform: none; } 30% { opacity: 1; transform: translateY(-2px); } }
 @media (prefers-reduced-motion: reduce) { .help-dot { animation: none; } }
+
+/* Printable documentation (/documentation?pdf=1): A4 pages, a full-page themed cover, the contents on their own
+   page, then sections that follow each other; cards, code blocks, lists and tables are never cut across pages,
+   colours print as on screen, and a running footer (set in PrintDocument) carries the version and page number. */
+@page { size: A4; margin: 12mm 0 14mm; }
+@page :first { margin: 0; }
+.doc-print { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+.doc-print .doc-cover { min-height: 297mm; }
+.doc-print .doc-page { break-before: page; }
+.doc-print .doc-section:first-of-type, .doc-print .doc-page + .doc-section { break-before: page; }
+.doc-print .doc-section h2 { break-after: avoid; }
+.doc-print .doc-body p, .doc-print .doc-body li, .doc-print .doc-body table, .doc-print .doc-body [class*="rounded-"] { break-inside: avoid; }
+.doc-print .doc-body h3 { break-after: avoid; }
+@media screen { .doc-print { max-width: 210mm; margin: 0 auto; } }
+@media print { .cookie-glass, .help-launcher, [data-sonner-toaster] { display: none !important; } }
+
+/* Blog: each article card has a soft wash of its category colour (--hue) in one corner, fading into the card,
+   and the featured article two washes; no pattern, so reading stays calm. */
+.blog-card { background-image: radial-gradient(75% 60% at 100% 0%, oklch(.82 .1 var(--hue, 255) / .38), transparent 70%), radial-gradient(60% 50% at 0% 100%, oklch(.88 .06 var(--hue, 255) / .22), transparent 70%); }
+.blog-featured { background-image: radial-gradient(60% 95% at 100% 0%, oklch(.8 .11 var(--hue, 255) / .38), transparent 70%), radial-gradient(45% 85% at 0% 100%, oklch(.82 .09 calc(var(--hue, 255) + 60) / .3), transparent 70%); }
+.dark .blog-card { background-image: radial-gradient(75% 60% at 100% 0%, oklch(.5 .12 var(--hue, 255) / .3), transparent 70%), radial-gradient(60% 50% at 0% 100%, oklch(.45 .08 var(--hue, 255) / .2), transparent 70%); }
+.dark .blog-featured { background-image: radial-gradient(60% 95% at 100% 0%, oklch(.5 .13 var(--hue, 255) / .32), transparent 70%), radial-gradient(45% 85% at 0% 100%, oklch(.48 .1 calc(var(--hue, 255) + 60) / .26), transparent 70%); }
+
+/* Page titles (Blog, Documentation, Pricing, About): the hero gradient with an iridescent light (the logo colours)
+   passing through the letters. */
+.title-shine {
+  background-image: linear-gradient(105deg, transparent 36%, #f3e08a 42%, #f7b6d2 46%, #ffffff 50%, #a9d3f5 54%, #b9a6f5 58%, transparent 64%), var(--gradient-hero-text);
+  background-size: 260% 100%, 100% 100%; background-repeat: no-repeat; background-position: 160% 0, 0 0;
+  -webkit-background-clip: text; background-clip: text; color: transparent;
+  animation: title-shine 9s cubic-bezier(.4, 0, .3, 1) infinite; }
+@keyframes title-shine { 0%, 12% { background-position: 160% 0, 0 0; } 72%, 100% { background-position: -60% 0, 0 0; } }
+/* Same light on titles set on a light background (dark text), e.g. the pricing section. */
+.title-shine-ink {
+  background-image: linear-gradient(105deg, transparent 36%, #e0b93a 42%, #e66aa0 46%, #8f7cf0 50%, #4ea3e8 54%, #3fb8a6 58%, transparent 64%), linear-gradient(var(--foreground), var(--foreground));
+  background-size: 260% 100%, 100% 100%; background-repeat: no-repeat; background-position: 160% 0, 0 0;
+  -webkit-background-clip: text; background-clip: text; color: transparent;
+  animation: title-shine 9s cubic-bezier(.4, 0, .3, 1) infinite; }
+@media (prefers-reduced-motion: reduce) { .title-shine, .title-shine-ink { animation: none; background-position: 160% 0, 0 0; } }

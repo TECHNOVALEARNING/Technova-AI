@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { pageHead, breadcrumbLd } from "@/lib/seo";
-import { useState } from "react";
+import { useState, type CSSProperties } from "react";
 import { ArrowUpRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Nav, Footer, PageHero, R, ActionText, useReveal, useSiteLang } from "@/components/site/SiteChrome";
@@ -19,6 +19,9 @@ const txt = {
 };
 
 
+// Each category tints the soft colour wash of its article cards (and of the featured one).
+const catHue: Record<Post["cat"], number> = { compare: 255, guides: 165, models: 300, marketing: 35, law: 205 };
+
 function BlogPage() {
   const [lang, setLang] = useSiteLang();
   const t = txt[lang];
@@ -30,12 +33,12 @@ function BlogPage() {
   return (
     <div className="min-h-screen overflow-x-clip bg-background text-foreground">
       <Nav lang={lang} setLang={setLang} />
-      <PageHero tag={t.tag} title={t.title} sub={t.sub} />
+      <PageHero tag={t.tag} title={t.title} sub={t.sub} shine />
 
       <section className="px-4 pt-8 sm:pt-10">
         <R className="mx-auto max-w-6xl">
-          <a href={featured.url} target="_blank" rel="noreferrer" className="group block overflow-hidden rounded-[32px] border border-border bg-card shadow-soft transition hover:shadow-lift">
-            <div className="flex flex-col justify-center p-7 md:p-10">
+          <a href={featured.url} target="_blank" rel="noreferrer" className="blog-featured group relative block overflow-hidden rounded-[32px] border border-border bg-card shadow-soft transition hover:shadow-lift" style={{ "--hue": catHue[featured.cat] } as CSSProperties}>
+            <div className="relative flex flex-col justify-center p-7 md:p-10">
               <span className="text-xs font-medium uppercase tracking-[0.18em] text-muted-foreground">{t.featured} · {blogCats[featured.cat][lang]}</span>
               <h2 className="mt-3 font-display text-3xl font-semibold tracking-tight md:text-4xl">{featured.title[lang]}</h2>
               <p className="mt-3 max-w-2xl text-muted-foreground">{featured.excerpt[lang]}</p>
@@ -58,8 +61,8 @@ function BlogPage() {
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {list.map((p, i) => (
               <R key={p.url} delay={(i % 3) * 60}>
-                <a href={p.url} target="_blank" rel="noreferrer" className="group flex h-full flex-col overflow-hidden rounded-[26px] border border-border bg-card shadow-soft transition duration-300 hover:-translate-y-1 hover:shadow-lift">
-                  <div className="flex flex-1 flex-col p-5">
+                <a href={p.url} target="_blank" rel="noreferrer" className={`blog-card group relative flex h-full flex-col overflow-hidden rounded-[26px] border border-border bg-card shadow-soft transition duration-300 hover:-translate-y-1 hover:shadow-lift`} style={{ "--hue": catHue[p.cat] } as CSSProperties}>
+                  <div className="relative flex flex-1 flex-col p-5">
                     <span className="text-[11px] font-medium uppercase tracking-[0.16em] text-muted-foreground">{blogCats[p.cat][lang]}</span>
                     <h3 className="mt-2 font-display text-lg font-semibold leading-snug">{p.title[lang]}</h3>
                     <p className="mt-2 text-sm text-muted-foreground">{p.excerpt[lang]}</p>

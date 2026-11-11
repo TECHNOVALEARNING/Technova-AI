@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { Link } from "@tanstack/react-router";
 import { ArrowUpRight, Globe, LogIn, Mail, Menu, X, Facebook, Instagram, Linkedin, Youtube } from "lucide-react";
+import { Flag } from "@/components/site/Flag";
 import { HelpWidget } from "@/components/site/HelpWidget";
 import { Button } from "@/components/ui/button";
 import { content, isSiteLang, siteLangs, tr, type SiteLang } from "@/lib/i18n";
@@ -35,18 +36,18 @@ function LangMenu({ lang, setLang, label }: { lang: SiteLang; setLang: (l: SiteL
     document.addEventListener("keydown", onKey);
     return () => { document.removeEventListener("pointerdown", onDown); document.removeEventListener("keydown", onKey); };
   }, [open]);
-  const short = siteLangs.find((l) => l.code === lang)?.short ?? "FR";
+  const current = siteLangs.find((l) => l.code === lang) ?? siteLangs[0]!;
   return (
     <div ref={ref} className="relative ml-2 hidden lg:block">
       <Button variant="pill" size="pill" onClick={() => setOpen((o) => !o)} aria-haspopup="listbox" aria-expanded={open} aria-label={label}
         className="flex items-center gap-1 rounded-full px-3 py-1.5 text-xs text-ink-foreground/80 transition hover:bg-ink-foreground/10">
-        <Globe className="h-3.5 w-3.5" /> {short}
+        <Flag code={current.code} className="h-3.5 w-5" title={current.label} />
       </Button>
       {open && <ul role="listbox" aria-label={label} className="absolute right-0 top-[calc(100%+10px)] w-40 overflow-hidden rounded-2xl border border-ink-foreground/15 bg-ink/95 p-1.5 shadow-lift backdrop-blur-xl">
         {siteLangs.map((l) => <li key={l.code} role="option" aria-selected={l.code === lang}>
           <button type="button" onClick={() => { setLang(l.code); setOpen(false); }}
             className={`flex w-full items-center justify-between rounded-xl px-3 py-2 text-left text-sm transition hover:bg-ink-foreground/10 ${l.code === lang ? "text-ink-foreground" : "text-ink-foreground/70"}`}>
-            {l.label}<span className="text-[10px] font-semibold tracking-wider text-ink-foreground/40">{l.short}</span>
+            <span className="flex items-center gap-2.5"><Flag code={l.code} className="h-3.5 w-5" />{l.label}</span>{l.code === lang && <span className="size-1.5 rounded-full bg-ink-foreground/70" />}
           </button>
         </li>)}
       </ul>}
@@ -166,7 +167,7 @@ export function Nav({ lang, setLang }: { lang: SiteLang; setLang: (l: SiteLang) 
             <div role="group" aria-label={t.nav.language} className="mt-2 grid grid-cols-4 gap-1.5">
               {siteLangs.map((l) => <button key={l.code} type="button" aria-pressed={l.code === lang} aria-label={l.label} onClick={() => { setLang(l.code); setMenuOpen(false); }}
                 className={`flex min-h-10 items-center justify-center gap-1 rounded-full text-xs font-semibold transition ${l.code === lang ? "bg-ink-foreground text-ink" : "bg-ink-foreground/10 text-ink-foreground/80 hover:bg-ink-foreground/20"}`}>
-                {l.code === lang && <Globe className="size-3.5" />}{l.short}
+                <Flag code={l.code} className="h-4 w-6" />
               </button>)}
             </div>
           </div>
@@ -215,13 +216,13 @@ export function Footer({ lang }: { lang: SiteLang }) {
 }
 
 /** Dark hero band shared by the content pages. */
-export function PageHero({ tag, title, sub, children }: { tag: string; title: string; sub: string; children?: ReactNode }) {
+export function PageHero({ tag, title, sub, children, shine = false }: { tag: string; title: string; sub: string; children?: ReactNode; shine?: boolean }) {
   return (
     <section className="relative overflow-hidden bg-ink px-5 pb-14 pt-32 text-center text-ink-foreground md:px-12 md:pb-20 md:pt-40">
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(60%_80%_at_50%_0%,color-mix(in_oklab,var(--iris-2)_14%,transparent),transparent)]" />
       <div className="relative z-10 mx-auto max-w-4xl">
         <div className="flex animate-fade-in justify-center"><Tag dark>{tag}</Tag></div>
-        <h1 className="mx-auto mt-5 max-w-3xl animate-fade-in font-display text-4xl font-semibold leading-[1.05] tracking-tight md:text-6xl"><span className="text-hero-gradient">{title}</span></h1>
+        <h1 className="mx-auto mt-5 max-w-3xl animate-fade-in font-display text-4xl font-semibold leading-[1.05] tracking-tight md:text-6xl"><span className={shine ? "title-shine" : "text-hero-gradient"}>{title}</span></h1>
         <p className="mx-auto mt-4 max-w-xl text-base text-ink-foreground/75 md:text-lg">{sub}</p>
         {children}
       </div>

@@ -53,7 +53,7 @@ export function PricingContent({ lang, glass = false }: { lang: SiteLang; glass?
 
   return <section id="pricing" className="px-5 py-12 sm:py-16">
     <div className="relative mx-auto max-w-7xl">
-      <h2 className="font-display text-3xl font-semibold md:text-4xl">{t.title}</h2>
+      <h2 className="font-display text-3xl font-semibold md:text-4xl"><span className="title-shine-ink">{t.title}</span></h2>
       <p className="mt-3 text-muted-foreground">{t.sub}</p>
       <p className="mt-2 text-sm font-medium">{t.terms}</p>
 

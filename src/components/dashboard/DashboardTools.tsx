@@ -3,7 +3,8 @@ import { confirmDialog } from "@/components/ConfirmHost";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
-import { Activity, Check, Coins, Copy, Database, Gauge, KeyRound, MessageSquare, Plus, Sparkles, Trash2, Unlink, Zap } from "lucide-react";
+import { Activity, ArrowUpRight, Boxes, Check, Coins, Copy, Database, Gauge, KeyRound, MessageSquare, Plus, Sparkles, Trash2, Unlink, Zap } from "lucide-react";
+import { Flag } from "@/components/site/Flag";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -131,7 +132,9 @@ export function ModelsPage() {
   const c = useCopy(); const navigate = useNavigate(); const { lang } = useDashboard(); const fr = lang === "fr"; const plan = usePlanTier() ?? 0;
   function open(tier: ChatTier) { savePref("technova-workspace-tier", tier); savePref("technova-workspace-mode", "chat"); void navigate({ to: "/dashboard/chat" }); }
   const cr = (n: number) => `${n.toLocaleString(fr ? "fr-FR" : "en-US")} ${fr ? "crédits" : "credits"}`;
-  return <div><PageHead title={c.modelsTitle} sub={c.modelsSub} />
+  return <div><div className="mb-6 flex flex-wrap items-end justify-between gap-3"><div><h1 className="font-display text-[26px] font-semibold leading-tight">{c.modelsTitle}</h1><p className="mt-1 text-[13px] text-muted-foreground">{c.modelsSub}</p></div>
+      {/* The public catalogue lists every model, with the ones behind each mode tagged. */}
+      <a href="/modeles" target="_blank" rel="noopener" className="inline-flex h-9 items-center gap-1.5 rounded-full bg-foreground px-4 text-[12.5px] font-semibold text-background transition hover:opacity-90"><Boxes className="size-4" />{fr ? "Voir tous les modèles" : "See all models"}<ArrowUpRight className="size-3.5" /></a></div>
     <div className="grid gap-4 md:grid-cols-3">{chatTierIds.map(id => { const t = chatTiers[id]; const locked = id === "expert" && plan < EXPERT_MIN_TIER; return <div key={id} className={`${card} flex flex-col`}>
       <div className="flex items-center gap-3"><span className="grid size-10 place-items-center rounded-full bg-secondary text-foreground" aria-hidden="true"><FontAwesomeIcon icon={modeIcons[id]} fixedWidth className="size-4" /></span><div className="min-w-0"><p className="text-[15px] font-semibold">{fr ? t.fr : t.en}</p><p className="text-[11.5px] text-muted-foreground">{fr ? t.hintFr : t.hintEn}</p></div></div>
       <div className="mt-4 grid grid-cols-2 border-t border-border pt-4 text-[12px]"><div><p className="text-muted-foreground">{fr ? "Par message" : "Per message"}</p><p className="mt-0.5 font-medium">{cr(chatTierCredits(id, false, plan))}</p></div><div><p className="text-muted-foreground">{fr ? "Avec un fichier" : "With a file"}</p><p className="mt-0.5 font-medium">{cr(chatTierCredits(id, true, plan))}</p></div></div>
@@ -384,7 +387,7 @@ export function SettingsToolsPage() {
       <form onSubmit={save} className={card}><p className={eyebrow}>{c.fullName.toUpperCase()}</p><Input value={value} onChange={e => setValue(e.target.value)} maxLength={80} className="mt-3 h-10 rounded-full bg-background px-4" aria-label={c.fullName} /><p className="mt-2 text-[11.5px] text-muted-foreground">{email}</p><div className="mt-4 flex flex-wrap gap-2"><Button type="submit" disabled={busy} className="h-9 rounded-full px-5">{c.save}</Button><Button asChild variant="outline" className="h-9 rounded-full px-5"><Link to="/dashboard/credits">{c.choosePlan}</Link></Button></div></form>
       <div className={`${card} space-y-5`}>
         <div><p className={eyebrow}>{c.currency.toUpperCase()}</p><div className="mt-3"><CurrencySwitch {...cur} /></div></div>
-        <div><p className={eyebrow}>{c.language.toUpperCase()}</p><div className="mt-3 flex gap-2"><button type="button" className={pill(lang === "fr")} onClick={() => setLang("fr")}>FR</button><button type="button" className={pill(lang === "en")} onClick={() => setLang("en")}>EN</button></div></div>
+        <div><p className={eyebrow}>{c.language.toUpperCase()}</p><div className="mt-3 flex gap-2"><button type="button" className={pill(lang === "fr")} onClick={() => setLang("fr")} aria-label="Français" title="Français"><Flag code="fr" className="h-3.5 w-5" /></button><button type="button" className={pill(lang === "en")} onClick={() => setLang("en")} aria-label="English" title="English"><Flag code="en" className="h-3.5 w-5" /></button></div></div>
         <div><p className={eyebrow}>{c.theme.toUpperCase()}</p><div className="mt-3 flex gap-2"><button type="button" className={pill(theme === "light")} onClick={() => setTheme("light")}>{c.light}</button><button type="button" className={pill(theme === "dark")} onClick={() => setTheme("dark")}>{c.dark}</button></div></div>
       </div>
     </div>

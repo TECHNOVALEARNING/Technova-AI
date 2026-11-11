@@ -2,6 +2,7 @@ import { useEffect, useState, type FormEvent } from "react";
 import { afterSignInPath } from "@/lib/public-pricing";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { ArrowLeft, ArrowRight, Eye, EyeOff, Globe, LoaderCircle } from "lucide-react";
+import { Flag } from "@/components/site/Flag";
 import { z } from "zod";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -132,7 +133,7 @@ export function AuthPage({ mode }: { mode: Mode }) {
       <section className="flex min-w-0 flex-col px-5 pb-9 pt-5 sm:px-10 lg:px-10 lg:py-7">
         <div className="flex items-center justify-between gap-4">
           <Link to="/" className="inline-flex items-center gap-2 text-xs font-semibold text-muted-foreground hover:text-foreground"><ArrowLeft className="size-4" />{t.back}</Link>
-          <Button type="button" variant="ghost" size="sm" onClick={() => setLang(lang === "fr" ? "en" : "fr")} aria-label={lang === "fr" ? "Switch to English" : "Passer en français"} className="gap-2 rounded-full border border-border px-3 text-xs font-bold"><Globe className="size-4" />{lang === "fr" ? "EN" : "FR"}</Button>
+          <Button type="button" variant="ghost" size="sm" onClick={() => setLang(lang === "fr" ? "en" : "fr")} aria-label={lang === "fr" ? "Switch to English" : "Passer en français"} className="gap-2 rounded-full border border-border px-3 text-xs font-bold"><Flag code={lang === "fr" ? "en" : "fr"} className="h-3.5 w-5" /></Button>
         </div>
         <div className="mx-auto flex w-full max-w-[360px] flex-1 flex-col justify-center py-8 lg:py-4">
           <Link to="/" className="mb-7 w-fit font-display text-lg font-bold lg:hidden">TECH<span className="opacity-60">NOVA</span></Link>

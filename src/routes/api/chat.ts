@@ -199,17 +199,35 @@ export const Route = createFileRoute("/api/chat")({
             }
           } catch { /* search unavailable: answer without it */ }
         }
+        // "Lire des fichiers": the owner's files named in the message (else the most recent ones) join the documents below.
+        let toolFileIds: string[] = [];
+        if (agent && agentTools.has("read_file") && lastUser.trim()) {
+          try {
+            const { filesForMessage } = await import("@/lib/agent-tools.server");
+            const found = await filesForMessage(userId, lastUser);
+            toolFileIds = found.fileIds;
+            toolContext += found.listing;
+          } catch (e) { console.error("agent files tool", e instanceof Error ? e.message : e); }
+        }
+        // "Lire une base de données": read-only schema and rows of the owner's connected Supabase project.
+        if (agent && agentTools.has("database_read") && lastUser.trim()) {
+          try {
+            const { databaseContext } = await import("@/lib/agent-tools.server");
+            toolContext += await databaseContext(userId, lastUser);
+          } catch (e) { console.error("agent database tool", e instanceof Error ? e.message : e); }
+        }
         // RAG: chat files and knowledge bases (the agent's own bases included), ownership checked server-side.
         const kbIds = [...(parsed.data.knowledgeBaseIds ?? []), ...(agent?.knowledge_base_ids ?? [])];
-        if ((parsed.data.fileIds?.length || kbIds.length) && lastUser.trim()) {
+        const ragFileIds = [...new Set([...(parsed.data.fileIds ?? []), ...toolFileIds])];
+        if ((ragFileIds.length || kbIds.length) && lastUser.trim()) {
           try {
             const { buildFileContext } = await import("@/lib/files.server");
-            toolContext += await buildFileContext({ ownerId: userId, query: lastUser, fileIds: parsed.data.fileIds ?? [], kbIds, context: agent ? "agent" : "chat" });
+            toolContext += await buildFileContext({ ownerId: userId, query: lastUser, fileIds: ragFileIds, kbIds, context: agent ? "agent" : "chat" });
           } catch (e) { console.error("file context", e instanceof Error ? e.message : e); }
         }
         const toolsRule = agent
           ? toolContext
-            ? "\n\nFresh results from your enabled tools and/or the user's documents are provided below — use them and cite sources. Never claim other abilities (code execution, emails, payments, database writes)."
+            ? "\n\nFresh results from your enabled tools (web, the user's files, their database read-only) and/or the user's documents are provided below — use them and cite sources (file names, table names, URLs). Never claim other abilities (code execution, emails, payments, database writes)."
             : `\n\nEnabled tools: ${[...agentTools].join(", ") || "none"}. No live tool result was needed or available for this message. Never claim abilities beyond your enabled tools.`
           : "";
         const systemPrompt = agent

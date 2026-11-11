@@ -105,7 +105,7 @@ function AboutPage() {
   const eyebrow = "text-xs font-medium uppercase tracking-[0.16em] text-muted-foreground";
   return <div className="min-h-screen overflow-x-clip bg-background text-foreground">
     <Nav lang={lang} setLang={setLang} />
-    <PageHero tag={t.tag} title={t.title} sub={t.sub} />
+    <PageHero tag={t.tag} title={t.title} sub={t.sub} shine />
 
     <section className="px-4 pt-12">
       <div className="mx-auto grid max-w-6xl gap-4 md:grid-cols-2">
