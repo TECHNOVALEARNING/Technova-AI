@@ -3,6 +3,7 @@ import { pageHead, breadcrumbLd } from "@/lib/seo";
 import { useEffect, useMemo, useState, type CSSProperties } from "react";
 import { ArrowRight, AudioLines, Brain, ChevronLeft, ChevronRight, Clapperboard, Code2, Eye, Image as ImageIcon, MessageSquareText, ScrollText, Search, Zap } from "lucide-react";
 import { Nav, Footer, PageHero, useSiteLang } from "@/components/site/SiteChrome";
+import { GENERIC_MOTIFS, ModelArt, type ArtMotif } from "@/components/site/ModelArt";
 import type { SiteLang } from "@/lib/i18n";
 import { allPublicModels, mediaCatalog, textModels, type PublicModel, type TextCap } from "@/lib/public-models";
 
@@ -47,16 +48,23 @@ const cover = (name: string): CSSProperties => {
   return { background: `radial-gradient(70% 90% at 85% 0%, oklch(.62 .17 ${h} / .55), transparent 70%), radial-gradient(60% 80% at 0% 100%, oklch(.5 .14 ${(h + 50) % 360} / .45), transparent 70%), linear-gradient(140deg, oklch(.24 .04 ${h}), oklch(.14 .02 ${(h + 30) % 360}))` };
 };
 
-// Pictures (public/media/models, 640×400 cards and 1600×686 banners): a model's own cover when it has one,
-// media creations a fixed picture, the other models one picture per provider from a neutral pool.
+// Pictures (public/media/models, 640×400 cards and 1600×686 banners): a model's own cover when it has one and
+// a fixed picture per media creation; every other model gets its own drawn cover (ModelArt), never a repeat.
 const ownCovers: Record<string, string> = {
   "Claude Sonnet 5": "claude-sonnet-5", "Claude Opus 5": "claude-opus-5", "Claude Haiku 5.5": "claude-haiku-5-5", "Claude Fable 5": "claude-fable-5",
   "Grok 4.6": "grok-4-6", "GPT-5.2": "gpt-5-2", "Gemini 4 Argon": "gemini-4-argon", "Kimi K3.1 Pro": "kimi-k3-1-pro",
   "Gemini 3 Flash Preview": "gemini-3", "Gemini 3.1 Pro Preview": "gemini-3",
 };
 const mediaCovers: Record<string, string> = { "seedream/5-flash-text-to-image": "vase", "nano-banana-2": "hummingbird", "bytedance/seedance-2-fast": "cinema", "kling-3.0-omni/text-to-video": "lake", "ai-music-api/generate": "headphones" };
-const coverPool = ["swirl", "nodes", "earth", "fisherman", "bubble", "lake", "hummingbird", "cinema", "vase", "headphones", "abstract"];
-const coverOf = (m: PublicModel) => `/media/models/${m.kind === "text" ? ownCovers[m.name] ?? coverPool[hueOf(m.provider) % coverPool.length] : mediaCovers[m.id] ?? "abstract"}.webp`;
+const pictureOf = (m: PublicModel) => { const slug = m.kind === "text" ? ownCovers[m.name] : mediaCovers[m.id]; return slug ? `/media/models/${slug}.webp` : null; };
+/** Colour of a drawn cover: the provider family, shifted per model so a large family is not one flat colour. */
+const artHue = (m: PublicModel) => (hueOf(m.provider) + ([...m.name].reduce((h, c) => (h * 31 + c.charCodeAt(0)) >>> 0, 11) % 140) - 70 + 360) % 360;
+/** Drawn cover motif: one of the model's strengths or a generic one, chosen from its name so it stays stable. */
+const motifOf = (m: PublicModel): ArtMotif => {
+  const seed = [...m.name].reduce((h, c) => (h * 33 + c.charCodeAt(0)) >>> 0, 5);
+  const options: ArtMotif[] = [...(m.kind === "text" ? m.caps : []), GENERIC_MOTIFS[seed % GENERIC_MOTIFS.length]!, GENERIC_MOTIFS[(seed >>> 3) % GENERIC_MOTIFS.length]!];
+  return options[(seed >>> 6) % options.length]!;
+};
 
 const taskMatch = (m: PublicModel, task: Task) => task === "all" || m.kind === task || (m.kind === "text" && m.caps.includes(task as TextCap));
 // Featured banners after TechNova Smart: flagship text models, then one creation of each kind.
@@ -154,7 +162,9 @@ function ModelsPage() {
       <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">{list.slice(0, shown).map((m) => {
         return <article key={keyOf(m)} className="group flex min-w-0 flex-col overflow-hidden rounded-[22px] border border-border bg-card transition hover:-translate-y-0.5 hover:shadow-lift">
           <div className="relative flex h-40 flex-col justify-end overflow-hidden p-4 text-white" style={cover(m.provider)}>
-            <img src={coverOf(m)} alt="" loading="lazy" decoding="async" width={640} height={400} className="absolute inset-0 h-full w-full object-cover transition-transform duration-700 group-hover:scale-105" />
+            {(() => { const pic = pictureOf(m); return pic
+              ? <img src={pic} alt="" loading="lazy" decoding="async" width={640} height={400} className="absolute inset-0 h-full w-full object-cover transition-transform duration-700 group-hover:scale-105" />
+              : <div className="absolute inset-0 transition-transform duration-700 group-hover:scale-105"><ModelArt name={m.name} hue={artHue(m)} motif={motifOf(m)} /></div>; })()}
             <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/85 via-black/35 to-black/10" />
             <span className="absolute right-3 top-3 z-10 inline-flex max-w-[70%] items-center gap-1.5 rounded-full bg-black/45 px-2.5 py-1 font-mono text-[9.5px] uppercase tracking-[0.14em] backdrop-blur"><span className="size-1.5 shrink-0 rounded-full" style={dot(m.provider)} /><span className="truncate">{m.provider}</span></span>
             {m.kind === "text" && m.soon && <span className="absolute left-3 top-3 z-10 rounded-full bg-white/15 px-2 py-0.5 text-[10px] font-medium backdrop-blur">{t.soon}</span>}
