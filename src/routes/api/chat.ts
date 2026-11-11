@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { z } from "zod";
 import { openRouterModelIds } from "@/lib/chat-models";
 import { creditCost, estimateTokens } from "@/lib/model-pricing";
-import { chatTierCredits, chatTiers, EXPERT_MIN_TIER, PRO_TIER, smartTier, type ChatTier } from "@/lib/chat-modes";
+import { chatTierCredits, chatTiers, EXPERT_MIN_TIER, PRO_TIER, smartTier, textSignals, type ChatTier } from "@/lib/chat-modes";
 
 const bodySchema = z.object({
   // The chat composer sends one of the three modes; custom agents keep their own model.
@@ -84,15 +84,14 @@ const engineCost = (e: Engine, inputTokens: number, outputTokens: number) => {
   return raw > 0 ? Math.ceil(raw) : 0;
 };
 
-// TechNova Smart: picks the cheapest model that fits the request.
+// TechNova Smart for agents: fast, low-cost models first (whole-word signals, see textSignals); Claude only for a
+// really heavy job. Images, audio and video still switch to a model that reads them (below).
 function smartPick(text: string): string {
-  const t = text.toLowerCase();
-  const has = (words: string[]) => words.some((w) => t.includes(w));
-  const big = t.length > 1200 || has(["application complète", "full app", "architecture", "système complet", "full system", "saas", "plateforme"]);
-  if (big) return "Gemini 2.5 Pro";
-  if (has(["design", "landing", "page", "ui", "ux", "interface", "maquette", "css", "tailwind", "animation", "couleur", "color", "site"])) return "Claude Sonnet 5";
-  if (has(["sql", "supabase", "base de données", "database", "api", "backend", "fonction", "function", "bug", "erreur", "error", "code", "react", "python", "php", "javascript", "typescript", "script"])) return "DeepSeek V3";
-  return "GPT-4o Mini";
+  const s = textSignals(text);
+  if (s.heavy) return "Claude Sonnet 5";
+  if (s.code) return "DeepSeek V3";
+  if (s.analysis || s.long) return "Qwen3 235B";
+  return "Gemini 2.5 Flash Lite";
 }
 const visionModels = new Set(["GPT-4o", "GPT-4o Mini", "Claude Sonnet 5", "Claude Opus 5", "Gemini 2.5 Flash Lite", "Gemini 3.5 Flash Lite", "Claude Haiku 4.5", "Gemini 2.5 Flash", "Gemini 2.5 Pro", "Mistral Large", "Gemma 3 12B"]);
 const mediaModels = new Set(["Gemini 2.5 Flash", "Gemini 2.5 Pro", "Gemini 2.5 Flash Lite", "Gemini 3.5 Flash Lite"]);

@@ -51,6 +51,7 @@ import { Route as AuthenticatedDashboardUsageRouteImport } from './routes/_authe
 import { Route as ApiAiChatRouteImport } from './routes/api/ai/chat'
 import { Route as ApiPublicFeexpayWebhookRouteImport } from './routes/api/public/feexpay-webhook'
 import { Route as ApiPublicGeoPriceRouteImport } from './routes/api/public/geo-price'
+import { Route as ApiPublicHelpChatRouteImport } from './routes/api/public/help-chat'
 import { Route as ApiPublicMediaPurgeRouteImport } from './routes/api/public/media-purge'
 import { Route as ApiPublicNyoleWebhookRouteImport } from './routes/api/public/nyole-webhook'
 import { Route as ApiPublicReportSiteRouteImport } from './routes/api/public/report-site'
@@ -287,6 +288,11 @@ const ApiPublicGeoPriceRoute = ApiPublicGeoPriceRouteImport.update({
   path: '/api/public/geo-price',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicHelpChatRoute = ApiPublicHelpChatRouteImport.update({
+  id: '/api/public/help-chat',
+  path: '/api/public/help-chat',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicMediaPurgeRoute = ApiPublicMediaPurgeRouteImport.update({
   id: '/api/public/media-purge',
   path: '/api/public/media-purge',
@@ -393,6 +399,7 @@ export interface FileRoutesByFullPath {
   '/api/ai/chat': typeof ApiAiChatRoute
   '/api/public/feexpay-webhook': typeof ApiPublicFeexpayWebhookRoute
   '/api/public/geo-price': typeof ApiPublicGeoPriceRoute
+  '/api/public/help-chat': typeof ApiPublicHelpChatRoute
   '/api/public/media-purge': typeof ApiPublicMediaPurgeRoute
   '/api/public/nyole-webhook': typeof ApiPublicNyoleWebhookRoute
   '/api/public/report-site': typeof ApiPublicReportSiteRoute
@@ -447,6 +454,7 @@ export interface FileRoutesByTo {
   '/api/ai/chat': typeof ApiAiChatRoute
   '/api/public/feexpay-webhook': typeof ApiPublicFeexpayWebhookRoute
   '/api/public/geo-price': typeof ApiPublicGeoPriceRoute
+  '/api/public/help-chat': typeof ApiPublicHelpChatRoute
   '/api/public/media-purge': typeof ApiPublicMediaPurgeRoute
   '/api/public/nyole-webhook': typeof ApiPublicNyoleWebhookRoute
   '/api/public/report-site': typeof ApiPublicReportSiteRoute
@@ -504,6 +512,7 @@ export interface FileRoutesById {
   '/api/ai/chat': typeof ApiAiChatRoute
   '/api/public/feexpay-webhook': typeof ApiPublicFeexpayWebhookRoute
   '/api/public/geo-price': typeof ApiPublicGeoPriceRoute
+  '/api/public/help-chat': typeof ApiPublicHelpChatRoute
   '/api/public/media-purge': typeof ApiPublicMediaPurgeRoute
   '/api/public/nyole-webhook': typeof ApiPublicNyoleWebhookRoute
   '/api/public/report-site': typeof ApiPublicReportSiteRoute
@@ -561,6 +570,7 @@ export interface FileRouteTypes {
     | '/api/ai/chat'
     | '/api/public/feexpay-webhook'
     | '/api/public/geo-price'
+    | '/api/public/help-chat'
     | '/api/public/media-purge'
     | '/api/public/nyole-webhook'
     | '/api/public/report-site'
@@ -615,6 +625,7 @@ export interface FileRouteTypes {
     | '/api/ai/chat'
     | '/api/public/feexpay-webhook'
     | '/api/public/geo-price'
+    | '/api/public/help-chat'
     | '/api/public/media-purge'
     | '/api/public/nyole-webhook'
     | '/api/public/report-site'
@@ -671,6 +682,7 @@ export interface FileRouteTypes {
     | '/api/ai/chat'
     | '/api/public/feexpay-webhook'
     | '/api/public/geo-price'
+    | '/api/public/help-chat'
     | '/api/public/media-purge'
     | '/api/public/nyole-webhook'
     | '/api/public/report-site'
@@ -713,6 +725,7 @@ export interface RootRouteChildren {
   ApiAiChatRoute: typeof ApiAiChatRoute
   ApiPublicFeexpayWebhookRoute: typeof ApiPublicFeexpayWebhookRoute
   ApiPublicGeoPriceRoute: typeof ApiPublicGeoPriceRoute
+  ApiPublicHelpChatRoute: typeof ApiPublicHelpChatRoute
   ApiPublicMediaPurgeRoute: typeof ApiPublicMediaPurgeRoute
   ApiPublicNyoleWebhookRoute: typeof ApiPublicNyoleWebhookRoute
   ApiPublicReportSiteRoute: typeof ApiPublicReportSiteRoute
@@ -1021,6 +1034,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicGeoPriceRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/help-chat': {
+      id: '/api/public/help-chat'
+      path: '/api/public/help-chat'
+      fullPath: '/api/public/help-chat'
+      preLoaderRoute: typeof ApiPublicHelpChatRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/media-purge': {
       id: '/api/public/media-purge'
       path: '/api/public/media-purge'
@@ -1194,6 +1214,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiAiChatRoute: ApiAiChatRoute,
   ApiPublicFeexpayWebhookRoute: ApiPublicFeexpayWebhookRoute,
   ApiPublicGeoPriceRoute: ApiPublicGeoPriceRoute,
+  ApiPublicHelpChatRoute: ApiPublicHelpChatRoute,
   ApiPublicMediaPurgeRoute: ApiPublicMediaPurgeRoute,
   ApiPublicNyoleWebhookRoute: ApiPublicNyoleWebhookRoute,
   ApiPublicReportSiteRoute: ApiPublicReportSiteRoute,

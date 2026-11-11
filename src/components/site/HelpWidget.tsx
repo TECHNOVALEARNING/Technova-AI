@@ -2,14 +2,14 @@ import { useEffect, useRef, useState, type FormEvent } from "react";
 import { ArrowUp, BookOpen, Mail, X } from "lucide-react";
 import { content, type SiteLang } from "@/lib/i18n";
 
-// Floating help on public pages: the TechNova logo as an avatar and a compact, solid panel. Visitors pick a
-// frequent question or type their own; the answer comes from the site FAQ (closest match, nothing sent to a
-// model), and a question it cannot answer is handed to the support e-mail with the question already written.
+// Floating help on public pages: the TechNova logo as an avatar and a compact, solid panel. A frequent question
+// is answered at once from the site FAQ; a typed question goes to the AI assistant (DeepSeek, /api/public/help-chat).
+// When the assistant is unavailable, the closest FAQ answer or a prefilled support e-mail takes over.
 const copy = {
-  fr: { open: "Questions et réponses", close: "Fermer l'aide", title: "Assistance TechNova", status: "Réponses immédiates", hello: "Bonjour 👋 Posez votre question ou choisissez-en une.", placeholder: "Votre question…", send: "Envoyer", unknown: "Je n'ai pas de réponse toute prête à cette question. Notre équipe vous répond par e-mail :", write: "Écrire au support", mail: "Support", docs: "Documentation", subject: "Question depuis le site" },
-  en: { open: "Questions and answers", close: "Close help", title: "TechNova support", status: "Instant answers", hello: "Hi 👋 Ask your question or pick one.", placeholder: "Your question…", send: "Send", unknown: "I don't have a ready answer to that. Our team will reply by e-mail:", write: "Email support", mail: "Support", docs: "Documentation", subject: "Question from the website" },
-  es: { open: "Preguntas y respuestas", close: "Cerrar la ayuda", title: "Asistencia TechNova", status: "Respuestas inmediatas", hello: "Hola 👋 Escribe tu pregunta o elige una.", placeholder: "Tu pregunta…", send: "Enviar", unknown: "No tengo una respuesta lista para eso. Nuestro equipo te responde por correo:", write: "Escribir al soporte", mail: "Soporte", docs: "Documentación", subject: "Pregunta desde el sitio" },
-  pt: { open: "Perguntas e respostas", close: "Fechar a ajuda", title: "Suporte TechNova", status: "Respostas imediatas", hello: "Olá 👋 Escreva sua pergunta ou escolha uma.", placeholder: "Sua pergunta…", send: "Enviar", unknown: "Não tenho uma resposta pronta para isso. Nossa equipe responde por e-mail:", write: "Escrever ao suporte", mail: "Suporte", docs: "Documentação", subject: "Pergunta pelo site" },
+  fr: { open: "Questions et réponses", close: "Fermer l'aide", title: "Assistance TechNova", status: "Assistant IA · réponses immédiates", typing: "L'assistant écrit…", busy: "Beaucoup de questions en ce moment : réessayez dans quelques minutes, ou écrivez-nous :", hello: "Bonjour 👋 Posez votre question ou choisissez-en une.", placeholder: "Votre question…", send: "Envoyer", unknown: "Je n'ai pas de réponse toute prête à cette question. Notre équipe vous répond par e-mail :", write: "Écrire au support", mail: "Support", docs: "Documentation", subject: "Question depuis le site" },
+  en: { open: "Questions and answers", close: "Close help", title: "TechNova support", status: "AI assistant · instant answers", typing: "The assistant is typing…", busy: "Lots of questions right now: try again in a few minutes, or write to us:", hello: "Hi 👋 Ask your question or pick one.", placeholder: "Your question…", send: "Send", unknown: "I don't have a ready answer to that. Our team will reply by e-mail:", write: "Email support", mail: "Support", docs: "Documentation", subject: "Question from the website" },
+  es: { open: "Preguntas y respuestas", close: "Cerrar la ayuda", title: "Asistencia TechNova", status: "Asistente IA · respuestas inmediatas", typing: "El asistente está escribiendo…", busy: "Muchas preguntas ahora mismo: inténtalo en unos minutos o escríbenos:", hello: "Hola 👋 Escribe tu pregunta o elige una.", placeholder: "Tu pregunta…", send: "Enviar", unknown: "No tengo una respuesta lista para eso. Nuestro equipo te responde por correo:", write: "Escribir al soporte", mail: "Soporte", docs: "Documentación", subject: "Pregunta desde el sitio" },
+  pt: { open: "Perguntas e respostas", close: "Fechar a ajuda", title: "Suporte TechNova", status: "Assistente IA · respostas imediatas", typing: "O assistente está escrevendo…", busy: "Muitas perguntas agora: tente em alguns minutos ou escreva para nós:", hello: "Olá 👋 Escreva sua pergunta ou escolha uma.", placeholder: "Sua pergunta…", send: "Enviar", unknown: "Não tenho uma resposta pronta para isso. Nossa equipe responde por e-mail:", write: "Escrever ao suporte", mail: "Suporte", docs: "Documentação", subject: "Pergunta pelo site" },
 } satisfies Record<SiteLang, unknown>;
 
 type Msg = { from: "me" | "bot"; text: string; mail?: string };
@@ -38,6 +38,7 @@ export function HelpWidget({ lang }: { lang: SiteLang }) {
   const [open, setOpen] = useState(false);
   const [msgs, setMsgs] = useState<Msg[]>([]);
   const [draft, setDraft] = useState("");
+  const [thinking, setThinking] = useState(false);
   const end = useRef<HTMLDivElement>(null);
   const button = useRef<HTMLButtonElement>(null);
   const input = useRef<HTMLInputElement>(null);
@@ -49,17 +50,35 @@ export function HelpWidget({ lang }: { lang: SiteLang }) {
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   }, [open]);
-  useEffect(() => { end.current?.scrollIntoView({ behavior: "smooth", block: "end" }); }, [msgs]);
+  useEffect(() => { end.current?.scrollIntoView({ behavior: "smooth", block: "end" }); }, [msgs, thinking]);
 
-  function ask(question: string) {
-    const q = question.trim().slice(0, 300);
-    if (!q) return;
-    const hit = faq.find((f) => f.q === q) ?? bestAnswer(q, faq);
-    const mail = `mailto:support@technovaihub.com?subject=${encodeURIComponent(t.subject)}&body=${encodeURIComponent(q)}`;
-    setMsgs((m) => [...m, { from: "me", text: q }, hit ? { from: "bot", text: hit.a } : { from: "bot", text: t.unknown, mail }]);
+  async function ask(question: string) {
+    const q = question.trim().slice(0, 500);
+    if (!q || thinking) return;
     setDraft("");
+    const mail = `mailto:support@technovaihub.com?subject=${encodeURIComponent(t.subject)}&body=${encodeURIComponent(q)}`;
+    // A suggested question is answered at once from the FAQ (no AI call).
+    const exact = faq.find((f) => f.q === q);
+    if (exact) { setMsgs((m) => [...m, { from: "me", text: q }, { from: "bot", text: exact.a }]); return; }
+    const history = [...msgs.filter((m) => !m.mail).slice(-6), { from: "me" as const, text: q }];
+    setMsgs((m) => [...m, { from: "me", text: q }]);
+    setThinking(true);
+    let reply: Msg;
+    try {
+      const res = await fetch("/api/public/help-chat", { method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ lang, messages: history.map((m) => ({ role: m.from === "me" ? "user" : "assistant", content: m.text.slice(0, 800) })) }) });
+      const data = (await res.json().catch(() => ({}))) as { answer?: string };
+      if (res.ok && data.answer) reply = { from: "bot", text: data.answer };
+      else if (res.status === 429) reply = { from: "bot", text: t.busy, mail };
+      else throw new Error("unavailable");
+    } catch {
+      const hit = bestAnswer(q, faq);
+      reply = hit ? { from: "bot", text: hit.a } : { from: "bot", text: t.unknown, mail };
+    }
+    setThinking(false);
+    setMsgs((m) => [...m, reply]);
   }
-  const submit = (e: FormEvent) => { e.preventDefault(); ask(draft); };
+  const submit = (e: FormEvent) => { e.preventDefault(); void ask(draft); };
   const askedQs = new Set(msgs.filter((m) => m.from === "me").map((m) => m.text));
   const suggestions = faq.filter((f) => !askedQs.has(f.q)).slice(0, msgs.length ? 3 : 5);
 
@@ -75,13 +94,14 @@ export function HelpWidget({ lang }: { lang: SiteLang }) {
         {msgs.map((m, i) => m.from === "me"
           ? <p key={i} className="ml-auto w-fit max-w-[85%] rounded-2xl rounded-br-md bg-foreground px-3 py-2 text-[12.5px] text-background">{m.text}</p>
           : <div key={i} className="flex items-end gap-2"><Avatar size={22} /><div className="max-w-[85%] rounded-2xl rounded-bl-md border border-border bg-card px-3 py-2 text-[12.5px] leading-relaxed">{m.text}{m.mail && <a href={m.mail} className="mt-1.5 flex w-fit items-center gap-1.5 font-semibold underline underline-offset-2"><Mail className="size-3.5" />{t.write}</a>}</div></div>)}
-        {suggestions.length > 0 && <div className="flex flex-wrap gap-1.5 pt-0.5">{suggestions.map((f) => <button key={f.q} type="button" onClick={() => ask(f.q)} className="rounded-full border border-border bg-card px-2.5 py-1 text-left text-[11.5px] text-muted-foreground transition hover:border-foreground/30 hover:text-foreground">{f.q}</button>)}</div>}
+        {thinking && <div className="flex items-end gap-2" role="status"><Avatar size={22} /><p className="flex items-center gap-1 rounded-2xl rounded-bl-md border border-border bg-card px-3 py-2.5" aria-label={t.typing}><span className="help-dot" /><span className="help-dot" /><span className="help-dot" /></p></div>}
+        {suggestions.length > 0 && !thinking && <div className="flex flex-wrap gap-1.5 pt-0.5">{suggestions.map((f) => <button key={f.q} type="button" onClick={() => void ask(f.q)} className="rounded-full border border-border bg-card px-2.5 py-1 text-left text-[11.5px] text-muted-foreground transition hover:border-foreground/30 hover:text-foreground">{f.q}</button>)}</div>}
         <div ref={end} />
       </div>
       <form onSubmit={submit} className="flex items-center gap-2 border-t border-border p-2.5">
-        <input ref={input} value={draft} onChange={(e) => setDraft(e.target.value)} maxLength={300} placeholder={t.placeholder} aria-label={t.placeholder}
+        <input ref={input} value={draft} onChange={(e) => setDraft(e.target.value)} maxLength={500} placeholder={t.placeholder} aria-label={t.placeholder}
           className="h-9 min-w-0 flex-1 rounded-full border border-border bg-background px-3.5 text-[12.5px] outline-none focus:border-foreground/40" />
-        <button type="submit" disabled={!draft.trim()} aria-label={t.send} className="grid size-9 shrink-0 place-items-center rounded-full bg-foreground text-background transition disabled:opacity-30"><ArrowUp className="size-4" /></button>
+        <button type="submit" disabled={!draft.trim() || thinking} aria-label={t.send} className="grid size-9 shrink-0 place-items-center rounded-full bg-foreground text-background transition disabled:opacity-30"><ArrowUp className="size-4" /></button>
       </form>
       <footer className="flex justify-center gap-4 pb-2.5 text-[11px] text-muted-foreground">
         <a href="mailto:support@technovaihub.com" className="inline-flex items-center gap-1 hover:text-foreground"><Mail className="size-3" />{t.mail}</a>

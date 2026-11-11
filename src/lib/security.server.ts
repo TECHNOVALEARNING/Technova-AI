@@ -17,6 +17,9 @@ export const RATE_LIMITS = {
   admin_moderation: { limit: 60, window: 60 },
   files: { limit: 40, window: 600 },
   knowledge: { limit: 60, window: 60 },
+  // Public help assistant: per visitor, and one shared daily ceiling that bounds its cost.
+  help_chat: { limit: 12, window: 600 },
+  help_chat_daily: { limit: 1500, window: 86400 },
 } as const;
 
 export type RateBucket = keyof typeof RATE_LIMITS;

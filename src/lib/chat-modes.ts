@@ -28,12 +28,29 @@ export function chatTierCredits(tier: ChatTier, hasFile: boolean, planTier: numb
 export const isChatTier = (value: unknown): value is ChatTier => typeof value === "string" && (chatTierIds as readonly string[]).includes(value);
 export const isChatChoice = (value: unknown): value is ChatChoice => value === "smart" || isChatTier(value);
 
-/** TechNova Smart: the cheapest mode that fits the request (Expert only when the plan includes it). */
+// TechNova Smart reads the request with whole words only (accents ignored): "ui" no longer matches "oui",
+// nor "api" "rapide". Everyday words ("paiement", "mobile money", "plateforme") never raise the price.
+const fold = (s: string) => s.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+const CODE = ["code", "coder", "bug", "bugs", "debug", "debugger", "erreur", "error", "exception", "sql", "api", "react", "angular", "nextjs", "node", "nodejs", "python", "php", "laravel", "django", "javascript", "typescript", "java", "kotlin", "swift", "html", "css", "tailwind", "fonction", "function", "script", "regex", "json", "backend", "frontend", "supabase", "firebase", "docker", "git", "github", "algorithme", "algorithm", "compile", "deploy"];
+const ANALYSIS = ["analyse", "analyser", "analyze", "analysis", "resume", "resumer", "summarize", "summary", "compare", "comparer", "rapport", "report", "tableau", "excel", "pdf", "document", "contrat", "dissertation", "memoire", "business plan", "strategie", "strategy", "landing page", "site web", "website"];
+const HEAVY = ["architecture", "application complete", "app complete", "full app", "full stack", "fullstack", "systeme complet", "full system", "saas", "microservices", "refactor", "refactoriser", "migration", "base de donnees complete"];
+
+/** Whole-word signals of a message, shared by the chat modes and the Smart agents. */
+export function textSignals(text: string) {
+  const t = ` ${fold(text).replace(/[^a-z0-9+#]+/g, " ")} `;
+  const count = (list: string[]) => list.filter((w) => t.includes(` ${w} `)).length;
+  const code = count(CODE), analysis = count(ANALYSIS), heavyWords = count(HEAVY);
+  const length = text.length;
+  // Heavy: a really big job — very long, or long and clearly technical with a project-scale word.
+  const heavy = length > 4000 || (length > 1500 && heavyWords > 0 && code > 0) || (length > 2500 && code >= 3);
+  return { code: code > 0, analysis: analysis > 0, heavy, long: length > 700 };
+}
+
+/** TechNova Smart: Éclair for everyday questions, Équilibré for code, analysis, files or long messages,
+ *  Expert only for a really heavy job and only when the plan includes it. */
 export function smartTier(text: string, hasFile: boolean, planTier: number): ChatTier {
-  const t = text.toLowerCase();
-  const has = (words: string[]) => words.some((w) => t.includes(w));
-  const big = t.length > 1500 || has(["application complète", "app complète", "full app", "architecture", "système complet", "full system", "saas", "plateforme", "authentification", "paiement", "momo", "mobile money", "tableau de bord", "dashboard admin"]);
-  if (big && planTier >= EXPERT_MIN_TIER) return "expert";
-  if (big || hasFile || t.length > 400 || has(["code", "bug", "erreur", "error", "sql", "api", "react", "python", "php", "javascript", "typescript", "html", "css", "fonction", "function", "script", "analyse", "analyze", "pdf", "page", "site", "landing"])) return "equilibre";
+  const s = textSignals(text);
+  if (s.heavy && planTier >= EXPERT_MIN_TIER) return "expert";
+  if (s.heavy || hasFile || s.long || s.code || s.analysis) return "equilibre";
   return "eclair";
 }
