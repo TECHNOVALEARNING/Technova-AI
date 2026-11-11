@@ -53,7 +53,14 @@ const cover = (name: string): CSSProperties => {
 const ownCovers: Record<string, string> = {
   "Claude Sonnet 5": "claude-sonnet-5", "Claude Opus 5": "claude-opus-5", "Claude Haiku 5.5": "claude-haiku-5-5", "Claude Fable 5": "claude-fable-5",
   "Grok 4.6": "grok-4-6", "GPT-5.2": "gpt-5-2", "Gemini 4 Argon": "gemini-4-argon", "Kimi K3.1 Pro": "kimi-k3-1-pro",
-  "Gemini 3 Flash Preview": "gemini-3", "Gemini 3.1 Pro Preview": "gemini-3",
+  "Gemini 3.1 Pro Preview": "gemini-3",
+  // Second set of pictures: one each, given to the models they suit best (logos cropped out).
+  "GPT-4o": "gpt-4o", "GPT-4o Mini": "gpt-4o-mini", "GPT-5.6 Sol": "gpt-5-6", "GPT-6.1 Terra": "gpt-6-1-terra",
+  "Gemini 2.5 Flash Lite": "gemini-2-5-flash-lite", "Gemini 3.5 Flash Lite": "gemini-3-5-flash-lite", "Gemini 2.5 Flash": "gemini-2-5-flash",
+  "Gemini 2.5 Pro": "gemini-2-5-pro", "Gemini 3.6 Flash": "gemini-3-6-flash", "Gemma 3 12B": "gemma-3-12b",
+  "DeepSeek R1": "deepseek-r1", "DeepSeek V3": "deepseek-v3", "Qwen3 235B": "qwen3-235b", "Mistral Large": "mistral-large",
+  "Llama 3.3 70B": "llama-3-3-70b", "Llama 3.1 8B": "llama-3-1-8b", "Claude Opus 4.5": "claude-opus-4-5", "Claude Sonnet 4.5": "claude-sonnet-4-5",
+  "Claude Fable 5.1": "claude-fable-5-1", "Grok 4.5": "grok-4-5", "Nemotron 3 Super": "nemotron-3-super",
 };
 const mediaCovers: Record<string, string> = { "seedream/5-flash-text-to-image": "vase", "nano-banana-2": "hummingbird", "bytedance/seedance-2-fast": "cinema", "kling-3.0-omni/text-to-video": "lake", "ai-music-api/generate": "headphones" };
 const pictureOf = (m: PublicModel) => { const slug = m.kind === "text" ? ownCovers[m.name] : mediaCovers[m.id]; return slug ? `/media/models/${slug}.webp` : null; };
