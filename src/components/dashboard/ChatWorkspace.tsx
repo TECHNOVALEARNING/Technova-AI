@@ -604,14 +604,12 @@ function StarterIdeas({ choice, inputRef }: { choice: ReturnType<typeof useWorks
 }
 
 export function ChatListPage() {
-  const { threads, reload, t } = useDashboard();
+  const { reload, t } = useDashboard();
   const choice = useWorkspaceChoice();
   const composerRef = useRef<HTMLTextAreaElement>(null);
   const navigate = useNavigate();
-  const [query, setQuery] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
-  const filtered = threads.filter((item) => item.title.toLowerCase().includes(query.toLowerCase()));
   async function start(text = "", files: ChatFilePart[] = []) {
     if (busy) return;
     setBusy(true);
@@ -646,8 +644,8 @@ export function ChatListPage() {
     void navigate({ to: "/dashboard/chat/$threadId", params: { threadId: data.id } });
   }
   return (
-    <div className="chat-workspace chat-home relative -mx-4 -mt-6 min-h-[calc(100svh-92px)] lg:min-h-[calc(100svh-76px)] overflow-hidden sm:-mx-6 lg:-mx-7">
-      <div className="relative mx-auto flex min-h-[calc(100svh-92px)] lg:min-h-[calc(100svh-76px)] max-w-[1330px] flex-col px-4 pb-8 sm:px-8 lg:px-12">
+    <div className="chat-workspace chat-home relative -mx-4 -mt-6 min-h-[calc(100svh-170px)] lg:min-h-[calc(100svh-150px)] overflow-hidden sm:-mx-6 lg:-mx-7">
+      <div className="relative mx-auto flex min-h-[calc(100svh-170px)] lg:min-h-[calc(100svh-150px)] max-w-[1330px] flex-col px-4 pb-4 sm:px-8 lg:px-12">
         <section className="flex flex-1 flex-col items-center justify-center gap-5 py-10 sm:gap-6 sm:py-12">
           <div className="text-center">
             <h1 className="chat-greeting text-balance text-2xl font-medium leading-tight tracking-tight sm:whitespace-nowrap sm:text-[32px]">
@@ -663,49 +661,6 @@ export function ChatListPage() {
               </p>
             )}
             <div className="mt-4"><StarterIdeas choice={choice} inputRef={composerRef} /></div>
-          </div>
-        </section>
-        <section className="chat-library relative mx-auto w-full max-w-[980px] rounded-[20px] border border-border/70 bg-card/85 px-4 py-3.5 shadow-soft backdrop-blur-xl sm:px-5 sm:py-4">
-          <div className="flex items-center gap-3">
-            <h2 className="shrink-0 text-[13.5px] font-medium">{choice.copy.library}</h2>
-            <div className="relative hidden w-48 sm:block">
-              <Search className="absolute left-2.5 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground" />
-              <Input
-                value={query}
-                onChange={(event) => setQuery(event.target.value)}
-                placeholder={t.search}
-                aria-label={t.search}
-                className="h-7 rounded-full border-transparent bg-background/60 pl-8 text-[11.5px] shadow-none"
-              />
-            </div>
-            <span className="ml-auto shrink-0 text-[11px] tabular-nums text-muted-foreground">
-              {threads.length} {choice.copy.saved}
-            </span>
-          </div>
-          {/* The three latest (more while searching); the full history stays in the sidebar. */}
-          <div className="mt-3 grid gap-2 sm:grid-cols-3">
-            {filtered.slice(0, query ? 6 : 3).map((thread) => (
-              <Link
-                key={thread.id}
-                to="/dashboard/chat/$threadId"
-                params={{ threadId: thread.id }}
-                className="group flex min-w-0 items-center gap-2.5 rounded-xl border border-border/80 bg-background/50 px-3 py-2.5 transition-colors hover:border-foreground/20"
-              >
-                <MessageCircle className="size-3.5 shrink-0 text-muted-foreground" strokeWidth={1.6} />
-                <span className="min-w-0 flex-1">
-                  <strong className="block truncate text-[12.5px] font-medium">{thread.title}</strong>
-                  <small className="text-[10.5px] text-muted-foreground">
-                    {new Date(thread.updated_at).toLocaleDateString(choice.copy.locale)}
-                  </small>
-                </span>
-                <ArrowRight className="size-3.5 shrink-0 text-muted-foreground/60 transition-transform group-hover:translate-x-0.5" strokeWidth={1.6} />
-              </Link>
-            ))}
-            {filtered.length === 0 && (
-              <p className="py-1.5 text-[11.5px] text-muted-foreground sm:col-span-3">
-                {query ? t.noResults : t.noChats}
-              </p>
-            )}
           </div>
         </section>
       </div>
