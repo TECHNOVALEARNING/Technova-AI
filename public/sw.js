@@ -2,7 +2,7 @@
 // - Pages: always from the network (they are personalised); offline.html when the network is down.
 // - Build assets (/assets/*, hashed and immutable) and icons/media: cache-first.
 // - Never cached: API, server functions, auth, payments, published sites, other origins.
-const VERSION = "technova-v1";
+const VERSION = "technova-v2";
 const STATIC = `${VERSION}-static`;
 const PRECACHE = ["/offline.html", "/favicon.svg", "/icons/icon-192.png", "/icons/icon-512.png", "/manifest.webmanifest"];
 
@@ -43,7 +43,13 @@ self.addEventListener("fetch", (event) => {
         const hit = await cache.match(request);
         if (hit) return hit;
         const response = await fetch(request);
-        if (response.ok && response.type === "basic") cache.put(request, response.clone());
+        // Only real files are kept: an HTML answer for a missing script would otherwise be served forever.
+        const type = response.headers.get("content-type") || "";
+        if (response.ok && response.type === "basic" && !type.includes("text/html")) {
+          cache.put(request, response.clone());
+          // Each deployment brings new hashed files: keep the cache from growing without limit.
+          cache.keys().then((keys) => { if (keys.length > 400) keys.slice(0, keys.length - 300).forEach((k) => cache.delete(k)); });
+        }
         return response;
       }),
     );

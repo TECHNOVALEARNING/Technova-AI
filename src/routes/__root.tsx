@@ -7,7 +7,7 @@ import {
   HeadContent,
   Scripts,
 } from "@tanstack/react-router";
-import { useEffect, type ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 
 import appCss from "../styles.css?url";
 import { supabase } from "@/integrations/supabase/client";
@@ -16,6 +16,8 @@ import { CookieConsent } from "@/components/site/CookieConsent";
 import { ConfirmHost } from "@/components/ConfirmHost";
 import { publicEnvScript } from "@/lib/public-env";
 import { registerServiceWorker } from "@/lib/pwa";
+import { STALE_BUILD_RE, installStaleBuildGuard, markStaleBuild, onStaleBuild, reloadForNewBuild } from "@/lib/stale-build";
+import { toast } from "sonner";
 
 function NotFoundComponent() {
   return (
@@ -43,29 +45,34 @@ function ErrorComponent({ error }: import("@tanstack/react-router").ErrorCompone
   console.error(error);
   const message = error instanceof Error ? error.message : String(error ?? "");
   // After a deployment, a tab opened on the previous version asks for files that no longer exist:
-  // reload once to pick up the new version instead of showing the error.
-  const staleBuild = /dynamically imported module|Importing a module script failed|ChunkLoadError|Loading (CSS )?chunk|Unable to preload CSS/i.test(message);
+  // reload to pick up the new version instead of showing the error (at most once every 20 s, so a
+  // file that is really missing still ends on this page rather than in a reload loop).
+  const staleBuild = STALE_BUILD_RE.test(message);
+  const [updating, setUpdating] = useState(staleBuild);
   useEffect(() => {
     if (!staleBuild) return;
-    try {
-      if (sessionStorage.getItem("tn-stale-reload")) return;
-      sessionStorage.setItem("tn-stale-reload", "1");
-    } catch { /* storage blocked: reload anyway, once per page */ }
-    window.location.reload();
+    markStaleBuild();
+    if (!reloadForNewBuild()) setUpdating(false);
   }, [staleBuild]);
-  useEffect(() => {
-    const clear = window.setTimeout(() => { try { sessionStorage.removeItem("tn-stale-reload"); } catch { /* ignore */ } }, 10_000);
-    return () => window.clearTimeout(clear);
-  }, []);
+
+  if (updating) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-background px-4" role="status">
+        <p className="text-sm text-muted-foreground">Mise à jour de TechNova… / Updating TechNova…</p>
+      </div>
+    );
+  }
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-background px-4">
       <div className="max-w-md text-center">
         <h1 className="text-xl font-semibold tracking-tight text-foreground">
-          This page didn't load
+          Cette page ne s’est pas chargée
         </h1>
         <p className="mt-2 text-sm text-muted-foreground">
-          Something went wrong on our end. You can try refreshing or head back home.
+          {staleBuild
+            ? "Une nouvelle version de TechNova vient d’être mise en ligne. Rechargez la page pour continuer."
+            : "Un problème est survenu de notre côté. Rechargez la page ou revenez à l’accueil."}
         </p>
         <div className="mt-6 flex flex-wrap justify-center gap-2">
           <button
@@ -73,18 +80,18 @@ function ErrorComponent({ error }: import("@tanstack/react-router").ErrorCompone
               // A real reload: re-rendering in place repeats the same failure (missing file after a deployment, broken state).
               window.location.reload();
             }}
-            className="inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
+            className="inline-flex items-center justify-center rounded-full bg-primary px-5 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
           >
-            Try again
+            Recharger
           </button>
           <a
             href="/"
-            className="inline-flex items-center justify-center rounded-md border border-input bg-background px-4 py-2 text-sm font-medium text-foreground transition-colors hover:bg-accent"
+            className="inline-flex items-center justify-center rounded-full border border-input bg-background px-5 py-2 text-sm font-medium text-foreground transition-colors hover:bg-accent"
           >
-            Go home
+            Accueil
           </a>
         </div>
-        {message && <p className="mt-6 break-words font-mono text-[11px] text-muted-foreground/80">{message.slice(0, 300)}</p>}
+        {message && !staleBuild && <p className="mt-6 break-words font-mono text-[11px] text-muted-foreground/80">{message.slice(0, 300)}</p>}
       </div>
     </div>
   );
@@ -161,7 +168,18 @@ function RootComponent() {
   const { queryClient } = Route.useRouteContext();
   const router = useRouter();
 
-  useEffect(() => { registerServiceWorker(); }, []);
+  useEffect(() => {
+    registerServiceWorker();
+    installStaleBuildGuard();
+    // A newer version is online: offer the reload instead of letting an action fail later.
+    return onStaleBuild(() => {
+      const en = document.documentElement.lang === "en";
+      toast(en ? "A new version of TechNova is available." : "Une nouvelle version de TechNova est disponible.", {
+        id: "tn-new-build", duration: Infinity,
+        action: { label: en ? "Reload" : "Recharger", onClick: () => window.location.reload() },
+      });
+    });
+  }, []);
 
   useEffect(() => {
     const { data } = supabase.auth.onAuthStateChange((event) => {

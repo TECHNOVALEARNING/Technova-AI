@@ -32,5 +32,7 @@ export default defineConfig(({ command }) => ({
     alias: { "@": fileURLToPath(new URL("./src", import.meta.url)) },
     dedupe: ["react", "react-dom", "@tanstack/react-router", "@tanstack/react-start"],
   },
+  // One id per build, shared by the browser and server bundles (src/lib/stale-build.ts).
+  define: { __BUILD_ID__: JSON.stringify(command === "build" ? (process.env["VERCEL_GIT_COMMIT_SHA"] ?? String(Date.now())) : "dev") },
   server: { port: 3000 },
 }));
