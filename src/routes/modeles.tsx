@@ -41,15 +41,30 @@ const providers = [...providerCount.keys()].sort((x, y) => providerCount.get(y)!
 const fixedHue: Record<string, number> = { TechNova: 255, OpenAI: 165, Anthropic: 45, Google: 250, "Mistral AI": 60, Alibaba: 300, DeepSeek: 265, Meta: 235, xAI: 20, "Zhipu AI": 200, "Moonshot AI": 320, NVIDIA: 135, Cohere: 350, Amazon: 75, Microsoft: 215 };
 const hueOf = (name: string) => fixedHue[name] ?? [...name].reduce((h, c) => (h * 31 + c.charCodeAt(0)) % 360, 7);
 const dot = (name: string): CSSProperties => ({ background: `oklch(.72 .16 ${hueOf(name)})` });
-/** Card cover drawn from the provider colour: no picture to load, one look for 269 models. */
+/** Provider colour shown while a card picture loads (and if it ever fails). */
 const cover = (name: string): CSSProperties => {
   const h = hueOf(name);
   return { background: `radial-gradient(70% 90% at 85% 0%, oklch(.62 .17 ${h} / .55), transparent 70%), radial-gradient(60% 80% at 0% 100%, oklch(.5 .14 ${(h + 50) % 360} / .45), transparent 70%), linear-gradient(140deg, oklch(.24 .04 ${h}), oklch(.14 .02 ${(h + 30) % 360}))` };
 };
 
+// Pictures (public/media/models, 640×400 cards and 1600×686 banners): a model's own cover when it has one,
+// media creations a fixed picture, the other models one picture per provider from a neutral pool.
+const ownCovers: Record<string, string> = {
+  "Claude Sonnet 5": "claude-sonnet-5", "Claude Opus 5": "claude-opus-5", "Claude Haiku 5.5": "claude-haiku-5-5", "Claude Fable 5": "claude-fable-5",
+  "Grok 4.6": "grok-4-6", "GPT-5.2": "gpt-5-2", "Gemini 4 Argon": "gemini-4-argon", "Kimi K3.1 Pro": "kimi-k3-1-pro",
+  "Gemini 3 Flash Preview": "gemini-3", "Gemini 3.1 Pro Preview": "gemini-3",
+};
+const mediaCovers: Record<string, string> = { "seedream/5-flash-text-to-image": "vase", "nano-banana-2": "hummingbird", "bytedance/seedance-2-fast": "cinema", "kling-3.0-omni/text-to-video": "lake", "ai-music-api/generate": "headphones" };
+const coverPool = ["swirl", "nodes", "earth", "fisherman", "bubble", "lake", "hummingbird", "cinema", "vase", "headphones", "abstract"];
+const coverOf = (m: PublicModel) => `/media/models/${m.kind === "text" ? ownCovers[m.name] ?? coverPool[hueOf(m.provider) % coverPool.length] : mediaCovers[m.id] ?? "abstract"}.webp`;
+
 const taskMatch = (m: PublicModel, task: Task) => task === "all" || m.kind === task || (m.kind === "text" && m.caps.includes(task as TextCap));
-// Featured: the engines behind the chat modes, then the media creations.
-const featured: PublicModel[] = [...textModels.filter((m) => m.mode), ...mediaCatalog.filter((m) => !m.cheap)].slice(0, 5);
+// Featured banners after TechNova Smart: flagship text models, then one creation of each kind.
+const featured: { model: PublicModel; banner: string }[] = [
+  ["Claude Fable 5", "claude-fable-5"], ["Grok 4.6", "grok-4-6"], ["Claude Sonnet 5", "claude-sonnet-5"],
+  ["nano-banana-2", "hummingbird"], ["kling-3.0-omni/text-to-video", "lake"], ["ai-music-api/generate", "headphones"],
+].flatMap(([key, banner]) => { const model = allPublicModels.find((m) => keyOf(m) === key); return model ? [{ model, banner: `/media/models/${banner}-wide.webp` }] : []; });
+const SLIDE_MS = 6500;
 const PAGE = 24;
 
 function ModelsPage() {
@@ -58,7 +73,7 @@ function ModelsPage() {
   const n = (v: number) => v.toLocaleString(loc);
   const [q, setQ] = useState(""); const [task, setTask] = useState<Task>("all");
   const [provider, setProvider] = useState("all"); const [sort, setSort] = useState<"recommended" | "cheapest">("recommended");
-  const [shown, setShown] = useState(PAGE); const [slide, setSlide] = useState(0);
+  const [shown, setShown] = useState(PAGE); const [slide, setSlide] = useState(0); const [paused, setPaused] = useState(false);
   const list = useMemo(() => {
     const query = q.trim().toLowerCase();
     const r = allPublicModels.filter((m) => taskMatch(m, task) && (provider === "all" || m.provider === provider) && (!query || `${m.name} ${m.provider}`.toLowerCase().includes(query)));
@@ -73,28 +88,39 @@ function ModelsPage() {
   // Slide 1 presents TechNova Smart; the others the featured models with their price.
   const slides = [
     { key: "smart", provider: "TechNova", name: t.smartTitle, tags: [u.chat, ...kinds.slice(1).map((k) => t.tabs[k])], desc: t.smartText },
-    ...featured.map((m) => ({ key: keyOf(m), provider: m.provider, name: m.name, tags: tags(m), desc: `${m.kind === "text" && m.mode ? `${m.mode[lang]} · ` : ""}${price(m)} ${unit(m)}${m.kind === "text" ? ` · ${t.context} ${m.context}` : ""}` })),
+    ...featured.map(({ model: m }) => ({ key: keyOf(m), provider: m.provider, name: m.name, tags: tags(m), desc: `${m.kind === "text" && m.mode ? `${m.mode[lang]} · ` : ""}${price(m)} ${unit(m)}${m.kind === "text" ? ` · ${t.context} ${m.context}` : ""}` })),
   ];
+  const banners = ["/media/models/swirl-wide.webp", ...featured.map((x) => x.banner)];
   const f = slides[slide] ?? slides[0]!;
   const go = (step: number) => setSlide((i) => (i + step + slides.length) % slides.length);
+  // Slides change on their own, like a showcase, except while hovered or focused or for reduced motion.
+  useEffect(() => {
+    if (paused || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    const timer = window.setTimeout(() => setSlide((i) => (i + 1) % slides.length), SLIDE_MS);
+    return () => window.clearTimeout(timer);
+  }, [slide, paused, slides.length]);
 
   return <div className="min-h-screen overflow-x-clip bg-background text-foreground">
     <Nav lang={lang} setLang={setLang} />
     <PageHero tag={t.tag} title={t.title} sub={t.sub(allPublicModels.length)} />
     <section className="px-4 py-10 sm:px-5"><div className="mx-auto max-w-6xl">
 
-      {/* Featured carousel */}
-      <div className="relative overflow-hidden rounded-[28px] bg-ink text-ink-foreground shadow-lift" style={cover(f.provider)} aria-roledescription="carousel" aria-label={u.featured}>
-        <span className="pointer-events-none absolute -top-3 left-6 select-none font-display text-[110px] font-bold leading-none text-ink-foreground/10 sm:left-10 sm:text-[150px]" aria-hidden="true">{String(slide + 1).padStart(2, "0")}</span>
-        <div className="relative flex min-h-[300px] flex-col justify-center gap-4 px-14 py-10 sm:px-20 md:min-h-[340px] md:max-w-[62%]">
-          <div className="flex flex-wrap gap-1.5">{f.tags.map((x) => <span key={x} className="rounded-full border border-ink-foreground/25 bg-ink-foreground/10 px-2.5 py-0.5 text-[11px] font-medium">{x}</span>)}</div>
-          <div><p className="text-[11px] font-medium uppercase tracking-[0.18em] text-ink-foreground/60">{f.provider}</p><h2 className="mt-1 font-display text-3xl font-semibold tracking-tight md:text-4xl">{f.name}</h2></div>
-          <p className="max-w-md text-sm leading-relaxed text-ink-foreground/75">{f.desc}</p>
-          <a href="/dashboard/chat" className="inline-flex h-10 w-fit items-center gap-2 rounded-full bg-ink-foreground px-5 text-sm font-semibold text-ink transition hover:opacity-90">{t.try}<ArrowRight className="size-4" /></a>
+      {/* Featured carousel: wide banner pictures that cross-fade, text on a dark gradient at the left. */}
+      <div className="relative overflow-hidden rounded-[28px] bg-ink text-ink-foreground shadow-lift" aria-roledescription="carousel" aria-label={u.featured}
+        onMouseEnter={() => setPaused(true)} onMouseLeave={() => setPaused(false)} onFocus={() => setPaused(true)} onBlur={() => setPaused(false)}>
+        {banners.map((src, i) => <img key={src} src={src} alt="" aria-hidden="true" loading={i === 0 ? "eager" : "lazy"} decoding="async"
+          className={`absolute inset-0 h-full w-full object-cover transition-[opacity,transform] duration-[1200ms] ease-out ${i === slide ? "scale-100 opacity-100" : "scale-[1.04] opacity-0"}`} />)}
+        <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(90deg,rgb(0_0_0/.88)_0%,rgb(0_0_0/.62)_38%,rgb(0_0_0/.12)_70%,transparent_100%)] max-md:bg-[linear-gradient(0deg,rgb(0_0_0/.9)_0%,rgb(0_0_0/.55)_55%,rgb(0_0_0/.2)_100%)]" />
+        <span className="pointer-events-none absolute -top-3 left-6 select-none font-display text-[110px] font-bold leading-none text-white/10 sm:left-14 sm:text-[150px]" aria-hidden="true">{String(slide + 1).padStart(2, "0")}</span>
+        <div key={f.key} className="models-slide relative flex min-h-[320px] flex-col justify-center gap-4 px-14 py-10 sm:px-20 md:min-h-[380px] md:max-w-[58%]" aria-live="polite">
+          <div className="flex flex-wrap gap-1.5">{f.tags.map((x) => <span key={x} className="rounded-md border border-white/20 bg-white/10 px-2 py-0.5 text-[10.5px] font-medium backdrop-blur">{x}</span>)}</div>
+          <div><p className="text-[11px] font-medium uppercase tracking-[0.18em] text-white/60">{f.provider}</p><h2 className="mt-1 font-display text-3xl font-semibold tracking-tight md:text-4xl">{f.name}</h2></div>
+          <p className="max-w-md text-sm leading-relaxed text-white/75">{f.desc}</p>
+          <a href="/dashboard/chat" className="inline-flex h-10 w-fit items-center gap-2 rounded-full bg-white px-5 text-sm font-semibold text-black transition hover:opacity-90">{t.try}<ArrowRight className="size-4" /></a>
         </div>
-        <button type="button" onClick={() => go(-1)} aria-label={u.prev} className="absolute left-3 top-1/2 grid size-9 -translate-y-1/2 place-items-center rounded-full border border-ink-foreground/20 bg-ink/50 backdrop-blur transition hover:bg-ink/80"><ChevronLeft className="size-4" /></button>
-        <button type="button" onClick={() => go(1)} aria-label={u.next} className="absolute right-3 top-1/2 grid size-9 -translate-y-1/2 place-items-center rounded-full border border-ink-foreground/20 bg-ink/50 backdrop-blur transition hover:bg-ink/80"><ChevronRight className="size-4" /></button>
-        <div className="absolute bottom-4 left-1/2 flex -translate-x-1/2 gap-1.5">{slides.map((m, i) => <button key={m.key} type="button" onClick={() => setSlide(i)} aria-label={m.name} aria-current={i === slide} className={`h-1.5 rounded-full transition-all ${i === slide ? "w-6 bg-ink-foreground" : "w-1.5 bg-ink-foreground/35"}`} />)}</div>
+        <button type="button" onClick={() => go(-1)} aria-label={u.prev} className="absolute left-3 top-1/2 grid size-9 -translate-y-1/2 place-items-center rounded-full border border-white/20 bg-black/45 backdrop-blur transition hover:bg-black/70"><ChevronLeft className="size-4" /></button>
+        <button type="button" onClick={() => go(1)} aria-label={u.next} className="absolute right-3 top-1/2 grid size-9 -translate-y-1/2 place-items-center rounded-full border border-white/20 bg-black/45 backdrop-blur transition hover:bg-black/70"><ChevronRight className="size-4" /></button>
+        <div className="absolute bottom-4 left-1/2 flex -translate-x-1/2 gap-1.5">{slides.map((m, i) => <button key={m.key} type="button" onClick={() => setSlide(i)} aria-label={m.name} aria-current={i === slide} className={`h-1.5 rounded-full transition-all ${i === slide ? "w-6 bg-white" : "w-1.5 bg-white/35"}`} />)}</div>
       </div>
 
       {/* Title, count, search */}
@@ -126,16 +152,16 @@ function ModelsPage() {
 
       {/* Cover cards */}
       <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">{list.slice(0, shown).map((m) => {
-        const Icon = kindIcons[m.kind];
         return <article key={keyOf(m)} className="group flex min-w-0 flex-col overflow-hidden rounded-[22px] border border-border bg-card transition hover:-translate-y-0.5 hover:shadow-lift">
-          <div className="relative flex h-36 flex-col justify-end p-4 text-white" style={cover(m.provider)}>
-            <Icon className="pointer-events-none absolute -right-3 -top-3 size-24 text-white/10 transition-transform duration-500 group-hover:scale-110" strokeWidth={1} aria-hidden="true" />
-            <span className="absolute right-3 top-3 inline-flex max-w-[70%] items-center gap-1.5 rounded-full bg-black/45 px-2.5 py-1 font-mono text-[9.5px] uppercase tracking-[0.14em] backdrop-blur"><span className="size-1.5 shrink-0 rounded-full" style={dot(m.provider)} /><span className="truncate">{m.provider}</span></span>
-            {m.kind === "text" && m.soon && <span className="absolute left-3 top-3 rounded-full bg-white/15 px-2 py-0.5 text-[10px] font-medium backdrop-blur">{t.soon}</span>}
-            {m.kind === "text" && m.mode && <span className="absolute left-3 top-3 rounded-full bg-white/90 px-2 py-0.5 text-[10px] font-semibold text-black">{m.mode[lang]}</span>}
-            {m.kind !== "text" && m.cheap && <span className="absolute left-3 top-3 rounded-full bg-white/90 px-2 py-0.5 text-[10px] font-semibold text-black">{t.cheap}</span>}
-            <p className="font-mono text-[9.5px] uppercase tracking-[0.18em] text-white/60">{m.provider}</p>
-            <h3 className="mt-0.5 line-clamp-2 break-words font-display text-[17px] font-semibold leading-tight">{m.name}</h3>
+          <div className="relative flex h-40 flex-col justify-end overflow-hidden p-4 text-white" style={cover(m.provider)}>
+            <img src={coverOf(m)} alt="" loading="lazy" decoding="async" width={640} height={400} className="absolute inset-0 h-full w-full object-cover transition-transform duration-700 group-hover:scale-105" />
+            <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/85 via-black/35 to-black/10" />
+            <span className="absolute right-3 top-3 z-10 inline-flex max-w-[70%] items-center gap-1.5 rounded-full bg-black/45 px-2.5 py-1 font-mono text-[9.5px] uppercase tracking-[0.14em] backdrop-blur"><span className="size-1.5 shrink-0 rounded-full" style={dot(m.provider)} /><span className="truncate">{m.provider}</span></span>
+            {m.kind === "text" && m.soon && <span className="absolute left-3 top-3 z-10 rounded-full bg-white/15 px-2 py-0.5 text-[10px] font-medium backdrop-blur">{t.soon}</span>}
+            {m.kind === "text" && m.mode && <span className="absolute left-3 top-3 z-10 rounded-full bg-white/90 px-2 py-0.5 text-[10px] font-semibold text-black">{m.mode[lang]}</span>}
+            {m.kind !== "text" && m.cheap && <span className="absolute left-3 top-3 z-10 rounded-full bg-white/90 px-2 py-0.5 text-[10px] font-semibold text-black">{t.cheap}</span>}
+            <p className="relative font-mono text-[9.5px] uppercase tracking-[0.18em] text-white/70">{m.provider}</p>
+            <h3 className="relative mt-0.5 line-clamp-2 break-words font-display text-[17px] font-semibold leading-tight">{m.name}</h3>
           </div>
           <div className="flex flex-1 flex-col p-4">
             <div className="flex flex-wrap gap-1.5">

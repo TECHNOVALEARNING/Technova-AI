@@ -2,8 +2,9 @@ import { createFileRoute } from "@tanstack/react-router";
 import { pageHead, appLd, faqLd, organizationLd, websiteLd } from "@/lib/seo";
 import { useEffect, useRef, useState, type CSSProperties, type ReactNode } from "react";
 import {
-  ArrowRight, ArrowUpRight, Check, Plus, Minus, Sparkles, Globe, LogIn, Menu, Zap, Boxes, WalletCards, ShieldCheck, Lock, ServerOff, UserRoundPlus, Play, X,
+  ArrowRight, ArrowUpRight, Check, Plus, Minus, Globe, LogIn, Menu, Zap, Boxes, WalletCards, ShieldCheck, Lock, ServerOff, UserRoundPlus, Play, X,
 } from "lucide-react";
+import { TechNovaMark } from "@/components/site/TechNovaMark";
 import { Button } from "@/components/ui/button";
 import heroOrb from "@/assets/hero-orb.jpg";
 import { media } from "@/lib/media";
@@ -237,7 +238,7 @@ function Why({ t }: { t: T }) {
       <Heading tag={t.why.tag} title={t.why.title} sub={t.why.sub} />
       <div className="mx-auto grid max-w-6xl gap-4 md:grid-cols-3">
         {t.why.items.map((it, i) => {
-          const Icon = icons[i] ?? Sparkles;
+          const Icon = icons[i] ?? Zap;
           return <R key={it.t} delay={i * 120} className="h-full">
             <article className="why-card group h-full">
               <div className="why-stage" aria-hidden="true">
@@ -285,7 +286,7 @@ function Services({ t }: { t: T }) {
         <R className="md:col-span-3">
           <div className="relative flex flex-col items-start justify-between gap-6 overflow-hidden rounded-[40px] border border-border bg-iris p-7 md:flex-row md:items-center md:p-9">
             <div className="flex items-center gap-4">
-              <div className="grid h-12 w-12 place-items-center rounded-2xl bg-ink text-ink-foreground"><Sparkles className="h-5 w-5" /></div>
+              <div className="grid h-12 w-12 place-items-center rounded-2xl bg-ink text-ink-foreground"><TechNovaMark className="h-6 w-6" /></div>
               <div>
                 <h3 className="font-display text-2xl font-semibold text-ink">{s.banner.t}</h3>
                 <p className="text-sm text-ink/70">{s.banner.d}</p>
@@ -302,7 +303,7 @@ function Services({ t }: { t: T }) {
 function How({ t }: { t: T }) {
   const trackRef = useRef<HTMLDivElement>(null);
   const [progress, setProgress] = useState(0);
-  const icons = [UserRoundPlus, WalletCards, Boxes, Sparkles];
+  const icons = [UserRoundPlus, WalletCards, Boxes, TechNovaMark];
 
   useEffect(() => {
     let frame = 0;
@@ -335,7 +336,7 @@ function How({ t }: { t: T }) {
       <div ref={trackRef} className="process-track mx-auto max-w-6xl" style={{ "--process-progress": progress } as CSSProperties}>
         <div className="process-spine" aria-hidden="true"><span className="process-spine-fill" /></div>
         {t.how.steps.map((st, i) => {
-          const Icon = icons[i] ?? Sparkles;
+          const Icon = icons[i] ?? TechNovaMark;
           const stepPosition = i / (t.how.steps.length - 1);
           const fill = Math.max(0, Math.min(1, (progress - stepPosition + (i === 0 ? 0 : 0.04)) * 25));
           const active = fill > 0.02;

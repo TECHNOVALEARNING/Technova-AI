@@ -1045,3 +1045,27 @@ body:has(.dashboard-shell) :is([data-radix-popper-content-wrapper] > [data-state
 }
 /* Starter chips on the chat home: mockup chips. */
 :root .dashboard-shell[class*="look-"] .starter-chip { background: var(--mock-chip); border-color: transparent; box-shadow: var(--mock-chip-shadow); }
+
+/* Models page carousel: each slide's text rises in softly while the banner picture cross-fades. */
+.models-slide > * { animation: models-slide-in .7s cubic-bezier(.2, .7, .2, 1) both; }
+.models-slide > :nth-child(2) { animation-delay: .06s; }
+.models-slide > :nth-child(3) { animation-delay: .12s; }
+.models-slide > :nth-child(4) { animation-delay: .18s; }
+@keyframes models-slide-in { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+@media (prefers-reduced-motion: reduce) { .models-slide > * { animation: none; } }
+
+/* Help widget (public pages): frosted-glass launcher and panel, like the dashboard glass. */
+.help-launcher { background: oklch(1 0 0 / .7); border: 1px solid oklch(1 0 0 / .8); backdrop-filter: blur(24px) saturate(1.6); -webkit-backdrop-filter: blur(24px) saturate(1.6);
+  box-shadow: 0 14px 34px -12px oklch(.3 .04 260 / .4), inset 0 1px 0 oklch(1 0 0 / .9); color: var(--foreground); }
+.help-panel { background: oklch(.99 .003 260 / .78); border: 1px solid oklch(1 0 0 / .75); backdrop-filter: blur(40px) saturate(1.6); -webkit-backdrop-filter: blur(40px) saturate(1.6);
+  box-shadow: 0 30px 80px -24px oklch(.3 .04 260 / .45), inset 0 1px 0 oklch(1 0 0 / .9); animation: help-in .28s cubic-bezier(.2, .8, .2, 1) both; transform-origin: bottom right; }
+.help-bubble { background: oklch(1 0 0 / .8); box-shadow: 0 1px 3px oklch(.3 .03 260 / .1); }
+.help-chip { background: oklch(1 0 0 / .62); border: 1px solid oklch(.9 .01 260 / .9); }
+.help-chip:hover { background: oklch(1 0 0 / .95); border-color: oklch(.75 .02 260); }
+.dark .help-launcher { background: oklch(.22 .01 260 / .72); border-color: oklch(1 0 0 / .12); box-shadow: 0 14px 34px -12px oklch(0 0 0 / .6), inset 0 1px 0 oklch(1 0 0 / .08); }
+.dark .help-panel { background: oklch(.18 .01 260 / .82); border-color: oklch(1 0 0 / .1); box-shadow: 0 30px 80px -20px oklch(0 0 0 / .7), inset 0 1px 0 oklch(1 0 0 / .06); }
+.dark .help-bubble { background: oklch(1 0 0 / .08); }
+.dark .help-chip { background: oklch(1 0 0 / .06); border-color: oklch(1 0 0 / .12); }
+.dark .help-chip:hover { background: oklch(1 0 0 / .12); }
+@keyframes help-in { from { opacity: 0; transform: translateY(10px) scale(.96); } to { opacity: 1; transform: none; } }
+@media (prefers-reduced-motion: reduce) { .help-panel { animation: none; } }

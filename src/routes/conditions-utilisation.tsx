@@ -1,7 +1,8 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { pageHead } from "@/lib/seo";
 import type { ReactNode } from "react";
-import { BadgeCheck, Coins, FileLock2, Scale, ShieldCheck, Sparkles } from "lucide-react";
+import { BadgeCheck, Coins, FileLock2, Scale, ShieldCheck } from "lucide-react";
+import { TechNovaMark } from "@/components/site/TechNovaMark";
 import { Button } from "@/components/ui/button";
 import { Nav, Footer, PageHero, useSiteLang } from "@/components/site/SiteChrome";
 import { tr } from "@/lib/i18n";
@@ -27,7 +28,7 @@ const sections = [
 const essentials = [
   { icon: Coins, title: "Crédits prépayés.", text: "Pas d'abonnement ni de renouvellement automatique. Vos crédits Technova n'expirent pas et ne sont débités qu'à l'usage." },
   { icon: FileLock2, title: "Vos contenus restent à vous.", text: "Vous gardez vos droits sur ce que vous créez. TechNova n'entraîne aucun modèle avec vos conversations, fichiers ou projets." },
-  { icon: Sparkles, title: "L'IA peut se tromper.", text: "Les réponses sont générées automatiquement : vérifiez toujours les informations importantes avant de les utiliser." },
+  { icon: TechNovaMark, title: "L'IA peut se tromper.", text: "Les réponses sont générées automatiquement : vérifiez toujours les informations importantes avant de les utiliser." },
   { icon: ShieldCheck, title: "Un usage responsable.", text: "Pas de contenu illégal, de fraude ni d'atteinte aux droits d'autrui. Les abus peuvent entraîner la suspension du compte." },
   { icon: BadgeCheck, title: "Échecs remboursés.", text: "Si une génération échoue, les crédits réservés pour elle vous sont restitués automatiquement." },
   { icon: Scale, title: "Des règles claires.", text: "Ces conditions s'appliquent à tous les utilisateurs, en complément de notre politique de confidentialité." },

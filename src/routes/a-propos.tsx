@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { pageHead, breadcrumbLd } from "@/lib/seo";
-import { ArrowRight, Compass, Globe2, HeartHandshake, Linkedin, Sparkles, Target } from "lucide-react";
+import { ArrowRight, Compass, Globe2, HeartHandshake, Linkedin, Target } from "lucide-react";
+import { TechNovaMark } from "@/components/site/TechNovaMark";
 import { Button } from "@/components/ui/button";
 import { ActionText, Footer, Nav, PageHero, useSiteLang } from "@/components/site/SiteChrome";
 import type { SiteLang } from "@/lib/i18n";
@@ -93,7 +94,7 @@ const text = {
   },
 } satisfies Record<SiteLang, unknown>;
 
-const valueIcons = [Globe2, Sparkles, HeartHandshake];
+const valueIcons = [Globe2, TechNovaMark, HeartHandshake];
 
 function AboutPage() {
   const [lang, setLang] = useSiteLang(); const t = text[lang];

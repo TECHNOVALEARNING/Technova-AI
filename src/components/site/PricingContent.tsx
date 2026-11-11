@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "@tanstack/react-router";
-import { ArrowUpRight } from "lucide-react";
+import { ArrowUpRight, Building2, Code2 } from "lucide-react";
 import "@/lib/fontawesome";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { Button } from "@/components/ui/button";
@@ -23,11 +23,18 @@ const geoText = {
   es: { billed: "Se factura" },
   pt: { billed: "Cobrado" },
 } satisfies Record<SiteLang, unknown>;
+// Bar under the packs: the API for developers, custom terms for companies (no extra pack or modal).
+const barText = {
+  fr: { api: "Connectez-vous et utilisez notre API", apiSub: "Une clé, tous les modèles, facturés en crédits.", apiCta: "Utiliser l'API", pro: "Entreprise ?", proSub: "Contactez-nous pour des tarifs adaptés à votre volume.", proCta: "Nous contacter", subject: "Tarifs entreprise" },
+  en: { api: "Sign in and use our API", apiSub: "One key, every model, billed in credits.", apiCta: "Use the API", pro: "A company?", proSub: "Contact us for pricing that fits your volume.", proCta: "Contact us", subject: "Enterprise pricing" },
+  es: { api: "Inicia sesión y usa nuestra API", apiSub: "Una clave, todos los modelos, facturados en créditos.", apiCta: "Usar la API", pro: "¿Empresa?", proSub: "Contáctanos para precios adaptados a tu volumen.", proCta: "Contactar", subject: "Precios para empresas" },
+  pt: { api: "Entre e use a nossa API", apiSub: "Uma chave, todos os modelos, cobrados em créditos.", apiCta: "Usar a API", pro: "Empresa?", proSub: "Fale conosco para preços adaptados ao seu volume.", proCta: "Fale conosco", subject: "Preços para empresas" },
+} satisfies Record<SiteLang, unknown>;
 const locales: Record<SiteLang, string> = { fr: "fr-FR", en: "en-US", es: "es-ES", pt: "pt-BR" };
 
 /** `glass` (landing page): frosted-glass cards on the normal page background. */
 export function PricingContent({ lang, glass = false }: { lang: SiteLang; glass?: boolean }) {
-  const t = text[lang]; const g = geoText[lang]; const loc = locales[lang]; const navigate = useNavigate();
+  const t = text[lang]; const g = geoText[lang]; const b = barText[lang]; const loc = locales[lang]; const navigate = useNavigate();
   const geo = useGeoPrice();
   const [packs, setPacks] = useState<PublicPack[]>(fallbackPacks);
   useEffect(() => {
@@ -74,6 +81,18 @@ export function PricingContent({ lang, glass = false }: { lang: SiteLang; glass?
         </article>;
       })}</div>
 
+      <div className={`mt-6 grid overflow-hidden rounded-2xl border md:grid-cols-2 ${glass ? "glass-card" : "border-border bg-card"}`}>
+        <div className="flex flex-col gap-4 p-5 sm:flex-row sm:items-center sm:p-6">
+          <span className="grid size-11 shrink-0 place-items-center rounded-xl bg-ink text-ink-foreground"><Code2 className="size-5" /></span>
+          <div className="min-w-0 flex-1"><p className="font-display font-semibold">{b.api}</p><p className="text-sm text-muted-foreground">{b.apiSub}</p></div>
+          <a href="/dashboard/api" className="inline-flex h-10 shrink-0 items-center justify-center gap-1.5 rounded-full bg-foreground px-5 text-sm font-semibold text-background transition hover:opacity-90">{b.apiCta}<ArrowUpRight className="size-3.5" /></a>
+        </div>
+        <div className="flex flex-col gap-4 border-t border-border p-5 sm:flex-row sm:items-center sm:p-6 md:border-l md:border-t-0">
+          <span className="grid size-11 shrink-0 place-items-center rounded-xl bg-secondary"><Building2 className="size-5" /></span>
+          <div className="min-w-0 flex-1"><p className="font-display font-semibold">{b.pro}</p><p className="text-sm text-muted-foreground">{b.proSub}</p></div>
+          <a href={`mailto:support@technovaihub.com?subject=${encodeURIComponent(b.subject)}`} className="inline-flex h-10 shrink-0 items-center justify-center gap-1.5 rounded-full border border-border px-5 text-sm font-semibold transition hover:border-foreground/40">{b.proCta}<ArrowUpRight className="size-3.5" /></a>
+        </div>
+      </div>
     </div>
   </section>;
 }

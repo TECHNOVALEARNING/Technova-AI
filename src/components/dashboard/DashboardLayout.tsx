@@ -113,7 +113,9 @@ export function DashboardLayout({ children }: { children: ReactNode }) {
   const isThread = pathname.startsWith("/dashboard/chat/");
   const current = links.find(l => pathname === l.to)?.key ?? (pathname.startsWith("/dashboard/chat") ? "chat" : pathname === "/dashboard/docs" ? "docs" : "overview");
   const filtered = threads.filter(thread => thread.title.toLocaleLowerCase().includes(search.toLocaleLowerCase())).sort((a, b) => Number(b.pinned) - Number(a.pinned));
-  const matchingSections = [...links, { key: "docs", to: "/dashboard/docs", icon: BookOpen } as const].filter(item => t[item.key].toLocaleLowerCase().includes(search.toLocaleLowerCase()));
+  // Sidebar wording: the models page is about prices per mode, the credits page holds packs and balance.
+  const navLabel = (key: (typeof links)[number]["key"] | "docs") => key === "models" ? (lang === "fr" ? "Tarifs par mode" : "Prices by mode") : key === "credits" ? (lang === "fr" ? "Tarifs et crédits" : "Pricing & credits") : t[key];
+  const matchingSections = [...links, { key: "docs", to: "/dashboard/docs", icon: BookOpen } as const].filter(item => navLabel(item.key).toLocaleLowerCase().includes(search.toLocaleLowerCase()));
   const initials = (name || email || "T").charAt(0).toUpperCase();
   // The secondary links stay unfolded while one of them is the open page (and in the icon-only menu).
   const onSecondary = !primaryKeys.includes(current) || pathname === "/dashboard/admin";
@@ -139,7 +141,7 @@ export function DashboardLayout({ children }: { children: ReactNode }) {
         </div>
         <div className="flex min-h-0 flex-1 flex-col px-3">
           <nav aria-label={t.navigation} className="shrink-0 space-y-px">
-            {links.filter(item => showAll || primaryKeys.includes(item.key)).map(item => <Link key={item.key} to={item.to} title={t[item.key]} aria-current={current === item.key ? "page" : undefined} className={`side-link flex h-8 items-center gap-2.5 rounded-lg px-2.5 text-[12.5px] font-medium transition-colors ${mini ? "lg:justify-center lg:px-0" : ""} ${current === item.key ? "is-active text-foreground" : "text-muted-foreground hover:text-foreground"}`}><item.icon className="size-[15px] shrink-0" strokeWidth={1.7} /><span className={mini ? "lg:hidden" : ""}>{t[item.key]}</span></Link>)}
+            {links.filter(item => showAll || primaryKeys.includes(item.key)).map(item => <Link key={item.key} to={item.to} title={navLabel(item.key)} aria-current={current === item.key ? "page" : undefined} className={`side-link flex h-8 items-center gap-2.5 rounded-lg px-2.5 text-[12.5px] font-medium transition-colors ${mini ? "lg:justify-center lg:px-0" : ""} ${current === item.key ? "is-active text-foreground" : "text-muted-foreground hover:text-foreground"}`}><item.icon className="size-[15px] shrink-0" strokeWidth={1.7} /><span className={mini ? "lg:hidden" : ""}>{navLabel(item.key)}</span></Link>)}
             {isAdmin && showAll && <Link to="/dashboard/admin" title="Administration" aria-current={pathname === "/dashboard/admin" ? "page" : undefined} className={`side-link flex h-8 items-center gap-2.5 rounded-lg px-2.5 text-[12.5px] font-medium transition-colors ${mini ? "lg:justify-center lg:px-0" : ""} ${pathname === "/dashboard/admin" ? "is-active text-foreground" : "text-muted-foreground hover:text-foreground"}`}><ShieldAlert className="size-[15px] shrink-0" strokeWidth={1.7} /><span className={mini ? "lg:hidden" : ""}>Administration</span></Link>}
             {!mini && !onSecondary && <button type="button" onClick={() => setMoreOpen(v => !v)} aria-expanded={moreOpen}
               className="side-link flex h-8 w-full items-center gap-2.5 rounded-lg px-2.5 text-[12.5px] font-medium text-muted-foreground transition-colors hover:text-foreground">
@@ -160,7 +162,7 @@ export function DashboardLayout({ children }: { children: ReactNode }) {
           </div>
           <div className={`mt-1 flex items-center gap-0.5 px-1 ${mini ? "lg:mt-auto lg:flex-col lg:px-0" : ""}`}>
             <Popover open={themeOpen} onOpenChange={setThemeOpen}>
-              <PopoverTrigger asChild><Button variant="ghost" size="sm" className={`h-8 gap-1.5 rounded-lg px-2 text-[12px] font-medium text-muted-foreground ${mini ? "lg:w-8 lg:px-0" : ""}`} aria-label={t.theme} title={t.theme}><Palette className="size-4" /><span className={mini ? "lg:hidden" : ""}>{lang === "fr" ? "Thème" : "Theme"}</span></Button></PopoverTrigger>
+              <PopoverTrigger asChild><Button variant="ghost" size="sm" className={`h-8 gap-1.5 rounded-lg px-2 text-[12px] font-medium text-muted-foreground ${mini ? "lg:w-8 lg:px-0" : ""}`} aria-label={t.theme} title={t.theme}><Palette className="size-4" /><span className={mini ? "lg:hidden" : ""}>{lang === "fr" ? "Thèmes" : "Themes"}</span></Button></PopoverTrigger>
               <PopoverContent side="top" align="start" className="w-56 rounded-2xl p-1.5">
                 {(["dark", "light"] as const).map((mode) => <div key={mode} className="py-1">
                   <p className="px-2.5 pb-1 pt-1.5 text-[10px] font-medium uppercase tracking-[0.12em] text-muted-foreground">{mode === "dark" ? (lang === "fr" ? "Sombres" : "Dark") : (lang === "fr" ? "Clairs" : "Light")}</p>

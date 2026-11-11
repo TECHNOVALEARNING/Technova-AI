@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { Link } from "@tanstack/react-router";
 import { ArrowUpRight, Globe, LogIn, Mail, Menu, X, Facebook, Instagram, Linkedin, Youtube } from "lucide-react";
+import { HelpWidget } from "@/components/site/HelpWidget";
 import { Button } from "@/components/ui/button";
 import { content, isSiteLang, siteLangs, tr, type SiteLang } from "@/lib/i18n";
 import { supabase } from "@/integrations/supabase/client";
@@ -192,6 +193,7 @@ export function Footer({ lang }: { lang: SiteLang }) {
   ] as const;
   return (
     <footer className="border-t border-border bg-background px-5 pb-8 pt-14 text-foreground sm:pt-20">
+      <HelpWidget lang={lang} />
       <div className="mx-auto grid max-w-6xl gap-12 lg:grid-cols-[1fr_2.4fr]">
         <div><Logo className="text-xl" /><p className="mt-1 text-xs text-chat-glow">AI HUB</p><p className="mt-3 text-[10px] uppercase text-muted-foreground">By Tenulysse</p>
           <p className="mt-6 max-w-xs text-sm leading-7 text-muted-foreground">{tr(lang, { fr: "L’infrastructure IA unifiée pour les créateurs, développeurs et entreprises.", en: "Unified AI infrastructure for creators, developers and businesses.", es: "La infraestructura de IA unificada para creadores, desarrolladores y empresas.", pt: "A infraestrutura de IA unificada para criadores, desenvolvedores e empresas." })}</p>
