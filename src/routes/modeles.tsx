@@ -105,7 +105,7 @@ function ModelsPage() {
     { key: "smart", provider: "TechNova", name: t.smartTitle, tags: [u.chat, ...kinds.slice(1).map((k) => t.tabs[k])], desc: t.smartText },
     ...featured.map(({ model: m }) => ({ key: keyOf(m), provider: m.provider, name: m.name, tags: tags(m), desc: `${m.kind === "text" && m.mode ? `${m.mode[lang]} · ` : ""}${price(m)} ${unit(m)}${m.kind === "text" ? ` · ${t.context} ${m.context}` : ""}` })),
   ];
-  const banners = ["/media/models/swirl-wide.webp", ...featured.map((x) => x.banner)];
+  const banners = ["/media/models/smart-wide.webp", ...featured.map((x) => x.banner)];
   const f = slides[slide] ?? slides[0]!;
   const go = (step: number) => setSlide((i) => (i + step + slides.length) % slides.length);
   // Slides change on their own, like a showcase, except while hovered or focused or for reduced motion.
