@@ -73,7 +73,9 @@ export function PricingContent({ lang, glass = false }: { lang: SiteLang; glass?
               <p className="text-xs text-muted-foreground">{t.once}</p>
             </>}
           <p className="mt-2 text-sm font-semibold">{p.credits.toLocaleString(loc)} {t.credits}</p>
-          {copy && <ul className="mt-5 flex-1 space-y-3 text-sm">{copy.perks.map((perk) => <li key={perk.text} className="flex items-start gap-3">
+          {copy && <ul className="mt-5 flex-1 space-y-3 text-sm">{copy.perks.map((perk) => perk.lead
+            ? <li key={perk.text} className="font-semibold">{perk.text}</li>
+            : <li key={perk.text} className="flex items-start gap-3">
             <FontAwesomeIcon icon={perk.icon} fixedWidth aria-hidden className={`mt-0.5 size-4 shrink-0 ${p.featured ? "text-supabase" : "text-chat-glow"}`} />
             <span>{perk.text}</span>
           </li>)}</ul>}

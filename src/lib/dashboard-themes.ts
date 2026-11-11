@@ -2,7 +2,7 @@
  *  changes the content area (wallpaper, glass panels, composer). The light looks follow the dashboard mockup
  *  (Pastel, Azur, Givre); Azur and Crépuscule come from the ivory-haze mockup,
  *  Abysse and Améthyste from the two dark reference images; retired preferences open a look of their mode. */
-export type DashboardLook = "pastel" | "azur" | "givre" | "brume" | "soie" | "crepuscule" | "abysse" | "amethyste";
+export type DashboardLook = "pastel" | "azur" | "givre" | "perle" | "brume" | "soie" | "crepuscule" | "abysse" | "amethyste";
 
 export const dashboardLooks: { id: DashboardLook; mode: "light" | "dark"; fr: string; en: string; swatch: string }[] = [
   { id: "brume", mode: "dark", fr: "Brume", en: "Mist", swatch: "#26252a" },
@@ -13,6 +13,7 @@ export const dashboardLooks: { id: DashboardLook; mode: "light" | "dark"; fr: st
   { id: "pastel", mode: "light", fr: "Pastel", en: "Pastel", swatch: "#a9c3da" },
   { id: "azur", mode: "light", fr: "Azur", en: "Azure", swatch: "#9cc3e6" },
   { id: "givre", mode: "light", fr: "Givre", en: "Frost", swatch: "#c7cdf6" },
+  { id: "perle", mode: "light", fr: "Perle", en: "Pearl", swatch: "#d4d4d4" },
 ];
 
 /** Default look for each mode (the light/dark switch in Settings). */

@@ -114,7 +114,7 @@ export function DashboardLayout({ children }: { children: ReactNode }) {
   const current = links.find(l => pathname === l.to)?.key ?? (pathname.startsWith("/dashboard/chat") ? "chat" : pathname === "/dashboard/docs" ? "docs" : "overview");
   const filtered = threads.filter(thread => thread.title.toLocaleLowerCase().includes(search.toLocaleLowerCase())).sort((a, b) => Number(b.pinned) - Number(a.pinned));
   // Sidebar wording: the models page is about prices per mode, the credits page holds packs and balance.
-  const navLabel = (key: (typeof links)[number]["key"] | "docs") => key === "models" ? (lang === "fr" ? "Tarifs par mode" : "Prices by mode") : key === "credits" ? (lang === "fr" ? "Tarifs et crédits" : "Pricing & credits") : t[key];
+  const navLabel = (key: (typeof links)[number]["key"] | "docs") => key === "models" ? "Modes" : key === "credits" ? (lang === "fr" ? "Tarifs et crédits" : "Pricing & credits") : t[key];
   const matchingSections = [...links, { key: "docs", to: "/dashboard/docs", icon: BookOpen } as const].filter(item => navLabel(item.key).toLocaleLowerCase().includes(search.toLocaleLowerCase()));
   const initials = (name || email || "T").charAt(0).toUpperCase();
   // The secondary links stay unfolded while one of them is the open page (and in the icon-only menu).

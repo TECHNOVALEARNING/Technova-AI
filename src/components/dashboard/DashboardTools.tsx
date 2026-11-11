@@ -35,7 +35,7 @@ import supabaseLogo from "@/assets/supabase-logo.svg";
 
 const copy = {
   fr: {
-    modelsTitle: "Tarifs par mode", modelsSub: "Trois modes de réponse et des créations à prix fixe, en crédits TechNova.", input: "Entrée", output: "Sortie", chat: "Discuter", soon: "Bientôt disponible", free: "Gratuit",
+    modelsTitle: "Modes", modelsSub: "Trois modes de réponse et des créations à prix fixe, en crédits TechNova.", input: "Entrée", output: "Sortie", chat: "Discuter", soon: "Bientôt disponible", free: "Gratuit",
     creditsTitle: "Tarifs et crédits", creditsSub: "Rechargez et suivez votre solde de crédits.", balance: "Solde", credits: "crédits Technova", remaining: "de votre solde restant", currency: "Devise", buy: "Acheter des crédits", popular: "Populaire", bonus: "bonus", activity: "Activité récente", noActivity: "Aucune activité pour le moment.", included: "Offert à l'inscription",
     payNotice: "Paiement sécurisé par Technova PAY : Mobile Money (Orange, Wave, MTN, Moov) et carte bancaire.", testMode: "Mode test actif : aucun paiement réel n'est encaissé.", testBlocked: "Paiement de test refusé : le site est en production. Aucun crédit n'a été ajouté.",
     redirecting: "Redirection…", paySuccess: "Paiement confirmé : vos crédits Technova sont ajoutés.", payPending: "Paiement en attente de confirmation. Vos crédits seront ajoutés dès validation.", payCancelled: "Paiement annulé.", payError: "Le paiement n'a pas pu démarrer. Réessayez.",
@@ -51,7 +51,7 @@ const copy = {
     confirmPack: "Confirmez votre achat", oneTime: "Paiement unique, sans abonnement.", confirmPay: "Payer maintenant", cancel: "Annuler",
   },
   en: {
-    modelsTitle: "Prices by mode", modelsSub: "Three answer modes and fixed-price creations, in TechNova credits.", input: "Input", output: "Output", chat: "Chat", soon: "Coming soon", free: "Free",
+    modelsTitle: "Modes", modelsSub: "Three answer modes and fixed-price creations, in TechNova credits.", input: "Input", output: "Output", chat: "Chat", soon: "Coming soon", free: "Free",
     creditsTitle: "Pricing & credits", creditsSub: "Top up and track your credit balance.", balance: "Balance", credits: "Technova credits", remaining: "of your credit balance remaining", currency: "Currency", buy: "Buy credits", popular: "Popular", bonus: "bonus", activity: "Recent activity", noActivity: "No activity yet.", included: "Included at sign-up",
     payNotice: "Secure payment by Technova PAY: Mobile Money (Orange, Wave, MTN, Moov) and card.", testMode: "Test mode: no real payment is collected.", testBlocked: "Test payment refused: the site is in production. No credits were added.",
     redirecting: "Redirecting…", paySuccess: "Payment confirmed: your Technova credits were added.", payPending: "Payment awaiting confirmation. Credits will be added once validated.", payCancelled: "Payment cancelled.", payError: "Payment could not start. Please try again.",
