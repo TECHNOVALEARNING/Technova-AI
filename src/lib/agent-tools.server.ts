@@ -25,11 +25,13 @@ export async function filesForMessage(ownerId: string, message: string): Promise
 
 type Column = { table_name: string; column_name: string; data_type: string };
 
+// The read-only endpoint runs as supabase_read_only_user and only needs the "Database: Read" OAuth
+// permission (the plain /database/query endpoint needs "Database: Write"). Every query is schema-qualified.
 async function runQuery(ref: string, token: string, query: string): Promise<unknown[]> {
-  const res = await fetch(`https://api.supabase.com/v1/projects/${encodeURIComponent(ref)}/database/query`, {
+  const res = await fetch(`https://api.supabase.com/v1/projects/${encodeURIComponent(ref)}/database/query/read-only`, {
     method: "POST",
     headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
-    body: JSON.stringify({ query, read_only: true }),
+    body: JSON.stringify({ query }),
     signal: AbortSignal.timeout(12_000),
   });
   if (!res.ok) throw new Error(`database query ${res.status}`);
