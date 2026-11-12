@@ -115,7 +115,7 @@ async function tokenRequest(connectorId: string, params: Record<string, string>)
   }
   const res = await fetch(c.provider.token, { method: "POST", headers, body, signal: AbortSignal.timeout(15_000) });
   const json = (await res.json().catch(() => ({}))) as { access_token?: unknown; refresh_token?: unknown; expires_in?: unknown; error?: unknown };
-  if (!res.ok || typeof json.access_token !== "string") throw new Error(`token_exchange_${res.status}`);
+  if (!res.ok || typeof json.access_token !== "string") throw new Error(`token_exchange_${res.status}${typeof json.error === "string" ? `_${json.error}` : ""}`);
   const expiresIn = Number(json.expires_in ?? 0);
   return {
     access: json.access_token,

@@ -4,24 +4,25 @@ import { Button } from "@/components/ui/button";
 import { useDashboard } from "./DashboardLayout";
 import { CONNECTOR_CATALOG } from "@/lib/connectors";
 import { BrandLogo } from "./BrandLogo";
-import { completeConnect, disconnectConnector, listConnections, startConnect } from "@/lib/connections.functions";
+import { disconnectConnector, listConnections, startConnect } from "@/lib/connections.functions";
+import { connectErrorText } from "@/lib/connect-errors";
 import { listMySites, unpublishSite } from "@/lib/publishing.functions";
-import { upgradeFeatureOf, upgradeSentence } from "@/lib/plans";
 
 type Status = { id: string; configured: boolean; connected: boolean; label: string | null };
 const tx = (lang: string, fr: string, en: string) => (lang === "en" ? en : fr);
 
-function waitForCode(popup: Window, connectorId: string) {
-  return new Promise<{ code: string; state: string }>((resolve, reject) => {
+/** Waits for the popup's return page, which finishes the connection itself. Resolves "done", or the failure
+ *  reason it reports; a popup closed without any message resolves "closed" (the caller then re-reads the status). */
+function waitForReturn(popup: Window, connectorId: string) {
+  return new Promise<string>((resolve) => {
     const cleanup = () => { window.removeEventListener("message", onMsg); window.clearInterval(poll); };
     const onMsg = (e: MessageEvent) => {
-      if (e.origin !== window.location.origin || e.source !== popup || e.data?.connectorId !== connectorId) return;
-      cleanup();
-      if (e.data.type === "technovaOAuthComplete" && typeof e.data.code === "string" && typeof e.data.state === "string") resolve({ code: e.data.code, state: e.data.state });
-      else reject(new Error("failed"));
+      if (e.origin !== window.location.origin || e.data?.connectorId !== connectorId) return;
+      if (e.data.type === "technovaOAuthDone") { cleanup(); resolve("done"); }
+      else if (e.data.type === "technovaOAuthFailed") { cleanup(); resolve(typeof e.data.reason === "string" && e.data.reason ? e.data.reason : "failed"); }
     };
     window.addEventListener("message", onMsg);
-    const poll = window.setInterval(() => { if (popup.closed) { cleanup(); reject(new Error("closed")); } }, 500);
+    const poll = window.setInterval(() => { if (popup.closed) { cleanup(); resolve("closed"); } }, 500);
   });
 }
 
@@ -40,19 +41,23 @@ export function ConnectionsPage() {
     const popup = window.open("", "technova-connect", "width=600,height=720");
     if (!popup) { setNotice(tx(lang, "Autorisez les fenêtres pop-up puis réessayez.", "Allow popups and try again.")); return; }
     setBusy(id); setNotice("");
+    let authorizationUrl: string;
     try {
-      const { authorizationUrl } = await startConnect({ data: { connectorId: id } });
-      const wait = waitForCode(popup, id);
-      popup.location.href = authorizationUrl;
-      const { code, state } = await wait;
-      await completeConnect({ data: { code, state, connectorId: id } });
-      setNotice(tx(lang, "Compte connecté.", "Account connected."));
-      await load();
+      ({ authorizationUrl } = await startConnect({ data: { connectorId: id } }));
     } catch (e) {
       popup.close();
-      const feature = upgradeFeatureOf(e instanceof Error ? e.message : "");
-      setNotice(feature ? upgradeSentence(feature, lang !== "en") : tx(lang, "La connexion n’a pas abouti.", "Connection did not complete."));
+      setNotice(connectErrorText(e instanceof Error ? e.message : "", lang !== "en"));
+      setBusy(null);
+      return;
     }
+    const wait = waitForReturn(popup, id);
+    popup.location.href = authorizationUrl;
+    const result = await wait;
+    // The status is re-read in every case: the popup may have finished even if its message was lost.
+    const fresh = await listConnections().catch(() => null);
+    if (fresh) setStatus(fresh);
+    const connected = fresh?.find((x) => x.id === id)?.connected ?? false;
+    setNotice(connected ? tx(lang, "Compte connecté.", "Account connected.") : connectErrorText(result, lang !== "en"));
     setBusy(null);
   };
   const disconnect = async (id: string) => { setBusy(id); await disconnectConnector({ data: { connectorId: id } }).catch(() => {}); await load(); setBusy(null); };

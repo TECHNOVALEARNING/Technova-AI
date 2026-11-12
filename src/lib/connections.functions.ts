@@ -24,11 +24,19 @@ export const startConnect = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     const { isConfigured, appOrigin, authorizationUrl, signState, RETURN_PATH } = await import("@/lib/connections.server");
     const { hitRateLimit } = await import("@/lib/security.server");
-    if (!(await hitRateLimit(context.userId, "connect"))) throw new Error("Trop de tentatives. Réessayez plus tard.");
+    if (!(await hitRateLimit(context.userId, "connect"))) throw new Error("CONNECT_RATE_LIMITED");
     if (data.connectorId === "github") { const { requirePlan } = await import("@/lib/plan.server"); await requirePlan(context.userId, "github"); }
-    if (!isConfigured(data.connectorId)) throw new Error("Ce service n'est pas encore configuré.");
-    const redirectUri = `${appOrigin(getRequest())}${RETURN_PATH}`;
-    return { authorizationUrl: authorizationUrl(data.connectorId, redirectUri, signState(context.userId, data.connectorId)) };
+    if (!isConfigured(data.connectorId)) throw new Error("CONNECT_NOT_CONFIGURED");
+    let state: string, redirectUri: string;
+    try {
+      redirectUri = `${appOrigin(getRequest())}${RETURN_PATH}`;
+      state = signState(context.userId, data.connectorId);
+    } catch (e) {
+      // Missing TECHNOVA_CONN_CRYPTO_KEY or app address: a server configuration problem, never a user one.
+      console.error("[connect] configuration", data.connectorId, e instanceof Error ? e.message : e);
+      throw new Error("CONNECT_NOT_CONFIGURED");
+    }
+    return { authorizationUrl: authorizationUrl(data.connectorId, redirectUri, state) };
   });
 
 export const completeConnect = createServerFn({ method: "POST" })
@@ -40,9 +48,15 @@ export const completeConnect = createServerFn({ method: "POST" })
     const { logSecurityEvent } = await import("@/lib/security.server");
     if (!verifyState(data.state, context.userId, data.connectorId)) {
       await logSecurityEvent(context.userId, "connector_state_mismatch", "warning", { connector: data.connectorId });
-      throw new Error("La demande de connexion n'a pas pu être vérifiée.");
+      throw new Error("CONNECT_STATE_INVALID");
     }
-    const token = await exchangeCode(data.connectorId, data.code, `${appOrigin(getRequest())}${RETURN_PATH}`);
+    let token: Awaited<ReturnType<typeof exchangeCode>>;
+    try {
+      token = await exchangeCode(data.connectorId, data.code, `${appOrigin(getRequest())}${RETURN_PATH}`);
+    } catch (e) {
+      console.error("[connect] token exchange", data.connectorId, e instanceof Error ? e.message : e);
+      throw new Error("CONNECT_EXCHANGE_FAILED");
+    }
     const label = await accountLabel(data.connectorId, token.access);
     await saveConnection(context.userId, data.connectorId, token, label);
     await logSecurityEvent(context.userId, "connector_connected", "info", { connector: data.connectorId });
