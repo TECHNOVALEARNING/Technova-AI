@@ -70,7 +70,7 @@ export function MusicWizard({ open, onOpenChange, lang, onCreate }: { open: bool
   const [exclude, setExclude] = useState("");
   const [instrumental, setInstrumental] = useState(false);
   const [error, setError] = useState("");
-  const tone = "border-fuchsia-500/60 bg-fuchsia-500/10 text-fuchsia-700 dark:text-fuchsia-300";
+  const tone = "border-[#a77bcb]/70 bg-[#a77bcb]/12 text-[#7a569b] dark:text-[#c9a3e6]";
 
   function create() {
     const main = text.trim();
@@ -95,7 +95,7 @@ export function MusicWizard({ open, onOpenChange, lang, onCreate }: { open: bool
     setText(""); setTitle(""); setGenre([]); setMood([]); setTempo([]); setVoice([]); setLanguage([]); setInstruments(""); setExclude(""); setInstrumental(false); setMode("describe");
   }
 
-  return <Shell open={open} onOpenChange={onOpenChange} accent="rgb(217 70 239 / .12)" icon={<Music2 className="size-4 text-fuchsia-600" />}
+  return <Shell open={open} onOpenChange={onOpenChange} accent="rgb(167 123 203 / .14)" icon={<Music2 className="size-4 text-[#a77bcb]" />}
     title={fr ? "Créer une musique" : "Create a song"} sub={fr ? "Décrivez votre chanson ou collez vos paroles ; précisez le style si vous le souhaitez. Une chanson complète, prête à télécharger." : "Describe your song or paste your lyrics; add a style if you like. A complete song, ready to download."}
     footer={<>
       <button type="button" onClick={() => onOpenChange(false)} className="h-9 rounded-full px-3 text-[13px] text-muted-foreground hover:text-foreground">{fr ? "Annuler" : "Cancel"}</button>
@@ -157,7 +157,7 @@ export function VideoWizard({ open, onOpenChange, lang, onCreate }: { open: bool
   const [quality, setQuality] = useState(false);
   const [avoid, setAvoid] = useState("");
   const [error, setError] = useState("");
-  const tone = "border-orange-500/60 bg-orange-500/10 text-orange-700 dark:text-orange-300";
+  const tone = "border-[#5f9c57]/70 bg-[#5f9c57]/12 text-[#47783f] dark:text-[#8cc283]";
   const price = quality ? mediaTiers.video_quality.credits : mediaTiers.video_fast.credits;
 
   function create() {
@@ -185,7 +185,7 @@ export function VideoWizard({ open, onOpenChange, lang, onCreate }: { open: bool
   }
 
   const formats: [MediaRatio, string][] = [["16:9", fr ? "16:9 · Paysage (YouTube)" : "16:9 · Landscape (YouTube)"], ["9:16", fr ? "9:16 · Vertical (TikTok, Reels, Statut)" : "9:16 · Vertical (TikTok, Reels)"], ["1:1", fr ? "1:1 · Carré" : "1:1 · Square"]];
-  return <Shell open={open} onOpenChange={onOpenChange} accent="rgb(249 115 22 / .12)" icon={<Clapperboard className="size-4 text-orange-600" />}
+  return <Shell open={open} onOpenChange={onOpenChange} accent="rgb(95 156 87 / .14)" icon={<Clapperboard className="size-4 text-[#5f9c57]" />}
     title={fr ? "Créer une vidéo" : "Create a video"} sub={fr ? `Décrivez la scène ; précisez le style, la caméra et la lumière pour une vidéo de ${MEDIA_VIDEO_SECONDS} secondes réussie du premier coup.` : `Describe the scene; set the style, camera and light for a ${MEDIA_VIDEO_SECONDS}-second video that works first time.`}
     footer={locked
       ? <><span className="mr-auto text-[12px] text-muted-foreground">{fr ? `La vidéo est incluse à partir du forfait ${packNames[featureMinTier.video]}.` : `Video is included from the ${packNames[featureMinTier.video]} plan.`}</span><Link to="/dashboard/credits" className="inline-flex h-9 items-center gap-1.5 rounded-full bg-foreground px-4 text-[13px] font-semibold text-background"><Lock className="size-4" />{fr ? "Voir les forfaits" : "See plans"}</Link></>

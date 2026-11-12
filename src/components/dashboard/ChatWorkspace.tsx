@@ -643,10 +643,6 @@ function StarterIdeas({ choice, inputRef, onSalesPage, onMusic, onVideo }: { cho
     }, 0);
   }
   return <div className="space-y-2">
-    <div className="flex flex-wrap justify-center gap-2">
-      <button type="button" onClick={onMusic} className="create-chip create-chip-music inline-flex h-8 items-center gap-1.5 rounded-full px-3.5 text-[12px] font-semibold text-white"><Music className="size-3.5" />{lang === "en" ? "Create a song" : "Création de musique"}</button>
-      <button type="button" onClick={onVideo} className="create-chip create-chip-video inline-flex h-8 items-center gap-1.5 rounded-full px-3.5 text-[12px] font-semibold text-white"><Film className="size-3.5" />{lang === "en" ? "Create a video" : "Création de vidéo"}</button>
-    </div>
     <div className="starter-row flex w-full flex-nowrap justify-center gap-0.5 overflow-x-auto">
     {starterIdeas.map((idea) => {
       const [title, hint] = idea[lang === "en" ? "en" : "fr"];
@@ -658,6 +654,10 @@ function StarterIdeas({ choice, inputRef, onSalesPage, onMusic, onVideo }: { cho
         <span className="truncate">{title}</span>
       </button>;
     })}
+    </div>
+    <div className="flex flex-wrap justify-center gap-2">
+      <button type="button" onClick={onMusic} className="create-chip create-chip-music inline-flex h-8 items-center gap-1.5 rounded-full px-3.5 text-[12px] font-semibold text-white"><Music className="size-3.5" />{lang === "en" ? "Create a song" : "Création de musique"}</button>
+      <button type="button" onClick={onVideo} className="create-chip create-chip-video inline-flex h-8 items-center gap-1.5 rounded-full px-3.5 text-[12px] font-semibold text-white"><Film className="size-3.5" />{lang === "en" ? "Create a video" : "Création de vidéo"}</button>
     </div>
   </div>;
 }
