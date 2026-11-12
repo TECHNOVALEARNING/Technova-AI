@@ -4,7 +4,7 @@ import { savePref } from "@/lib/consent";
 import { planKeyOf, planLabels, usePlan } from "@/lib/plan-client";
 import { BookMarked, Bot, ChevronUp, Library, Plug, ShieldAlert } from "lucide-react";
 import { getMyRole } from "@/lib/admin.functions";
-import { Activity, ArrowLeft, CalendarDays, Check, Palette, Crown, Bell, BookOpen, Boxes, ChevronDown, ChevronRight, Code2, CreditCard, Diamond, Gift, Globe2, Inbox, LayoutDashboard, LifeBuoy, LogOut, Menu, MessageCircle, Moon, PanelLeftClose, PanelLeftOpen, Search, Settings2, Sun, Wallet, X } from "lucide-react";
+import { Activity, ArrowLeft, CalendarDays, Check, Palette, Crown, Bell, BookOpen, Boxes, ChevronDown, ChevronRight, Code2, CreditCard, Diamond, Gift, Globe2, Inbox, LayoutDashboard, LogOut, Menu, MessageCircle, Moon, PanelLeftClose, PanelLeftOpen, Search, Settings2, Sun, Wallet, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { dashboardText, type Lang } from "@/lib/i18n";
@@ -49,7 +49,6 @@ export function DashboardLayout({ children }: { children: ReactNode }) {
   const [lang, setLangState] = useState<Lang>("fr");
   const [look, setLookState] = useState<DashboardLook>(defaultLook.light);
   const theme = lookMode(look);
-  const [themeOpen, setThemeOpen] = useState(false);
   const [threads, setThreads] = useState<Thread[]>([]);
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -107,6 +106,7 @@ export function DashboardLayout({ children }: { children: ReactNode }) {
   // Inbox (account menu): tips, credit prices and live notices, with an unread dot on the profile.
   const inbox = useInbox(lang === "en" ? "en" : "fr");
   const [inboxOpen, setInboxOpen] = useState(false);
+  const [accountView, setAccountView] = useState<"menu" | "themes">("menu");
   // Sessions end after a week without activity (see session-guard.ts).
   useSessionGuard(useCallback(() => { void navigate({ to: "/connexion", replace: true }); }, [navigate]));
   async function signOut() {
@@ -172,16 +172,28 @@ export function DashboardLayout({ children }: { children: ReactNode }) {
         </div>
         <div className="shrink-0 border-t border-border p-2">
           {/* Account menu (click the profile): plan, upgrade, settings, connections, usage, API, help and sign-out. */}
-          <Popover open={accountOpen} onOpenChange={setAccountOpen}>
+          <Popover open={accountOpen} onOpenChange={(open) => { setAccountOpen(open); if (!open) setAccountView("menu"); }}>
             <PopoverTrigger asChild>
-              <button type="button" aria-label={lang === "fr" ? "Menu du compte" : "Account menu"} className={`flex w-full items-center gap-2.5 rounded-lg px-2 py-1.5 text-left transition hover:bg-secondary/70 ${mini ? "lg:hidden" : ""}`}>
+              <button type="button" aria-label={lang === "fr" ? "Menu du compte" : "Account menu"} className={`flex w-full items-center gap-2.5 rounded-lg px-2 py-1.5 text-left transition hover:bg-secondary/70 ${mini ? "lg:justify-center lg:px-0" : ""}`}>
                 <span className={`plan-ring plan-${planKey ?? "free"}`} title={planName ? `${lang === "fr" ? "Forfait" : "Plan"} ${planName}` : undefined}><span className="grid size-9 place-items-center rounded-full bg-card text-[13px] font-semibold text-foreground">{initials}</span></span>
-                <span className="min-w-0 flex-1"><span className="block truncate text-[12px] font-medium">{name || t.accountName}</span>{email && <span className="block truncate text-[10.5px] text-muted-foreground">{email}</span>}{planKey && planKey !== "free" && <span className={`plan-${planKey} plan-pill mt-1 inline-flex items-center gap-1 rounded-full font-semibold leading-none ${planKey === "pro" ? "h-5 px-2.5 text-[10.5px] tracking-[0.06em]" : "h-[18px] px-2 text-[10px]"}`}>{planKey === "pro" && <Crown className="size-3" strokeWidth={2.4} aria-hidden="true" />}<span className="plan-chip-text">{planKey === "pro" ? "PRO" : planName}</span></span>}</span>
-                {inbox.unread > 0 && <span className="grid h-5 min-w-5 shrink-0 place-items-center rounded-full bg-sky-500 px-1.5 text-[10.5px] font-semibold text-white" aria-label={lang === "fr" ? `${inbox.unread} messages non lus` : `${inbox.unread} unread messages`}>{inbox.unread}</span>}
-                <ChevronDown className={`size-4 shrink-0 text-muted-foreground transition-transform ${accountOpen ? "rotate-180" : ""}`} />
+                <span className={`min-w-0 flex-1 ${mini ? "lg:hidden" : ""}`}><span className="block truncate text-[12px] font-medium">{name || t.accountName}</span>{email && <span className="block truncate text-[10.5px] text-muted-foreground">{email}</span>}{planKey && planKey !== "free" && <span className={`plan-${planKey} plan-pill mt-1 inline-flex items-center gap-1 rounded-full font-semibold leading-none ${planKey === "pro" ? "h-5 px-2.5 text-[10.5px] tracking-[0.06em]" : "h-[18px] px-2 text-[10px]"}`}>{planKey === "pro" && <Crown className="size-3" strokeWidth={2.4} aria-hidden="true" />}<span className="plan-chip-text">{planKey === "pro" ? "PRO" : planName}</span></span>}</span>
+                {inbox.unread > 0 && <span className={`${mini ? "lg:hidden " : ""}grid h-5 min-w-5 shrink-0 place-items-center rounded-full bg-sky-500 px-1.5 text-[10.5px] font-semibold text-white`} aria-label={lang === "fr" ? `${inbox.unread} messages non lus` : `${inbox.unread} unread messages`}>{inbox.unread}</span>}
+                <ChevronDown className={`size-4 shrink-0 text-muted-foreground transition-transform ${accountOpen ? "rotate-180" : ""} ${mini ? "lg:hidden" : ""}`} />
               </button>
             </PopoverTrigger>
             <PopoverContent side="top" align="start" sideOffset={8} className="w-[260px] rounded-2xl p-1.5">
+              {accountView === "themes" ? <>
+                <button type="button" onClick={() => setAccountView("menu")} className="flex w-full items-center gap-2 rounded-xl px-2.5 py-2 text-left text-[13px] font-semibold transition hover:bg-secondary"><ArrowLeft className="size-4" />{lang === "fr" ? "Thèmes" : "Themes"}</button>
+                {(["dark", "light"] as const).map((mode) => <div key={mode} className="py-1">
+                  <p className="px-2.5 pb-1 pt-1.5 text-[10px] font-medium uppercase tracking-[0.12em] text-muted-foreground">{mode === "dark" ? (lang === "fr" ? "Sombres" : "Dark") : (lang === "fr" ? "Clairs" : "Light")}</p>
+                  {dashboardLooks.filter((item) => item.mode === mode).map((item) => <button key={item.id} type="button" onClick={() => { setLook(item.id); setAccountOpen(false); }} aria-pressed={look === item.id}
+                    className={`flex h-8 w-full items-center gap-2.5 rounded-lg px-2.5 text-left text-[12.5px] transition-colors hover:bg-secondary ${look === item.id ? "bg-secondary font-medium" : ""}`}>
+                    {mode === "dark" ? <Moon className="size-3.5 text-muted-foreground" strokeWidth={1.7} /> : <Sun className="size-3.5 text-muted-foreground" strokeWidth={1.7} />}
+                    <span className="flex-1">{mode === "dark" ? (lang === "fr" ? "Sombre" : "Dark") : (lang === "fr" ? "Clair" : "Light")} — {item[lang === "fr" ? "fr" : "en"]}</span>
+                    {look === item.id ? <Check className="size-3.5" /> : <span className="size-3 rounded-full border border-border" style={{ background: item.swatch }} />}
+                  </button>)}
+                </div>)}
+              </> : <>
               <div className="flex items-center gap-3 rounded-xl px-2.5 py-2.5">
                 <span className={`plan-ring plan-${planKey ?? "free"}`}><span className="grid size-9 place-items-center rounded-full bg-card text-[13px] font-semibold text-foreground">{initials}</span></span>
                 <span className="min-w-0 flex-1"><span className="block truncate text-[13px] font-semibold">{name || t.accountName}</span><span className="block truncate text-[11.5px] text-muted-foreground">{planName || (lang === "fr" ? "Gratuit" : "Free")}</span></span>
@@ -198,30 +210,14 @@ export function DashboardLayout({ children }: { children: ReactNode }) {
               <AccountItem to="/dashboard/usage" icon={Activity} label={lang === "fr" ? "Utilisation" : "Usage"} />
               <AccountItem to="/dashboard/api" icon={Code2} label="API" />
               <div className="my-1 h-px bg-border" />
-              <AccountItem to="/dashboard/docs" icon={LifeBuoy} label={lang === "fr" ? "Aide" : "Help"} chevron />
+              <button type="button" onClick={() => setAccountView("themes")} className="flex w-full items-center gap-3 rounded-xl px-2.5 py-2 text-left text-[13.5px] transition hover:bg-secondary"><Palette className="size-[18px] text-muted-foreground" strokeWidth={1.7} /><span className="flex-1">{lang === "fr" ? "Thèmes" : "Themes"}</span><span className="size-3 rounded-full border border-border" style={{ background: dashboardLooks.find((l) => l.id === look)?.swatch }} /><ChevronRight className="size-4 text-muted-foreground" /></button>
+              <AccountItem to="/dashboard/docs" icon={BookOpen} label={lang === "fr" ? "Aide et documentation" : "Help and docs"} chevron />
+              <Link to="/" className="flex items-center gap-3 rounded-xl px-2.5 py-2 text-[13.5px] transition hover:bg-secondary"><ArrowLeft className="size-[18px] text-muted-foreground" strokeWidth={1.7} /><span className="flex-1">{lang === "fr" ? "Retour au site" : "Back to the website"}</span></Link>
               <button type="button" onClick={() => void signOut()} className="flex w-full items-center gap-3 rounded-xl px-2.5 py-2 text-left text-[13.5px] transition hover:bg-secondary"><LogOut className="size-[18px] text-muted-foreground" strokeWidth={1.7} /><span className="flex-1">{lang === "fr" ? "Se déconnecter" : "Sign out"}</span></button>
+              </>}
             </PopoverContent>
           </Popover>
           {inboxOpen && <InboxDialog lang={lang === "en" ? "en" : "fr"} inbox={inbox} onClose={() => setInboxOpen(false)} />}
-          <div className={`mt-1 flex items-center gap-0.5 px-1 ${mini ? "lg:mt-auto lg:flex-col lg:px-0" : ""}`}>
-            <Popover open={themeOpen} onOpenChange={setThemeOpen}>
-              <PopoverTrigger asChild><Button variant="ghost" size="sm" className={`h-8 gap-1.5 rounded-lg px-2 text-[12px] font-medium text-muted-foreground ${mini ? "lg:w-8 lg:px-0" : ""}`} aria-label={t.theme} title={t.theme}><Palette className="size-4" /><span className={mini ? "lg:hidden" : ""}>{lang === "fr" ? "Thèmes" : "Themes"}</span></Button></PopoverTrigger>
-              <PopoverContent side="top" align="start" className="w-56 rounded-2xl p-1.5">
-                {(["dark", "light"] as const).map((mode) => <div key={mode} className="py-1">
-                  <p className="px-2.5 pb-1 pt-1.5 text-[10px] font-medium uppercase tracking-[0.12em] text-muted-foreground">{mode === "dark" ? (lang === "fr" ? "Sombres" : "Dark") : (lang === "fr" ? "Clairs" : "Light")}</p>
-                  {dashboardLooks.filter((item) => item.mode === mode).map((item) => <button key={item.id} type="button" onClick={() => { setLook(item.id); setThemeOpen(false); }} aria-pressed={look === item.id}
-                    className={`flex h-8 w-full items-center gap-2.5 rounded-lg px-2.5 text-left text-[12.5px] transition-colors hover:bg-secondary ${look === item.id ? "bg-secondary font-medium" : ""}`}>
-                    {mode === "dark" ? <Moon className="size-3.5 text-muted-foreground" strokeWidth={1.7} /> : <Sun className="size-3.5 text-muted-foreground" strokeWidth={1.7} />}
-                    <span className="flex-1">{mode === "dark" ? (lang === "fr" ? "Sombre" : "Dark") : (lang === "fr" ? "Clair" : "Light")} — {item[lang === "fr" ? "fr" : "en"]}</span>
-                    {look === item.id ? <Check className="size-3.5" /> : <span className="size-3 rounded-full border border-border" style={{ background: item.swatch }} />}
-                  </button>)}
-                </div>)}
-              </PopoverContent>
-            </Popover>
-            <Button asChild variant="ghost" size="icon-sm" className="size-8 rounded-lg text-muted-foreground"><Link to="/dashboard/docs" aria-label={t.docs} title={t.docs}><BookOpen className="size-4" /></Link></Button>
-            <Button asChild variant="ghost" size="icon-sm" className="size-8 rounded-lg text-muted-foreground"><Link to="/" aria-label={t.home} title={t.home}><ArrowLeft className="size-4" /></Link></Button>
-            <Button variant="ghost" size="icon-sm" className={`size-8 rounded-lg text-muted-foreground ${mini ? "" : "ml-auto"}`} onClick={() => void signOut()} aria-label={t.signOut} title={t.signOut}><LogOut className="size-4" /></Button>
-          </div>
         </div>
       </aside>
       <div className="dashboard-content relative isolate min-w-0 flex-1">

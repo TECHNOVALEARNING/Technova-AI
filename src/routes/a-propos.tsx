@@ -114,7 +114,7 @@ function AboutPage() {
           return <article key={tag as string} className="flex flex-col rounded-[28px] border border-border bg-card p-7 shadow-soft md:p-9">
             <span className="grid size-11 place-items-center rounded-2xl bg-ink text-ink-foreground"><I className="size-5" /></span>
             <p className={`mt-6 ${eyebrow}`}>{tag as string}</p>
-            <h2 className="about-title mt-2 font-display text-2xl font-semibold leading-tight tracking-tight md:text-3xl">{title as string}</h2>
+            <h2 className="mt-2 font-display text-2xl font-semibold leading-tight tracking-tight md:text-3xl">{title as string}</h2>
             <p className="mt-4 leading-relaxed text-muted-foreground">{body as string}</p>
           </article>;
         })}
