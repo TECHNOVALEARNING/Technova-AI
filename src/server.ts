@@ -71,6 +71,20 @@ function withSecurityHeaders(response: Response, requestId: string): Response {
   return res;
 }
 
+// Public marketing pages are the same for every visitor (language, theme and session are read in the
+// browser), so Vercel's CDN may keep them 5 minutes and serve a stale copy while it refreshes: a traffic spike
+// no longer re-renders every visit. Browsers still revalidate (Cache-Control stays max-age=0) and each new
+// deployment starts with an empty CDN cache. Private, token and user-site routes are never listed here.
+const CDN_CACHED_PAGES = /^\/(?:|modeles|tarifs|documentation|blog|a-propos|conditions-utilisation|confidentialite|cookies|connexion|inscription|mot-de-passe-oublie)\/?$/;
+
+function withPublicPageCache(request: Request, response: Response): Response {
+  if (request.method !== "GET" || response.status !== 200 || response.headers.has("set-cookie")) return response;
+  if (!CDN_CACHED_PAGES.test(new URL(request.url).pathname)) return response;
+  if (!(response.headers.get("content-type") ?? "").includes("text/html")) return response;
+  response.headers.set("Vercel-CDN-Cache-Control", "public, s-maxage=300, stale-while-revalidate=86400");
+  return response;
+}
+
 export default {
   async fetch(request: Request, env: unknown, ctx: unknown) {
     const requestId = requestIdFor(request);
@@ -81,7 +95,7 @@ export default {
         if (siteSlug !== null) return withSecurityHeaders(await serveSiteHost(request, siteSlug), requestId);
         const handler = await getServerEntry();
         const response = await handler.fetch(request, env, ctx);
-        return withSecurityHeaders(await normalizeCatastrophicSsrResponse(response), requestId);
+        return withPublicPageCache(request, withSecurityHeaders(await normalizeCatastrophicSsrResponse(response), requestId));
       } catch (error) {
         console.error(`[${requestId}]`, error);
         return new Response(renderErrorPage(), {

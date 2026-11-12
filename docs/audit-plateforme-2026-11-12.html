@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Audit TechNova AI Hub</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@600;700;800&family=Source+Sans+3:wght@400;600;700&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
+<style>
+/* Plan: utilitarian audit dossier. Summary verdict tiles, then evidence (load table), then findings by severity with a coloured stripe, then a timed action plan. */
+:root {
+  --bg: #f4f6f8; --surface: #ffffff; --ink: #14202e; --muted: #5b6876; --line: #dde3ea; --accent: #1f6f8b;
+  --crit: #c2412d; --high: #d9822b; --med: #b8930f; --low: #6b7a8a; --good: #2f8a5a;
+  --crit-bg: #fbeae6; --high-bg: #fcf0e2; --med-bg: #fbf4dc; --low-bg: #eef1f4; --good-bg: #e6f4ec;
+  --display: "Manrope", "Segoe UI", system-ui, sans-serif; --body: "Source Sans 3", "Segoe UI", system-ui, sans-serif; --mono: "JetBrains Mono", ui-monospace, Consolas, monospace;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #0f151c; --surface: #17202a; --ink: #e6edf3; --muted: #9aa8b6; --line: #2a3644; --accent: #5fb4d1;
+  --crit: #ef7a63; --high: #f0a453; --med: #e2c14b; --low: #9aa8b6; --good: #5cc48b;
+  --crit-bg: #3a1f1a; --high-bg: #3a2a17; --med-bg: #353014; --low-bg: #1e2833; --good-bg: #16302a; color-scheme: dark; } }
+:root[data-theme="dark"] {
+  --bg: #0f151c; --surface: #17202a; --ink: #e6edf3; --muted: #9aa8b6; --line: #2a3644; --accent: #5fb4d1;
+  --crit: #ef7a63; --high: #f0a453; --med: #e2c14b; --low: #9aa8b6; --good: #5cc48b;
+  --crit-bg: #3a1f1a; --high-bg: #3a2a17; --med-bg: #353014; --low-bg: #1e2833; --good-bg: #16302a; color-scheme: dark; }
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--ink); font: 16px/1.55 var(--body); }
+main { max-width: 1040px; margin: 0 auto; padding: 32px 16px 64px; display: grid; gap: 28px; }
+h1, h2, h3 { font-family: var(--display); line-height: 1.2; text-wrap: balance; margin: 0; }
+h1 { font-size: clamp(26px, 4vw, 36px); font-weight: 800; }
+h2 { font-size: 21px; font-weight: 700; }
+h3 { font-size: 16px; font-weight: 700; }
+p { margin: 0; max-width: 72ch; }
+.muted { color: var(--muted); }
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 20px; }
+header { display: grid; gap: 10px; }
+.eyebrow { font: 600 12px/1 var(--mono); letter-spacing: .08em; text-transform: uppercase; color: var(--accent); }
+.verdict { border-left: 5px solid var(--good); background: var(--surface); border-radius: 12px; padding: 16px 18px; display: grid; gap: 6px; }
+.tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; }
+.tile { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 14px 16px; display: grid; gap: 4px; }
+.tile b { font: 800 22px/1.1 var(--display); }
+.pill { display: inline-flex; align-items: center; gap: 6px; font: 600 12px/1 var(--body); padding: 5px 9px; border-radius: 999px; width: fit-content; }
+.p-good { background: var(--good-bg); color: var(--good); } .p-med { background: var(--med-bg); color: var(--med); } .p-high { background: var(--high-bg); color: var(--high); }
+.p-crit { background: var(--crit-bg); color: var(--crit); } .p-low { background: var(--low-bg); color: var(--low); }
+section { display: grid; gap: 14px; }
+.table-wrap { overflow-x: auto; border: 1px solid var(--line); border-radius: 12px; background: var(--surface); }
+table { border-collapse: collapse; width: 100%; font-size: 14.5px; font-variant-numeric: tabular-nums; }
+th, td { text-align: left; padding: 10px 12px; border-bottom: 1px solid var(--line); white-space: nowrap; }
+th { font-weight: 600; color: var(--muted); font-size: 13px; }
+tr:last-child td { border-bottom: 0; }
+.bar { height: 8px; border-radius: 99px; background: var(--line); position: relative; min-width: 120px; }
+.bar i { position: absolute; inset: 0 auto 0 0; border-radius: 99px; background: var(--accent); }
+.findings { display: grid; gap: 10px; }
+.finding { background: var(--surface); border: 1px solid var(--line); border-left: 5px solid var(--low); border-radius: 12px; padding: 14px 16px; display: grid; gap: 6px; }
+.finding.crit { border-left-color: var(--crit); } .finding.high { border-left-color: var(--high); } .finding.med { border-left-color: var(--med); } .finding.low { border-left-color: var(--low); }
+.finding .top { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.fix { font-size: 15px; } .fix strong { color: var(--accent); }
+code { font: 500 13px var(--mono); background: var(--low-bg); padding: 1px 5px; border-radius: 5px; }
+ul { margin: 0; padding-left: 20px; display: grid; gap: 6px; }
+.cols { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 12px; }
+.step { display: grid; gap: 8px; }
+.step h3 { display: flex; gap: 8px; align-items: center; }
+.num { display: inline-grid; place-items: center; width: 26px; height: 26px; border-radius: 50%; background: var(--ink); color: var(--surface); font: 700 13px var(--display); }
+footer { font-size: 13.5px; }
+@media (prefers-reduced-motion: reduce) { * { scroll-behavior: auto; } }
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <span class="eyebrow">Audit · 12 novembre 2026 · version en production</span>
+    <h1>Audit de la plateforme TechNova AI Hub</h1>
+    <p class="muted">Sécurité, code, fonctionnalités et test de charge réalisés sur www.technovaihub.com et sur le code source, avant la mise sur le marché.</p>
+  </header>
+
+  <div class="verdict">
+    <h2>Verdict : prête pour 200 à 300 utilisateurs simultanés, 500 avec quatre corrections</h2>
+    <p>Le socle est solide : base de données verrouillée par utilisateur, clés et secrets côté serveur, aucune erreur serveur sur 4 700 requêtes de test. Les limites viendront de la base de données et des fournisseurs d'IA, pas du site lui-même. Les corrections prioritaires prennent environ une journée de travail.</p>
+  </div>
+
+  <div class="tiles">
+    <div class="tile"><span class="pill p-good">Bon</span><b>Sécurité</b><span class="muted">RLS sur toutes les tables, 0 faille critique, 3 points à renforcer</span></div>
+    <div class="tile"><span class="pill p-good">Sain</span><b>Code</b><span class="muted">0 erreur de typage, build OK, 2 alertes de lint sans impact</span></div>
+    <div class="tile"><span class="pill p-good">OK</span><b>Fonctionnel</b><span class="muted">19/19 pages et services publics répondent, 404 propre</span></div>
+    <div class="tile"><span class="pill p-good">0 erreur serveur</span><b>Charge</b><span class="muted">500 requêtes simultanées tenues, 225 req/s mesurées</span></div>
+    <div class="tile"><span class="pill p-high">4 conditions</span><b>500 utilisateurs</b><span class="muted">Index, cache des pages, région, forfaits Vercel et Supabase</span></div>
+  </div>
+
+  <section>
+    <h2>Test de charge</h2>
+    <p class="muted">Vagues de 50, 200, 300 et 500 utilisateurs simultanés, 2 requêtes chacun, sur deux points gratuits de la production : une fonction serveur légère et une page rendue par le serveur. Aucun appel d'IA (pour ne pas consommer de crédits), aucune écriture.</p>
+    <div class="table-wrap"><table>
+      <thead><tr><th>Cible</th><th>Simultanés</th><th>Requêtes</th><th>Réussite</th><th>Médiane</th><th>95 %</th><th>Débit</th><th>Erreurs serveur</th></tr></thead>
+      <tbody>
+        <tr><td>Fonction légère</td><td>50</td><td>100</td><td>100 %</td><td>0,57 s</td><td>1,47 s</td><td>52 req/s</td><td>0</td></tr>
+        <tr><td>Fonction légère</td><td>200</td><td>400</td><td>100 %</td><td>1,26 s</td><td>1,44 s</td><td>140 req/s</td><td>0</td></tr>
+        <tr><td>Fonction légère</td><td>300</td><td>600</td><td>100 %</td><td>1,45 s</td><td>1,76 s</td><td>172 req/s</td><td>0</td></tr>
+        <tr><td>Fonction légère</td><td>500</td><td>1 000</td><td>100 %</td><td>2,87 s</td><td>3,18 s</td><td>225 req/s</td><td>0</td></tr>
+        <tr><td>Page /connexion</td><td>50</td><td>100</td><td>100 %</td><td>0,53 s</td><td>0,68 s</td><td>77 req/s</td><td>0</td></tr>
+        <tr><td>Page /connexion</td><td>300</td><td>600</td><td>100 %</td><td>2,69 s</td><td>3,07 s</td><td>159 req/s</td><td>0</td></tr>
+        <tr><td>Page /connexion</td><td>500 (contrôle)</td><td>500</td><td>100 %</td><td>—</td><td>—</td><td>—</td><td>0</td></tr>
+      </tbody>
+    </table></div>
+    <p>Deux vagues ont eu 8 à 9 % d'échecs <em>côté client</em> (connexions coupées par l'ordinateur de test, aucun code d'erreur du serveur) ; la vague de contrôle à 500 a réussi 500 sur 500. Les temps qui montent avec la charge viennent en partie de la machine de test unique : le vrai plafond du serveur est au-dessus de ce qui a été mesuré.</p>
+  </section>
+
+  <section>
+    <h2>Capacité : 200, 300, 500 utilisateurs</h2>
+    <p>500 utilisateurs connectés ne font pas 500 requêtes à la seconde. Un utilisateur actif envoie en moyenne une requête toutes les 10 à 30 secondes (message, solde rafraîchi toutes les 30 s, présence toutes les 2 min). Estimation de la charge réelle :</p>
+    <div class="table-wrap"><table>
+      <thead><tr><th>Utilisateurs simultanés</th><th>Requêtes/s estimées</th><th>Opérations base de données/s</th><th>Part du débit mesuré</th><th>Avis</th></tr></thead>
+      <tbody>
+        <tr><td>200</td><td>8 à 20</td><td>≈ 60 à 120</td><td><div class="bar"><i style="width:9%"></i></div></td><td><span class="pill p-good">À l'aise</span></td></tr>
+        <tr><td>300</td><td>12 à 30</td><td>≈ 90 à 180</td><td><div class="bar"><i style="width:13%"></i></div></td><td><span class="pill p-good">À l'aise</span></td></tr>
+        <tr><td>500</td><td>20 à 50</td><td>≈ 150 à 300</td><td><div class="bar"><i style="width:22%"></i></div></td><td><span class="pill p-med">Oui, avec les corrections</span></td></tr>
+      </tbody>
+    </table></div>
+    <div class="cols">
+      <div class="card step"><h3>Ce qui tient</h3><ul><li>Vercel : les fonctions s'ajoutent automatiquement, aucune erreur à 500 simultanés.</li><li>Pages et fichiers statiques servis par le réseau Vercel.</li><li>Limites anti-abus par utilisateur déjà en place sur chaque action payante.</li></ul></div>
+      <div class="card step"><h3>Ce qui limitera en premier</h3><ul><li><b>La base Supabase</b> : chaque message fait 8 à 10 opérations ; un index manque sur la table la plus sollicitée.</li><li><b>Les fournisseurs d'IA</b> : quotas OpenRouter et kie.ai (images, vidéos, musique), et le solde chez eux.</li><li><b>Studio</b> : constructions longues (jusqu'à 5 min) ; la reprise des constructions interrompues ne traite que 2 par minute.</li></ul></div>
+    </div>
+  </section>
+
+  <section>
+    <h2>Constats et corrections proposées</h2>
+    <div class="findings">
+      <div class="finding high"><div class="top"><span class="pill p-high">Élevé</span><h3>Index manquant sur les réservations de crédits</h3></div>
+        <p>Le solde (lu toutes les 30 s sur le chat) additionne <code>credit_reservations</code> sans index sur le propriétaire. La table gagne une ligne à chaque message, image ou construction : chaque lecture parcourt toute la table et ralentit avec le succès.</p>
+        <p class="fix"><strong>Correction :</strong> migration avec un index partiel <code>(owner_id) WHERE status = 'pending'</code>, plus un index de nettoyage sur <code>rate_limits(window_start)</code>. Effort : 15 minutes.</p></div>
+
+      <div class="finding high"><div class="top"><span class="pill p-high">Élevé</span><h3>Pages publiques recalculées à chaque visite, loin des utilisateurs</h3></div>
+        <p>Les pages publiques sont renvoyées avec <code>max-age=0</code> : chaque visite déclenche un calcul serveur (≈ 0,5 s). Ces calculs s'exécutent à Washington (<code>iad1</code>) alors que les visiteurs passent par Paris. Un pic de visites (campagne, publicité) se paie en temps et en coût.</p>
+        <p class="fix"><strong>Correction :</strong> mettre en cache CDN les pages publiques identiques pour tous (<code>s-maxage=300, stale-while-revalidate</code>) et placer les fonctions Vercel dans la même région que la base Supabase (à vérifier dans Supabase → Settings → General). Effort : 1 à 2 heures.</p></div>
+
+      <div class="finding high"><div class="top"><span class="pill p-high">Élevé</span><h3>Forfaits d'hébergement à confirmer avant le lancement</h3></div>
+        <p>Le forfait gratuit Vercel (Hobby) est réservé à un usage non commercial. Côté Supabase, la taille de la machine et les sauvegardes déterminent la capacité réelle et la récupération en cas d'incident.</p>
+        <p class="fix"><strong>Correction :</strong> Vercel Pro ; Supabase Pro avec au moins la machine « Small », sauvegardes quotidiennes et, si possible, restauration à la minute (PITR). Coût : environ 45 à 70 $ par mois.</p></div>
+
+      <div class="finding med"><div class="top"><span class="pill p-med">Moyen</span><h3>Le limiteur anti-abus laisse passer si la base ne répond pas</h3></div>
+        <p>En cas d'erreur de la base, <code>hitRateLimit</code> autorise la requête. Pendant une panne partielle, les limites ne s'appliquent plus aux actions payantes.</p>
+        <p class="fix"><strong>Correction :</strong> refuser (code 503) pour les actions payantes quand la vérification échoue ; garder le passage libre pour les actions gratuites. Effort : 30 minutes.</p></div>
+
+      <div class="finding med"><div class="top"><span class="pill p-med">Moyen</span><h3>La lecture du solde écrit dans la base</h3></div>
+        <p><code>get_wallet_balance</code> réécrit <code>credit_wallets</code> à chaque appel. Avec le rafraîchissement toutes les 30 s, 500 utilisateurs produisent environ 17 écritures par seconde sans changement réel.</p>
+        <p class="fix"><strong>Correction :</strong> n'écrire que si le solde a changé, ou rendre la fonction en lecture seule ; rafraîchir le solde à la fin de chaque réponse plutôt qu'en continu. Effort : 1 heure.</p></div>
+
+      <div class="finding med"><div class="top"><span class="pill p-med">Moyen</span><h3>Reprise lente des constructions Studio interrompues</h3></div>
+        <p>Le travailleur reprend 2 constructions par minute, l'une après l'autre, dans une fonction limitée à 300 s. Si beaucoup d'utilisateurs ferment l'onglet pendant un pic, la file met longtemps à se vider.</p>
+        <p class="fix"><strong>Correction :</strong> traiter les reprises en parallèle (4 à 6 à la fois, avec le verrou déjà en place). Effort : 1 heure.</p></div>
+
+      <div class="finding med"><div class="top"><span class="pill p-med">Moyen</span><h3>Pas de supervision d'erreurs ni de tests automatiques</h3></div>
+        <p>Les erreurs serveur ne sont visibles que dans les journaux Vercel ; aucune alerte si le site tombe. Aucun test automatique ne protège la facturation (réserver, débiter, rembourser) ni les webhooks de paiement.</p>
+        <p class="fix"><strong>Correction :</strong> un outil de suivi d'erreurs (Sentry, offre gratuite), une sonde de disponibilité (UptimeRobot, gratuit) et une dizaine de tests sur les crédits et les paiements. Effort : 1 jour.</p></div>
+
+      <div class="finding med"><div class="top"><span class="pill p-med">Moyen</span><h3>Réglages de sécurité Supabase Auth</h3></div>
+        <p>Le code limite les tentatives et masque les erreurs, mais trois protections se règlent dans Supabase : CAPTCHA à l'inscription, refus des mots de passe divulgués, double authentification (au moins pour les administrateurs).</p>
+        <p class="fix"><strong>Correction :</strong> Supabase → Authentication → Attack Protection et Multi-Factor. Effort : 30 minutes.</p></div>
+
+      <div class="finding med"><div class="top"><span class="pill p-med">Moyen</span><h3>Quotas des fournisseurs d'IA</h3></div>
+        <p>À 500 utilisateurs, les plafonds d'OpenRouter et de kie.ai (nombre de créations simultanées) arriveront avant ceux du site. Une création refusée par le fournisseur est remboursée, mais l'utilisateur attend.</p>
+        <p class="fix"><strong>Correction :</strong> vérifier les quotas de chaque compte, garder une réserve de solde (l'alerte de la console admin s'affiche sous 5 $), et prévoir une file d'attente pour les vidéos. Effort : 2 heures de vérification.</p></div>
+
+      <div class="finding med"><div class="top"><span class="pill p-med">Moyen</span><h3>Dépendance Zod : risque de saturation mémoire</h3></div>
+        <p>La version 3 de Zod (validation des entrées) a une faille de déni de service sur des listes très grandes. Les schémas du site fixent déjà des tailles maximales, ce qui limite le risque ; la correction officielle exige Zod 4.</p>
+        <p class="fix"><strong>Correction :</strong> planifier la mise à jour vers Zod 4 après le lancement, avec un passage de tests. Effort : une demi-journée.</p></div>
+
+      <div class="finding low"><div class="top"><span class="pill p-low">Faible</span><h3>Points mineurs</h3></div>
+        <ul>
+          <li>Le relais d'images de Studio (<code>/api/public/studio-image</code>) est public sans limite de débit : ajouter une limite par visiteur.</li>
+          <li>La fenêtre de paiement par carte s'ouvre sans <code>noopener</code> : risque faible, à corriger en une ligne.</li>
+          <li>La politique de contenu (CSP) est minimale : ajouter <code>script-src</code> plus tard, après un inventaire des scripts.</li>
+          <li>Alertes « élevées » de dépendances sans effet en production : Vite (serveur de développement) et image-size (export PowerPoint dans le navigateur).</li>
+          <li>Bandeau « Nos partenaires technologiques » : aucun partenariat officiel avec OpenAI, Google, Anthropic… Préférer « Technologies que nous utilisons » pour éviter un litige de marque.</li>
+        </ul></div>
+    </div>
+  </section>
+
+  <section>
+    <h2>Ce qui est déjà bien fait</h2>
+    <div class="cols">
+      <div class="card"><ul>
+        <li>Accès aux données limité à leur propriétaire sur toutes les tables (RLS), fonctions sensibles réservées au serveur.</li>
+        <li>Crédits impossibles à créer depuis le navigateur ; clés API stockées hachées.</li>
+        <li>Jetons des comptes reliés chiffrés (AES-GCM), lus seulement par le serveur.</li>
+      </ul></div>
+      <div class="card"><ul>
+        <li>En-têtes de sécurité présents en production (HSTS, anti-iframe, nosniff, CSP minimale).</li>
+        <li>Sites publiés isolés dans un cadre sans accès à la session ; détection de secrets et d'hameçonnage avant publication.</li>
+        <li>Webhooks de paiement et tâches planifiées authentifiés ; limites anti-abus sur chaque action payante.</li>
+      </ul></div>
+    </div>
+  </section>
+
+  <section>
+    <h2>Plan d'action</h2>
+    <div class="cols">
+      <div class="card step"><h3><span class="num">1</span>Avant le lancement (1 à 2 jours)</h3><ul><li>Index sur les réservations et le nettoyage.</li><li>Cache CDN des pages publiques et région des fonctions.</li><li>Forfaits Vercel Pro et Supabase Pro + sauvegardes.</li><li>Limiteur fermé pour les actions payantes.</li><li>Réglages Supabase Auth (CAPTCHA, mots de passe divulgués, MFA admin).</li></ul></div>
+      <div class="card step"><h3><span class="num">2</span>Première semaine</h3><ul><li>Suivi d'erreurs et sonde de disponibilité.</li><li>Tests automatiques crédits et paiements.</li><li>Lecture du solde sans écriture ; reprises Studio en parallèle.</li><li>Vérification des quotas OpenRouter et kie.ai.</li></ul></div>
+      <div class="card step"><h3><span class="num">3</span>Premier mois</h3><ul><li>Mise à jour vers Zod 4.</li><li>CSP complète avec <code>script-src</code>.</li><li>Nouveau test de charge, connecté, sur un environnement de préproduction avec des appels d'IA réels.</li></ul></div>
+    </div>
+  </section>
+
+  <footer class="card muted">
+    <p><b>Méthode et limites.</b> Analyse du code source (43 migrations, toutes les routes serveur), audit des dépendances, typage et lint, build de production, vérification des 19 adresses publiques et des en-têtes en production, test de charge depuis une seule machine. Non testé sous charge : les parcours connectés et les appels d'IA (coût réel). Le forfait et la taille de la base Supabase n'étaient pas visibles depuis le code.</p>
+  </footer>
+</main>
+</body>
+</html>

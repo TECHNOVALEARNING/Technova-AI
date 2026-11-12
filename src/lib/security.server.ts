@@ -24,14 +24,21 @@ export const RATE_LIMITS = {
 
 export type RateBucket = keyof typeof RATE_LIMITS;
 
-/** Returns true when the call is allowed. Fails open only if the database itself errors. */
+/**
+ * Buckets whose actions cost money (AI providers, credits, embeddings). If the rate-limit check itself fails
+ * (database error), these are refused rather than let through unlimited; free actions stay allowed so an
+ * incident does not lock people out of publishing, payments or connections.
+ */
+const FAIL_CLOSED: ReadonlySet<RateBucket> = new Set<RateBucket>(["chat", "studio", "media", "api", "research", "files", "knowledge", "arena", "help_chat", "help_chat_daily", "admin_transfer"]);
+
+/** Returns true when the call is allowed. On a database error: refused for paid buckets, allowed otherwise. */
 export async function hitRateLimit(userId: string, bucket: RateBucket): Promise<boolean> {
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
   const cfg = RATE_LIMITS[bucket];
   const { data, error } = await supabaseAdmin.rpc("hit_rate_limit", {
     _user: userId, _bucket: bucket, _limit: cfg.limit, _window_seconds: cfg.window,
   });
-  if (error) { console.error("rate limit check failed", error.message); return true; }
+  if (error) { console.error("rate limit check failed", bucket, error.message); return !FAIL_CLOSED.has(bucket); }
   return data !== false;
 }
 
