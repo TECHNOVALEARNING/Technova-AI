@@ -1,4 +1,8 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { Link } from "@tanstack/react-router";
+import { Loader2 } from "lucide-react";
+import { listConnections } from "@/lib/connections.functions";
+import { createStripePaymentLink } from "@/lib/publishing.functions";
 import { ArrowLeft, ArrowRight, Banknote, Check, CreditCard, Hammer, Link2, MessageCircle, Package, Palette, Rocket, Smartphone, Sparkles, Truck } from "lucide-react";
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/components/ui/dialog";
 import { STUDIO_COST } from "@/lib/studio";
@@ -145,6 +149,27 @@ export function SalesPageWizard({ open, onOpenChange, lang, onBuild }: { open: b
   const siteTier = featureMinTier.site, publishTier = featureMinTier.publish;
   const packName = (n: number) => packNames[n] ?? "";
   const brief = useMemo(() => (step === 3 ? salesBrief(f, lang) : ""), [f, lang, step]);
+  // Stripe: when the account is linked (Connections), the payment link can be created here in one click.
+  const [stripe, setStripe] = useState<"unknown" | "connected" | "absent">("unknown");
+  const [stripeBusy, setStripeBusy] = useState(false);
+  const [stripeError, setStripeError] = useState("");
+  useEffect(() => {
+    if (!open || step !== 2 || stripe !== "unknown") return;
+    listConnections().then((all) => setStripe(all.find((c) => c.id === "stripe")?.connected ? "connected" : "absent")).catch(() => setStripe("absent"));
+  }, [open, step, stripe]);
+  async function makeStripeLink() {
+    setStripeBusy(true); setStripeError("");
+    try {
+      const r = await createStripePaymentLink({ data: { product: f.product.trim() || t.title, amount: f.price, currency: f.currency } });
+      if (r.ok) set("payLink", r.url);
+      else setStripeError(r.error === "stripe_currency" ? (lang === "fr" ? `Stripe n'accepte pas la devise ${f.currency} ici : choisissez une autre devise à l'étape Offre.` : `Stripe does not accept ${f.currency} here: pick another currency in the Offer step.`)
+        : r.error === "stripe_amount" ? (lang === "fr" ? "Indiquez un prix valide à l'étape Offre." : "Enter a valid price in the Offer step.")
+        : r.error === "not_connected_stripe" ? (lang === "fr" ? "Reliez d'abord Stripe dans Connexions." : "Link Stripe first in Connections.")
+        : r.error === "plan_site" ? (lang === "fr" ? "Votre forfait ne permet pas encore la création de sites." : "Your plan does not include site creation yet.")
+        : (lang === "fr" ? "Stripe a refusé la création du lien. Vérifiez que votre compte Stripe est activé, puis réessayez." : "Stripe refused to create the link. Check your Stripe account is activated, then try again."));
+    } catch { setStripeError(lang === "fr" ? "Création du lien impossible pour le moment." : "Could not create the link right now."); }
+    setStripeBusy(false);
+  }
 
   function go(next: number) {
     if (next > step) { const e = stepErrors(f, step, lang); setErrors(e); if (e.length) return; }
@@ -240,7 +265,11 @@ export function SalesPageWizard({ open, onOpenChange, lang, onBuild }: { open: b
                   <div className="sm:col-span-2"><Field label={t.momoName}><input className={field} value={f.momoName} maxLength={80} onChange={(e) => set("momoName", e.target.value)} /></Field></div>
                 </>}
                 {k === "whatsapp" && <div className="sm:col-span-2"><Field label={t.whatsapp}><input className={field} type="tel" inputMode="tel" value={f.whatsapp} maxLength={20} placeholder="+229 01 00 00 00 00" onChange={(e) => set("whatsapp", e.target.value)} /></Field></div>}
-                {k === "link" && <div className="sm:col-span-2"><Field label={t.payLink}><input className={field} type="url" inputMode="url" value={f.payLink} maxLength={300} placeholder="https://" onChange={(e) => set("payLink", e.target.value)} /></Field></div>}
+                {k === "link" && <div className="space-y-2 sm:col-span-2"><Field label={t.payLink}><input className={field} type="url" inputMode="url" value={f.payLink} maxLength={300} placeholder="https://" onChange={(e) => set("payLink", e.target.value)} /></Field>
+                  {stripe === "connected" ? <button type="button" disabled={stripeBusy} onClick={() => void makeStripeLink()} className="inline-flex h-8 items-center gap-1.5 rounded-full bg-[#635BFF] px-3.5 text-[12px] font-semibold text-white transition hover:brightness-110 disabled:opacity-60">{stripeBusy && <Loader2 className="size-3.5 animate-spin" />}{lang === "fr" ? `Créer le lien Stripe (${f.price || "…"} ${f.currency})` : `Create the Stripe link (${f.price || "…"} ${f.currency})`}</button>
+                    : stripe === "absent" ? <p className="text-[11.5px] text-muted-foreground">{lang === "fr" ? "Astuce : reliez Stripe dans " : "Tip: link Stripe in "}<Link to="/dashboard/connexions" className="font-medium text-primary hover:underline">{lang === "fr" ? "Connexions" : "Connections"}</Link>{lang === "fr" ? " pour créer ce lien automatiquement." : " to create this link automatically."}</p> : null}
+                  {stripeError && <p role="alert" className="text-[11.5px] text-destructive">{stripeError}</p>}
+                </div>}
                 {k === "cod" && <div className="sm:col-span-2"><Field label={t.codZones}><input className={field} value={f.codZones} maxLength={200} placeholder={lang === "fr" ? "Ex. : Cotonou, Abomey-Calavi, Porto-Novo" : "E.g. Lagos, Abuja"} onChange={(e) => set("codZones", e.target.value)} /></Field></div>}
               </div>}
             </div>;

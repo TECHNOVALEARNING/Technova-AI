@@ -125,3 +125,139 @@ export const createPreviewLink = createServerFn({ method: "POST" })
     if (error || !row) return { ok: false as const, error: "failed" };
     return { ok: true as const, token: row.token };
   });
+
+/** Shared checks before a site leaves TechNova: plan, rate limit, size, secrets, phishing. */
+async function checkOutgoingSite(userId: string, files: { path: string; content: string }[], event: string) {
+  const { hitRateLimit, logSecurityEvent } = await import("@/lib/security.server");
+  const { getTier, allows } = await import("@/lib/plan.server");
+  if (!allows(await getTier(userId), "publish")) { await logSecurityEvent(userId, "plan_limit_blocked", "info", { feature: "publish" }); return "plan_publish"; }
+  if (!(await hitRateLimit(userId, "publish"))) return "rate";
+  if (files.reduce((n, f) => n + f.content.length, 0) > 2_000_000) return "size";
+  const { findSecrets } = await import("@/lib/secret-scan");
+  const leaks = findSecrets(files);
+  if (leaks.length) { await logSecurityEvent(userId, `${event}_blocked_secret`, "warning", { kinds: [...new Set(leaks.map((l) => l.kind))] }); return "secrets"; }
+  const { findPhishing } = await import("@/lib/phishing-scan");
+  const phishing = findPhishing(files);
+  if (phishing.length) { await logSecurityEvent(userId, `${event}_blocked_phishing`, "warning", { reasons: [...new Set(phishing.map((p) => p.reason))] }); return "phishing"; }
+  return null;
+}
+
+/**
+ * Deploys the files to the user's own Netlify account (file-digest deploy, docs.netlify.com/api/get-started):
+ * reuses the site of the same name or creates one, sends SHA-1 digests, uploads only the files Netlify asks for.
+ */
+export const deploySiteToNetlify = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: { name: string; files: unknown }) => z.object({ name: z.string().regex(SITE_SLUG_RE), files: filesSchema }).parse(input))
+  .handler(async ({ data, context }) => {
+    const blocked = await checkOutgoingSite(context.userId, data.files, "netlify_deploy");
+    if (blocked) return { ok: false as const, error: blocked };
+    const { getAccessToken, netlifyFetch } = await import("@/lib/connections.server");
+    const key = await getAccessToken(context.userId, "netlify");
+    if (!key) return { ok: false as const, error: "not_connected_netlify" };
+    const api = (path: string, init?: RequestInit) => netlifyFetch(key, path, init);
+    const json = { "Content-Type": "application/json" };
+    type NetlifySite = { id: string; name: string; ssl_url?: string; url?: string };
+    // Reuse this user's site with that name, else create it (adding a short suffix when the name is taken on Netlify).
+    const list = await api(`/sites?name=${encodeURIComponent(data.name)}&filter=all&per_page=50`);
+    if (list.status === 401) return { ok: false as const, error: "reconnect_netlify" };
+    let site: NetlifySite | undefined = list.ok ? ((await list.json()) as NetlifySite[]).find((s) => s.name === data.name) : undefined;
+    if (!site) {
+      for (const name of [data.name, `${data.name}-${Math.random().toString(36).slice(2, 6)}`]) {
+        const created = await api("/sites", { method: "POST", headers: json, body: JSON.stringify({ name }) });
+        if (created.ok) { site = (await created.json()) as NetlifySite; break; }
+        if (created.status !== 422) return { ok: false as const, error: `netlify_${created.status}` };
+      }
+      if (!site) return { ok: false as const, error: "taken" };
+    }
+    const { createHash } = await import("node:crypto");
+    const bodies = new Map<string, { path: string; content: string }>();
+    const digest: Record<string, string> = {};
+    for (const f of data.files) {
+      const sha = createHash("sha1").update(f.content, "utf8").digest("hex");
+      digest[`/${f.path}`] = sha;
+      bodies.set(sha, f);
+    }
+    const deployRes = await api(`/sites/${site.id}/deploys`, { method: "POST", headers: json, body: JSON.stringify({ files: digest }) });
+    if (!deployRes.ok) return { ok: false as const, error: `netlify_${deployRes.status}` };
+    const deploy = (await deployRes.json()) as { id: string; required?: string[]; ssl_url?: string };
+    for (const sha of deploy.required ?? []) {
+      const f = bodies.get(sha);
+      if (!f) continue;
+      const path = f.path.split("/").map(encodeURIComponent).join("/");
+      const put = await api(`/deploys/${deploy.id}/files/${path}`, { method: "PUT", headers: { "Content-Type": "application/octet-stream" }, body: f.content });
+      if (!put.ok) return { ok: false as const, error: `netlify_${put.status}` };
+    }
+    const { logSecurityEvent } = await import("@/lib/security.server");
+    await logSecurityEvent(context.userId, "netlify_deployed", "info", { site: site.name });
+    return { ok: true as const, url: site.ssl_url || deploy.ssl_url || `https://${site.name}.netlify.app` };
+  });
+
+/**
+ * Deploys the files to the user's own Vercel account (POST /v13/deployments with inline files, production target).
+ * Needs the Deployments and Projects "Read and Write" permissions on the TechNova Vercel app; a token tied to a
+ * team is retried with that team's id.
+ */
+export const deploySiteToVercel = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: { name: string; files: unknown }) => z.object({ name: z.string().regex(SITE_SLUG_RE), files: filesSchema }).parse(input))
+  .handler(async ({ data, context }) => {
+    const blocked = await checkOutgoingSite(context.userId, data.files, "vercel_deploy");
+    if (blocked) return { ok: false as const, error: blocked };
+    const { getAccessToken, vercelFetch } = await import("@/lib/connections.server");
+    const key = await getAccessToken(context.userId, "vercel");
+    if (!key) return { ok: false as const, error: "reconnect_vercel" };
+    const body = JSON.stringify({
+      name: data.name, target: "production",
+      files: data.files.map((f) => ({ file: f.path, data: f.content })),
+      projectSettings: { framework: null, buildCommand: null, installCommand: null, outputDirectory: null },
+    });
+    const send = (team?: string) => vercelFetch(key, `/v13/deployments?skipAutoDetectionConfirmation=1${team ? `&teamId=${encodeURIComponent(team)}` : ""}`, { method: "POST", headers: { "Content-Type": "application/json" }, body });
+    let res = await send();
+    if (res.status === 403 || res.status === 404) {
+      const teams = await vercelFetch(key, "/v2/teams?limit=1");
+      const team = teams.ok ? ((await teams.json()) as { teams?: { id: string }[] }).teams?.[0]?.id : undefined;
+      if (team) res = await send(team);
+    }
+    if (res.status === 401) return { ok: false as const, error: "reconnect_vercel" };
+    if (res.status === 403) return { ok: false as const, error: "vercel_permissions" };
+    if (!res.ok) { console.error("[vercel] deploy", res.status, (await res.text().catch(() => "")).slice(0, 300)); return { ok: false as const, error: `vercel_${res.status}` }; }
+    const dep = (await res.json()) as { url?: string; alias?: string[] };
+    const { logSecurityEvent } = await import("@/lib/security.server");
+    await logSecurityEvent(context.userId, "vercel_deployed", "info", { name: data.name });
+    const host = dep.alias?.[0] ?? dep.url ?? `${data.name}.vercel.app`;
+    return { ok: true as const, url: `https://${host}` };
+  });
+
+// Stripe zero-decimal currencies: amounts are sent as is; others in hundredths (docs.stripe.com/currencies).
+const ZERO_DECIMAL = new Set(["bif", "clp", "djf", "gnf", "jpy", "kmf", "krw", "mga", "pyg", "rwf", "ugx", "vnd", "vuv", "xaf", "xof", "xpf"]);
+const STRIPE_CURRENCY: Record<string, string> = { FCFA: "xof", XOF: "xof", XAF: "xaf", EUR: "eur", USD: "usd", NGN: "ngn", GHS: "ghs", MAD: "mad", GNF: "gnf", CDF: "cdf" };
+
+/** Creates a product, a price and a Payment Link on the user's connected Stripe account; returns its URL. */
+export const createStripePaymentLink = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: { product: string; amount: string; currency: string }) => z.object({ product: z.string().trim().min(1).max(120), amount: z.string().trim().max(20), currency: z.string().max(8) }).parse(input))
+  .handler(async ({ data, context }) => {
+    const { getTier, allows } = await import("@/lib/plan.server");
+    if (!allows(await getTier(context.userId), "site")) return { ok: false as const, error: "plan_site" };
+    const { hitRateLimit } = await import("@/lib/security.server");
+    if (!(await hitRateLimit(context.userId, "publish"))) return { ok: false as const, error: "rate" };
+    const currency = STRIPE_CURRENCY[data.currency.toUpperCase()];
+    if (!currency) return { ok: false as const, error: "stripe_currency" };
+    const value = Number(data.amount.replace(/\s/g, "").replace(",", "."));
+    if (!Number.isFinite(value) || value <= 0) return { ok: false as const, error: "stripe_amount" };
+    const unit = ZERO_DECIMAL.has(currency) ? Math.round(value) : Math.round(value * 100);
+    const { getAccessToken, stripeFetch } = await import("@/lib/connections.server");
+    const account = await getAccessToken(context.userId, "stripe");
+    if (!account) return { ok: false as const, error: "not_connected_stripe" };
+    const fail = async (step: string, res: Response) => { console.error(`[stripe] ${step}`, res.status, (await res.text().catch(() => "")).slice(0, 300)); return { ok: false as const, error: `stripe_${res.status}` }; };
+    const product = await stripeFetch(account, "/v1/products", { name: data.product });
+    if (!product.ok) return fail("product", product);
+    const productId = ((await product.json()) as { id: string }).id;
+    const price = await stripeFetch(account, "/v1/prices", { product: productId, unit_amount: String(unit), currency });
+    if (!price.ok) return fail("price", price);
+    const priceId = ((await price.json()) as { id: string }).id;
+    const link = await stripeFetch(account, "/v1/payment_links", { "line_items[0][price]": priceId, "line_items[0][quantity]": "1" });
+    if (!link.ok) return fail("link", link);
+    return { ok: true as const, url: ((await link.json()) as { url: string }).url };
+  });

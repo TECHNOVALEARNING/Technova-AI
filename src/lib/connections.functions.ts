@@ -3,7 +3,9 @@ import { getRequest } from "@tanstack/react-start/server";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
-const OAUTH_CONNECTORS = ["github", "google_drive", "notion"] as const;
+const OAUTH_CONNECTORS = ["github", "google_drive", "notion", "netlify", "vercel", "stripe"] as const;
+/** Connectors reserved to a plan (same table in ConnectionsPage). */
+const CONNECTOR_FEATURE = { github: "github", netlify: "publish", vercel: "publish", stripe: "site" } as const;
 const connectorSchema = z.enum(OAUTH_CONNECTORS);
 
 export const listConnections = createServerFn({ method: "GET" })
@@ -25,7 +27,8 @@ export const startConnect = createServerFn({ method: "POST" })
     const { isConfigured, appOrigin, authorizationUrl, signState, RETURN_PATH } = await import("@/lib/connections.server");
     const { hitRateLimit } = await import("@/lib/security.server");
     if (!(await hitRateLimit(context.userId, "connect"))) throw new Error("CONNECT_RATE_LIMITED");
-    if (data.connectorId === "github") { const { requirePlan } = await import("@/lib/plan.server"); await requirePlan(context.userId, "github"); }
+    const feature = (CONNECTOR_FEATURE as Record<string, "github" | "publish" | "site" | undefined>)[data.connectorId];
+    if (feature) { const { requirePlan } = await import("@/lib/plan.server"); await requirePlan(context.userId, feature); }
     if (!isConfigured(data.connectorId)) throw new Error("CONNECT_NOT_CONFIGURED");
     let state: string, redirectUri: string;
     try {
@@ -52,7 +55,7 @@ export const completeConnect = createServerFn({ method: "POST" })
     }
     let token: Awaited<ReturnType<typeof exchangeCode>>;
     try {
-      token = await exchangeCode(data.connectorId, data.code, `${appOrigin(getRequest())}${RETURN_PATH}`);
+      token = await exchangeCode(data.connectorId, data.code, `${appOrigin(getRequest())}${RETURN_PATH}`, data.state);
     } catch (e) {
       console.error("[connect] token exchange", data.connectorId, e instanceof Error ? e.message : e);
       throw new Error("CONNECT_EXCHANGE_FAILED");

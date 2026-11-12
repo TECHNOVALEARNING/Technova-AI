@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { CheckCircle2, Globe2, Loader2, Lock, Plug, Trash2 } from "lucide-react";
 import { Link } from "@tanstack/react-router";
-import { featureMinTier, upgradeSentence } from "@/lib/plans";
+import { featureMinTier, packNames, upgradeSentence } from "@/lib/plans";
 import { usePlanTier } from "@/lib/plan-client";
 import { SupabaseCard } from "./DashboardTools";
 import { Button } from "@/components/ui/button";
@@ -31,7 +31,7 @@ function waitForReturn(popup: Window, connectorId: string) {
 }
 
 /** Connectors reserved to a plan (the server re-checks on every connection). */
-const connectorFeature: Record<string, "github" | undefined> = { github: "github" };
+const connectorFeature: Record<string, "github" | "publish" | "site" | undefined> = { github: "github", netlify: "publish", vercel: "publish", stripe: "site" };
 
 export function ConnectionsPage() {
   const { lang } = useDashboard();
@@ -83,7 +83,7 @@ export function ConnectionsPage() {
           {(() => { const f = connectorFeature[c.id]; return f && tier !== null && tier < featureMinTier[f] && !s?.connected ? <p className="text-xs text-muted-foreground">{upgradeSentence(f, lang !== "en")}</p> : null; })()}
           {c.kind === "soon" ? <Button size="sm" variant="outline" disabled>{tx(lang, "Bientôt disponible", "Coming soon")}</Button>
             : !s || tier === null ? <Button size="sm" variant="outline" disabled><Loader2 className="size-4 animate-spin" /></Button>
-            : (() => { const f = connectorFeature[c.id]; return f && tier < featureMinTier[f] && !s.connected; })() ? <Button size="sm" asChild><Link to="/dashboard/credits"><Lock className="size-4" />{tx(lang, "Passer au forfait Pro", "Upgrade to Pro")}</Link></Button>
+            : (() => { const f = connectorFeature[c.id]; return f && tier < featureMinTier[f] && !s.connected; })() ? <Button size="sm" asChild><Link to="/dashboard/credits"><Lock className="size-4" />{(() => { const name = packNames[featureMinTier[connectorFeature[c.id]!]]; return tx(lang, `Passer au forfait ${name}`, `Upgrade to ${name}`); })()}</Link></Button>
             : !s.configured ? <Button size="sm" variant="outline" disabled>{tx(lang, "Configuration requise", "Setup required")}</Button>
             : s.connected ? <Button size="sm" variant="ghost" disabled={busy === c.id} onClick={() => void disconnect(c.id)}><Trash2 className="size-4" />{tx(lang, "Déconnecter", "Disconnect")}</Button>
             : <Button size="sm" disabled={busy === c.id} onClick={() => void connect(c.id)}>{busy === c.id ? <Loader2 className="size-4 animate-spin" /> : <Plug className="size-4" />}{tx(lang, "Connecter", "Connect")}</Button>}

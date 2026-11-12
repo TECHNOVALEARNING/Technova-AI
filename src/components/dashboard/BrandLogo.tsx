@@ -4,8 +4,11 @@ import { faGithub, faNotion, faStripeS } from "@fortawesome/free-brands-svg-icon
 
 // Logos of the connectable services, in their own colours (Font Awesome brands where it has them, the Google
 // Drive and Vercel marks drawn here). Used on the Connections page, one tile per service.
-export function BrandLogo({ id }: { id: string }) {
-  const tile = "grid size-10 shrink-0 place-items-center rounded-xl border border-border bg-white shadow-sm dark:bg-white/95";
+export function BrandLogo({ id, size = "md" }: { id: string; size?: "md" | "sm" }) {
+  // "sm" is a 20px tile for buttons; its children are scaled down by the selector below.
+  const tile = size === "sm"
+    ? "grid size-5 shrink-0 place-items-center rounded-md border border-border bg-white dark:bg-white/95 [&>svg]:!size-3 [&>svg]:shrink-0"
+    : "grid size-10 shrink-0 place-items-center rounded-xl border border-border bg-white shadow-sm dark:bg-white/95";
   if (id === "github") return <span className={tile}><FontAwesomeIcon icon={faGithub} className="size-5 text-[#181717]" /></span>;
   if (id === "notion") return <span className={tile}><FontAwesomeIcon icon={faNotion} className="size-5 text-black" /></span>;
   if (id === "stripe") return <span className={`${tile} !bg-[#635BFF] border-transparent`}><FontAwesomeIcon icon={faStripeS} className="size-5 text-white" /></span>;

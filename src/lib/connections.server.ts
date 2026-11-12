@@ -1,4 +1,4 @@
-import { createHmac, randomBytes, timingSafeEqual } from "node:crypto";
+import { createHash, createHmac, randomBytes, timingSafeEqual } from "node:crypto";
 import { decryptSecret, encryptSecret } from "@/lib/connection-crypto.server";
 
 // Direct OAuth 2.0 with each provider, using TechNova's own OAuth apps.
@@ -12,6 +12,8 @@ type Provider = {
   env: string;
   /** Notion expects client credentials as HTTP Basic; the others as form fields. */
   basicAuth?: boolean;
+  /** Vercel requires PKCE (S256); the verifier is derived from the signed state, so nothing is stored. */
+  pkce?: boolean;
   extra?: Record<string, string>;
 };
 
@@ -28,6 +30,31 @@ const PROVIDERS: Record<string, Provider> = {
     scopes: ["https://www.googleapis.com/auth/drive.readonly"],
     env: "GOOGLE_DRIVE",
     extra: { access_type: "offline", prompt: "consent", include_granted_scopes: "true" },
+  },
+  // Netlify OAuth app (docs.netlify.com/api/get-started): deploy Studio sites to the user's own Netlify.
+  netlify: {
+    authorize: "https://app.netlify.com/authorize",
+    token: "https://api.netlify.com/oauth/token",
+    scopes: [],
+    env: "NETLIFY",
+  },
+  // Sign in with Vercel (vercel.com/docs/sign-in-with-vercel): PKCE, 1-hour access token + rotating refresh token.
+  // Deployments / Projects "Read and Write" permissions are set on the Vercel app (API permissions are in beta).
+  vercel: {
+    authorize: "https://vercel.com/oauth/authorize",
+    token: "https://api.vercel.com/login/oauth/token",
+    scopes: ["openid", "offline_access"],
+    env: "VERCEL",
+    pkce: true,
+  },
+  // Stripe Connect OAuth (docs.stripe.com/connect/oauth-reference): the client secret is the platform's secret
+  // key; we keep only the connected account id (acct_…) and act with the Stripe-Account header.
+  stripe: {
+    authorize: "https://connect.stripe.com/oauth/authorize",
+    token: "https://connect.stripe.com/oauth/token",
+    scopes: [],
+    env: "STRIPE",
+    extra: { scope: "read_write" },
   },
   notion: {
     authorize: "https://api.notion.com/v1/oauth/authorize",
@@ -88,11 +115,20 @@ export function verifyState(state: string, userId: string, connectorId: string) 
   }
 }
 
+/** PKCE verifier bound to one signed state (RFC 7636: 43–128 characters). */
+function pkceVerifier(state: string) {
+  return createHmac("sha256", stateKey()).update(`pkce:${state}`).digest("base64url") + createHmac("sha256", stateKey()).update(`pkce2:${state}`).digest("base64url");
+}
+
 export function authorizationUrl(connectorId: string, redirectUri: string, state: string) {
   const c = credentials(connectorId);
   if (!c) throw new Error("not_configured");
   const q = new URLSearchParams({ client_id: c.id, redirect_uri: redirectUri, response_type: "code", state, ...c.provider.extra });
   if (c.provider.scopes.length) q.set("scope", c.provider.scopes.join(" "));
+  if (c.provider.pkce) {
+    q.set("code_challenge", createHash("sha256").update(pkceVerifier(state)).digest("base64url"));
+    q.set("code_challenge_method", "S256");
+  }
   return `${c.provider.authorize}?${q.toString()}`;
 }
 
@@ -103,6 +139,13 @@ type StoredToken = { access: string; refresh?: string; expiresAt?: number };
 async function tokenRequest(connectorId: string, params: Record<string, string>): Promise<StoredToken> {
   const c = credentials(connectorId);
   if (!c) throw new Error("not_configured");
+  if (connectorId === "stripe") {
+    // Only the connected account id is kept; the platform key acts for it (Stripe-Account header).
+    const res = await fetch(c.provider.token, { method: "POST", headers: { "Content-Type": "application/x-www-form-urlencoded" }, body: new URLSearchParams({ ...params, client_secret: c.secret }).toString(), signal: AbortSignal.timeout(15_000) });
+    const json = (await res.json().catch(() => ({}))) as { stripe_user_id?: unknown; error?: unknown };
+    if (!res.ok || typeof json.stripe_user_id !== "string") throw new Error(`token_exchange_${res.status}${typeof json.error === "string" ? `_${json.error}` : ""}`);
+    return { access: json.stripe_user_id };
+  }
   const headers: Record<string, string> = { Accept: "application/json" };
   let body: string;
   if (c.provider.basicAuth) {
@@ -124,8 +167,10 @@ async function tokenRequest(connectorId: string, params: Record<string, string>)
   };
 }
 
-export function exchangeCode(connectorId: string, code: string, redirectUri: string) {
-  return tokenRequest(connectorId, { grant_type: "authorization_code", code, redirect_uri: redirectUri });
+export function exchangeCode(connectorId: string, code: string, redirectUri: string, state: string) {
+  if (connectorId === "stripe") return tokenRequest(connectorId, { grant_type: "authorization_code", code });
+  const pkce = PROVIDERS[connectorId]?.pkce ? { code_verifier: pkceVerifier(state) } : {};
+  return tokenRequest(connectorId, { grant_type: "authorization_code", code, redirect_uri: redirectUri, ...pkce });
 }
 
 export async function accountLabel(connectorId: string, access: string): Promise<string | null> {
@@ -137,6 +182,24 @@ export async function accountLabel(connectorId: string, access: string): Promise
     if (connectorId === "google_drive") {
       const res = await fetch("https://www.googleapis.com/drive/v3/about?fields=user(emailAddress)", { headers: { Authorization: `Bearer ${access}` } });
       return res.ok ? ((await res.json()) as { user?: { emailAddress?: string } }).user?.emailAddress ?? null : null;
+    }
+    if (connectorId === "netlify") {
+      const res = await netlifyFetch(access, "/user");
+      if (!res.ok) return null;
+      const u = (await res.json()) as { email?: string; full_name?: string; slug?: string };
+      return u.email ?? u.full_name ?? u.slug ?? null;
+    }
+    if (connectorId === "vercel") {
+      const res = await fetch("https://api.vercel.com/login/oauth/userinfo", { method: "POST", headers: { Authorization: `Bearer ${access}` }, signal: AbortSignal.timeout(10_000) });
+      if (!res.ok) return null;
+      const u = (await res.json()) as { preferred_username?: string; email?: string; name?: string };
+      return u.preferred_username ?? u.email ?? u.name ?? null;
+    }
+    if (connectorId === "stripe") {
+      const res = await stripeFetch(access, "/v1/account");
+      if (!res.ok) return null;
+      const a = (await res.json()) as { business_profile?: { name?: string | null }; settings?: { dashboard?: { display_name?: string | null } }; email?: string | null; id?: string };
+      return a.business_profile?.name || a.settings?.dashboard?.display_name || a.email || a.id || null;
     }
   } catch { /* the label is cosmetic */ }
   return null;
@@ -197,8 +260,36 @@ export async function revokeConnection(userId: string, connectorId: string) {
       });
     } else if (connectorId === "google_drive") {
       await fetch("https://oauth2.googleapis.com/revoke", { method: "POST", headers: { "Content-Type": "application/x-www-form-urlencoded" }, body: new URLSearchParams({ token: token.refresh ?? token.access }) });
+    } else if (connectorId === "vercel") {
+      await fetch("https://api.vercel.com/login/oauth/token/revoke", { method: "POST", headers: { Authorization: `Basic ${Buffer.from(`${c.id}:${c.secret}`).toString("base64")}`, "Content-Type": "application/x-www-form-urlencoded" }, body: new URLSearchParams({ token: token.refresh ?? token.access }) });
+    } else if (connectorId === "stripe") {
+      await fetch("https://connect.stripe.com/oauth/deauthorize", { method: "POST", headers: { Authorization: `Basic ${Buffer.from(`${c.secret}:`).toString("base64")}`, "Content-Type": "application/x-www-form-urlencoded" }, body: new URLSearchParams({ client_id: c.id, stripe_user_id: token.access }) });
     }
   } catch (e) { console.error("revoke failed", connectorId, e); }
+}
+
+export function netlifyFetch(access: string, path: string, init?: RequestInit) {
+  const headers = new Headers(init?.headers);
+  headers.set("Authorization", `Bearer ${access}`);
+  headers.set("User-Agent", "TechNova-AI-Hub");
+  return fetch(`https://api.netlify.com/api/v1${path.startsWith("/") ? path : `/${path}`}`, { ...init, headers, signal: AbortSignal.timeout(30_000) });
+}
+
+export function vercelFetch(access: string, path: string, init?: RequestInit) {
+  const headers = new Headers(init?.headers);
+  headers.set("Authorization", `Bearer ${access}`);
+  return fetch(`https://api.vercel.com${path.startsWith("/") ? path : `/${path}`}`, { ...init, headers, signal: AbortSignal.timeout(30_000) });
+}
+
+/** Calls the Stripe API for a connected account with the platform secret key (STRIPE_OAUTH_CLIENT_SECRET). */
+export function stripeFetch(account: string, path: string, form?: Record<string, string>) {
+  const secret = process.env["STRIPE_OAUTH_CLIENT_SECRET"]?.trim() ?? "";
+  return fetch(`https://api.stripe.com${path}`, {
+    method: form ? "POST" : "GET",
+    headers: { Authorization: `Bearer ${secret}`, "Stripe-Account": account, ...(form ? { "Content-Type": "application/x-www-form-urlencoded" } : {}) },
+    ...(form ? { body: new URLSearchParams(form).toString() } : {}),
+    signal: AbortSignal.timeout(20_000),
+  });
 }
 
 export function githubFetch(access: string, path: string, init?: RequestInit) {
