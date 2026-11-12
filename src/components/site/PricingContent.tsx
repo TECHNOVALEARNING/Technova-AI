@@ -34,7 +34,7 @@ const locales: Record<SiteLang, string> = { fr: "fr-FR", en: "en-US", es: "es-ES
 
 /** `glass` (landing page): frosted-glass cards on the normal page background. */
 export function PricingContent({ lang, glass = false }: { lang: SiteLang; glass?: boolean }) {
-  const t = text[lang]; const g = geoText[lang]; const b = barText[lang]; const loc = locales[lang]; const navigate = useNavigate();
+  const t = text[lang]; const g = geoText[lang]; const loc = locales[lang]; const navigate = useNavigate();
   const geo = useGeoPrice();
   const [packs, setPacks] = useState<PublicPack[]>(fallbackPacks);
   useEffect(() => {
@@ -83,18 +83,24 @@ export function PricingContent({ lang, glass = false }: { lang: SiteLang; glass?
         </article>;
       })}</div>
 
-      <div className={`mt-6 grid overflow-hidden rounded-2xl border md:grid-cols-2 ${glass ? "glass-card" : "border-border bg-card"}`}>
-        <div className="flex flex-col gap-4 p-5 sm:flex-row sm:items-center sm:p-6">
-          <span className="grid size-11 shrink-0 place-items-center rounded-xl bg-ink text-ink-foreground"><Code2 className="size-5" /></span>
-          <div className="min-w-0 flex-1"><p className="font-display font-semibold">{b.api}</p><p className="text-sm text-muted-foreground">{b.apiSub}</p></div>
-          <a href="/dashboard/api" className="inline-flex h-10 shrink-0 items-center justify-center gap-1.5 rounded-full bg-foreground px-5 text-sm font-semibold text-background transition hover:opacity-90">{b.apiCta}<ArrowUpRight className="size-3.5" /></a>
-        </div>
-        <div className="flex flex-col gap-4 border-t border-border p-5 sm:flex-row sm:items-center sm:p-6 md:border-l md:border-t-0">
-          <span className="grid size-11 shrink-0 place-items-center rounded-xl bg-secondary"><Building2 className="size-5" /></span>
-          <div className="min-w-0 flex-1"><p className="font-display font-semibold">{b.pro}</p><p className="text-sm text-muted-foreground">{b.proSub}</p></div>
-          <a href={`mailto:support@technovaihub.com?subject=${encodeURIComponent(b.subject)}`} className="inline-flex h-10 shrink-0 items-center justify-center gap-1.5 rounded-full border border-border px-5 text-sm font-semibold transition hover:border-foreground/40">{b.proCta}<ArrowUpRight className="size-3.5" /></a>
-        </div>
-      </div>
+      <PricingBar lang={lang} glass={glass} />
     </div>
   </section>;
+}
+
+/** Bar under the packs: the API for developers and custom terms for companies (landing, Tarifs, dashboard). */
+export function PricingBar({ lang, glass = false }: { lang: SiteLang; glass?: boolean }) {
+  const b = barText[lang];
+  return <div className={`mt-6 grid overflow-hidden rounded-2xl border md:grid-cols-2 ${glass ? "glass-card" : "border-border bg-card"}`}>
+    <div className="flex flex-col gap-4 p-5 sm:flex-row sm:items-center sm:p-6">
+      <span className="grid size-11 shrink-0 place-items-center rounded-xl bg-ink text-ink-foreground"><Code2 className="size-5" /></span>
+      <div className="min-w-0 flex-1"><p className="font-display font-semibold">{b.api}</p><p className="text-sm text-muted-foreground">{b.apiSub}</p></div>
+      <a href="/dashboard/api" className="inline-flex h-10 shrink-0 items-center justify-center gap-1.5 rounded-full bg-foreground px-5 text-sm font-semibold text-background transition hover:opacity-90">{b.apiCta}<ArrowUpRight className="size-3.5" /></a>
+    </div>
+    <div className="flex flex-col gap-4 border-t border-border p-5 sm:flex-row sm:items-center sm:p-6 md:border-l md:border-t-0">
+      <span className="grid size-11 shrink-0 place-items-center rounded-xl bg-secondary"><Building2 className="size-5" /></span>
+      <div className="min-w-0 flex-1"><p className="font-display font-semibold">{b.pro}</p><p className="text-sm text-muted-foreground">{b.proSub}</p></div>
+      <a href={`mailto:support@technovaihub.com?subject=${encodeURIComponent(b.subject)}`} className="inline-flex h-10 shrink-0 items-center justify-center gap-1.5 rounded-full border border-border px-5 text-sm font-semibold transition hover:border-foreground/40">{b.proCta}<ArrowUpRight className="size-3.5" /></a>
+    </div>
+  </div>;
 }

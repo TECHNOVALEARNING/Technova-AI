@@ -953,6 +953,7 @@ export type Database = {
       }
       profiles: {
         Row: {
+          last_seen_at: string | null
           account_type: string | null
           organization_name: string | null
           work_domain: string | null
@@ -1341,6 +1342,12 @@ export type Database = {
         }
         Relationships: []
       }
+      user_feedback: {
+        Row: { created_at: string; id: string; message: string; owner_id: string; page: string; rating: number | null; read_at: string | null }
+        Insert: { created_at?: string; id?: string; message?: string; owner_id?: string; page?: string; rating?: number | null; read_at?: string | null }
+        Update: { created_at?: string; id?: string; message?: string; owner_id?: string; page?: string; rating?: number | null; read_at?: string | null }
+        Relationships: []
+      }
       user_plugins: {
         Row: {
           agent_ids: string[]
@@ -1432,6 +1439,11 @@ export type Database = {
         Returns: { mode: string; engine: string; replies: number; input_tokens: number; output_tokens: number; reasoning_tokens: number; cost_usd: number; credits: number }[]
       }
       admin_credit_totals: { Args: never; Returns: { consumed: number; distributed: number; granted: number; purchased: number }[] }
+      touch_presence: { Args: never; Returns: undefined }
+      admin_online_users: { Args: { _minutes: number }; Returns: { online: number; last_hour: number; today: number }[] }
+      admin_feedback_list: { Args: { _limit: number; _offset: number }; Returns: { id: string; email: string | null; rating: number | null; message: string; page: string; read_at: string | null; created_at: string }[] }
+      admin_feedback_summary: { Args: never; Returns: { total: number; unread: number; rated: number; average: number | null }[] }
+      admin_feedback_mark_read: { Args: { _ids: string[] }; Returns: undefined }
       admin_revenue: { Args: never; Returns: { buyers: number; failed_30d: number; paid_30d: number; pending_30d: number; revenue_30d: number; revenue_today: number; revenue_total: number }[] }
       match_document_chunks: {
         Args: { _embedding: string; _file_ids: string[]; _k?: number; _kb_ids: string[]; _min_score?: number; _owner: string }

@@ -1,12 +1,12 @@
 import { useCallback, useEffect, useState } from "react";
 import { confirmDialog, promptDialog } from "@/components/ConfirmHost";
-import { AlertTriangle, ChevronLeft, ChevronRight, Coins, Loader2, RefreshCw, Search, ShieldCheck, TrendingUp, Users, Wallet } from "lucide-react";
+import { AlertTriangle, Check, ChevronLeft, ChevronRight, Coins, Loader2, RefreshCw, Search, ShieldCheck, Star, TrendingUp, Users, Wallet, Wifi } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
   adminListPacks, adminListPayments, adminListPublicRegistry, adminListUsers, adminSetAdminRole, adminSetUserSuspension,
-  adminUnpublishRegistryItem, adminUpdatePack, getAdminOverview,
+  adminUnpublishRegistryItem, adminUpdatePack, getAdminOverview, adminListFeedback, adminMarkFeedbackRead,
 } from "@/lib/admin-console.functions";
 import { getAdminStats } from "@/lib/admin.functions";
 
@@ -51,6 +51,14 @@ export function AdminOverview({ fr }: { fr: boolean }) {
         { icon: TrendingUp, label: fr ? "Aujourd'hui" : "Today", value: `${n(o.revenue.today)} FCFA`, sub: fr ? `${n(o.revenue.pending30)} en attente · ${n(o.revenue.failed30)} échoués (30 j)` : `${n(o.revenue.pending30)} pending · ${n(o.revenue.failed30)} failed (30d)` },
         { icon: Users, label: fr ? "Comptes" : "Accounts", value: stats ? n(stats.users) : "…", sub: fr ? "inscrits au total" : "registered in total" },
       ].map((c) => <div key={c.label} className={card}><c.icon className="size-4 text-muted-foreground" /><p className="mt-2 font-display text-xl font-semibold tabular-nums">{c.value}</p><p className="text-xs text-muted-foreground">{c.label}</p><p className="mt-1 text-[11px] text-muted-foreground">{c.sub}</p></div>)}
+    </div>
+
+    <div className={`${card} flex flex-wrap items-center gap-x-8 gap-y-3`}>
+      <div className="flex items-center gap-3"><span className="relative grid size-10 place-items-center rounded-xl bg-emerald-500/12 text-emerald-600"><Wifi className="size-5" />{(o.online?.now ?? 0) > 0 && <span className="absolute -right-0.5 -top-0.5 size-2.5 animate-pulse rounded-full bg-emerald-500" />}</span>
+        <div><p className="font-display text-2xl font-semibold tabular-nums">{o.online ? n(o.online.now) : "—"}</p><p className="text-xs text-muted-foreground">{fr ? "utilisateurs connectés maintenant (5 dernières minutes)" : "users online now (last 5 minutes)"}</p></div></div>
+      {o.online ? <div className="flex gap-6 text-sm"><p><span className="font-semibold tabular-nums">{n(o.online.hour)}</span> <span className="text-xs text-muted-foreground">{fr ? "sur la dernière heure" : "in the last hour"}</span></p><p><span className="font-semibold tabular-nums">{n(o.online.today)}</span> <span className="text-xs text-muted-foreground">{fr ? "sur 24 heures" : "in 24 hours"}</span></p></div>
+        : <p className="text-xs text-destructive">{fr ? "Lancez la migration 0042_feedback_and_presence.sql dans Supabase pour activer ce compteur." : "Run migration 0042_feedback_and_presence.sql in Supabase to enable this counter."}</p>}
+      <p className="w-full text-[11px] text-muted-foreground">{fr ? "Comptes connectés ayant un onglet du tableau de bord ouvert et visible (signal toutes les 2 minutes)." : "Signed-in accounts with a visible dashboard tab open (signal every 2 minutes)."}</p>
     </div>
 
     <div className="grid gap-3 lg:grid-cols-2">
@@ -234,4 +242,46 @@ export function AdminRegistryModeration({ fr }: { fr: boolean }) {
       </tr>)}</tbody>
     </table></div>
   </section>;
+}
+
+// ---------- Suggestion box ----------
+type FeedbackPage = Extract<Awaited<ReturnType<typeof adminListFeedback>>, { ready: true }>;
+
+export function AdminFeedback({ fr }: { fr: boolean }) {
+  const loc = fr ? "fr-FR" : "en-US";
+  const [page, setPage] = useState(1);
+  const [d, setD] = useState<FeedbackPage | null | "missing">(null);
+  const load = useCallback(() => { adminListFeedback({ data: { page } }).then((r) => setD(r.ready ? r : "missing")).catch((e) => toast.error(errText(e))); }, [page]);
+  useEffect(load, [load]);
+  async function markRead(ids: string[]) {
+    if (!ids.length) return;
+    try { await adminMarkFeedbackRead({ data: { ids } }); load(); } catch (e) { toast.error(errText(e)); }
+  }
+  if (d === null) return <p className="py-10 text-center text-sm text-muted-foreground"><Loader2 className="mx-auto size-5 animate-spin" /></p>;
+  if (d === "missing") return <p className="rounded-xl border border-border bg-card px-4 py-3 text-sm text-destructive">{fr ? "Lancez la migration 0042_feedback_and_presence.sql dans Supabase pour recevoir les suggestions." : "Run migration 0042_feedback_and_presence.sql in Supabase to receive suggestions."}</p>;
+  const unreadHere = d.items.filter((i) => !i.read_at).map((i) => i.id);
+  return <div className="space-y-4">
+    <div className="grid gap-3 sm:grid-cols-3">
+      <div className={card}><p className="font-display text-xl font-semibold tabular-nums">{d.summary.total.toLocaleString(loc)}</p><p className="text-xs text-muted-foreground">{fr ? "suggestions reçues" : "suggestions received"}</p></div>
+      <div className={card}><p className="font-display text-xl font-semibold tabular-nums">{d.summary.unread.toLocaleString(loc)}</p><p className="text-xs text-muted-foreground">{fr ? "non lues" : "unread"}</p></div>
+      <div className={card}><p className="flex items-center gap-1.5 font-display text-xl font-semibold tabular-nums">{d.summary.average === null ? "—" : d.summary.average.toLocaleString(loc, { maximumFractionDigits: 2 })}<Star className="size-4 fill-amber-400 text-amber-400" /></p><p className="text-xs text-muted-foreground">{fr ? `note moyenne (${d.summary.rated} notes)` : `average rating (${d.summary.rated} ratings)`}</p></div>
+    </div>
+    <div className="flex items-center justify-between gap-2">
+      <h2 className="font-display text-lg font-semibold">{fr ? "Boîte de réception" : "Inbox"}</h2>
+      <div className="flex gap-2">{unreadHere.length > 0 && <Button variant="outline" size="sm" className="rounded-full" onClick={() => void markRead(unreadHere)}><Check className="size-3.5" />{fr ? "Tout marquer comme lu" : "Mark all as read"}</Button>}<Button variant="outline" size="sm" className="rounded-full" onClick={load}><RefreshCw className="size-3.5" />{fr ? "Actualiser" : "Refresh"}</Button></div>
+    </div>
+    {d.items.length === 0 ? <p className={`${card} text-sm text-muted-foreground`}>{fr ? "Aucune suggestion pour le moment." : "No suggestions yet."}</p>
+      : <ul className="space-y-2">{d.items.map((i) => <li key={i.id} className={`${card} ${i.read_at ? "" : "border-primary/40"}`}>
+        <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
+          {!i.read_at && <span className="rounded-full bg-primary px-2 py-0.5 text-[10px] font-semibold text-primary-foreground">{fr ? "Nouveau" : "New"}</span>}
+          <span className="font-medium text-foreground">{i.email ?? (fr ? "Compte supprimé" : "Deleted account")}</span>
+          <span>{new Date(i.created_at).toLocaleString(loc, { dateStyle: "medium", timeStyle: "short" })}</span>
+          {i.page && <span className="font-mono">{i.page}</span>}
+          {i.rating !== null && <span className="inline-flex items-center gap-0.5" aria-label={`${i.rating} / 5`}>{[1, 2, 3, 4, 5].map((n) => <Star key={n} className={`size-3.5 ${n <= (i.rating ?? 0) ? "fill-amber-400 text-amber-400" : "text-muted-foreground/30"}`} />)}</span>}
+          {!i.read_at && <button type="button" onClick={() => void markRead([i.id])} className="ml-auto text-xs font-medium text-primary hover:underline">{fr ? "Marquer comme lu" : "Mark as read"}</button>}
+        </div>
+        {i.message && <p className="mt-2 whitespace-pre-wrap text-sm">{i.message}</p>}
+      </li>)}</ul>}
+    <Pager page={page} total={d.summary.total} size={d.size} onPage={setPage} />
+  </div>;
 }

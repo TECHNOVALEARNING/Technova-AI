@@ -5,10 +5,10 @@ import { listSecurityEvents } from "@/lib/admin.functions";
 import { CreditTransfer } from "./CreditTransfer";
 import { SiteModeration } from "./SiteModeration";
 import { OnboardingStats } from "./OnboardingStats";
-import { AdminOverview, AdminPacks, AdminPayments, AdminRegistryModeration, AdminUsers } from "./AdminConsole";
+import { AdminFeedback, AdminOverview, AdminPacks, AdminPayments, AdminRegistryModeration, AdminUsers } from "./AdminConsole";
 
 type Ev = { id: string; user_id: string | null; kind: string; severity: string; detail: unknown; created_at: string };
-type Tab = "overview" | "users" | "payments" | "packs" | "credits" | "moderation" | "security";
+type Tab = "overview" | "users" | "feedback" | "payments" | "packs" | "credits" | "moderation" | "security";
 
 export function AdminPage() {
   const { lang } = useDashboard();
@@ -21,7 +21,7 @@ export function AdminPage() {
   if (!state.admin) return <div className="p-8"><h1 className="font-display text-xl font-semibold">{fr ? "Accès réservé" : "Restricted"}</h1><p className="mt-1 text-sm text-muted-foreground">{fr ? "Cette page est réservée aux administrateurs." : "This page is for administrators only."}</p></div>;
 
   const tabs: [Tab, string][] = [
-    ["overview", fr ? "Vue d'ensemble" : "Overview"], ["users", fr ? "Utilisateurs" : "Users"], ["payments", fr ? "Paiements" : "Payments"],
+    ["overview", fr ? "Vue d'ensemble" : "Overview"], ["users", fr ? "Utilisateurs" : "Users"], ["feedback", "Suggestions"], ["payments", fr ? "Paiements" : "Payments"],
     ["packs", fr ? "Packs" : "Packs"], ["credits", fr ? "Crédits" : "Credits"], ["moderation", fr ? "Modération" : "Moderation"], ["security", fr ? "Sécurité" : "Security"],
   ];
   return <div className="mx-auto w-full max-w-6xl p-4 sm:p-8">
@@ -31,6 +31,7 @@ export function AdminPage() {
     <div className="mt-5">
       {tab === "overview" && <><AdminOverview fr={fr} /><OnboardingStats fr={fr} /></>}
       {tab === "users" && <AdminUsers fr={fr} onCredit={(email) => { setCreditEmail(email); setTab("credits"); }} />}
+      {tab === "feedback" && <AdminFeedback fr={fr} />}
       {tab === "payments" && <AdminPayments fr={fr} />}
       {tab === "packs" && <AdminPacks fr={fr} />}
       {tab === "credits" && <CreditTransfer key={creditEmail} fr={fr} initialEmail={creditEmail} />}

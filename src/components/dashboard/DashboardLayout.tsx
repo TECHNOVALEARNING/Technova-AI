@@ -2,9 +2,9 @@ import { createContext, useCallback, useContext, useEffect, useState, type React
 import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import { savePref } from "@/lib/consent";
 import { planKeyOf, planLabels, usePlan } from "@/lib/plan-client";
-import { BookMarked, Bot, ChevronUp, Library, Plug, ShieldAlert, Puzzle } from "lucide-react";
+import { BookMarked, Bot, ChevronUp, ExternalLink, Library, MessageSquareHeart, Plug, ShieldAlert, Puzzle } from "lucide-react";
 import { getMyRole } from "@/lib/admin.functions";
-import { Activity, ArrowLeft, CalendarDays, Check, Palette, Crown, Bell, BookOpen, Boxes, ChevronDown, ChevronRight, Code2, CreditCard, Diamond, Gift, Globe2, Inbox, LayoutDashboard, LogOut, Menu, MessageCircle, Moon, PanelLeftClose, PanelLeftOpen, Search, Settings2, Sun, Wallet, X } from "lucide-react";
+import { Activity, ArrowLeft, CalendarDays, Check, Palette, Crown, Bell, BookOpen, Boxes, ChevronDown, ChevronRight, Code2, CreditCard, Diamond, Gift, Globe2, Inbox, LayoutDashboard, LogOut, Menu, MessageCircle, Moon, PanelLeftClose, PanelLeftOpen, Search, Settings2, Sun, Wallet, X, Wrench } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { dashboardText, type Lang } from "@/lib/i18n";
@@ -17,6 +17,8 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { ThreadItem } from "./ThreadItem";
 import { PendingDeletionBanner } from "./PendingDeletionBanner";
 import { TopActions } from "./TopActions";
+import { SuggestionBox } from "./SuggestionBox";
+import { usePresence } from "@/lib/presence";
 import { InboxDialog, useInbox } from "./Inbox";
 import { clearSessionGuard, useSessionGuard } from "@/lib/session-guard";
 import { DashboardContext, type Thread } from "./dashboard-context";
@@ -108,6 +110,8 @@ export function DashboardLayout({ children }: { children: ReactNode }) {
   const inbox = useInbox(lang === "en" ? "en" : "fr");
   const [inboxOpen, setInboxOpen] = useState(false);
   const [accountView, setAccountView] = useState<"menu" | "themes">("menu");
+  const [suggestOpen, setSuggestOpen] = useState(false);
+  usePresence();
   // Sessions end after a week without activity (see session-guard.ts).
   useSessionGuard(useCallback(() => { void navigate({ to: "/connexion", replace: true }); }, [navigate]));
   async function signOut() {
@@ -213,11 +217,14 @@ export function DashboardLayout({ children }: { children: ReactNode }) {
               <div className="my-1 h-px bg-border" />
               <button type="button" onClick={() => setAccountView("themes")} className="flex w-full items-center gap-3 rounded-xl px-2.5 py-2 text-left text-[13.5px] transition hover:bg-secondary"><Palette className="size-[18px] text-muted-foreground" strokeWidth={1.7} /><span className="flex-1">{lang === "fr" ? "Thèmes" : "Themes"}</span><span className="size-3 rounded-full border border-border" style={{ background: dashboardLooks.find((l) => l.id === look)?.swatch }} /><ChevronRight className="size-4 text-muted-foreground" /></button>
               <AccountItem to="/dashboard/docs" icon={BookOpen} label={lang === "fr" ? "Aide et documentation" : "Help and docs"} chevron />
+              <button type="button" onClick={() => { setAccountOpen(false); setSuggestOpen(true); }} className="flex w-full items-center gap-3 rounded-xl px-2.5 py-2 text-left text-[13.5px] transition hover:bg-secondary"><MessageSquareHeart className="size-[18px] text-muted-foreground" strokeWidth={1.7} /><span className="flex-1">{lang === "fr" ? "Boîte à suggestions" : "Suggestion box"}</span></button>
+              <a href="https://www.technovalearning.com/outils-digitaux" target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 rounded-xl px-2.5 py-2 text-[13.5px] transition hover:bg-secondary"><Wrench className="size-[18px] text-muted-foreground" strokeWidth={1.7} /><span className="flex-1">{lang === "fr" ? "Autres outils" : "Other tools"}</span><ExternalLink className="size-3.5 text-muted-foreground" /></a>
               <Link to="/" className="flex items-center gap-3 rounded-xl px-2.5 py-2 text-[13.5px] transition hover:bg-secondary"><ArrowLeft className="size-[18px] text-muted-foreground" strokeWidth={1.7} /><span className="flex-1">{lang === "fr" ? "Retour au site" : "Back to the website"}</span></Link>
               <button type="button" onClick={() => void signOut()} className="flex w-full items-center gap-3 rounded-xl px-2.5 py-2 text-left text-[13.5px] transition hover:bg-secondary"><LogOut className="size-[18px] text-muted-foreground" strokeWidth={1.7} /><span className="flex-1">{lang === "fr" ? "Se déconnecter" : "Sign out"}</span></button>
               </>}
             </PopoverContent>
           </Popover>
+          <SuggestionBox open={suggestOpen} onOpenChange={setSuggestOpen} lang={lang === "en" ? "en" : "fr"} />
           {inboxOpen && <InboxDialog lang={lang === "en" ? "en" : "fr"} inbox={inbox} onClose={() => setInboxOpen(false)} />}
         </div>
       </aside>

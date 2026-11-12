@@ -33,6 +33,9 @@ import { useDashboard } from "./dashboard-context";
 import { PaymentSuccess } from "./PaymentSuccess";
 import { PaymentCheckout } from "./PaymentCheckout";
 import supabaseLogo from "@/assets/supabase-logo.svg";
+import "@/lib/fontawesome";
+import { packCopy } from "@/lib/public-pricing";
+import { PricingBar } from "@/components/site/PricingContent";
 
 const copy = {
   fr: {
@@ -171,13 +174,17 @@ function Packs({ cur }: { cur: ReturnType<typeof useCurrency> }) {
     <p className="mt-1 text-[13px]">{pendingPack.name} · {pendingPack.price_xof.toLocaleString("fr-FR")} FCFA → {pendingPack.credits.toLocaleString()} {c.credits}</p>
     <p className="mt-1 text-[11.5px] text-muted-foreground">{c.oneTime}</p>
     <div className="mt-3 flex gap-2"><Button className="h-9 rounded-full text-[12.5px]" onClick={() => buy(pendingPack.slug)}>{c.confirmPay}</Button><Button variant="ghost" className="h-9 rounded-full text-[12.5px]" onClick={() => setPending(null)}>{c.cancel}</Button></div>
-  </div>}<div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">{packs.map(p => <div key={p.id} className={`${card} ${p.featured ? "border-primary/60 ring-1 ring-primary/30" : ""}`}>
+  </div>}<div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">{packs.map(p => { const copy = packCopy[p.slug]?.[lang === "en" ? "en" : "fr"]; return <div key={p.id} className={`${card} flex flex-col ${p.featured ? "border-primary/60 ring-1 ring-primary/30" : ""}`}>
     <div className="flex items-center justify-between"><p className="text-[13.5px] font-semibold">{p.name}</p>{p.featured && <span className="rounded-full bg-primary px-2 py-0.5 text-[10px] font-semibold text-primary-foreground">{c.popular}</span>}</div>
     <p className="mt-2 font-display text-[24px] font-semibold">{cur.format(p.price_xof)}</p>
     {cur.currency !== "XOF" && <p className="text-[11px] text-muted-foreground">{lang === "fr" ? "Facturé" : "Billed"} {p.price_xof.toLocaleString("fr-FR")} FCFA</p>}
     <p className="text-[12px] text-muted-foreground">{p.credits.toLocaleString()} {c.credits}</p>
+    {copy && <p className="mt-2 text-[12px] text-muted-foreground">{copy.tagline}</p>}
+    {copy && <ul className="mt-3 flex-1 space-y-2 text-[12.5px]">{copy.perks.map((perk) => perk.lead
+      ? <li key={perk.text} className="font-semibold">{perk.text}</li>
+      : <li key={perk.text} className="flex items-start gap-2"><FontAwesomeIcon icon={perk.icon} fixedWidth aria-hidden className={`mt-0.5 size-3.5 shrink-0 ${p.featured ? "text-primary" : "text-muted-foreground"}`} /><span>{perk.text}</span></li>)}</ul>}
     <Button variant={p.featured ? "default" : "outline"} className="mt-4 h-9 w-full rounded-full text-[12.5px]" onClick={() => buy(p.slug)}>{c.buy}</Button>
-  </div>)}</div></div>;
+  </div>; })}</div><PricingBar lang={lang === "en" ? "en" : "fr"} /></div>;
 }
 
 export function CreditsPage() {

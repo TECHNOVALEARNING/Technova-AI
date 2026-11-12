@@ -19,6 +19,7 @@ import ecoConnect from "@/assets/eco-connect.webp";
 import { content, labs, type SiteLang } from "@/lib/i18n";
 import { Nav, Footer, Heading, Tag, R, ActionText, useReveal, useSiteLang } from "@/components/site/SiteChrome";
 import { InstallAppPrompt } from "@/components/site/InstallAppPrompt";
+import { PartnersStrip } from "@/components/site/PartnersStrip";
 import { RoutingSection } from "@/components/site/RoutingSection";
 
 import { PricingContent } from "@/components/site/PricingContent";
@@ -38,6 +39,7 @@ function Index() {
     <div className="min-h-screen overflow-x-clip bg-background text-foreground">
       <Nav lang={lang} setLang={setLang} />
       <Hero t={t} />
+      <PartnersStrip lang={lang} />
       <Intro t={t} />
       <Why t={t} />
       <Services t={t} />

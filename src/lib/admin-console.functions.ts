@@ -39,12 +39,14 @@ export const getAdminOverview = createServerFn({ method: "GET" })
   .handler(async ({ context }) => {
     await requireAdmin(context);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const [revenue, credits, balances, engineUsage] = await Promise.all([
+    const [revenue, credits, balances, engineUsage, presence] = await Promise.all([
       supabaseAdmin.rpc("admin_revenue"),
       supabaseAdmin.rpc("admin_credit_totals"),
       providerBalances(),
       supabaseAdmin.rpc("admin_engine_usage", { _days: 30 }),
+      supabaseAdmin.rpc("admin_online_users", { _minutes: 5 }),
     ]);
+    const p = presence.error ? null : presence.data?.[0];
     const r = revenue.data?.[0]; const c = credits.data?.[0];
     // Provider cost of consumed credits: prices are set at 1 200 credits per US dollar.
     const consumedUsd = c ? Math.round((c.consumed / 1200) * 100) / 100 : 0;
@@ -52,6 +54,8 @@ export const getAdminOverview = createServerFn({ method: "GET" })
       revenue: { total: r?.revenue_total ?? 0, d30: r?.revenue_30d ?? 0, today: r?.revenue_today ?? 0, paid30: r?.paid_30d ?? 0, pending30: r?.pending_30d ?? 0, failed30: r?.failed_30d ?? 0, buyers: r?.buyers ?? 0 },
       credits: { distributed: c?.distributed ?? 0, consumed: c?.consumed ?? 0, purchased: c?.purchased ?? 0, granted: c?.granted ?? 0, consumedUsd },
       balances,
+      // Signed-in accounts active in the dashboard (heartbeat every 2 minutes); null until migration 0042.
+      online: p ? { now: Number(p.online), hour: Number(p.last_hour), today: Number(p.today) } : null,
       // Engine behind each chat mode with its real cost (null until migration 0039 is applied).
       engines: engineUsage.error ? null : (engineUsage.data ?? []).map((e) => ({ mode: e.mode, engine: e.engine, replies: Number(e.replies), input: Number(e.input_tokens), output: Number(e.output_tokens), reasoning: Number(e.reasoning_tokens), costUsd: Number(e.cost_usd), credits: Number(e.credits) })),
     };
@@ -185,5 +189,37 @@ export const adminUnpublishRegistryItem = createServerFn({ method: "POST" })
     if (error) throw new Error(error.message);
     const { logSecurityEvent } = await import("@/lib/security.server");
     await logSecurityEvent(context.userId, "registry_item_unpublished", "info", { item: data.id });
+    return { ok: true };
+  });
+
+/** Suggestion box: newest first, with the summary (total, unread, average rating). */
+export const adminListFeedback = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: { page: number }) => z.object({ page: z.number().int().min(1).max(1000) }).parse(input))
+  .handler(async ({ data, context }) => {
+    await requireAdmin(context);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const size = 25;
+    const [list, summary] = await Promise.all([
+      supabaseAdmin.rpc("admin_feedback_list", { _limit: size, _offset: (data.page - 1) * size }),
+      supabaseAdmin.rpc("admin_feedback_summary"),
+    ]);
+    if (list.error || summary.error) return { ready: false as const };
+    const sm = summary.data?.[0];
+    return {
+      ready: true as const, size,
+      summary: { total: Number(sm?.total ?? 0), unread: Number(sm?.unread ?? 0), rated: Number(sm?.rated ?? 0), average: sm?.average === null || sm?.average === undefined ? null : Number(sm.average) },
+      items: list.data ?? [],
+    };
+  });
+
+export const adminMarkFeedbackRead = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: { ids: string[] }) => z.object({ ids: z.array(z.string().uuid()).min(1).max(100) }).parse(input))
+  .handler(async ({ data, context }) => {
+    await requireAdmin(context);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { error } = await supabaseAdmin.rpc("admin_feedback_mark_read", { _ids: data.ids });
+    if (error) throw new Error(error.message);
     return { ok: true };
   });
