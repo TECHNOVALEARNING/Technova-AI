@@ -7,6 +7,7 @@ import { Nav, Footer, PageHero, Heading, R, ActionText, useReveal, useSiteLang }
 import { CodeBlock } from "@/components/site/CodeBlock";
 import { featureGuideBlocks } from "@/components/site/FeatureGuides";
 import { featureGuideBlocks2 } from "@/components/site/FeatureGuides2";
+import { featureGuideBlocks3 } from "@/components/site/FeatureGuides3";
 import { isSiteLang, type SiteLang } from "@/lib/i18n";
 import { DOC_DATE, DOC_VERSION, docPdfPath } from "@/lib/docs-version";
 import { codeSamples, useApiBase, withApiBase } from "@/lib/site-pages";
@@ -146,10 +147,10 @@ function DocCard({ id, n, title, children }: { id: string; n: number; title: str
 }
 
 const pdfText = {
-  fr: { download: "Télécharger en PDF", version: "Version", date: "Mise à jour le", contents: "Sommaire", footer: "TechNova AI Hub · Documentation", intro: "Guide complet de la plateforme et de son API : démarrage, intégration, agents IA, connaissances, Registry, connexions et mise en production." },
-  en: { download: "Download as PDF", version: "Version", date: "Updated on", contents: "Contents", footer: "TechNova AI Hub · Documentation", intro: "Complete guide to the platform and its API: getting started, integration, AI agents, knowledge, Registry, connections and going to production." },
-  es: { download: "Descargar en PDF", version: "Versión", date: "Actualizado el", contents: "Índice", footer: "TechNova AI Hub · Documentación", intro: "Guía completa de la plataforma y su API: inicio, integración, agentes de IA, conocimiento, Registry, conexiones y paso a producción." },
-  pt: { download: "Baixar em PDF", version: "Versão", date: "Atualizado em", contents: "Sumário", footer: "TechNova AI Hub · Documentação", intro: "Guia completo da plataforma e da sua API: início, integração, agentes de IA, conhecimento, Registry, conexões e ida para produção." },
+  fr: { download: "Télécharger en PDF", version: "Version", date: "Mise à jour le", contents: "Sommaire", footer: "TechNova AI Hub · Documentation", intro: "Guide complet de la plateforme et de son API : démarrage, intégration, agents IA, connaissances, Registry, connexions, plugins, page de vente pro, téléchargements et mise en production." },
+  en: { download: "Download as PDF", version: "Version", date: "Updated on", contents: "Contents", footer: "TechNova AI Hub · Documentation", intro: "Complete guide to the platform and its API: getting started, integration, AI agents, knowledge, Registry, connections, plugins, pro sales page, downloads and going to production." },
+  es: { download: "Descargar en PDF", version: "Versión", date: "Actualizado el", contents: "Índice", footer: "TechNova AI Hub · Documentación", intro: "Guía completa de la plataforma y su API: inicio, integración, agentes de IA, conocimiento, Registry, conexiones, plugins, página de venta pro, descargas y paso a producción." },
+  pt: { download: "Baixar em PDF", version: "Versão", date: "Atualizado em", contents: "Sumário", footer: "TechNova AI Hub · Documentação", intro: "Guia completo da plataforma e da sua API: início, integração, agentes de IA, conhecimento, Registry, conexões, plugins, página de vendas pro, downloads e ida para produção." },
 } satisfies Record<SiteLang, unknown>;
 
 function DocsPage() {
@@ -198,8 +199,9 @@ function DocsPage() {
     </> });
     if (s.id === "demarrage") blocks.push({ id: "exemples", title: t.exTag, body: <><p className="mt-3 leading-relaxed text-muted-foreground">{t.exTitle}</p>{examples}</> });
   }
-  // Feature guides: AI agents, knowledge bases and where they can be used.
-  { const [agents, knowledge, where] = featureGuideBlocks(lang); blocks.push(agents!, knowledge!, ...featureGuideBlocks2(lang), where!); }
+  // Feature guides: AI agents, knowledge bases, Registry, Connections, Plugins, sales page, downloads,
+  // the everyday workspace, then where agents and knowledge can be used.
+  { const [agents, knowledge, where] = featureGuideBlocks(lang); blocks.push(agents!, knowledge!, ...featureGuideBlocks2(lang), ...featureGuideBlocks3(lang), where!); }
   blocks.push({ id: "cas-usage", title: t.reTag, body: <><p className="mt-3 leading-relaxed text-muted-foreground">{t.reTitle}</p>{recipes}</> });
   blocks.push({ id: "production", title: t.bpToc, body: <><p className="mt-3 leading-relaxed text-muted-foreground">{t.bpTitle}</p>{checklist}</> });
 
@@ -266,7 +268,8 @@ function PrintDocument({ lang, title, intro, blocks, contents, versionLabel, dat
       <div className="relative flex items-center gap-3"><img src="/favicon.svg" alt="" className="size-12 rounded-xl" /><span className="font-display text-xl font-bold tracking-[0.14em]">TECHNOVA <span className="opacity-60">AI HUB</span></span></div>
       <div className="relative">
         <p className="text-sm uppercase tracking-[0.3em] text-ink-foreground/60">Documentation</p>
-        <h1 className="mt-4 max-w-2xl font-display text-6xl font-semibold leading-[1.02]"><span className="text-hero-gradient">{title}</span></h1>
+        {/* Solid colour: gradient-clipped text prints with hairline boxes around each line in Chrome PDFs. */}
+        <h1 className="mt-4 max-w-2xl font-display text-6xl font-semibold leading-[1.02] text-[#e4e7f2]">{title}</h1>
         <p className="mt-6 max-w-xl text-lg leading-relaxed text-ink-foreground/75">{intro}</p>
       </div>
       <div className="relative flex items-end justify-between gap-6 border-t border-ink-foreground/15 pt-6 text-sm text-ink-foreground/70">

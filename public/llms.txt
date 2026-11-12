@@ -10,7 +10,7 @@
 
 ## Développeurs
 
-- [Documentation & API](https://www.technovaihub.com/documentation): une seule clé API pour les modèles de texte et de code, facturée en crédits ; démarrage rapide, exemples JavaScript/Python/PHP/cURL, authentification, chat completions, modèles, crédits, erreurs, limites, cas d'usage et mise en production
+- [Documentation & API](https://www.technovaihub.com/documentation): une seule clé API pour les modèles de texte et de code, facturée en crédits ; démarrage rapide, exemples JavaScript/Python/PHP/cURL, authentification, chat completions, modèles, crédits, erreurs, limites, guides (agents, bases de connaissances, Registry, connexions, plugins et commandes « / », page de vente pro avec paiement Mobile Money/WhatsApp, téléchargement des réponses en Word/Excel/PowerPoint/PDF), cas d'usage et mise en production
 
 ## Entreprise
 

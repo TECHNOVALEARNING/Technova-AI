@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { Activity, ArrowUpRight, BookOpen, Bot, Code2, Database, KeyRound, Library } from "lucide-react";
+import { Activity, ArrowUpRight, BookOpen, Bot, Code2, Database, KeyRound, Library, BadgeDollarSign, Puzzle } from "lucide-react";
 import { useDashboard } from "@/components/dashboard/DashboardLayout";
 
 export const Route = createFileRoute("/_authenticated/dashboard/docs")({
@@ -21,6 +21,8 @@ function DocsHub() {
     { href: "/documentation", icon: BookOpen, title: fr ? "Documentation de l'API" : "API documentation", text: fr ? "Authentification, requêtes, modèles, erreurs et limites." : "Authentication, requests, models, errors and limits." },
     { href: "/documentation#agents", icon: Bot, title: fr ? "Guide des agents IA" : "AI agents guide", text: fr ? "Rôle, réglages, outils et utilisation, avec schémas." : "Role, settings, tools and use, with diagrams." },
     { href: "/documentation#connaissances", icon: Database, title: fr ? "Guide des bases de connaissances" : "Knowledge bases guide", text: fr ? "Dépôt, préparation des documents et utilisation." : "Upload, document preparation and use." },
+    { href: "/documentation#plugins", icon: Puzzle, title: fr ? "Guide des plugins" : "Plugins guide", text: fr ? "Installer un métier, utiliser les commandes « / »." : "Install a skill, use the “/” commands." },
+    { href: "/documentation#page-de-vente", icon: BadgeDollarSign, title: fr ? "Page de vente pro" : "Pro sales page", text: fr ? "De l'offre au paiement, jusqu'à la publication." : "From offer to payment, up to publishing." },
     { href: "/documentation#exemples", icon: Code2, title: fr ? "Exemples de code" : "Code examples", text: fr ? "JavaScript, Python, PHP et cURL prêts à copier." : "Ready-to-copy JavaScript, Python, PHP and cURL." },
   ];
   const internal = [
