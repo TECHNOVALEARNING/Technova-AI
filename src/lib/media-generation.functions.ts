@@ -13,6 +13,15 @@ const createInput = z.object({
   threadId: z.string().uuid(),
   /** A finished image of this account to edit; the edit model then receives it as its source. */
   sourceId: z.string().uuid().optional(),
+  /** Music creation journey: own lyrics, title, style, voice, exclusions, instrumental. */
+  music: z.object({
+    title: z.string().trim().max(80).optional(),
+    lyrics: z.string().trim().max(5000).optional(),
+    style: z.string().trim().max(1000).optional(),
+    exclude: z.string().trim().max(300).optional(),
+    vocal: z.enum(["m", "f"]).optional(),
+    instrumental: z.boolean().optional(),
+  }).optional(),
 });
 
 async function kie(path: string, init?: RequestInit) {
@@ -77,7 +86,7 @@ export const createMediaGeneration = createServerFn({ method: "POST" })
       }
     }
     const model = spec.id;
-    const built = buildMediaInput(spec, data.prompt, data.aspectRatio, MEDIA_VIDEO_SECONDS);
+    const built = buildMediaInput(spec, data.prompt, data.aspectRatio, MEDIA_VIDEO_SECONDS, spec.kind === "music" ? data.music : undefined);
     if (editing) {
       // The source must be a finished image of this account, still within its 14-day retention.
       const { data: source } = await context.supabase.from("media_generations")

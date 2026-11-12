@@ -1,5 +1,9 @@
 import { useCallback, useEffect, useState } from "react";
-import { CheckCircle2, Globe2, Loader2, Plug, Trash2 } from "lucide-react";
+import { CheckCircle2, Globe2, Loader2, Lock, Plug, Trash2 } from "lucide-react";
+import { Link } from "@tanstack/react-router";
+import { featureMinTier, upgradeSentence } from "@/lib/plans";
+import { usePlanTier } from "@/lib/plan-client";
+import { SupabaseCard } from "./DashboardTools";
 import { Button } from "@/components/ui/button";
 import { useDashboard } from "./DashboardLayout";
 import { CONNECTOR_CATALOG } from "@/lib/connectors";
@@ -26,8 +30,12 @@ function waitForReturn(popup: Window, connectorId: string) {
   });
 }
 
+/** Connectors reserved to a plan (the server re-checks on every connection). */
+const connectorFeature: Record<string, "github" | undefined> = { github: "github" };
+
 export function ConnectionsPage() {
   const { lang } = useDashboard();
+  const tier = usePlanTier();
   const [status, setStatus] = useState<Status[]>([]);
   const [sites, setSites] = useState<{ slug: string; title: string; updated_at: string; disabled_at: string | null }[]>([]);
   const [busy, setBusy] = useState<string | null>(null);
@@ -72,14 +80,17 @@ export function ConnectionsPage() {
         return <article key={c.id} className="flex flex-col gap-3 rounded-2xl border border-border bg-card/90 p-4 backdrop-blur">
           <div className="flex items-center gap-3"><BrandLogo id={c.id} /><div className="min-w-0"><h2 className="font-medium">{c.name}</h2>{s?.connected && <p className="flex items-center gap-1 truncate text-xs text-primary"><CheckCircle2 className="size-3" />{s.label ?? tx(lang, "Connecté", "Connected")}</p>}</div></div>
           <p className="flex-1 text-sm text-muted-foreground">{tx(lang, c.fr, c.en)}</p>
+          {(() => { const f = connectorFeature[c.id]; return f && tier !== null && tier < featureMinTier[f] && !s?.connected ? <p className="text-xs text-muted-foreground">{upgradeSentence(f, lang !== "en")}</p> : null; })()}
           {c.kind === "soon" ? <Button size="sm" variant="outline" disabled>{tx(lang, "Bientôt disponible", "Coming soon")}</Button>
-            : !s ? <Button size="sm" variant="outline" disabled><Loader2 className="size-4 animate-spin" /></Button>
+            : !s || tier === null ? <Button size="sm" variant="outline" disabled><Loader2 className="size-4 animate-spin" /></Button>
+            : (() => { const f = connectorFeature[c.id]; return f && tier < featureMinTier[f] && !s.connected; })() ? <Button size="sm" asChild><Link to="/dashboard/credits"><Lock className="size-4" />{tx(lang, "Passer au forfait Pro", "Upgrade to Pro")}</Link></Button>
             : !s.configured ? <Button size="sm" variant="outline" disabled>{tx(lang, "Configuration requise", "Setup required")}</Button>
             : s.connected ? <Button size="sm" variant="ghost" disabled={busy === c.id} onClick={() => void disconnect(c.id)}><Trash2 className="size-4" />{tx(lang, "Déconnecter", "Disconnect")}</Button>
             : <Button size="sm" disabled={busy === c.id} onClick={() => void connect(c.id)}>{busy === c.id ? <Loader2 className="size-4 animate-spin" /> : <Plug className="size-4" />}{tx(lang, "Connecter", "Connect")}</Button>}
         </article>;
       })}
     </section>
+    <SupabaseCard />
     <section><h2 className="mb-3 font-display text-lg font-semibold">{tx(lang, "Mes sites publiés", "My published sites")}</h2>
       {sites.length === 0 ? <p className="text-sm text-muted-foreground">{tx(lang, "Publiez un site depuis le panneau Artefact du mode Créer.", "Publish a site from the Artifact panel in Create mode.")}</p>
         : <ul className="divide-y divide-border rounded-2xl border border-border bg-card/90">{sites.map((s) => <li key={s.slug} className="flex items-center gap-3 p-3"><Globe2 className="size-4 text-muted-foreground" /><a href={`/s/${s.slug}`} target="_blank" rel="noopener noreferrer" className="min-w-0 flex-1 truncate text-sm font-medium hover:underline">/s/{s.slug}</a>{s.disabled_at && <span title={tx(lang, "Signalé puis suspendu, en attente de vérification par TechNova.", "Reported and suspended, pending review by TechNova.")} className="shrink-0 rounded-full bg-destructive/15 px-2 py-0.5 text-[11px] text-destructive">{tx(lang, "Suspendu", "Suspended")}</span>}<Button size="sm" variant="ghost" disabled={busy === s.slug} onClick={() => void unpublish(s.slug)}>{tx(lang, "Dépublier", "Unpublish")}</Button></li>)}</ul>}

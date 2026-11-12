@@ -3,7 +3,7 @@ import { confirmDialog } from "@/components/ConfirmHost";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
-import { Activity, ArrowUpRight, Boxes, Check, Coins, Copy, Database, Gauge, KeyRound, MessageSquare, Plus, Sparkles, Trash2, Unlink, Zap } from "lucide-react";
+import { Activity, ArrowUpRight, Boxes, Check, Coins, Copy, Database, Gauge, KeyRound, Lock, MessageSquare, Plus, Sparkles, Trash2, Unlink, Zap } from "lucide-react";
 import { Flag } from "@/components/site/Flag";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -24,7 +24,7 @@ import { chatTierCredits, chatTierIds, chatTiers, EXPERT_MIN_TIER, type ChatTier
 import { mediaTiers, type MediaTier } from "@/lib/media-models";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faBolt, faBrain, faFilm, faImage, faMusic, faScaleBalanced } from "@fortawesome/free-solid-svg-icons";
-import { upgradeFeatureOf, upgradeSentence } from "@/lib/plans";
+import { featureMinTier, upgradeFeatureOf, upgradeSentence } from "@/lib/plans";
 import { usePlanTier } from "@/lib/plan-client";
 import { savePref } from "@/lib/consent";
 import { formatFromXof, rateFor, useGeoPrice } from "@/lib/geo-price-client";
@@ -199,15 +199,15 @@ export function BillingPage() {
 }
 
 export function ApiKeysPage() {
-  const c = useCopy(); const create = useServerFn(createApiKey); const { lang } = useDashboard(); const tier = usePlanTier(); const locked = tier !== null && tier < 3;
+  const c = useCopy(); const create = useServerFn(createApiKey); const { lang } = useDashboard(); const tier = usePlanTier(); const locked = tier !== null && tier < 3; const unknown = tier === null;
   const [keys, setKeys] = useState<Tables<"api_keys">[]>([]); const [name, setName] = useState(""); const [busy, setBusy] = useState(false); const [secret, setSecret] = useState(""); const [copied, setCopied] = useState(false);
   const load = useCallback(async () => { const { data } = await supabase.from("api_keys").select("*").order("created_at", { ascending: false }); setKeys(data ?? []); }, []);
   useEffect(() => { void load(); }, [load]);
-  async function submit(e: React.FormEvent) { e.preventDefault(); if (!name.trim()) return; setBusy(true); try { const r = await create({ data: { name } }); setSecret(r.secret); setName(""); setCopied(false); await load(); } catch (e) { const f = upgradeFeatureOf(e instanceof Error ? e.message : ""); toast.error(f ? upgradeSentence(f, lang !== "en") : "Error"); } finally { setBusy(false); } }
+  async function submit(e: React.FormEvent) { e.preventDefault(); if (!name.trim() || locked || unknown) return; setBusy(true); try { const r = await create({ data: { name } }); setSecret(r.secret); setName(""); setCopied(false); await load(); } catch (e) { const f = upgradeFeatureOf(e instanceof Error ? e.message : ""); toast.error(f ? upgradeSentence(f, lang !== "en") : "Error"); } finally { setBusy(false); } }
   async function revoke(id: string) { if (!(await confirmDialog({ title: c.revokeConfirm, tone: "danger", confirmLabel: c.revoke }))) return; await supabase.from("api_keys").delete().eq("id", id); await load(); }
   return <div className="space-y-4"><PageHead title={c.apiTitle} sub={c.apiSub} />
     {locked && <p className="rounded-xl border border-border bg-card px-4 py-3 text-[13px]">{upgradeSentence("api", lang !== "en")} <Link to="/dashboard/credits" className="font-medium text-primary hover:underline">{lang === "en" ? "See packs" : "Voir les packs"}</Link></p>}
-    <div className={card}><form onSubmit={submit} className="flex gap-2"><Input value={name} onChange={e => setName(e.target.value)} maxLength={60} placeholder={c.keyName} aria-label={c.keyName} className="h-10 rounded-full bg-background px-4" /><Button type="submit" disabled={busy || locked || !name.trim()} className="h-10 shrink-0 rounded-full px-5"><Plus className="size-4" />{c.newKey}</Button></form>
+    <div className={card}><form onSubmit={submit} className="flex gap-2"><Input value={name} onChange={e => setName(e.target.value)} maxLength={60} placeholder={c.keyName} aria-label={c.keyName} className="h-10 rounded-full bg-background px-4" /><Button type="submit" disabled={busy || locked || unknown || !name.trim()} className="h-10 shrink-0 rounded-full px-5"><Plus className="size-4" />{c.newKey}</Button></form>
       {secret ? <div className="mt-4 rounded-xl border border-primary/40 bg-secondary/60 p-4"><p className="text-[12px] font-medium">{c.copyOnce}</p><div className="mt-2 flex items-center gap-2"><code className="min-w-0 flex-1 truncate rounded-lg bg-background px-3 py-2 font-mono text-[12px]">{secret}</code><Button size="sm" variant="outline" className="rounded-full" onClick={() => { void navigator.clipboard.writeText(secret); setCopied(true); }}>{copied ? <Check className="size-4" /> : <Copy className="size-4" />}{copied ? c.copied : ""}</Button></div><Button size="sm" variant="ghost" className="mt-2 rounded-full text-[12px]" onClick={() => setSecret("")}>{c.done}</Button></div>
       : <div className="mt-4 flex items-center gap-2 rounded-xl border border-border px-4 py-3 text-[12.5px] text-muted-foreground"><Check className="size-4 text-primary" />{c.keysActive}</div>}</div>
     {keys.length === 0 ? <p className="text-[12.5px] text-muted-foreground">{c.noKeys}</p> : <div className={`${card} divide-y divide-border p-0`}>{keys.map(k => <div key={k.id} className="flex items-center gap-3 px-5 py-4"><KeyRound className="size-4 text-muted-foreground" /><div className="min-w-0 flex-1"><p className="truncate text-[13px] font-medium">{k.name}</p><p className="font-mono text-[11px] text-muted-foreground">{k.prefix}••••••••</p></div><span className="hidden text-[11px] text-muted-foreground sm:block">{c.created} {new Date(k.created_at).toLocaleDateString()}</span><Button size="sm" variant="ghost" className="rounded-full text-destructive" onClick={() => void revoke(k.id)}><Trash2 className="size-4" />{c.revoke}</Button></div>)}</div>}
@@ -216,9 +216,11 @@ export function ApiKeysPage() {
 
 type SupaProject = { ref: string; name: string };
 
-function SupabaseCard() {
+export function SupabaseCard() {
   const c = useCopy();
   const { lang } = useDashboard();
+  const tier = usePlanTier();
+  const supaLocked = tier !== null && tier < featureMinTier.supabase;
   const start = useServerFn(startSupabaseConnect);
   const complete = useServerFn(completeSupabaseConnect);
   const status = useServerFn(getSupabaseConnection);
@@ -336,7 +338,9 @@ function SupabaseCard() {
       </div>
       <div className="flex flex-wrap items-center gap-2">{projects === null && <Button size="sm" variant="outline" disabled={busy} onClick={() => void pick()}>{c.supaLoad}</Button>}
         <Button size="sm" variant="ghost" className="text-destructive" disabled={busy} onClick={() => void forget()}><Unlink className="size-4" />{c.supaDisconnect}</Button></div>
-    </div> : <div className="mt-6 border-t border-border pt-5"><Button className="h-9 px-5" disabled={busy} onClick={() => void connect()}>{busy ? c.supaWait : c.supaConnect}</Button></div>}
+    </div> : <div className="mt-6 border-t border-border pt-5">{supaLocked
+      ? <div className="flex flex-wrap items-center gap-3"><Button asChild className="h-9 px-5"><Link to="/dashboard/credits"><Lock className="size-4" />{lang === "en" ? "Upgrade to Pro" : "Passer au forfait Pro"}</Link></Button><span className="text-xs text-muted-foreground">{upgradeSentence("supabase", lang !== "en")}</span></div>
+      : <Button className="h-9 px-5" disabled={busy || tier === null} onClick={() => void connect()}>{busy ? c.supaWait : c.supaConnect}</Button>}</div>}
     <p className="mt-5 text-xs leading-relaxed text-muted-foreground">{c.supaNote}</p>
   </section>;
 }

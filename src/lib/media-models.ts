@@ -119,12 +119,37 @@ const named: Record<MediaRatio, string> = {
   "1:1": "square_hd", "16:9": "landscape_16_9", "9:16": "portrait_16_9", "4:3": "landscape_4_3", "3:4": "portrait_4_3",
 };
 
-export function buildMediaInput(model: MediaModel, prompt: string, ratio: MediaRatio, seconds: number) {
-  if (model.kind === "music") {
-    // Simple mode: the description drives the song; kie.ai requires a style (or lyrics) alongside it.
-    const instrumental = /\b(instrumental|sans paroles|sans voix|no vocals|without vocals)\b/i.test(prompt);
-    return { input: { custom_mode: false, instrumental, model: "V6", prompt: prompt.slice(0, 3000), style: prompt.slice(0, 200) }, ratio: "auto", duration: null };
+/** Options from the music creation journey (all optional; validated on the server). */
+export type MusicOptions = { title?: string | undefined; lyrics?: string | undefined; style?: string | undefined; exclude?: string | undefined; vocal?: "m" | "f" | undefined; instrumental?: boolean | undefined };
+
+/**
+ * kie.ai music input (docs.kie.ai/suno-api/generate-music). Custom mode is used when the user gives their own
+ * lyrics or wants an instrumental: the lyrics are sung as written, with a title and a style. Otherwise the
+ * description drives the song (simple mode) and voice or exclusions are written into it, because the
+ * custom-only fields (vocal_gender…) must not be sent in simple mode.
+ */
+function musicInput(prompt: string, o: MusicOptions = {}): Record<string, unknown> {
+  const instrumental = o.instrumental ?? /\b(instrumental|sans paroles|sans voix|no vocals|without vocals)\b/i.test(prompt);
+  const style = (o.style?.trim() || prompt).slice(0, 1000);
+  const lyrics = o.lyrics?.trim() ?? "";
+  if (lyrics || instrumental) {
+    const title = (o.title?.trim() || prompt.replace(/\s+/g, " ").split(/[.,;:!?\n]/)[0]!.trim() || "TechNova").slice(0, 80);
+    return {
+      custom_mode: true, instrumental, model: "V6", title, style,
+      ...(lyrics && !instrumental ? { lyrics: lyrics.slice(0, 5000) } : {}),
+      ...(o.exclude?.trim() ? { negative_tags: o.exclude.trim().slice(0, 300) } : {}),
+      ...(o.vocal && !instrumental ? { vocal_gender: o.vocal } : {}),
+    };
   }
+  const hints = [
+    o.vocal === "f" ? "female vocals" : o.vocal === "m" ? "male vocals" : "",
+    o.exclude?.trim() ? `avoid: ${o.exclude.trim()}` : "",
+  ].filter(Boolean).join("; ");
+  return { custom_mode: false, instrumental: false, model: "V6", prompt: `${prompt}${hints ? ` (${hints})` : ""}`.slice(0, 3000), style };
+}
+
+export function buildMediaInput(model: MediaModel, prompt: string, ratio: MediaRatio, seconds: number, music?: MusicOptions) {
+  if (model.kind === "music") return { input: musicInput(prompt, music), ratio: "auto", duration: null };
   const chosen = model.ratios.includes(ratio) ? ratio : (model.ratios.includes("16:9") ? "16:9" : model.ratios[0]);
   const input: Record<string, unknown> = { prompt, ...(model.extra ?? {}) };
   if (chosen && model.size === "aspect_ratio") input["aspect_ratio"] = chosen;

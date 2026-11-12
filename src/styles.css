@@ -1131,3 +1131,10 @@ body:has(.dashboard-shell) :is([data-radix-popper-content-wrapper] > [data-state
 .plugin-card { transition: border-color .2s, box-shadow .2s; }
 .plugin-card:hover { border-color: oklch(0.7 0.1 var(--hue) / .6); box-shadow: 0 10px 30px -18px oklch(0.5 0.15 var(--hue) / .55); }
 .slash-menu-item[aria-selected="true"] { background: var(--secondary); }
+
+/* Music and video creation buttons under the chat box (and their journeys' main button). */
+.create-chip-music { background: linear-gradient(135deg, #c026d3, #7c3aed); box-shadow: 0 6px 18px -8px rgb(192 38 211 / .7); }
+.create-chip-video { background: linear-gradient(135deg, #f97316, #e11d48); box-shadow: 0 6px 18px -8px rgb(249 115 22 / .7); }
+.create-chip-music, .create-chip-video { transition: filter .2s, transform .2s; }
+.create-chip-music:hover, .create-chip-video:hover { filter: brightness(1.08); transform: translateY(-1px); }
+@media (prefers-reduced-motion: reduce) { .create-chip-music:hover, .create-chip-video:hover { transform: none; } }

@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState, type PointerEvent as
 import { confirmDialog } from "@/components/ConfirmHost";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
-import { History, Share, ArrowRight, Check, ChevronDown, Code2, MessageCircle, Pencil, Plus, Search, Trash2, Mic, Paperclip, X, Loader2, FileAudio, FileVideo, FileText, Square, Copy, Wand2, Zap, Film, Image as ImageIcon, Telescope, Music, Library, AlertCircle, LayoutTemplate, ShoppingBag, BarChart3, BadgeDollarSign, ScanEye, FileSearch, Download } from "lucide-react";
+import { History, Share, ArrowRight, ArrowUp, Check, ChevronDown, Code2, MessageCircle, Pencil, Plus, Search, Trash2, Mic, Paperclip, X, Loader2, FileAudio, FileVideo, FileText, Square, Copy, Wand2, Zap, Film, Image as ImageIcon, Telescope, Music, Library, AlertCircle, LayoutTemplate, ShoppingBag, BarChart3, BadgeDollarSign, ScanEye, FileSearch, Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -36,6 +36,7 @@ import { cn } from "@/lib/utils";
 import { ThinkingLine } from "./ThinkingSpinner";
 import { notifyCreditsChanged } from "./TopActions";
 import { SalesPageWizard } from "./SalesPageWizard";
+import { MusicWizard, VideoWizard, type MediaRequest } from "./MediaWizards";
 import { slashCommands, type SlashCommand } from "@/lib/plugins";
 import { useInstalledPlugins } from "@/lib/plugins-client";
 import { ArtifactPanel, StudioPlan, StudioQuestions, StudioTimeline } from "./Studio";
@@ -537,7 +538,7 @@ function ChatComposer({
                 disabled={disabled || reading || docsBusy}
                 aria-label={copy.saveIdea}
                 className="ml-1 size-8 shrink-0 rounded-full bg-foreground text-background hover:bg-foreground/85"
-              />
+              ><ArrowUp className="size-4" strokeWidth={2.4} /></PromptInputSubmit>
             )}
           </div>
         </PromptInputFooter>
@@ -626,7 +627,7 @@ const starterIdeas: StarterIdea[] = [
   { icon: FileSearch, mode: "chat", attach: true, fr: ["Analyser un document", "PDF, Word, Excel, PowerPoint…", "Résume le document joint en 5 points clés, puis liste les décisions et les actions à mener."], en: ["Analyse a document", "PDF, Word, Excel, PowerPoint…", "Summarise the attached document in 5 key points, then list the decisions and actions to take."] },
 ];
 
-function StarterIdeas({ choice, inputRef, onSalesPage }: { choice: ReturnType<typeof useWorkspaceChoice>; inputRef: React.RefObject<HTMLTextAreaElement | null>; onSalesPage: () => void }) {
+function StarterIdeas({ choice, inputRef, onSalesPage, onMusic, onVideo }: { choice: ReturnType<typeof useWorkspaceChoice>; inputRef: React.RefObject<HTMLTextAreaElement | null>; onSalesPage: () => void; onMusic: () => void; onVideo: () => void }) {
   const { lang } = useDashboard();
   function pick(idea: StarterIdea) {
     if (idea.wizard === "sales") { onSalesPage(); return; }
@@ -641,7 +642,12 @@ function StarterIdeas({ choice, inputRef, onSalesPage }: { choice: ReturnType<ty
       if (idea.attach) document.querySelector<HTMLInputElement>("input[data-chat-attach]")?.click();
     }, 0);
   }
-  return <div className="starter-row flex w-full flex-nowrap justify-center gap-0.5 overflow-x-auto">
+  return <div className="space-y-2">
+    <div className="flex flex-wrap justify-center gap-2">
+      <button type="button" onClick={onMusic} className="create-chip create-chip-music inline-flex h-8 items-center gap-1.5 rounded-full px-3.5 text-[12px] font-semibold text-white"><Music className="size-3.5" />{lang === "en" ? "Create a song" : "Création de musique"}</button>
+      <button type="button" onClick={onVideo} className="create-chip create-chip-video inline-flex h-8 items-center gap-1.5 rounded-full px-3.5 text-[12px] font-semibold text-white"><Film className="size-3.5" />{lang === "en" ? "Create a video" : "Création de vidéo"}</button>
+    </div>
+    <div className="starter-row flex w-full flex-nowrap justify-center gap-0.5 overflow-x-auto">
     {starterIdeas.map((idea) => {
       const [title, hint] = idea[lang === "en" ? "en" : "fr"];
       const Icon = idea.icon;
@@ -652,18 +658,26 @@ function StarterIdeas({ choice, inputRef, onSalesPage }: { choice: ReturnType<ty
         <span className="truncate">{title}</span>
       </button>;
     })}
+    </div>
   </div>;
 }
 
 export function ChatListPage() {
   const { reload, t, lang } = useDashboard();
   const [salesOpen, setSalesOpen] = useState(false);
+  const [musicOpen, setMusicOpen] = useState(false);
+  const [videoOpen, setVideoOpen] = useState(false);
+  // Music / video journeys: the conversation's first message carries the structured request.
+  function createMedia(request: MediaRequest, summary: string, title: string) {
+    choice.chooseMode("chat");
+    void start(summary, [], title, [{ type: "data-media-request", data: request } as unknown as Json]);
+  }
   const choice = useWorkspaceChoice();
   const composerRef = useRef<HTMLTextAreaElement>(null);
   const navigate = useNavigate();
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
-  async function start(text = "", files: ChatFilePart[] = [], givenTitle = "") {
+  async function start(text = "", files: ChatFilePart[] = [], givenTitle = "", extraParts: Json[] = []) {
     if (busy) return;
     setBusy(true);
     setError("");
@@ -684,7 +698,7 @@ export function ChatListPage() {
         thread_id: data.id,
         sdk_id: sdkId,
         role: "user",
-        parts: persistableParts(sdkId, [{ type: "text", text: text.trim() }, ...files]) as Json,
+        parts: [...(persistableParts(sdkId, [{ type: "text", text: text.trim() }, ...files]) as Json[]), ...extraParts] as Json,
       });
       if (noteError) {
         await supabase.from("chat_threads").delete().eq("id", data.id);
@@ -713,7 +727,9 @@ export function ChatListPage() {
                 {error}
               </p>
             )}
-            <div className="mt-4"><StarterIdeas choice={choice} inputRef={composerRef} onSalesPage={() => setSalesOpen(true)} /></div>
+            <div className="mt-4"><StarterIdeas choice={choice} inputRef={composerRef} onSalesPage={() => setSalesOpen(true)} onMusic={() => setMusicOpen(true)} onVideo={() => setVideoOpen(true)} /></div>
+            <MusicWizard open={musicOpen} onOpenChange={setMusicOpen} lang={lang === "en" ? "en" : "fr"} onCreate={createMedia} />
+            <VideoWizard open={videoOpen} onOpenChange={setVideoOpen} lang={lang === "en" ? "en" : "fr"} onCreate={createMedia} />
             <SalesPageWizard open={salesOpen} onOpenChange={setSalesOpen} lang={lang === "en" ? "en" : "fr"} onBuild={(brief, product) => { choice.chooseMode("create"); void start(brief, [], `${lang === "en" ? "Sales page" : "Page de vente"} · ${product}`); }} />
           </div>
         </section>
@@ -1116,6 +1132,21 @@ export function ThreadPage({ threadId }: { threadId: string }) {
         setThinking(false);
         setResearchStatus("");
       }
+      return;
+    }
+    const journey = last?.role === "user" ? (last.parts as unknown as Array<{ type: string; data?: MediaRequest }>).find((p) => p.type === "data-media-request")?.data : undefined;
+    if (journey) {
+      const kind: MediaKind = journey.kind;
+      const mediaModel = journey.kind === "video" ? (journey.quality ? qualityVideoModel : defaultVideoModel) : defaultMusicModel;
+      const aspectRatio = journey.kind === "video" ? journey.aspectRatio : "1:1";
+      setThinking(true);
+      try {
+        const id = await createMedia({ data: { threadId, kind, prompt: journey.prompt, aspectRatio, model: mediaModel, ...(journey.kind === "video" ? { duration: "5" as const } : { music: journey.music }) } });
+        const media: ChatMediaData = { id, kind, model: mediaLabel(mediaModel, kind), prompt: journey.prompt, ratio: aspectRatio, status: "waiting", progress: null, urls: [], error: null };
+        setMessages((prev) => [...prev, { id, role: "assistant", parts: [{ type: "data-media", data: media }] as unknown as UIMessage["parts"] }]);
+      } catch (e) {
+        await failWith(String((e as Error)?.message ?? e));
+      } finally { setThinking(false); }
       return;
     }
     const editing = editSourceRef.current;
