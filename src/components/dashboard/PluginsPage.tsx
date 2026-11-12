@@ -11,6 +11,7 @@ import { pluginCategories, pluginTools, plugins, toolLabels, type Plugin, type P
 import { installPlugin, setPluginEnabled, uninstallPlugin, useInstalledPlugins, type InstalledPlugin } from "@/lib/plugins-client";
 import { cn } from "@/lib/utils";
 import { useDashboard } from "./DashboardLayout";
+import { UpcomingConnectors } from "./UpcomingConnectors";
 
 const icons = { briefcase: Briefcase, scale: Scale, graduation: GraduationCap, megaphone: Megaphone, code: Code2, table: Table2, users: Users, calculator: Calculator, store: Store, pen: PenLine } as const;
 
@@ -107,6 +108,8 @@ export function PluginsPage() {
       </section>}
 
     <p className="flex items-start gap-2 text-[12px] text-muted-foreground"><ShieldCheck className="mt-0.5 size-4 shrink-0" />{fr ? `Les plugins officiels sont conçus par TechNova. Leurs agents n'ont que les accès affichés (lecture seule), un budget de ${DEFAULT_AGENT_BUDGET} crédits par réponse, et ne peuvent ni payer, ni envoyer d'e-mails, ni écrire dans une base.` : `Official plugins are made by TechNova. Their agents only get the accesses shown (read-only), a budget of ${DEFAULT_AGENT_BUDGET} credits per reply, and can never pay, send emails or write to a database.`}</p>
+
+    <UpcomingConnectors lang={L} />
 
     <PluginSheet plugin={open} item={open ? installed.get(open.id) ?? null : null} lang={L} agentsLocked={agentsLocked} busy={busy !== null}
       onClose={() => setOpen(null)} onInstall={install} onRemove={remove} onToggle={toggle} />

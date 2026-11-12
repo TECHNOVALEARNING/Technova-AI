@@ -11,7 +11,7 @@ export const dashboardLooks: { id: DashboardLook; mode: "light" | "dark"; fr: st
   { id: "abysse", mode: "dark", fr: "Abysse", en: "Abyss", swatch: "#1b2532" },
   { id: "amethyste", mode: "dark", fr: "Améthyste", en: "Amethyst", swatch: "#3a1f3d" },
   { id: "pastel", mode: "light", fr: "Pastel", en: "Pastel", swatch: "#a9c3da" },
-  { id: "azur", mode: "light", fr: "Azur", en: "Azure", swatch: "#9cc3e6" },
+  { id: "azur", mode: "light", fr: "Azur", en: "Azure", swatch: "#5f97d3" },
   { id: "givre", mode: "light", fr: "Givre", en: "Frost", swatch: "#c7cdf6" },
   { id: "perle", mode: "light", fr: "Perle", en: "Pearl", swatch: "#d4d4d4" },
 ];

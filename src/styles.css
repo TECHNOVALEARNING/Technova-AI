@@ -965,9 +965,9 @@ body:has(.dashboard-shell) :is([data-radix-popper-content-wrapper] > [data-state
 .dashboard-shell.look-azur .dashboard-content {
   --background: oklch(.975 .003 75); --foreground: oklch(.129 .042 264.7); --card-foreground: oklch(.129 .042 264.7); --muted-foreground: oklch(.554 .046 257.4);
   --primary: oklch(.32 .02 60); --primary-foreground: oklch(.984 .003 247.9);
-  --look-wallpaper: radial-gradient(60% 50% at 18% 8%, oklch(1 0 0 / .62), transparent 70%), radial-gradient(55% 45% at 88% 92%, oklch(.72 .05 250 / .22), transparent 72%),
-    radial-gradient(45% 35% at 8% 95%, oklch(.9 .02 240 / .18), transparent 70%),
-    linear-gradient(170deg, oklch(.72 .11 240) 0%, oklch(.82 .08 230) 25%, oklch(.89 .05 225) 55%, oklch(.95 .025 220) 78%, oklch(.99 .005 220) 100%);
+  --look-wallpaper: radial-gradient(60% 50% at 18% 8%, oklch(1 0 0 / .62), transparent 70%), radial-gradient(55% 45% at 88% 92%, oklch(.62 .08 250 / .26), transparent 72%),
+    radial-gradient(45% 35% at 8% 95%, oklch(.88 .03 240 / .18), transparent 70%),
+    linear-gradient(170deg, oklch(.6 .13 246) 0%, oklch(.7 .115 240) 25%, oklch(.81 .08 233) 55%, oklch(.91 .04 226) 78%, oklch(.975 .01 222) 100%);
   --look-veil: transparent; --look-glass: oklch(1 0 0 / .55); --look-glass-edge: oklch(1 0 0 / .6); --look-glass-shine: oklch(1 0 0 / .85);
   --look-glass-shadow: 0 20px 60px -20px oklch(.4 .03 60 / .18), 0 2px 8px -2px oklch(.4 .03 60 / .06); }
 .dark .dashboard-shell.look-crepuscule .dashboard-content {
