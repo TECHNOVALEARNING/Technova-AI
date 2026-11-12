@@ -1114,3 +1114,12 @@ body:has(.dashboard-shell) :is([data-radix-popper-content-wrapper] > [data-state
   -webkit-background-clip: text; background-clip: text; color: transparent;
   animation: title-shine 9s cubic-bezier(.4, 0, .3, 1) infinite; }
 @media (prefers-reduced-motion: reduce) { .title-shine, .title-shine-ink { animation: none; background-position: 160% 0, 0 0; } }
+
+/* Dashboard top bar: the upgrade button in the TechNova iris colours (calm, readable on every look). */
+.top-upgrade { background: linear-gradient(120deg, oklch(.55 .17 300), oklch(.58 .15 260) 55%, oklch(.6 .12 210)); }
+
+/* About page: section titles in a calm sage green, key figures in a calm lavender violet (both soft, readable). */
+.about-title { color: oklch(.48 .085 165); }
+.about-figure { color: oklch(.5 .13 295); }
+.dark .about-title { color: oklch(.8 .08 165); }
+.dark .about-figure { color: oklch(.8 .1 295); }

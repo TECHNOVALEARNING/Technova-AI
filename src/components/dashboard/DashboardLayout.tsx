@@ -16,6 +16,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 
 import { ThreadItem } from "./ThreadItem";
 import { PendingDeletionBanner } from "./PendingDeletionBanner";
+import { TopActions } from "./TopActions";
 import { DashboardContext, type Thread } from "./dashboard-context";
 export { useDashboard, type Thread } from "./dashboard-context";
 
@@ -184,8 +185,12 @@ export function DashboardLayout({ children }: { children: ReactNode }) {
       <div className="dashboard-content relative isolate min-w-0 flex-1">
         {!isThread && <div className={`dashboard-wallpaper pointer-events-none fixed inset-0 z-0 overflow-hidden`} aria-hidden="true"><img src={media.cloudBackground} alt="" className="h-full w-full scale-105 object-cover" /><span className="wallpaper-glow wallpaper-glow-1" /><span className="wallpaper-glow wallpaper-glow-2" /><span className="wallpaper-glow wallpaper-glow-3" /></div>}
         <header className="sticky top-0 z-30 flex h-12 items-center justify-between border-b border-border bg-card/95 px-3 backdrop-blur-xl lg:hidden"><Button variant="ghost" size="icon-sm" aria-label={t.menu} onClick={() => setMobileOpen(true)}><Menu className="size-5" /></Button><Link to="/dashboard" className="font-display text-[14px] font-bold">TechNova</Link><span className={`plan-ring plan-${planKey ?? "free"}`}><span className="grid size-7 place-items-center rounded-full bg-card text-[11px] font-bold text-foreground">{initials}</span></span></header>
-        {/* Today's date, top left of the content (browser time, set after mount to avoid a server/browser mismatch). */}
-        {!isThread && <p className="relative z-10 mx-auto flex h-7 w-full max-w-[1640px] items-center gap-1.5 px-4 pt-2 text-[11.5px] font-medium text-muted-foreground sm:px-6 lg:px-3 lg:pt-0"><CalendarDays className="size-3.5" strokeWidth={1.6} /><span className="first-letter:uppercase">{today}</span></p>}
+        {/* Top bar of every dashboard page: today's date on the left (not inside a conversation), and on the right
+            "Get the app" and "Upgrade" (browser time is set after mount to avoid a server/browser mismatch). */}
+        <div className="relative z-20 mx-auto flex w-full max-w-[1640px] items-center justify-between gap-3 px-4 pt-2 sm:px-6 lg:px-3 lg:pt-0">
+          {!isThread ? <p className="flex h-8 min-w-0 items-center gap-1.5 text-[11.5px] font-medium text-muted-foreground"><CalendarDays className="size-3.5 shrink-0" strokeWidth={1.6} /><span className="truncate first-letter:uppercase">{today}</span></p> : <span />}
+          <TopActions lang={lang} tier={plan?.tier ?? null} />
+        </div>
         <main className={`relative z-10 mx-auto w-full max-w-[1640px] px-4 pt-6 sm:px-6 lg:px-3 ${isThread ? "min-h-[calc(100svh-48px)] pb-8 lg:min-h-[calc(100svh-2rem)] lg:pb-4" : "min-h-[calc(100svh-148px)] pb-4 lg:min-h-[calc(100svh-124px)]"}`}>{error && <div role="alert" className="mb-5 flex items-center justify-between border-l-2 border-destructive bg-secondary px-4 py-3 text-sm"><span>{error}</span><Button variant="ghost" size="sm" onClick={() => void reload()}>{t.retry}</Button></div>}<PendingDeletionBanner fr={lang === "fr"} /><div key={pathname} className="dashboard-page-enter">{children}</div></main>
         {/* "Sites à visiter": the TechNova family sites, at the bottom of the dashboard. */}
         {!isThread && <div className="relative z-10 px-4 pb-4 sm:px-6 lg:px-3 lg:pb-0"><div className="dashboard-marquee mx-auto flex h-8 max-w-[1640px] items-center overflow-hidden rounded-full border border-border bg-card lg:h-9">

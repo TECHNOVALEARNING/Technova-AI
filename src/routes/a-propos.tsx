@@ -114,7 +114,7 @@ function AboutPage() {
           return <article key={tag as string} className="flex flex-col rounded-[28px] border border-border bg-card p-7 shadow-soft md:p-9">
             <span className="grid size-11 place-items-center rounded-2xl bg-ink text-ink-foreground"><I className="size-5" /></span>
             <p className={`mt-6 ${eyebrow}`}>{tag as string}</p>
-            <h2 className="mt-2 font-display text-2xl font-semibold leading-tight tracking-tight md:text-3xl">{title as string}</h2>
+            <h2 className="about-title mt-2 font-display text-2xl font-semibold leading-tight tracking-tight md:text-3xl">{title as string}</h2>
             <p className="mt-4 leading-relaxed text-muted-foreground">{body as string}</p>
           </article>;
         })}
@@ -124,10 +124,10 @@ function AboutPage() {
     <section className="px-4 pt-14" id="pourquoi">
       <div className="mx-auto max-w-6xl">
         <p className={eyebrow}>{t.whyTag}</p>
-        <h2 className="mt-2 max-w-4xl font-display text-3xl font-semibold leading-tight tracking-tight md:text-4xl">{t.whyTitle}</h2>
+        <h2 className="about-title mt-2 max-w-4xl font-display text-3xl font-semibold leading-tight tracking-tight md:text-4xl">{t.whyTitle}</h2>
         <p className="mt-4 max-w-3xl leading-relaxed text-muted-foreground">{t.whyIntro}</p>
         <div className="mt-8 grid gap-4 lg:grid-cols-3">{t.why.map(([figure, title, reality, deadEnd]) => <article key={title} className="flex flex-col rounded-[24px] border border-border bg-card p-6 shadow-soft">
-          <p className="font-display text-4xl font-semibold tracking-tight text-primary md:text-5xl">{figure}</p>
+          <p className="about-figure font-display text-4xl font-semibold tracking-tight md:text-5xl">{figure}</p>
           <h3 className="mt-3 font-display text-lg font-semibold">{title}</h3>
           <p className={`mt-4 ${eyebrow}`}>{t.whyCols[0]}</p>
           <p className="mt-1 text-sm leading-relaxed text-muted-foreground">{reality}</p>
@@ -142,10 +142,10 @@ function AboutPage() {
     <section className="px-4 pt-14">
       <div className="mx-auto max-w-6xl">
         <p className={eyebrow}>{t.statsTag}</p>
-        <h2 className="mt-2 font-display text-3xl font-semibold tracking-tight md:text-4xl">{t.statsTitle}</h2>
+        <h2 className="about-title mt-2 font-display text-3xl font-semibold tracking-tight md:text-4xl">{t.statsTitle}</h2>
         <dl className="mt-8 grid gap-px overflow-hidden rounded-[28px] border border-border bg-border sm:grid-cols-2 lg:grid-cols-5">
           {figures.map(([value, label]) => <div key={label} className="bg-card p-6">
-            <dt className="font-display text-4xl font-semibold tracking-tight md:text-5xl">{value}</dt>
+            <dt className="about-figure font-display text-4xl font-semibold tracking-tight md:text-5xl">{value}</dt>
             <dd className="mt-2 text-sm text-muted-foreground">{label}</dd>
           </div>)}
         </dl>
@@ -155,7 +155,7 @@ function AboutPage() {
     <section className="px-4 pt-14">
       <div className="mx-auto max-w-6xl">
         <p className={eyebrow}>{t.valuesTag}</p>
-        <h2 className="mt-2 font-display text-3xl font-semibold tracking-tight md:text-4xl">{t.valuesTitle}</h2>
+        <h2 className="about-title mt-2 font-display text-3xl font-semibold tracking-tight md:text-4xl">{t.valuesTitle}</h2>
         <div className="mt-8 grid gap-4 md:grid-cols-3">{t.values.map(([title, body], i) => { const I = valueIcons[i]!; return <div key={title} className="rounded-[24px] border border-border bg-card p-6 shadow-soft">
           <span className="grid size-10 place-items-center rounded-xl bg-secondary"><I className="size-[18px]" /></span>
           <h3 className="mt-5 font-display text-lg font-semibold">{title}</h3>
@@ -167,7 +167,7 @@ function AboutPage() {
     <section className="px-4 pt-14" id="equipe">
       <div className="mx-auto max-w-6xl">
         <p className={eyebrow}>{t.teamTag}</p>
-        <h2 className="mt-2 font-display text-3xl font-semibold tracking-tight md:text-4xl">{t.teamTitle}</h2>
+        <h2 className="about-title mt-2 font-display text-3xl font-semibold tracking-tight md:text-4xl">{t.teamTitle}</h2>
         <div className="mt-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">{team.map((m) => <figure key={m.name} className="group">
           <div className="overflow-hidden rounded-[28px] border border-border bg-secondary">
             <img src={m.photo} alt={m.name} width={640} height={640} loading="lazy" className="aspect-square w-full object-cover transition duration-700 group-hover:scale-[1.03]" />

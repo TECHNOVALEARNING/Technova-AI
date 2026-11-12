@@ -18,6 +18,26 @@ function GoogleMark() {
   return <svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.66l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>;
 }
 
+// Sign-in hardening: messages never reveal whether an account exists, passwords need letters and digits,
+// and repeated failed sign-ins pause the form (Supabase also limits attempts on its side).
+const MAX_FAILED = 5;
+const LOCK_MS = 60_000;
+const strongEnough = (p: string) => p.length >= 8 && p.length <= 128 && /[A-Za-z]/.test(p) && /\d/.test(p);
+/** 0–4: length, mixed case, digits, symbols. */
+function strength(p: string) {
+  if (!p) return 0;
+  let s = 0;
+  if (p.length >= 8) s++;
+  if (p.length >= 12) s++;
+  if (/[a-z]/.test(p) && /[A-Z]/.test(p)) s++;
+  if (/\d/.test(p) && /[^A-Za-z0-9]/.test(p)) s++;
+  return Math.min(4, s);
+}
+const secText = {
+  fr: { wrong: "E-mail ou mot de passe incorrect.", tooMany: "Trop de tentatives. Patientez quelques minutes puis réessayez.", locked: (s: number) => `Trop d'essais : réessayez dans ${s} s.`, unconfirmed: "Confirmez d'abord votre adresse e-mail (lien reçu par e-mail).", weak: "Choisissez un mot de passe d'au moins 8 caractères avec des lettres et des chiffres.", levels: ["Trop faible", "Faible", "Correct", "Bon", "Excellent"] },
+  en: { wrong: "Wrong e-mail or password.", tooMany: "Too many attempts. Wait a few minutes and try again.", locked: (s: number) => `Too many attempts: try again in ${s}s.`, unconfirmed: "Please confirm your e-mail address first (link sent by e-mail).", weak: "Choose a password of at least 8 characters with letters and digits.", levels: ["Too weak", "Weak", "Fair", "Good", "Excellent"] },
+};
+
 export function AuthPage({ mode }: { mode: Mode }) {
   const [lang, setLang] = useState<Lang>("fr");
   const [visible, setVisible] = useState(false);
@@ -27,8 +47,28 @@ export function AuthPage({ mode }: { mode: Mode }) {
   const [busy, setBusy] = useState(false);
   const [ready, setReady] = useState(false);
   const [recovery, setRecovery] = useState(false);
+  const [pw, setPw] = useState("");
+  const [failed, setFailed] = useState(0);
+  const [lockedUntil, setLockedUntil] = useState(0);
+  const [now, setNow] = useState(() => Date.now());
   const navigate = useNavigate();
   const t = content[lang].auth;
+  const sec = secText[lang === "en" ? "en" : "fr"];
+  const lockLeft = Math.max(0, Math.ceil((lockedUntil - now) / 1000));
+  useEffect(() => {
+    if (!lockedUntil) return;
+    const timer = window.setInterval(() => { setNow(Date.now()); if (Date.now() >= lockedUntil) { setLockedUntil(0); setFailed(0); } }, 1000);
+    return () => window.clearInterval(timer);
+  }, [lockedUntil]);
+  /** Only safe, generic messages reach the screen (no raw provider text, no hint that an account exists). */
+  function safeMessage(error: unknown) {
+    const raw = `${(error as { code?: string })?.code ?? ""} ${error instanceof Error ? error.message : ""}`.toLowerCase();
+    if (/rate|too many|over_request|over_email/.test(raw)) return sec.tooMany;
+    if (/not confirmed|email_not_confirmed/.test(raw)) return sec.unconfirmed;
+    if (/weak|pwned|password/.test(raw) && !isLogin) return sec.weak;
+    if (isLogin) return sec.wrong;
+    return t.authError;
+  }
   const isSignup = mode === "signup";
   const isLogin = mode === "login";
   const isReset = mode === "reset";
@@ -73,7 +113,7 @@ export function AuthPage({ mode }: { mode: Mode }) {
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (busy) return;
+    if (busy || lockLeft > 0) return;
     const data = new FormData(event.currentTarget);
     const name = String(data.get("name") ?? "").trim();
     const email = String(data.get("email") ?? "").trim();
@@ -83,6 +123,7 @@ export function AuthPage({ mode }: { mode: Mode }) {
     if (isSignup && !z.string().min(2).max(100).safeParse(name).success) next.name = t.invalidName;
     if (!isReset && !z.string().email().max(255).safeParse(email).success) next.email = t.invalidEmail;
     if (mode !== "forgot" && !z.string().min(8).max(128).safeParse(password).success) next.password = t.invalidPassword;
+    else if ((isSignup || isReset) && !strongEnough(password)) next.password = sec.weak;
     if (isReset && confirm !== password) next.confirm = t.mismatch;
     setErrors(next);
     if (Object.keys(next).length) return;
@@ -97,7 +138,12 @@ export function AuthPage({ mode }: { mode: Mode }) {
         else setMessage(t.preview);
       } else if (isLogin) {
         const { error } = await supabase.auth.signInWithPassword({ email, password });
-        if (error) throw error;
+        if (error) {
+          const count = failed + 1;
+          setFailed(count);
+          if (count >= MAX_FAILED) { setLockedUntil(Date.now() + LOCK_MS); setNow(Date.now()); }
+          throw error;
+        }
         navigate({ to: afterSignInPath() });
       } else if (isReset) {
         if (!recovery) { setFailure(t.invalidLink); return; }
@@ -107,11 +153,12 @@ export function AuthPage({ mode }: { mode: Mode }) {
         setMessage(t.passwordSaved);
       } else {
         const { error } = await supabase.auth.resetPasswordForEmail(email, { redirectTo: `${window.location.origin}/reset-password` });
-        if (error) throw error;
+        // Same answer whether or not the address has an account; only a rate limit is reported.
+        if (error && /rate|too many|over_email/i.test(`${error.code ?? ""} ${error.message}`)) throw error;
         setMessage(t.resetSent);
       }
     } catch (error) {
-      setFailure(error instanceof Error ? error.message : t.authError);
+      setFailure(safeMessage(error));
     } finally {
       setBusy(false);
     }
@@ -146,11 +193,13 @@ export function AuthPage({ mode }: { mode: Mode }) {
           <form noValidate method="post" onSubmit={handleSubmit} className="space-y-4">
             {isSignup && <div className="space-y-1.5"><Label htmlFor="auth-name">{t.name}</Label><Input id="auth-name" name="name" autoComplete="name" placeholder={t.namePlaceholder} maxLength={100} aria-invalid={!!errors.name} onChange={() => clear("name")} className="auth-input" />{errors.name && <p className="text-xs text-destructive">{errors.name}</p>}</div>}
             {!isReset && <div className="space-y-1.5"><Label htmlFor="auth-email">{t.email}</Label><Input id="auth-email" name="email" type="email" autoComplete="email" placeholder={t.emailPlaceholder} maxLength={255} aria-invalid={!!errors.email} onChange={() => clear("email")} className="auth-input" />{errors.email && <p className="text-xs text-destructive">{errors.email}</p>}</div>}
-            {mode !== "forgot" && <div className="space-y-1.5"><div className="flex items-center justify-between gap-2"><Label htmlFor="auth-password">{t.password}</Label>{isLogin && <Link to="/mot-de-passe-oublie" className="text-xs font-semibold text-muted-foreground underline-offset-4 hover:text-foreground hover:underline">{t.forgot}</Link>}</div><div className="relative"><Input id="auth-password" name="password" type={visible ? "text" : "password"} autoComplete={isLogin ? "current-password" : "new-password"} maxLength={128} aria-invalid={!!errors.password} onChange={() => clear("password")} className="auth-input pr-12" /><Button type="button" variant="ghost" size="icon" className="absolute right-1 top-0.5 size-10 text-muted-foreground" onClick={() => setVisible(!visible)} aria-label={visible ? t.hidePassword : t.showPassword} title={t.eye}>{visible ? <EyeOff className="size-4" /> : <Eye className="size-4" />}</Button></div>{errors.password ? <p className="text-xs text-destructive">{errors.password}</p> : (isSignup || isReset) && <p className="text-xs text-muted-foreground">{t.passwordHint}</p>}</div>}
+            {mode !== "forgot" && <div className="space-y-1.5"><div className="flex items-center justify-between gap-2"><Label htmlFor="auth-password">{t.password}</Label>{isLogin && <Link to="/mot-de-passe-oublie" className="text-xs font-semibold text-muted-foreground underline-offset-4 hover:text-foreground hover:underline">{t.forgot}</Link>}</div><div className="relative"><Input id="auth-password" name="password" type={visible ? "text" : "password"} autoComplete={isLogin ? "current-password" : "new-password"} maxLength={128} aria-invalid={!!errors.password} onChange={(e) => { clear("password"); setPw(e.target.value); }} className="auth-input pr-12" /><Button type="button" variant="ghost" size="icon" className="absolute right-1 top-0.5 size-10 text-muted-foreground" onClick={() => setVisible(!visible)} aria-label={visible ? t.hidePassword : t.showPassword} title={t.eye}>{visible ? <EyeOff className="size-4" /> : <Eye className="size-4" />}</Button></div>{errors.password ? <p className="text-xs text-destructive">{errors.password}</p> : (isSignup || isReset) && (pw
+              ? <div className="flex items-center gap-2" aria-live="polite"><div className="flex flex-1 gap-1">{[0, 1, 2, 3].map((i) => <span key={i} className={`h-1 flex-1 rounded-full transition-colors ${i < strength(pw) ? ["bg-destructive", "bg-orange-500", "bg-yellow-500", "bg-emerald-500"][strength(pw) - 1] : "bg-border"}`} />)}</div><span className="w-20 text-right text-[11px] text-muted-foreground">{sec.levels[strength(pw)]}</span></div>
+              : <p className="text-xs text-muted-foreground">{t.passwordHint}</p>)}</div>}
             {isReset && <div className="space-y-1.5"><Label htmlFor="auth-confirm">{t.confirm}</Label><Input id="auth-confirm" name="confirm" type={visible ? "text" : "password"} autoComplete="new-password" maxLength={128} aria-invalid={!!errors.confirm} onChange={() => clear("confirm")} className="auth-input" />{errors.confirm && <p className="text-xs text-destructive">{errors.confirm}</p>}</div>}
-            <Button type="submit" disabled={!ready || busy || (isReset && !recovery)} className="auth-submit mt-2 h-11 w-full gap-2 text-sm font-bold">{busy ? <LoaderCircle className="size-4 animate-spin" /> : null}{busy ? t.working : isSignup ? t.submitSignup : isLogin ? t.submitLogin : isReset ? t.savePassword : t.resetSubmit}{!busy && <ArrowRight className="size-4" />}</Button>
+            <Button type="submit" disabled={!ready || busy || lockLeft > 0 || (isReset && !recovery)} className="auth-submit mt-2 h-11 w-full gap-2 text-sm font-bold">{busy ? <LoaderCircle className="size-4 animate-spin" /> : null}{busy ? t.working : isSignup ? t.submitSignup : isLogin ? t.submitLogin : isReset ? t.savePassword : t.resetSubmit}{!busy && <ArrowRight className="size-4" />}</Button>
             {message && <p role="status" className="border-l-2 border-foreground bg-secondary px-4 py-3 text-sm leading-relaxed">{message}</p>}
-            {failure && <p role="alert" className="text-sm text-destructive">{failure}</p>}
+            {lockLeft > 0 ? <p role="alert" className="text-sm text-destructive">{sec.locked(lockLeft)}</p> : failure && <p role="alert" className="text-sm text-destructive">{failure}</p>}
             {isReset && !recovery && !message && <p role="alert" className="text-sm text-destructive">{t.invalidLink}</p>}
           </form>
           <div className={`${isSignup ? "mt-5 pt-4" : "mt-7 pt-6"} border-t border-border text-center text-sm text-muted-foreground`}>{isSignup ? t.hasAccount : isLogin ? t.noAccount : null} <Link to={isSignup || !isLogin ? "/connexion" : "/inscription"} className="font-bold text-foreground underline underline-offset-4">{isSignup || !isLogin ? t.switchLogin : t.switchSignup}</Link></div>

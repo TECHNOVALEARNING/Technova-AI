@@ -21,7 +21,7 @@ function EuFlag() {
       <rect width="30" height="20" fill="#003399" />
       {Array.from({ length: 12 }, (_, i) => {
         const a = (i * Math.PI) / 6;
-        return <path key={i} d={star} fill="#FFCC00" transform={`translate(${15 + 6 * Math.sin(a)} ${10 - 6 * Math.cos(a)}) scale(1.1)`} />;
+        return <path key={i} d={star} fill="#FFCC00" transform={`translate(${(15 + 6 * Math.sin(a)).toFixed(3)} ${(10 - 6 * Math.cos(a)).toFixed(3)}) scale(1.1)`} />;
       })}
     </svg>
   );

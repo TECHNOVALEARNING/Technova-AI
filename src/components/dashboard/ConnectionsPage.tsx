@@ -3,6 +3,7 @@ import { CheckCircle2, Globe2, Loader2, Plug, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useDashboard } from "./DashboardLayout";
 import { CONNECTOR_CATALOG } from "@/lib/connectors";
+import { BrandLogo } from "./BrandLogo";
 import { completeConnect, disconnectConnector, listConnections, startConnect } from "@/lib/connections.functions";
 import { listMySites, unpublishSite } from "@/lib/publishing.functions";
 import { upgradeFeatureOf, upgradeSentence } from "@/lib/plans";
@@ -64,7 +65,7 @@ export function ConnectionsPage() {
       {CONNECTOR_CATALOG.map((c) => {
         const s = status.find((x) => x.id === c.id);
         return <article key={c.id} className="flex flex-col gap-3 rounded-2xl border border-border bg-card/90 p-4 backdrop-blur">
-          <div className="flex items-center gap-3"><span className="grid size-10 place-items-center rounded-xl bg-muted font-display text-sm font-bold">{c.name.slice(0, 2)}</span><div className="min-w-0"><h2 className="font-medium">{c.name}</h2>{s?.connected && <p className="flex items-center gap-1 truncate text-xs text-primary"><CheckCircle2 className="size-3" />{s.label ?? tx(lang, "Connecté", "Connected")}</p>}</div></div>
+          <div className="flex items-center gap-3"><BrandLogo id={c.id} /><div className="min-w-0"><h2 className="font-medium">{c.name}</h2>{s?.connected && <p className="flex items-center gap-1 truncate text-xs text-primary"><CheckCircle2 className="size-3" />{s.label ?? tx(lang, "Connecté", "Connected")}</p>}</div></div>
           <p className="flex-1 text-sm text-muted-foreground">{tx(lang, c.fr, c.en)}</p>
           {c.kind === "soon" ? <Button size="sm" variant="outline" disabled>{tx(lang, "Bientôt disponible", "Coming soon")}</Button>
             : !s ? <Button size="sm" variant="outline" disabled><Loader2 className="size-4 animate-spin" /></Button>

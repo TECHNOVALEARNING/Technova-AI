@@ -22,14 +22,15 @@ export function registerServiceWorker() {
   else window.addEventListener("load", register, { once: true });
 }
 
-const isStandalone = () => typeof window !== "undefined" && (window.matchMedia("(display-mode: standalone)").matches || (navigator as Navigator & { standalone?: boolean }).standalone === true);
+/** True when TechNova runs as the installed app (standalone window or iOS home-screen app). */
+export const isStandaloneApp = () => typeof window !== "undefined" && (window.matchMedia("(display-mode: standalone)").matches || (navigator as Navigator & { standalone?: boolean }).standalone === true);
 const isIos = () => typeof navigator !== "undefined" && /iphone|ipad|ipod/i.test(navigator.userAgent) && !/crios|fxios/i.test(navigator.userAgent);
 
 /** "prompt": the browser can install now · "ios": show Share → Add to Home Screen · "none": already installed or unsupported. */
 export function useInstallApp() {
   const [mode, setMode] = useState<"prompt" | "ios" | "none">("none");
   useEffect(() => {
-    const update = () => setMode(isStandalone() ? "none" : deferred ? "prompt" : isIos() ? "ios" : "none");
+    const update = () => setMode(isStandaloneApp() ? "none" : deferred ? "prompt" : isIos() ? "ios" : "none");
     update();
     listeners.add(update);
     return () => { listeners.delete(update); };

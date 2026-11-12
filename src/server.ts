@@ -52,6 +52,8 @@ const SECURITY_HEADERS: Record<string, string> = {
   "Referrer-Policy": "strict-origin-when-cross-origin",
   "X-Frame-Options": "SAMEORIGIN",
   "Permissions-Policy": "camera=(), geolocation=(), payment=(), usb=(), microphone=(self)",
+  // Minimal content policy: no framing by other sites (clickjacking), no plugins, no <base> hijack, HTTPS only.
+  "Content-Security-Policy": "frame-ancestors 'self'; object-src 'none'; base-uri 'self'; upgrade-insecure-requests",
 };
 
 function withSecurityHeaders(response: Response, requestId: string): Response {
