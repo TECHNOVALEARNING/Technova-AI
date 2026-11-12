@@ -1118,8 +1118,9 @@ body:has(.dashboard-shell) :is([data-radix-popper-content-wrapper] > [data-state
 /* Dashboard top bar: the upgrade button in the TechNova iris colours (calm, readable on every look). */
 .top-upgrade { background: linear-gradient(120deg, oklch(.55 .17 300), oklch(.58 .15 260) 55%, oklch(.6 .12 210)); }
 
-/* About page: section titles in a calm sage green, key figures in a calm lavender violet (both soft, readable). */
-.about-title { color: oklch(.48 .085 165); }
-.about-figure { color: oklch(.5 .13 295); }
-.dark .about-title { color: oklch(.8 .08 165); }
-.dark .about-figure { color: oklch(.8 .1 295); }
+/* About page: section titles in the soft lavender → periwinkle → sage gradient of the reference image, key
+   figures in its middle periwinkle blue. */
+.about-title { width: fit-content; max-width: 100%; background-image: linear-gradient(90deg, #a77bcb 0%, #8f88cf 28%, #7b91c9 50%, #6d98a8 72%, #5f9c57 100%); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.about-figure { color: #7b8fcb; }
+.dark .about-title { background-image: linear-gradient(90deg, #c9a3e6 0%, #aeb0ea 30%, #9cb4e6 52%, #8fbcc4 74%, #8cc283 100%); }
+.dark .about-figure { color: #a5b6ea; }

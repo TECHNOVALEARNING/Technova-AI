@@ -23,6 +23,8 @@ const necessary: Row[] = [
   ["technova-consent", "Mémoriser vos choix en matière de cookies, pour ne pas vous les redemander à chaque page.", "6 mois"],
   ["technova-site-lang, technova-dashboard-lang", "Garder la langue que vous avez choisie pour le site et le tableau de bord.", "Jusqu'au prochain choix"],
   ["technova-dashboard-theme", "Garder le thème du tableau de bord que vous avez choisi (Brume, Soie, Crépuscule, Abysse, Améthyste, Pastel, Azur, Givre ou Perle).", "Jusqu'au prochain choix"],
+  ["technova-last-active", "Heure de votre dernière activité dans le tableau de bord : après 7 jours sans activité, la session se ferme pour protéger votre compte.", "Jusqu'à la déconnexion"],
+  ["technova-inbox-read", "Retenir les messages de votre boîte de réception que vous avez déjà lus.", "Jusqu'à la déconnexion"],
   ["tn-pending-pack", "Retenir le pack choisi avant la connexion, pour reprendre l'achat ensuite.", "Jusqu'au paiement"],
   ["technova-supabase-oauth-state", "Protéger la connexion à votre propre projet Supabase contre la falsification de requête.", "Quelques minutes"],
   ["technova-active-agent", "Ouvrir le chat avec l'agent que vous venez de choisir.", "Jusqu'au prochain choix"],

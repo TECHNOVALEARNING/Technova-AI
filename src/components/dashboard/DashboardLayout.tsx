@@ -4,7 +4,7 @@ import { savePref } from "@/lib/consent";
 import { planKeyOf, planLabels, usePlan } from "@/lib/plan-client";
 import { BookMarked, Bot, ChevronUp, Library, Plug, ShieldAlert } from "lucide-react";
 import { getMyRole } from "@/lib/admin.functions";
-import { Activity, ArrowLeft, CalendarDays, Check, Palette, Crown, Bell, BookOpen, Boxes, ChevronDown, Code2, CreditCard, Diamond, Gift, Globe2, LayoutDashboard, LogOut, Menu, MessageCircle, Moon, PanelLeftClose, PanelLeftOpen, Search, Settings2, Sun, Wallet, X } from "lucide-react";
+import { Activity, ArrowLeft, CalendarDays, Check, Palette, Crown, Bell, BookOpen, Boxes, ChevronDown, ChevronRight, Code2, CreditCard, Diamond, Gift, Globe2, Inbox, LayoutDashboard, LifeBuoy, LogOut, Menu, MessageCircle, Moon, PanelLeftClose, PanelLeftOpen, Search, Settings2, Sun, Wallet, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { dashboardText, type Lang } from "@/lib/i18n";
@@ -17,6 +17,8 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { ThreadItem } from "./ThreadItem";
 import { PendingDeletionBanner } from "./PendingDeletionBanner";
 import { TopActions } from "./TopActions";
+import { InboxDialog, useInbox } from "./Inbox";
+import { clearSessionGuard, useSessionGuard } from "@/lib/session-guard";
 import { DashboardContext, type Thread } from "./dashboard-context";
 export { useDashboard, type Thread } from "./dashboard-context";
 
@@ -37,6 +39,11 @@ const links = [
 ] as const;
 /** Always visible; the rest unfolds under "Plus" so the history gets the room. */
 const primaryKeys: readonly string[] = ["overview", "chat", "agents", "credits"];
+
+/** One line of the account menu. */
+function AccountItem({ to, icon: Icon, label, chevron = false }: { to: "/dashboard/credits" | "/dashboard/settings" | "/dashboard/connexions" | "/dashboard/usage" | "/dashboard/api" | "/dashboard/docs"; icon: typeof Plug; label: string; chevron?: boolean }) {
+  return <Link to={to} className="flex items-center gap-3 rounded-xl px-2.5 py-2 text-[13.5px] transition hover:bg-secondary"><Icon className="size-[18px] text-muted-foreground" strokeWidth={1.7} /><span className="flex-1">{label}</span>{chevron && <ChevronRight className="size-4 text-muted-foreground" />}</Link>;
+}
 
 export function DashboardLayout({ children }: { children: ReactNode }) {
   const [lang, setLangState] = useState<Lang>("fr");
@@ -97,7 +104,14 @@ export function DashboardLayout({ children }: { children: ReactNode }) {
     await reload();
     void navigate({ to: "/dashboard/chat/$threadId", params: { threadId: data.id } });
   }
+  // Inbox (account menu): tips, credit prices and live notices, with an unread dot on the profile.
+  const inbox = useInbox(lang === "en" ? "en" : "fr");
+  const [inboxOpen, setInboxOpen] = useState(false);
+  // Sessions end after a week without activity (see session-guard.ts).
+  useSessionGuard(useCallback(() => { void navigate({ to: "/connexion", replace: true }); }, [navigate]));
   async function signOut() {
+    clearSessionGuard();
+    try { localStorage.removeItem("technova-inbox-read"); } catch { /* ignore */ }
     await supabase.auth.signOut();
     void navigate({ to: "/connexion", replace: true });
   }
@@ -157,10 +171,38 @@ export function DashboardLayout({ children }: { children: ReactNode }) {
           </div>
         </div>
         <div className="shrink-0 border-t border-border p-2">
-          <div className={`flex items-center gap-2.5 rounded-lg px-2 py-1.5 ${mini ? "lg:hidden" : ""}`}>
-            <span className={`plan-ring plan-${planKey ?? "free"}`} title={planName ? `${lang === "fr" ? "Forfait" : "Plan"} ${planName}` : undefined}><span className="grid size-9 place-items-center rounded-full bg-card text-[13px] font-semibold text-foreground">{initials}</span></span>
-            <span className="min-w-0 flex-1"><span className="block truncate text-[12px] font-medium">{name || t.accountName}</span>{email && <span className="block truncate text-[10.5px] text-muted-foreground">{email}</span>}{planKey && planKey !== "free" && <Link to="/dashboard/credits" title={lang === "fr" ? "Voir les forfaits" : "See plans"} className={`plan-${planKey} plan-pill mt-1 inline-flex items-center gap-1 rounded-full font-semibold leading-none transition-opacity hover:opacity-85 ${planKey === "pro" ? "h-5 px-2.5 text-[10.5px] tracking-[0.06em]" : "h-[18px] px-2 text-[10px]"}`}>{planKey === "pro" && <Crown className="size-3" strokeWidth={2.4} aria-hidden="true" />}<span className="plan-chip-text">{planKey === "pro" ? "PRO" : planName}</span></Link>}</span>
-          </div>
+          {/* Account menu (click the profile): plan, upgrade, settings, connections, usage, API, help and sign-out. */}
+          <Popover open={accountOpen} onOpenChange={setAccountOpen}>
+            <PopoverTrigger asChild>
+              <button type="button" aria-label={lang === "fr" ? "Menu du compte" : "Account menu"} className={`flex w-full items-center gap-2.5 rounded-lg px-2 py-1.5 text-left transition hover:bg-secondary/70 ${mini ? "lg:hidden" : ""}`}>
+                <span className={`plan-ring plan-${planKey ?? "free"}`} title={planName ? `${lang === "fr" ? "Forfait" : "Plan"} ${planName}` : undefined}><span className="grid size-9 place-items-center rounded-full bg-card text-[13px] font-semibold text-foreground">{initials}</span></span>
+                <span className="min-w-0 flex-1"><span className="block truncate text-[12px] font-medium">{name || t.accountName}</span>{email && <span className="block truncate text-[10.5px] text-muted-foreground">{email}</span>}{planKey && planKey !== "free" && <span className={`plan-${planKey} plan-pill mt-1 inline-flex items-center gap-1 rounded-full font-semibold leading-none ${planKey === "pro" ? "h-5 px-2.5 text-[10.5px] tracking-[0.06em]" : "h-[18px] px-2 text-[10px]"}`}>{planKey === "pro" && <Crown className="size-3" strokeWidth={2.4} aria-hidden="true" />}<span className="plan-chip-text">{planKey === "pro" ? "PRO" : planName}</span></span>}</span>
+                {inbox.unread > 0 && <span className="grid h-5 min-w-5 shrink-0 place-items-center rounded-full bg-sky-500 px-1.5 text-[10.5px] font-semibold text-white" aria-label={lang === "fr" ? `${inbox.unread} messages non lus` : `${inbox.unread} unread messages`}>{inbox.unread}</span>}
+                <ChevronDown className={`size-4 shrink-0 text-muted-foreground transition-transform ${accountOpen ? "rotate-180" : ""}`} />
+              </button>
+            </PopoverTrigger>
+            <PopoverContent side="top" align="start" sideOffset={8} className="w-[260px] rounded-2xl p-1.5">
+              <div className="flex items-center gap-3 rounded-xl px-2.5 py-2.5">
+                <span className={`plan-ring plan-${planKey ?? "free"}`}><span className="grid size-9 place-items-center rounded-full bg-card text-[13px] font-semibold text-foreground">{initials}</span></span>
+                <span className="min-w-0 flex-1"><span className="block truncate text-[13px] font-semibold">{name || t.accountName}</span><span className="block truncate text-[11.5px] text-muted-foreground">{planName || (lang === "fr" ? "Gratuit" : "Free")}</span></span>
+              </div>
+              <div className="my-1 h-px bg-border" />
+              <button type="button" onClick={() => { setAccountOpen(false); setInboxOpen(true); }} className="flex w-full items-center gap-3 rounded-xl px-2.5 py-2 text-left text-[13.5px] transition hover:bg-secondary">
+                <span className="relative"><Inbox className="size-[18px] text-muted-foreground" strokeWidth={1.7} />{inbox.unread > 0 && <span className="absolute -right-0.5 -top-0.5 size-2 rounded-full bg-sky-500 ring-2 ring-popover" />}</span>
+                <span className="flex-1">{lang === "fr" ? "Boîte de réception" : "Inbox"}</span>
+                {inbox.unread > 0 && <span className="rounded-full bg-sky-500/15 px-2 py-0.5 text-[11px] font-semibold text-sky-600 dark:text-sky-300">{inbox.unread}</span>}
+              </button>
+              {(plan?.tier ?? 0) < 3 && <AccountItem to="/dashboard/credits" icon={Crown} label={lang === "fr" ? "Passer à l'offre supérieure" : "Upgrade your plan"} />}
+              <AccountItem to="/dashboard/settings" icon={Settings2} label={lang === "fr" ? "Paramètres" : "Settings"} />
+              <AccountItem to="/dashboard/connexions" icon={Plug} label={lang === "fr" ? "Connexions" : "Connections"} />
+              <AccountItem to="/dashboard/usage" icon={Activity} label={lang === "fr" ? "Utilisation" : "Usage"} />
+              <AccountItem to="/dashboard/api" icon={Code2} label="API" />
+              <div className="my-1 h-px bg-border" />
+              <AccountItem to="/dashboard/docs" icon={LifeBuoy} label={lang === "fr" ? "Aide" : "Help"} chevron />
+              <button type="button" onClick={() => void signOut()} className="flex w-full items-center gap-3 rounded-xl px-2.5 py-2 text-left text-[13.5px] transition hover:bg-secondary"><LogOut className="size-[18px] text-muted-foreground" strokeWidth={1.7} /><span className="flex-1">{lang === "fr" ? "Se déconnecter" : "Sign out"}</span></button>
+            </PopoverContent>
+          </Popover>
+          {inboxOpen && <InboxDialog lang={lang === "en" ? "en" : "fr"} inbox={inbox} onClose={() => setInboxOpen(false)} />}
           <div className={`mt-1 flex items-center gap-0.5 px-1 ${mini ? "lg:mt-auto lg:flex-col lg:px-0" : ""}`}>
             <Popover open={themeOpen} onOpenChange={setThemeOpen}>
               <PopoverTrigger asChild><Button variant="ghost" size="sm" className={`h-8 gap-1.5 rounded-lg px-2 text-[12px] font-medium text-muted-foreground ${mini ? "lg:w-8 lg:px-0" : ""}`} aria-label={t.theme} title={t.theme}><Palette className="size-4" /><span className={mini ? "lg:hidden" : ""}>{lang === "fr" ? "Thèmes" : "Themes"}</span></Button></PopoverTrigger>
