@@ -1341,6 +1341,30 @@ export type Database = {
         }
         Relationships: []
       }
+      user_plugins: {
+        Row: {
+          agent_ids: string[]
+          enabled: boolean
+          installed_at: string
+          owner_id: string
+          plugin_id: string
+        }
+        Insert: {
+          agent_ids?: string[]
+          enabled?: boolean
+          installed_at?: string
+          owner_id?: string
+          plugin_id: string
+        }
+        Update: {
+          agent_ids?: string[]
+          enabled?: boolean
+          installed_at?: string
+          owner_id?: string
+          plugin_id?: string
+        }
+        Relationships: []
+      }
       usage_logs: {
         Row: {
           created_at: string

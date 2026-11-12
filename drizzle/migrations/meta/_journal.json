@@ -288,6 +288,13 @@
       "when": 1794816000000,
       "tag": "0040_welcome_bonus_confirmed",
       "breakpoints": true
+    },
+    {
+      "idx": 41,
+      "version": "7",
+      "when": 1795075200000,
+      "tag": "0041_user_plugins",
+      "breakpoints": true
     }
   ]
 }

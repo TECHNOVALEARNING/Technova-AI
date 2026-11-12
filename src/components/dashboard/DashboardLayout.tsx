@@ -2,7 +2,7 @@ import { createContext, useCallback, useContext, useEffect, useState, type React
 import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import { savePref } from "@/lib/consent";
 import { planKeyOf, planLabels, usePlan } from "@/lib/plan-client";
-import { BookMarked, Bot, ChevronUp, Library, Plug, ShieldAlert } from "lucide-react";
+import { BookMarked, Bot, ChevronUp, Library, Plug, ShieldAlert, Puzzle } from "lucide-react";
 import { getMyRole } from "@/lib/admin.functions";
 import { Activity, ArrowLeft, CalendarDays, Check, Palette, Crown, Bell, BookOpen, Boxes, ChevronDown, ChevronRight, Code2, CreditCard, Diamond, Gift, Globe2, Inbox, LayoutDashboard, LogOut, Menu, MessageCircle, Moon, PanelLeftClose, PanelLeftOpen, Search, Settings2, Sun, Wallet, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -27,6 +27,7 @@ const links = [
   { key: "overview", to: "/dashboard", icon: LayoutDashboard },
   { key: "chat", to: "/dashboard/chat", icon: MessageCircle },
   { key: "agents", to: "/dashboard/agents", icon: Bot },
+  { key: "plugins", to: "/dashboard/plugins", icon: Puzzle },
   { key: "knowledge", to: "/dashboard/knowledge", icon: BookMarked },
   { key: "registry", to: "/dashboard/registry", icon: Library },
   { key: "models", to: "/dashboard/models", icon: Boxes },
@@ -227,7 +228,7 @@ export function DashboardLayout({ children }: { children: ReactNode }) {
             "Get the app" and "Upgrade" (browser time is set after mount to avoid a server/browser mismatch). */}
         <div className="relative z-20 mx-auto flex w-full max-w-[1640px] items-center justify-between gap-3 px-4 pt-2 sm:px-6 lg:px-3 lg:pt-0">
           {!isThread ? <p className="flex h-8 min-w-0 items-center gap-1.5 text-[11.5px] font-medium text-muted-foreground"><CalendarDays className="size-3.5 shrink-0" strokeWidth={1.6} /><span className="truncate first-letter:uppercase">{today}</span></p> : <span />}
-          <TopActions lang={lang} tier={plan?.tier ?? null} />
+          <TopActions lang={lang} tier={plan?.tier ?? null} showCredits={pathname.startsWith("/dashboard/chat")} />
         </div>
         <main className={`relative z-10 mx-auto w-full max-w-[1640px] px-4 pt-6 sm:px-6 lg:px-3 ${isThread ? "min-h-[calc(100svh-48px)] pb-8 lg:min-h-[calc(100svh-2rem)] lg:pb-4" : "min-h-[calc(100svh-148px)] pb-4 lg:min-h-[calc(100svh-124px)]"}`}>{error && <div role="alert" className="mb-5 flex items-center justify-between border-l-2 border-destructive bg-secondary px-4 py-3 text-sm"><span>{error}</span><Button variant="ghost" size="sm" onClick={() => void reload()}>{t.retry}</Button></div>}<PendingDeletionBanner fr={lang === "fr"} /><div key={pathname} className="dashboard-page-enter">{children}</div></main>
         {/* "Sites à visiter": the TechNova family sites, at the bottom of the dashboard. */}

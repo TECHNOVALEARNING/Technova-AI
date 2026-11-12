@@ -1,43 +1,8 @@
-import { useCallback, useEffect, useRef, useState, type PointerEvent as ReactPointerEvent } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type PointerEvent as ReactPointerEvent } from "react";
 import { confirmDialog } from "@/components/ConfirmHost";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
-import {
-  History,
-  Share,
-  ArrowRight,
-  Check,
-  ChevronDown,
-  Code2,
-  MessageCircle,
-  Pencil,
-  Plus,
-  Search,
-  Trash2,
-  Mic,
-  Paperclip,
-  X,
-  Loader2,
-  FileAudio,
-  FileVideo,
-  FileText,
-  Square,
-  Copy,
-  Wand2,
-  Zap,
-  Film,
-  Image as ImageIcon,
-  Telescope,
-  Music,
-  Library,
-  AlertCircle,
-  LayoutTemplate,
-  ShoppingBag,
-  BarChart3,
-  Gamepad2,
-  ScanEye,
-  FileSearch,
-} from "lucide-react";
+import { History, Share, ArrowRight, Check, ChevronDown, Code2, MessageCircle, Pencil, Plus, Search, Trash2, Mic, Paperclip, X, Loader2, FileAudio, FileVideo, FileText, Square, Copy, Wand2, Zap, Film, Image as ImageIcon, Telescope, Music, Library, AlertCircle, LayoutTemplate, ShoppingBag, BarChart3, BadgeDollarSign, ScanEye, FileSearch, Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -50,6 +15,8 @@ import {
   ConversationScrollButton,
 } from "@/components/ai-elements/conversation";
 import { Message, MessageContent, MessageResponse } from "@/components/ai-elements/message";
+import type { ExportFormat } from "@/lib/export-reply";
+import { toast } from "sonner";
 import {
   PromptInput,
   PromptInputFooter,
@@ -67,6 +34,10 @@ import { faBolt, faBrain, faScaleBalanced, faWandMagicSparkles } from "@fortawes
 import { usePlanTier } from "@/lib/plan-client";
 import { cn } from "@/lib/utils";
 import { ThinkingLine } from "./ThinkingSpinner";
+import { notifyCreditsChanged } from "./TopActions";
+import { SalesPageWizard } from "./SalesPageWizard";
+import { slashCommands, type SlashCommand } from "@/lib/plugins";
+import { useInstalledPlugins } from "@/lib/plugins-client";
 import { ArtifactPanel, StudioPlan, StudioQuestions, StudioTimeline } from "./Studio";
 import { parseBuild, type StudioBuild, type StudioData, type StudioPlanData } from "@/lib/studio";
 import { featureMinTier, packSlugs, upgradeFeatureOf, upgradeSentence, type PlanFeature } from "@/lib/plans";
@@ -325,8 +296,44 @@ function MessageActionsRow({ text }: { text: string }) {
         className="grid size-7 place-items-center rounded-md text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground">
         {copied ? <Check className="size-3.5" /> : <Copy className="size-3.5" />}
       </button>
+      <ExportMenu text={text} lang={lang === "en" ? "en" : "fr"} />
     </div>
   );
+}
+
+/** Download a reply as Word, Excel, PowerPoint, PDF, Markdown, HTML or CSV (built in the browser, src/lib/export-reply.ts). */
+function ExportMenu({ text, lang }: { text: string; lang: "fr" | "en" }) {
+  const fr = lang === "fr";
+  const [open, setOpen] = useState(false);
+  const [busy, setBusy] = useState<ExportFormat | null>(null);
+  const formats: [ExportFormat, string, string][] = [
+    ["docx", "Word", ".docx"], ["xlsx", "Excel", ".xlsx"], ["pptx", "PowerPoint", ".pptx"], ["pdf", "PDF", fr ? "impression" : "print"],
+    ["md", "Markdown", ".md"], ["html", "HTML", ".html"], ["csv", "CSV", fr ? "tableaux" : "tables"],
+  ];
+  async function run(f: ExportFormat) {
+    setBusy(f);
+    try { const { exportReply } = await import("@/lib/export-reply"); await exportReply(text, f, lang); setOpen(false); }
+    catch (e) { toast.error(e instanceof Error ? e.message : fr ? "Export impossible." : "Export failed."); }
+    finally { setBusy(null); }
+  }
+  return <Popover open={open} onOpenChange={setOpen}>
+    <PopoverTrigger asChild>
+      <button type="button" aria-label={fr ? "Télécharger la réponse" : "Download the reply"} title={fr ? "Télécharger la réponse" : "Download the reply"}
+        className="grid size-7 place-items-center rounded-md text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"><Download className="size-3.5" /></button>
+    </PopoverTrigger>
+    <PopoverContent side="top" align="start" className="w-56 rounded-2xl p-1.5">
+      <p className="px-2.5 pb-1 pt-1.5 text-[10.5px] font-medium uppercase tracking-[0.12em] text-muted-foreground">{fr ? "Télécharger en" : "Download as"}</p>
+      {formats.map(([f, label, hint]) => <button key={f} type="button" disabled={busy !== null} onClick={() => void run(f)}
+        className="flex h-9 w-full items-center gap-2.5 rounded-lg px-2.5 text-left text-[13px] transition-colors hover:bg-secondary disabled:opacity-60">
+        <FileTypeBadge format={f} /><span className="flex-1">{label}</span>{busy === f ? <Loader2 className="size-3.5 animate-spin" /> : <span className="text-[11px] text-muted-foreground">{hint}</span>}
+      </button>)}
+    </PopoverContent>
+  </Popover>;
+}
+
+const badgeColors: Record<ExportFormat, string> = { docx: "#2B579A", xlsx: "#217346", pptx: "#D24726", pdf: "#E5252A", md: "#555B66", html: "#E44D26", csv: "#0F9D58" };
+function FileTypeBadge({ format }: { format: ExportFormat }) {
+  return <span className="grid h-6 w-7 shrink-0 place-items-center rounded-[5px] text-[8.5px] font-bold uppercase tracking-wide text-white" style={{ background: badgeColors[format] }}>{format === "docx" ? "W" : format === "xlsx" ? "X" : format === "pptx" ? "P" : format}</span>;
 }
 
 /** Types `text` one character at a time (restarts when `run` or the text changes); instant with reduced motion. */
@@ -385,6 +392,22 @@ function ChatComposer({
   const [reading, setReading] = useState(false);
   // The send button appears once there is something to send (the mic stays alone otherwise).
   const [hasText, setHasText] = useState(false);
+  // "/" commands of the installed, enabled plugins: typing "/" (then letters) lists them above the box.
+  const installedPlugins = useInstalledPlugins();
+  const commands = useMemo(() => slashCommands(installedPlugins.items.filter((i) => i.enabled).map((i) => i.plugin_id)), [installedPlugins.items]);
+  const [slash, setSlash] = useState<string | null>(null);
+  const [slashIndex, setSlashIndex] = useState(0);
+  const L = lang === "en" ? "en" : "fr";
+  // Commands whose name starts with the typed letters come first, then those whose label contains them.
+  const slashMatches = slash === null ? [] : [...commands.filter((c) => c.slug.startsWith(slash)), ...commands.filter((c) => !c.slug.startsWith(slash) && c.label[L].toLowerCase().includes(slash))].slice(0, 8);
+  const slashOpen = slash !== null && commands.length > 0;
+  function applyCommand(c: SlashCommand) {
+    const el = textareaRef.current; if (!el) return;
+    const prompt = c.prompt[L];
+    setTextareaValue(el, prompt); setHasText(true); setSlash(null); el.focus();
+    const start = prompt.indexOf("["), end = prompt.indexOf("]");
+    if (start >= 0 && end > start) el.setSelectionRange(start, end + 1);
+  }
   // The placeholder writes itself on arrival and again when the pointer comes over the empty box.
   const fullPlaceholder = editing ? (lang === "fr" ? "Ex. : rends le ciel plus orangé, ajoute un logo…" : "E.g. make the sky more orange, add a logo…") : mode === "chat" ? copy.chatPlaceholder : copy.createPlaceholder;
   const [typeRun, setTypeRun] = useState(0);
@@ -447,13 +470,41 @@ function ChatComposer({
             {docs.map((d) => <AttachmentChip key={d.key} file={{ type: "file", mediaType: INDEXED_FILE_TYPE, filename: d.filename, url: "" }} phase={d.phase} error={d.error ? fileErrorText(d.error, lang) : null} onRemove={() => setDocs((all) => all.filter((x) => x.key !== d.key))} />)}
           </div>
         )}
+        {slashOpen && <div id="slash-commands" role="listbox" aria-label={L === "fr" ? "Commandes des plugins" : "Plugin commands"} className="w-full px-2 pt-2">
+          <div className="max-h-64 overflow-y-auto rounded-2xl border border-border bg-popover p-1 shadow-sm">
+            {slashMatches.length ? slashMatches.map((c, i) => <button key={`${c.pluginId}-${c.slug}`} type="button" role="option" aria-selected={i === slashIndex}
+              onMouseEnter={() => setSlashIndex(i)} onMouseDown={(e) => e.preventDefault()} onClick={() => applyCommand(c)}
+              className="slash-menu-item flex w-full items-center gap-2.5 rounded-xl px-2.5 py-1.5 text-left text-[13px]">
+              <span className="plugin-icon grid size-6 shrink-0 place-items-center rounded-md font-mono text-[11px] font-semibold" style={{ ["--hue" as string]: c.hue }}>/</span>
+              <span className="font-mono text-[12.5px] font-medium">/{c.slug}</span>
+              <span className="min-w-0 flex-1 truncate text-muted-foreground">{c.label[L]}</span>
+              <span className="hidden shrink-0 text-[11px] text-muted-foreground sm:inline">{c.pluginName[L]}</span>
+            </button>)
+            : <p className="px-2.5 py-2 text-[12.5px] text-muted-foreground">{L === "fr" ? "Aucune commande ne correspond." : "No matching command."} <a href="/dashboard/plugins" className="font-medium text-primary hover:underline">Plugins</a></p>}
+          </div>
+        </div>}
         <PromptInputTextarea
           ref={textareaRef}
           autoFocus
           disabled={disabled}
           placeholder={typedPlaceholder}
           onMouseEnter={() => { if (!hasText) setTypeRun((n) => n + 1); }}
-          onChange={(e) => setHasText(e.currentTarget.value.trim().length > 0)}
+          onChange={(e) => {
+            const value = e.currentTarget.value;
+            setHasText(value.trim().length > 0);
+            const m = /^\/([\p{L}\d-]*)$/u.exec(value);
+            setSlash(m ? m[1]!.toLowerCase() : null); setSlashIndex(0);
+          }}
+          onKeyDown={(e) => {
+            if (!slashOpen) return;
+            if (e.key === "Escape") { e.preventDefault(); setSlash(null); return; }
+            if (!slashMatches.length) return;
+            if (e.key === "ArrowDown") { e.preventDefault(); setSlashIndex((i) => (i + 1) % slashMatches.length); }
+            else if (e.key === "ArrowUp") { e.preventDefault(); setSlashIndex((i) => (i - 1 + slashMatches.length) % slashMatches.length); }
+            else if (e.key === "Enter" || e.key === "Tab") { e.preventDefault(); applyCommand(slashMatches[Math.min(slashIndex, slashMatches.length - 1)]!); }
+          }}
+          aria-expanded={slashOpen}
+          aria-controls={slashOpen ? "slash-commands" : undefined}
           className="min-h-[60px] max-h-48 px-4 pt-3.5 text-[14px]"
         />
         <PromptInputFooter className="min-h-12 flex-wrap justify-between gap-2 px-3 pb-2.5">
@@ -563,21 +614,22 @@ function ChatOrb() {
   return <div className="chat-orb" aria-hidden="true"><span className="chat-orb-ball"><i /><i /><i /><b /></span></div>;
 }
 
-type StarterIdea = { icon: typeof LayoutTemplate; mode: Mode; attach?: boolean; fr: [string, string, string]; en: [string, string, string] };
+type StarterIdea = { icon: typeof LayoutTemplate; mode: Mode; attach?: boolean; wizard?: "sales"; fr: [string, string, string]; en: [string, string, string] };
 
 // One-click starting points: [title, hint, prefilled prompt]. Brackets mark what the user completes.
 const starterIdeas: StarterIdea[] = [
   { icon: LayoutTemplate, mode: "create", fr: ["Landing page", "Une page moderne et épurée", "Crée une landing page moderne et épurée pour [mon activité] : héros percutant, trois avantages, témoignages, tarifs et appel à l'action."], en: ["Landing page", "A modern, clean page", "Build a modern, clean landing page for [my business]: strong hero, three benefits, testimonials, pricing and a call to action."] },
   { icon: ShoppingBag, mode: "create", fr: ["Boutique en ligne", "Catalogue, fiche produit, panier", "Crée une boutique en ligne élégante pour vendre [mes produits] : catalogue avec filtres, fiche produit détaillée et panier."], en: ["Online store", "Catalog, product page, cart", "Build an elegant online store to sell [my products]: filterable catalog, detailed product page and cart."] },
   { icon: BarChart3, mode: "create", fr: ["Tableau de bord", "Données en graphiques interactifs", "Crée un tableau de bord interactif pour suivre [mes ventes / mes indicateurs] : chiffres clés, graphiques et filtres par période."], en: ["Dashboard", "Data as interactive charts", "Build an interactive dashboard to track [my sales / my metrics]: key figures, charts and period filters."] },
-  { icon: Gamepad2, mode: "create", fr: ["Jeu web", "Jouable dans le navigateur", "Crée un petit jeu jouable dans le navigateur : [idée de jeu], avec score, niveaux et bouton rejouer."], en: ["Web game", "Playable in the browser", "Build a small browser game: [game idea], with score, levels and a replay button."] },
+  { icon: BadgeDollarSign, mode: "create", wizard: "sales", fr: ["Page de vente pro", "Offre, style, paiement : une page qui vend", ""], en: ["Pro sales page", "Offer, style, payment: a page that sells", ""] },
   { icon: ScanEye, mode: "chat", attach: true, fr: ["Design vers code", "Une capture devient une page", "Reproduis fidèlement le design de l'image jointe en une page HTML/CSS responsive, dans un seul fichier."], en: ["Design to code", "A screenshot becomes a page", "Faithfully recreate the design in the attached image as a responsive HTML/CSS page, in a single file."] },
   { icon: FileSearch, mode: "chat", attach: true, fr: ["Analyser un document", "PDF, Word, Excel, PowerPoint…", "Résume le document joint en 5 points clés, puis liste les décisions et les actions à mener."], en: ["Analyse a document", "PDF, Word, Excel, PowerPoint…", "Summarise the attached document in 5 key points, then list the decisions and actions to take."] },
 ];
 
-function StarterIdeas({ choice, inputRef }: { choice: ReturnType<typeof useWorkspaceChoice>; inputRef: React.RefObject<HTMLTextAreaElement | null> }) {
+function StarterIdeas({ choice, inputRef, onSalesPage }: { choice: ReturnType<typeof useWorkspaceChoice>; inputRef: React.RefObject<HTMLTextAreaElement | null>; onSalesPage: () => void }) {
   const { lang } = useDashboard();
   function pick(idea: StarterIdea) {
+    if (idea.wizard === "sales") { onSalesPage(); return; }
     choice.chooseMode(idea.mode);
     const [, , prompt] = idea[lang === "en" ? "en" : "fr"];
     // Let the composer re-render in the chosen mode, then prefill and select the part to complete.
@@ -589,13 +641,13 @@ function StarterIdeas({ choice, inputRef }: { choice: ReturnType<typeof useWorks
       if (idea.attach) document.querySelector<HTMLInputElement>("input[data-chat-attach]")?.click();
     }, 0);
   }
-  return <div className="starter-row flex w-full flex-nowrap justify-center gap-1 overflow-x-auto">
+  return <div className="starter-row flex w-full flex-nowrap justify-center gap-0.5 overflow-x-auto">
     {starterIdeas.map((idea) => {
       const [title, hint] = idea[lang === "en" ? "en" : "fr"];
       const Icon = idea.icon;
       return <button key={title} type="button" onClick={() => pick(idea)}
         title={hint}
-        className="starter-chip group inline-flex h-7 shrink-0 items-center gap-1 rounded-full border px-2 text-[11.5px] text-foreground/80 transition-colors hover:text-foreground">
+        className="starter-chip group inline-flex h-7 shrink-0 items-center gap-[3px] rounded-full border px-[5px] text-[11.5px] text-foreground/80 transition-colors hover:text-foreground">
         <Icon className="size-3.5 text-muted-foreground transition-colors group-hover:text-foreground" strokeWidth={1.6} />
         <span className="truncate">{title}</span>
       </button>;
@@ -604,17 +656,18 @@ function StarterIdeas({ choice, inputRef }: { choice: ReturnType<typeof useWorks
 }
 
 export function ChatListPage() {
-  const { reload, t } = useDashboard();
+  const { reload, t, lang } = useDashboard();
+  const [salesOpen, setSalesOpen] = useState(false);
   const choice = useWorkspaceChoice();
   const composerRef = useRef<HTMLTextAreaElement>(null);
   const navigate = useNavigate();
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
-  async function start(text = "", files: ChatFilePart[] = []) {
+  async function start(text = "", files: ChatFilePart[] = [], givenTitle = "") {
     if (busy) return;
     setBusy(true);
     setError("");
-    const title = text.trim() ? text.trim().replace(/\s+/g, " ").slice(0, 65) : files[0]?.filename.slice(0, 65) || t.newChat;
+    const title = givenTitle ? givenTitle.slice(0, 65) : text.trim() ? text.trim().replace(/\s+/g, " ").slice(0, 65) : files[0]?.filename.slice(0, 65) || t.newChat;
     const { data, error: insertError } = await supabase
       .from("chat_threads")
       .insert({ title })
@@ -660,7 +713,8 @@ export function ChatListPage() {
                 {error}
               </p>
             )}
-            <div className="mt-4"><StarterIdeas choice={choice} inputRef={composerRef} /></div>
+            <div className="mt-4"><StarterIdeas choice={choice} inputRef={composerRef} onSalesPage={() => setSalesOpen(true)} /></div>
+            <SalesPageWizard open={salesOpen} onOpenChange={setSalesOpen} lang={lang === "en" ? "en" : "fr"} onBuild={(brief, product) => { choice.chooseMode("create"); void start(brief, [], `${lang === "en" ? "Sales page" : "Page de vente"} · ${product}`); }} />
           </div>
         </section>
       </div>
@@ -699,6 +753,8 @@ export function ThreadPage({ threadId }: { threadId: string }) {
   const [title, setTitle] = useState("");
   const [busy, setBusy] = useState(false);
   const [thinking, setThinking] = useState(false);
+  // Each finished reply, creation or Studio stage refreshes the credits shown in the top bar.
+  useEffect(() => { if (!thinking && !busy) notifyCreditsChanged(); }, [thinking, busy]);
   const [researchStatus, setResearchStatus] = useState("");
   const [artifact, setArtifact] = useState<StudioBuild | null>(null);
   const [activity, setActivity] = useState<StudioBuild | null>(null);

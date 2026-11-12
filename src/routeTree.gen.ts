@@ -45,6 +45,7 @@ import { Route as AuthenticatedDashboardCreditsRouteImport } from './routes/_aut
 import { Route as AuthenticatedDashboardDocsRouteImport } from './routes/_authenticated/dashboard/docs'
 import { Route as AuthenticatedDashboardKnowledgeRouteImport } from './routes/_authenticated/dashboard/knowledge'
 import { Route as AuthenticatedDashboardModelsRouteImport } from './routes/_authenticated/dashboard/models'
+import { Route as AuthenticatedDashboardPluginsRouteImport } from './routes/_authenticated/dashboard/plugins'
 import { Route as AuthenticatedDashboardRegistryRouteImport } from './routes/_authenticated/dashboard/registry'
 import { Route as AuthenticatedDashboardSettingsRouteImport } from './routes/_authenticated/dashboard/settings'
 import { Route as AuthenticatedDashboardUsageRouteImport } from './routes/_authenticated/dashboard/usage'
@@ -255,6 +256,12 @@ const AuthenticatedDashboardModelsRoute =
     path: '/models',
     getParentRoute: () => AuthenticatedDashboardRoute,
   } as any)
+const AuthenticatedDashboardPluginsRoute =
+  AuthenticatedDashboardPluginsRouteImport.update({
+    id: '/plugins',
+    path: '/plugins',
+    getParentRoute: () => AuthenticatedDashboardRoute,
+  } as any)
 const AuthenticatedDashboardRegistryRoute =
   AuthenticatedDashboardRegistryRouteImport.update({
     id: '/registry',
@@ -393,6 +400,7 @@ export interface FileRoutesByFullPath {
   '/dashboard/docs': typeof AuthenticatedDashboardDocsRoute
   '/dashboard/knowledge': typeof AuthenticatedDashboardKnowledgeRoute
   '/dashboard/models': typeof AuthenticatedDashboardModelsRoute
+  '/dashboard/plugins': typeof AuthenticatedDashboardPluginsRoute
   '/dashboard/registry': typeof AuthenticatedDashboardRegistryRoute
   '/dashboard/settings': typeof AuthenticatedDashboardSettingsRoute
   '/dashboard/usage': typeof AuthenticatedDashboardUsageRoute
@@ -448,6 +456,7 @@ export interface FileRoutesByTo {
   '/dashboard/docs': typeof AuthenticatedDashboardDocsRoute
   '/dashboard/knowledge': typeof AuthenticatedDashboardKnowledgeRoute
   '/dashboard/models': typeof AuthenticatedDashboardModelsRoute
+  '/dashboard/plugins': typeof AuthenticatedDashboardPluginsRoute
   '/dashboard/registry': typeof AuthenticatedDashboardRegistryRoute
   '/dashboard/settings': typeof AuthenticatedDashboardSettingsRoute
   '/dashboard/usage': typeof AuthenticatedDashboardUsageRoute
@@ -506,6 +515,7 @@ export interface FileRoutesById {
   '/_authenticated/dashboard/docs': typeof AuthenticatedDashboardDocsRoute
   '/_authenticated/dashboard/knowledge': typeof AuthenticatedDashboardKnowledgeRoute
   '/_authenticated/dashboard/models': typeof AuthenticatedDashboardModelsRoute
+  '/_authenticated/dashboard/plugins': typeof AuthenticatedDashboardPluginsRoute
   '/_authenticated/dashboard/registry': typeof AuthenticatedDashboardRegistryRoute
   '/_authenticated/dashboard/settings': typeof AuthenticatedDashboardSettingsRoute
   '/_authenticated/dashboard/usage': typeof AuthenticatedDashboardUsageRoute
@@ -564,6 +574,7 @@ export interface FileRouteTypes {
     | '/dashboard/docs'
     | '/dashboard/knowledge'
     | '/dashboard/models'
+    | '/dashboard/plugins'
     | '/dashboard/registry'
     | '/dashboard/settings'
     | '/dashboard/usage'
@@ -619,6 +630,7 @@ export interface FileRouteTypes {
     | '/dashboard/docs'
     | '/dashboard/knowledge'
     | '/dashboard/models'
+    | '/dashboard/plugins'
     | '/dashboard/registry'
     | '/dashboard/settings'
     | '/dashboard/usage'
@@ -676,6 +688,7 @@ export interface FileRouteTypes {
     | '/_authenticated/dashboard/docs'
     | '/_authenticated/dashboard/knowledge'
     | '/_authenticated/dashboard/models'
+    | '/_authenticated/dashboard/plugins'
     | '/_authenticated/dashboard/registry'
     | '/_authenticated/dashboard/settings'
     | '/_authenticated/dashboard/usage'
@@ -992,6 +1005,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedDashboardModelsRouteImport
       parentRoute: typeof AuthenticatedDashboardRoute
     }
+    '/_authenticated/dashboard/plugins': {
+      id: '/_authenticated/dashboard/plugins'
+      path: '/plugins'
+      fullPath: '/dashboard/plugins'
+      preLoaderRoute: typeof AuthenticatedDashboardPluginsRouteImport
+      parentRoute: typeof AuthenticatedDashboardRoute
+    }
     '/_authenticated/dashboard/registry': {
       id: '/_authenticated/dashboard/registry'
       path: '/registry'
@@ -1139,6 +1159,7 @@ interface AuthenticatedDashboardRouteChildren {
   AuthenticatedDashboardDocsRoute: typeof AuthenticatedDashboardDocsRoute
   AuthenticatedDashboardKnowledgeRoute: typeof AuthenticatedDashboardKnowledgeRoute
   AuthenticatedDashboardModelsRoute: typeof AuthenticatedDashboardModelsRoute
+  AuthenticatedDashboardPluginsRoute: typeof AuthenticatedDashboardPluginsRoute
   AuthenticatedDashboardRegistryRoute: typeof AuthenticatedDashboardRegistryRoute
   AuthenticatedDashboardSettingsRoute: typeof AuthenticatedDashboardSettingsRoute
   AuthenticatedDashboardUsageRoute: typeof AuthenticatedDashboardUsageRoute
@@ -1160,6 +1181,7 @@ const AuthenticatedDashboardRouteChildren: AuthenticatedDashboardRouteChildren =
     AuthenticatedDashboardDocsRoute: AuthenticatedDashboardDocsRoute,
     AuthenticatedDashboardKnowledgeRoute: AuthenticatedDashboardKnowledgeRoute,
     AuthenticatedDashboardModelsRoute: AuthenticatedDashboardModelsRoute,
+    AuthenticatedDashboardPluginsRoute: AuthenticatedDashboardPluginsRoute,
     AuthenticatedDashboardRegistryRoute: AuthenticatedDashboardRegistryRoute,
     AuthenticatedDashboardSettingsRoute: AuthenticatedDashboardSettingsRoute,
     AuthenticatedDashboardUsageRoute: AuthenticatedDashboardUsageRoute,
