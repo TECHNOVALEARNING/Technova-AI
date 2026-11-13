@@ -34,6 +34,7 @@ type Group = { title: L; soon?: boolean; rows: { label: L; cells: [Cell, Cell, C
 const groups: Group[] = [
   { title: { fr: "Chat & intelligence", en: "Chat & intelligence", es: "Chat e inteligencia", pt: "Chat e inteligência" }, rows: [
     { label: { fr: "Chat multi-modèles GPT, Claude, Gemini, DeepSeek", en: "Multi-model chat: GPT, Claude, Gemini, DeepSeek", es: "Chat multimodelo GPT, Claude, Gemini, DeepSeek", pt: "Chat multimodelo GPT, Claude, Gemini, DeepSeek" }, cells: [["p", "partial"], ["y", "all"], ["y", "all"], ["y", "all"]] },
+    { label: { fr: "Choix des modèles phares dans le chat", en: "Pick flagship models in the chat", es: "Elección de modelos insignia en el chat", pt: "Escolha de modelos de ponta no chat" }, cells: ["n", "n", "y", "y"] },
     { label: { fr: "TechNova Smart (modèle le moins cher auto)", en: "TechNova Smart (cheapest model, automatically)", es: "TechNova Smart (modelo más económico automático)", pt: "TechNova Smart (modelo mais barato automático)" }, cells: ["y", "y", "y", "y"] },
     { label: { fr: "Analyse de fichiers : images, PDF, audio", en: "File analysis: images, PDF, audio", es: "Análisis de archivos: imágenes, PDF, audio", pt: "Análise de arquivos: imagens, PDF, áudio" }, cells: ["y", "y", "y", "y"] },
   ] },

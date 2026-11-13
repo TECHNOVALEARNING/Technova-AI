@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState, type PointerEvent as
 import { confirmDialog } from "@/components/ConfirmHost";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
-import { History, Share, ArrowRight, ArrowUp, Check, ChevronDown, Code2, MessageCircle, Pencil, Plus, Search, Trash2, Mic, Paperclip, X, Loader2, FileAudio, FileVideo, FileText, Square, Copy, Wand2, Zap, Film, Image as ImageIcon, Telescope, Music, Library, AlertCircle, LayoutTemplate, ShoppingBag, BarChart3, BadgeDollarSign, ScanEye, FileSearch, Download } from "lucide-react";
+import { History, Share, ArrowRight, ArrowUp, Crown, Check, ChevronDown, Code2, MessageCircle, Pencil, Plus, Search, Trash2, Mic, Paperclip, X, Loader2, FileAudio, FileVideo, FileText, Square, Copy, Wand2, Zap, Film, Image as ImageIcon, Telescope, Music, Library, AlertCircle, LayoutTemplate, ShoppingBag, BarChart3, BadgeDollarSign, ScanEye, FileSearch, Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -32,6 +32,7 @@ import { chatTierIds, chatTiers, defaultChatChoice, EXPERT_MIN_TIER, isChatChoic
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faBolt, faBrain, faScaleBalanced, faWandMagicSparkles } from "@fortawesome/free-solid-svg-icons";
 import { usePlanTier } from "@/lib/plan-client";
+import { FLAGSHIP_MIN_TIER, FLAGSHIP_MODELS, flagshipLabel, isFlagshipModel } from "@/lib/flagship-models";
 import { cn } from "@/lib/utils";
 import { ThinkingLine } from "./ThinkingSpinner";
 import { notifyCreditsChanged } from "./TopActions";
@@ -83,6 +84,8 @@ function useWorkspaceChoice() {
   const [mode, setMode] = useState<Mode>("chat");
   // One of the three modes (Éclair, Équilibré, Expert); the engine behind it is chosen on the server.
   const [tier, setTier] = useState<ChatChoice>(defaultChatChoice);
+  // Flagship model (Creator/Pro): when set, it answers instead of the mode; choosing a mode clears it.
+  const [flagship, setFlagship] = useState<string | null>(null);
   // Deep Research stays on for the browser session until switched off (it costs more than a reply).
   const [research, setResearch] = useState(false);
   const [kbIds, setKbIds] = useState<string[]>([]);
@@ -94,6 +97,8 @@ function useWorkspaceChoice() {
       const storedTier = localStorage.getItem("technova-workspace-tier");
       if (storedMode === "chat" || storedMode === "create") setMode(storedMode);
       if (isChatChoice(storedTier)) setTier(storedTier);
+      const storedModel = localStorage.getItem("technova-workspace-model");
+      if (isFlagshipModel(storedModel)) setFlagship(storedModel);
     } catch { /* storage blocked */ }
   }, []);
   function chooseMode(value: Mode) {
@@ -103,6 +108,12 @@ function useWorkspaceChoice() {
   function chooseTier(value: ChatChoice) {
     setTier(value);
     savePref("technova-workspace-tier", value);
+    setFlagship(null);
+    try { localStorage.removeItem("technova-workspace-model"); } catch { /* storage blocked */ }
+  }
+  function chooseFlagship(name: string) {
+    setFlagship(name);
+    savePref("technova-workspace-model", name);
   }
   function chooseKnowledgeBases(ids: string[]) {
     const next = ids.slice(0, 5);
@@ -115,7 +126,10 @@ function useWorkspaceChoice() {
       return !on;
     });
   }
-  return { mode, tier, research: mode === "chat" && research, toggleResearch, kbIds, chooseKnowledgeBases, chooseMode, chooseTier, copy };
+  // A model chosen on this browser by another (higher-plan) account is never sent for this one.
+  const planTier = usePlanTier();
+  const allowedFlagship = planTier !== null && planTier >= FLAGSHIP_MIN_TIER ? flagship : null;
+  return { mode, tier, flagship: allowedFlagship, research: mode === "chat" && research, toggleResearch, kbIds, chooseKnowledgeBases, chooseMode, chooseTier, chooseFlagship, copy };
 }
 
 const tierIcons = { eclair: faBolt, equilibre: faScaleBalanced, expert: faBrain, smart: faWandMagicSparkles } as const;
@@ -123,9 +137,14 @@ const tierIcons = { eclair: faBolt, equilibre: faScaleBalanced, expert: faBrain,
 function ChoiceControls({ choice }: { choice: ReturnType<typeof useWorkspaceChoice> }) {
   const [modeOpen, setModeOpen] = useState(false);
   const [tierOpen, setTierOpen] = useState(false);
-  const { mode, tier, chooseMode, chooseTier, copy } = choice;
+  const { mode, tier, chooseMode, chooseTier, chooseFlagship, copy } = choice;
   const fr = copy.locale.startsWith("fr");
   const plan = usePlanTier();
+  // Flagship models: only Creator and Pro see them (Starter and Essential keep the four modes).
+  const canFlagship = plan !== null && plan >= FLAGSHIP_MIN_TIER;
+  const flagship = canFlagship ? choice.flagship : null;
+  const [flagshipOpen, setFlagshipOpen] = useState(false);
+  useEffect(() => { if (tierOpen) setFlagshipOpen(Boolean(flagship)); }, [tierOpen, flagship]);
   return (
     <div className="flex min-w-0 items-center gap-1.5">
       <Popover open={modeOpen} onOpenChange={setModeOpen}>
@@ -182,11 +201,11 @@ function ChoiceControls({ choice }: { choice: ReturnType<typeof useWorkspaceChoi
             className="h-8 min-w-0 gap-1.5 rounded-full px-2.5 text-[13px] font-normal text-muted-foreground hover:bg-transparent hover:text-foreground"
           >
             <FontAwesomeIcon icon={faWandMagicSparkles} fixedWidth aria-hidden className="size-3.5" />
-            <span className="truncate">{tier === "smart" ? smartChoice.fr : fr ? chatTiers[tier].fr : chatTiers[tier].en}</span>
+            <span className="truncate">{flagship ? flagshipLabel(flagship) : tier === "smart" ? smartChoice.fr : fr ? chatTiers[tier].fr : chatTiers[tier].en}</span>
             <ChevronDown className="size-3.5 shrink-0" />
           </Button>
         </PopoverTrigger>
-        <PopoverContent align="end" className="w-72 rounded-2xl border-border bg-popover p-1.5 shadow-soft">
+        <PopoverContent align="end" collisionPadding={12} className="max-h-[min(var(--radix-popover-content-available-height),560px)] w-72 overflow-y-auto rounded-2xl border-border bg-popover p-1.5 shadow-soft">
           {[...chatTierIds, "smart" as const].map((id) => {
             const smart = id === "smart";
             const locked = id === "expert" && plan !== null && plan < EXPERT_MIN_TIER;
@@ -207,10 +226,34 @@ function ChoiceControls({ choice }: { choice: ReturnType<typeof useWorkspaceChoi
                   <small className="block text-[10px] font-normal text-muted-foreground">{hint}</small>
                   {note && <small className="block text-[10px] font-normal text-destructive">{note}</small>}
                 </span>
-                {tier === id && <Check className="size-3.5 shrink-0 text-chat-glow" />}
+                {!flagship && tier === id && <Check className="size-3.5 shrink-0 text-chat-glow" />}
               </Button>
             );
           })}
+          {canFlagship && <div className="mt-1 border-t border-border/60 pt-1">
+            <button type="button" onClick={() => setFlagshipOpen((o) => !o)} aria-expanded={flagshipOpen}
+              className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left transition hover:bg-secondary">
+              <Crown className="size-4 shrink-0 text-amber-500" strokeWidth={1.8} />
+              <span className="min-w-0 flex-1">
+                <strong className="block text-xs">{fr ? "Modèles phares" : "Flagship models"}</strong>
+                <small className="block text-[10px] font-normal text-muted-foreground">{fr ? "Choisissez le modèle · facturé au coût réel" : "Pick the model · billed at real cost"}</small>
+              </span>
+              <ChevronDown className={`size-3.5 shrink-0 text-muted-foreground transition-transform ${flagshipOpen ? "rotate-180" : ""}`} />
+            </button>
+            {flagshipOpen && FLAGSHIP_MODELS.map((m) => (
+              <button key={m.name} type="button" onClick={() => { chooseFlagship(m.name); setTierOpen(false); }}
+                className="flex w-full items-center gap-2.5 rounded-xl py-2 pl-10 pr-3 text-left transition hover:bg-secondary">
+                <span className="min-w-0 flex-1">
+                  <strong className="block truncate text-xs">{m.label}</strong>
+                  <small className="block truncate text-[10px] font-normal text-muted-foreground">{fr ? m.fr : m.en}</small>
+                </span>
+                <span className="shrink-0 text-[10px] tracking-tight text-muted-foreground" aria-label={fr ? `Coût ${m.cost} sur 3` : `Cost ${m.cost} of 3`} title={fr ? "Coût relatif" : "Relative cost"}>
+                  {[1, 2, 3].map((k) => <span key={k} className={k <= m.cost ? "text-amber-500" : "opacity-30"}>●</span>)}
+                </span>
+                {flagship === m.name && <Check className="size-3.5 shrink-0 text-chat-glow" />}
+              </button>
+            ))}
+          </div>}
         </PopoverContent>
       </Popover>
     </div>
@@ -1245,6 +1288,7 @@ export function ThreadPage({ threadId }: { threadId: string }) {
         },
         body: JSON.stringify({
           tier: choice.tier,
+          ...(choice.flagship && choice.mode === "chat" && !agent ? { model: choice.flagship } : {}),
           mode: choice.mode,
           lang,
           ...(agent ? { agentId: agent.id } : {}),

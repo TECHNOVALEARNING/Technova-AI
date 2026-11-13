@@ -7,11 +7,11 @@ export const PLAN_UPGRADE = "PLAN_UPGRADE_REQUIRED";
 
 export type PlanFeature =
   | "premium_models" | "expert_mode" | "image_quota" | "video" | "site" | "site_limit" | "share" | "publish"
-  | "agents" | "agent_budget" | "api" | "github" | "supabase" | "usage_details";
+  | "agents" | "agent_budget" | "api" | "github" | "supabase" | "usage_details" | "flagship_models";
 
 export const featureMinTier: Record<PlanFeature, Tier> = {
   premium_models: 1, expert_mode: 2, image_quota: 1, video: 2, site: 1, site_limit: 2, share: 1, publish: 2,
-  agents: 2, agent_budget: 3, api: 3, github: 3, supabase: 3, usage_details: 3,
+  agents: 2, agent_budget: 3, api: 3, github: 3, supabase: 3, usage_details: 3, flagship_models: 2,
 };
 
 /** Chat models outside the Starter plan ("Partiel"): the most expensive ones (extra catalogue: 6 000+ credits per million output tokens). */
@@ -49,6 +49,7 @@ export const featureText: Record<PlanFeature, { fr: string; en: string }> = {
   github: { fr: "L'envoi vers GitHub", en: "Pushing to GitHub" },
   supabase: { fr: "La connexion à votre propre Supabase", en: "Connecting your own Supabase" },
   usage_details: { fr: "Le suivi détaillé de la consommation", en: "Detailed usage tracking" },
+  flagship_models: { fr: "Le choix des modèles phares dans le chat", en: "Choosing flagship models in the chat" },
 };
 
 /** "…est réservé(e) aux forfaits X et Y." for the upgrade card. */

@@ -3,11 +3,14 @@ import { z } from "zod";
 import { openRouterModelIds } from "@/lib/chat-models";
 import { creditCost, estimateTokens } from "@/lib/model-pricing";
 import { chatTierCredits, chatTiers, EXPERT_MIN_TIER, PRO_TIER, smartTier, textSignals, type ChatTier } from "@/lib/chat-modes";
+import { FLAGSHIP_MIN_TIER, isFlagshipModel } from "@/lib/flagship-models";
+import { extraModels } from "@/lib/openrouter-catalog";
 
 const bodySchema = z.object({
-  // The chat composer sends one of the three modes; custom agents keep their own model.
+  // The chat composer sends one of the three modes (or Smart); custom agents keep their own model.
   tier: z.enum(["eclair", "equilibre", "expert", "smart"]).optional(),
-  model: z.string().optional(),
+  // A flagship model picked by a Creator/Pro account (src/lib/flagship-models.ts); other names are ignored.
+  model: z.string().max(80).optional(),
   mode: z.enum(["chat", "create"]),
   lang: z.enum(["fr", "en"]).optional(),
   agentId: z.string().uuid().optional(),
@@ -147,7 +150,10 @@ export const Route = createFileRoute("/api/chat")({
         const hasFile = allFiles.length > 0 || (parsed.data.fileIds?.length ?? 0) > 0;
         const requestedTier = parsed.data.tier ?? "eclair";
         const chatTier: ChatTier = requestedTier === "smart" ? smartTier(lastUser, hasFile, tier) : requestedTier;
-        if (!agent && chatTier === "expert" && tier < EXPERT_MIN_TIER) return planResponse(userId, "expert_mode");
+        // Flagship model chosen in the composer: Creator and Pro only, billed at its real cost (no fixed mode price).
+        const flagship = !agent && isFlagshipModel(parsed.data.model) ? parsed.data.model : null;
+        if (flagship && tier < FLAGSHIP_MIN_TIER) return planResponse(userId, "flagship_models");
+        if (!agent && !flagship && chatTier === "expert" && tier < EXPERT_MIN_TIER) return planResponse(userId, "expert_mode");
         let model: string;
         let modelId: string;
         let engine: Engine | null = null;
@@ -157,6 +163,13 @@ export const Route = createFileRoute("/api/chat")({
           const picked = chosen === "TechNova Smart" ? smartPick(lastUser) : chosen;
           const requested = tier < 1 ? (STARTER_SMART_FALLBACK[picked] ?? picked) : picked;
           model = (needsMedia && !mediaModels.has(requested)) || (needsVision && !visionModels.has(requested)) ? "Gemini 2.5 Flash" : requested;
+          const id = openRouterModelIds[model];
+          if (!id) return new Response("Model not available for chat", { status: 400 });
+          modelId = id;
+        } else if (flagship) {
+          // A model that cannot read the attachment (audio/video, or images for a text-only model) hands over to one that can.
+          const sees = visionModels.has(flagship) || (extraModels.find((m) => m.name === flagship)?.caps.includes("vision") ?? false);
+          model = needsMedia || (needsVision && !sees) ? "Gemini 2.5 Flash" : flagship;
           const id = openRouterModelIds[model];
           if (!id) return new Response("Model not available for chat", { status: 400 });
           modelId = id;
@@ -235,7 +248,7 @@ export const Route = createFileRoute("/api/chat")({
           : systemPrompts[parsed.data.mode] + toolContext + langRule;
         // Reasoning models think before answering: cap the thinking so it cannot eat the whole reply.
         const reasoning = reasoningModels.has(model);
-        const maxTokens = agent ? Math.min(4096, Math.max(128, agent.max_tokens)) : engine ? engine.maxTokens : reasoning ? 2048 : 1024;
+        const maxTokens = agent ? Math.min(4096, Math.max(128, agent.max_tokens)) : engine ? engine.maxTokens : flagship ? 4096 : reasoning ? 2048 : 1024;
         const inputTokens = estimateTokens(systemPrompt + parsed.data.messages.map(m => m.content).join(" ")) + allFiles.reduce((sum, f) => sum + (f.mediaType.startsWith("image/") ? 1000 : f.mediaType === "application/pdf" ? 3000 : 8000), 0);
         // Hold the worst-case cost before calling the provider; the real cost is charged at the end.
         const worst = engine ? Math.max(flat, engineCost(engine, inputTokens, maxTokens)) : creditCost(model, inputTokens, maxTokens);
