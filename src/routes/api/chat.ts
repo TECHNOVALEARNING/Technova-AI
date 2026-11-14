@@ -5,6 +5,7 @@ import { creditCost, estimateTokens } from "@/lib/model-pricing";
 import { chatTierCredits, chatTiers, EXPERT_MIN_TIER, PRO_TIER, smartTier, textSignals, type ChatTier } from "@/lib/chat-modes";
 import { FLAGSHIP_MIN_TIER, isFlagshipModel } from "@/lib/flagship-models";
 import { extraModels } from "@/lib/openrouter-catalog";
+import { dateRule, needsFreshInfo, WEB_RESULTS, WEB_SEARCH_CREDITS } from "@/lib/fresh-info";
 
 const bodySchema = z.object({
   // The chat composer sends one of the three modes (or Smart); custom agents keep their own model.
@@ -243,15 +244,20 @@ export const Route = createFileRoute("/api/chat")({
             ? "\n\nFresh results from your enabled tools (web, the user's files, their database read-only) and/or the user's documents are provided below — use them and cite sources (file names, table names, URLs). Never claim other abilities (code execution, emails, payments, database writes)."
             : `\n\nEnabled tools: ${[...agentTools].join(", ") || "none"}. No live tool result was needed or available for this message. Never claim abilities beyond your enabled tools.`
           : "";
+        // Live web search for questions about current events in the chat (modes and flagship models; agents use
+        // their own web tool). Code questions skip it: words like "match" or "latest" mean something else there.
+        const webSearch = !agent && parsed.data.mode === "chat" && needsFreshInfo(lastUser) && !textSignals(lastUser).code;
+        const today = dateRule(parsed.data.lang === "en" ? "en" : "fr", new Date(), webSearch || (agent ? agentTools.has("web_search") && toolContext.includes("WEB SEARCH RESULTS") : false));
         const systemPrompt = agent
-          ? `You are "${agent.name}", a custom TechNova agent. Follow the owner's instructions below.${toolsRule}\n\nINSTRUCTIONS:\n${agent.instructions}${agent.memory ? `\n\nMEMORY (facts to remember):\n${agent.memory}` : ""}` + toolContext + langRule
-          : systemPrompts[parsed.data.mode] + toolContext + langRule;
+          ? `You are "${agent.name}", a custom TechNova agent. Follow the owner's instructions below.${toolsRule}${today}\n\nINSTRUCTIONS:\n${agent.instructions}${agent.memory ? `\n\nMEMORY (facts to remember):\n${agent.memory}` : ""}` + toolContext + langRule
+          : systemPrompts[parsed.data.mode] + today + toolContext + langRule;
         // Reasoning models think before answering: cap the thinking so it cannot eat the whole reply.
         const reasoning = reasoningModels.has(model);
         const maxTokens = agent ? Math.min(4096, Math.max(128, agent.max_tokens)) : engine ? engine.maxTokens : flagship ? 4096 : reasoning ? 2048 : 1024;
-        const inputTokens = estimateTokens(systemPrompt + parsed.data.messages.map(m => m.content).join(" ")) + allFiles.reduce((sum, f) => sum + (f.mediaType.startsWith("image/") ? 1000 : f.mediaType === "application/pdf" ? 3000 : 8000), 0);
-        // Hold the worst-case cost before calling the provider; the real cost is charged at the end.
-        const worst = engine ? Math.max(flat, engineCost(engine, inputTokens, maxTokens)) : creditCost(model, inputTokens, maxTokens);
+        // Web results join the prompt (about 1 500 tokens for three pages).
+        const inputTokens = estimateTokens(systemPrompt + parsed.data.messages.map(m => m.content).join(" ")) + allFiles.reduce((sum, f) => sum + (f.mediaType.startsWith("image/") ? 1000 : f.mediaType === "application/pdf" ? 3000 : 8000), 0) + (webSearch ? 1500 : 0);
+        // Hold the worst-case cost before calling the provider; the real cost (web search included) is charged at the end.
+        const worst = (engine ? Math.max(flat, engineCost(engine, inputTokens, maxTokens)) : creditCost(model, inputTokens, maxTokens)) + (webSearch ? WEB_SEARCH_CREDITS : 0);
         if (agent && worst > agent.max_cost) return new Response(`Cette demande dépasse le budget de l’agent (${worst} > ${agent.max_cost} crédits Technova). / This request exceeds the agent budget.`, { status: 402 });
         const { reserveCredits, settleCredits, releaseCredits } = await import("@/lib/credits.server");
         const reservation = worst > 0 ? await reserveCredits(userId, worst, model) : null;
@@ -296,6 +302,7 @@ export const Route = createFileRoute("/api/chat")({
             // Privacy promise on the landing page: only providers that neither store prompts nor train on them.
             provider: { data_collection: "deny" },
             ...(reasoning ? { reasoning: { max_tokens: Math.floor(maxTokens / 2) } } : {}),
+            ...(webSearch ? { plugins: [{ id: "web", max_results: WEB_RESULTS }] } : {}),
             messages: [{ role: "system", content: systemPrompt }, ...parsed.data.messages.map(m => (m.files?.length && m.role === "user" ? { role: m.role, content: toParts(m.content, m.files) } : { role: m.role, content: m.content }))],
           }),
         }).catch(() => null);
@@ -323,6 +330,7 @@ export const Route = createFileRoute("/api/chat")({
         const decoder = new TextDecoder();
         const encoder = new TextEncoder();
         let buffer = "";
+        const sources: { url: string; title: string }[] = [];
         const stream = upstream.body.pipeThrough(
           new TransformStream<Uint8Array, Uint8Array>({
             transform(chunk, controller) {
@@ -346,12 +354,22 @@ export const Route = createFileRoute("/api/chat")({
                   }
                   const delta = json.choices?.[0]?.delta?.content;
                   if (delta) { outputText += delta; controller.enqueue(encoder.encode(delta)); }
+                  // Web search sources (url_citation annotations), listed under the reply.
+                  for (const a of (json.choices?.[0]?.delta?.annotations ?? []) as { type?: string; url_citation?: { url?: string; title?: string } }[]) {
+                    const url = a.type === "url_citation" ? a.url_citation?.url : undefined;
+                    if (url?.startsWith("http") && !sources.some((s) => s.url === url) && sources.length < 6) sources.push({ url, title: a.url_citation?.title?.trim() || url.replace(/^https?:\/\//, "").split("/")[0]! });
+                  }
                 } catch {
                   /* partial frame */
                 }
               }
             },
-            async flush() {
+            async flush(controller) {
+              const unlisted = sources.filter((s) => !outputText.includes(s.url));
+              if (unlisted.length) {
+                const list = unlisted.map((s) => `- [${s.title.replace(/[[\]]/g, "")}](${s.url})`).join("\n");
+                controller.enqueue(encoder.encode(`\n\n**Sources**\n${list}`));
+              }
               await settle();
             },
           }),
