@@ -5,16 +5,17 @@ import { listSecurityEvents } from "@/lib/admin.functions";
 import { CreditTransfer } from "./CreditTransfer";
 import { SiteModeration } from "./SiteModeration";
 import { OnboardingStats } from "./OnboardingStats";
+import { AdminIncidents } from "./AdminIncidents";
 import { AdminFeedback, AdminOverview, AdminPacks, AdminPayments, AdminRegistryModeration, AdminUsers } from "./AdminConsole";
 
 type Ev = { id: string; user_id: string | null; kind: string; severity: string; detail: unknown; created_at: string };
-type Tab = "overview" | "users" | "feedback" | "payments" | "packs" | "credits" | "moderation" | "security";
+type Tab = "overview" | "users" | "feedback" | "payments" | "packs" | "credits" | "moderation" | "incidents" | "security";
 
 export function AdminPage() {
   const { lang } = useDashboard();
   const fr = lang !== "en";
   const [state, setState] = useState<{ admin: boolean; events: Ev[] } | null>(null);
-  const [tab, setTab] = useState<Tab>("overview");
+  const [tab, setTab] = useState<Tab>(() => (typeof window !== "undefined" && window.location.hash === "#incidents" ? "incidents" : "overview"));
   const [creditEmail, setCreditEmail] = useState("");
   useEffect(() => { listSecurityEvents().then(setState).catch(() => setState({ admin: false, events: [] })); }, []);
   if (!state) return <p className="p-8 text-sm text-muted-foreground">{fr ? "Chargement…" : "Loading…"}</p>;
@@ -22,7 +23,7 @@ export function AdminPage() {
 
   const tabs: [Tab, string][] = [
     ["overview", fr ? "Vue d'ensemble" : "Overview"], ["users", fr ? "Utilisateurs" : "Users"], ["feedback", "Suggestions"], ["payments", fr ? "Paiements" : "Payments"],
-    ["packs", fr ? "Packs" : "Packs"], ["credits", fr ? "Crédits" : "Credits"], ["moderation", fr ? "Modération" : "Moderation"], ["security", fr ? "Sécurité" : "Security"],
+    ["packs", fr ? "Packs" : "Packs"], ["credits", fr ? "Crédits" : "Credits"], ["moderation", fr ? "Modération" : "Moderation"], ["incidents", "Incidents"], ["security", fr ? "Sécurité" : "Security"],
   ];
   return <div className="mx-auto w-full max-w-6xl p-4 sm:p-8">
     <h1 className="flex items-center gap-2 font-display text-2xl font-semibold"><ShieldAlert className="size-5" />Administration</h1>
@@ -36,6 +37,7 @@ export function AdminPage() {
       {tab === "packs" && <AdminPacks fr={fr} />}
       {tab === "credits" && <CreditTransfer key={creditEmail} fr={fr} initialEmail={creditEmail} />}
       {tab === "moderation" && <><SiteModeration fr={fr} /><AdminRegistryModeration fr={fr} /></>}
+      {tab === "incidents" && <AdminIncidents />}
       {tab === "security" && <>
         <h2 className="font-display text-lg font-semibold">{fr ? "Journal de sécurité" : "Security log"}</h2>
         <div className="mt-2 overflow-x-auto rounded-2xl border border-border bg-card/90">

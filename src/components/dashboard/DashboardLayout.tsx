@@ -16,6 +16,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 
 import { ThreadItem } from "./ThreadItem";
 import { PendingDeletionBanner } from "./PendingDeletionBanner";
+import { IncidentBanner } from "./IncidentBanner";
 import { TopActions } from "./TopActions";
 import { SuggestionBox } from "./SuggestionBox";
 import { usePresence } from "@/lib/presence";
@@ -237,7 +238,7 @@ export function DashboardLayout({ children }: { children: ReactNode }) {
           {!isThread ? <p className="flex h-8 min-w-0 items-center gap-1.5 text-[11.5px] font-medium text-muted-foreground"><CalendarDays className="size-3.5 shrink-0" strokeWidth={1.6} /><span className="truncate first-letter:uppercase">{today}</span></p> : <span />}
           <TopActions lang={lang} tier={plan?.tier ?? null} showCredits={pathname.startsWith("/dashboard/chat")} />
         </div>
-        <main className={`relative z-10 mx-auto w-full max-w-[1640px] px-4 pt-6 sm:px-6 lg:px-3 ${isThread ? "min-h-[calc(100svh-48px)] pb-8 lg:min-h-[calc(100svh-2rem)] lg:pb-4" : "min-h-[calc(100svh-148px)] pb-4 lg:min-h-[calc(100svh-124px)]"}`}>{error && <div role="alert" className="mb-5 flex items-center justify-between border-l-2 border-destructive bg-secondary px-4 py-3 text-sm"><span>{error}</span><Button variant="ghost" size="sm" onClick={() => void reload()}>{t.retry}</Button></div>}<PendingDeletionBanner fr={lang === "fr"} /><div key={pathname} className="dashboard-page-enter">{children}</div></main>
+        <main className={`relative z-10 mx-auto w-full max-w-[1640px] px-4 pt-6 sm:px-6 lg:px-3 ${isThread ? "min-h-[calc(100svh-48px)] pb-8 lg:min-h-[calc(100svh-2rem)] lg:pb-4" : "min-h-[calc(100svh-148px)] pb-4 lg:min-h-[calc(100svh-124px)]"}`}>{error && <div role="alert" className="mb-5 flex items-center justify-between border-l-2 border-destructive bg-secondary px-4 py-3 text-sm"><span>{error}</span><Button variant="ghost" size="sm" onClick={() => void reload()}>{t.retry}</Button></div>}<PendingDeletionBanner fr={lang === "fr"} />{isAdmin && <IncidentBanner fr={lang !== "en"} />}<div key={pathname} className="dashboard-page-enter">{children}</div></main>
         {/* "Sites à visiter": the TechNova family sites, at the bottom of the dashboard. */}
         {!isThread && <div className="relative z-10 px-4 pb-4 sm:px-6 lg:px-3 lg:pb-0"><div className="dashboard-marquee mx-auto flex h-8 max-w-[1640px] items-center overflow-hidden rounded-full border border-border bg-card lg:h-9">
           <span className="flex shrink-0 items-center gap-1.5 border-r border-border px-3.5 text-[9.5px] font-medium uppercase tracking-[0.16em] text-muted-foreground"><span className="size-1.5 rounded-full bg-foreground/60" />{lang === "fr" ? "Sites à visiter" : "Sites to visit"}</span>

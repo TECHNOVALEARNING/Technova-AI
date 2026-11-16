@@ -1342,6 +1342,12 @@ export type Database = {
         }
         Relationships: []
       }
+      security_incidents: {
+        Row: { id: string; title: string; source: string; kind: string | null; event_count: number; detected_at: string; status: string; risk: string; affected_users: string[]; all_users: boolean; data_categories: string; description: string; measures: string; decision_note: string; decided_by: string | null; decided_at: string | null; authority_notified_at: string | null; users_notified_at: string | null; users_notified_count: number; closed_at: string | null; created_at: string; updated_at: string }
+        Insert: { id?: string; title: string; source?: string; kind?: string | null; event_count?: number; detected_at?: string; status?: string; risk?: string; affected_users?: string[]; all_users?: boolean; data_categories?: string; description?: string; measures?: string; decision_note?: string; decided_by?: string | null; decided_at?: string | null; authority_notified_at?: string | null; users_notified_at?: string | null; users_notified_count?: number; closed_at?: string | null; created_at?: string; updated_at?: string }
+        Update: { id?: string; title?: string; source?: string; kind?: string | null; event_count?: number; detected_at?: string; status?: string; risk?: string; affected_users?: string[]; all_users?: boolean; data_categories?: string; description?: string; measures?: string; decision_note?: string; decided_by?: string | null; decided_at?: string | null; authority_notified_at?: string | null; users_notified_at?: string | null; users_notified_count?: number; closed_at?: string | null; created_at?: string; updated_at?: string }
+        Relationships: []
+      }
       user_feedback: {
         Row: { created_at: string; id: string; message: string; owner_id: string; page: string; rating: number | null; read_at: string | null }
         Insert: { created_at?: string; id?: string; message?: string; owner_id?: string; page?: string; rating?: number | null; read_at?: string | null }
@@ -1441,6 +1447,8 @@ export type Database = {
       admin_credit_totals: { Args: never; Returns: { consumed: number; distributed: number; granted: number; purchased: number }[] }
       touch_presence: { Args: never; Returns: undefined }
       admin_online_users: { Args: { _minutes: number }; Returns: { online: number; last_hour: number; today: number }[] }
+      admin_user_emails: { Args: { _ids: string[] }; Returns: { id: string; email: string }[] }
+      admin_all_user_emails: { Args: { _limit: number; _offset: number }; Returns: { id: string; email: string }[] }
       admin_feedback_list: { Args: { _limit: number; _offset: number }; Returns: { id: string; email: string | null; rating: number | null; message: string; page: string; read_at: string | null; created_at: string }[] }
       admin_feedback_summary: { Args: never; Returns: { total: number; unread: number; rated: number; average: number | null }[] }
       admin_feedback_mark_read: { Args: { _ids: string[] }; Returns: undefined }
