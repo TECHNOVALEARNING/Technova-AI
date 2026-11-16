@@ -5,7 +5,7 @@ import { creditCost, estimateTokens } from "@/lib/model-pricing";
 import { chatTierCredits, chatTiers, EXPERT_MIN_TIER, PRO_TIER, smartTier, textSignals, type ChatTier } from "@/lib/chat-modes";
 import { FLAGSHIP_MIN_TIER, isFlagshipModel } from "@/lib/flagship-models";
 import { extraModels } from "@/lib/openrouter-catalog";
-import { dateRule, needsFreshInfo, WEB_RESULTS, WEB_SEARCH_CREDITS } from "@/lib/fresh-info";
+import { dateRule, needsFreshInfo, WEB_RESULTS, WEB_SEARCH_FEE } from "@/lib/fresh-info";
 import { humanizeCredits, humanizePrompt, wordCount } from "@/lib/text-tools";
 
 const bodySchema = z.object({
@@ -92,6 +92,23 @@ function engineFor(tier: ChatTier, planTier: number, needsVision: boolean, needs
   if (needsMedia) return engines.expertMedia;
   return planTier >= PRO_TIER ? engines.expertPro : engines.expert;
 }
+// Backups when a mode's engine is saturated: other providers, all answering with data_collection "deny"
+// (tested 2026-11-16: Google Vertex, DeepInfra, GMICloud). Text-only backups are used only without attachments.
+const BACKUPS: Record<string, { any: string[]; text: string[] }> = {
+  "google/gemini-2.5-flash-lite": { any: ["google/gemini-3.5-flash-lite"], text: ["mistralai/mistral-small-3.2-24b-instruct"] },
+  "qwen/qwen3-235b-a22b-2507": { any: [], text: ["deepseek/deepseek-chat-v3-0324", "google/gemini-3.5-flash-lite"] },
+  "google/gemini-3.5-flash-lite": { any: ["google/gemini-2.5-flash", "google/gemini-2.5-flash-lite"], text: [] },
+  "anthropic/claude-sonnet-5": { any: ["google/gemini-3.5-flash"], text: [] },
+  "anthropic/claude-opus-5": { any: ["anthropic/claude-sonnet-5", "google/gemini-3.5-flash"], text: [] },
+  "google/gemini-3.5-flash": { any: ["google/gemini-2.5-flash"], text: [] },
+};
+function backupEngines(id: string, needsVision: boolean, needsMedia: boolean): string[] {
+  const b = BACKUPS[id];
+  if (!b) return [];
+  return [...b.any, ...(needsVision || needsMedia ? [] : b.text)];
+}
+/** Statuses worth a second try elsewhere: saturated, or the provider briefly unavailable. */
+const RETRYABLE = new Set([408, 429, 500, 502, 503, 504, 529]);
 const engineCost = (e: Engine, inputTokens: number, outputTokens: number) => {
   const raw = (inputTokens * e.input + outputTokens * e.output) / 1_000_000;
   return raw > 0 ? Math.ceil(raw) : 0;
@@ -273,8 +290,9 @@ export const Route = createFileRoute("/api/chat")({
         const maxTokens = agent ? Math.min(4096, Math.max(128, agent.max_tokens)) : engine ? engine.maxTokens : flagship ? 4096 : reasoning ? 2048 : 1024;
         // Web results join the prompt (about 1 500 tokens for three pages).
         const inputTokens = estimateTokens(systemPrompt + parsed.data.messages.map(m => m.content).join(" ")) + allFiles.reduce((sum, f) => sum + (f.mediaType.startsWith("image/") ? 1000 : f.mediaType === "application/pdf" ? 3000 : 8000), 0) + (webSearch ? 1500 : 0);
-        // Hold the worst-case cost before calling the provider; the real cost (web search included) is charged at the end.
-        const worst = (engine ? Math.max(flat, engineCost(engine, inputTokens, maxTokens)) : creditCost(model, inputTokens, maxTokens)) + (webSearch ? WEB_SEARCH_CREDITS : 0);
+        // Hold the worst-case cost before calling the provider; the real cost is charged at the end. A web search adds
+        // only its fixed fee (WEB_SEARCH_FEE), never its real price.
+        const worst = (engine ? Math.max(flat, engineCost(engine, inputTokens, maxTokens)) : creditCost(model, inputTokens, maxTokens)) + (webSearch ? WEB_SEARCH_FEE : 0);
         if (agent && worst > agent.max_cost) return new Response(`Cette demande dépasse le budget de l’agent (${worst} > ${agent.max_cost} crédits Technova). / This request exceeds the agent budget.`, { status: 402 });
         const { reserveCredits, settleCredits, releaseCredits } = await import("@/lib/credits.server");
         const reservation = worst > 0 ? await reserveCredits(userId, worst, model) : null;
@@ -289,8 +307,12 @@ export const Route = createFileRoute("/api/chat")({
           const inTokens = billed?.input || inputTokens;
           const outTokens = billed ? billed.output : estimateTokens(outputText);
           // Charge what the provider billed (1 200 credits per USD), never less than the mode's fixed price.
-          const realCredits = billed?.costUsd != null ? Math.ceil(billed.costUsd * 1200) : engine ? engineCost(engine, inTokens, outTokens) : creditCost(model, inTokens, outTokens);
-          const credits = engine ? Math.max(flat, realCredits) : billed?.costUsd != null ? Math.max(1, realCredits) : realCredits;
+          // With a web search, OpenRouter's cost includes the search itself: price the tokens from the table instead and
+          // add the fixed search fee, so a simple news question costs the mode price + 2 credits.
+          const tokensOnly = engine ? engineCost(engine, inTokens, outTokens) : creditCost(model, inTokens, outTokens);
+          const realCredits = webSearch ? tokensOnly : billed?.costUsd != null ? Math.ceil(billed.costUsd * 1200) : tokensOnly;
+          const base = engine ? Math.max(flat, realCredits) : billed?.costUsd != null || webSearch ? Math.max(1, realCredits) : realCredits;
+          const credits = base + (webSearch ? WEB_SEARCH_FEE : 0);
           await supabaseAdmin.from("usage_logs").insert({ owner_id: userId, model: model, input_tokens: inTokens, output_tokens: outTokens, credits, latency_ms: Date.now() - startedAt });
           // Admin-only record of the engine behind the mode and its real cost (never readable from the browser).
           await supabaseAdmin.from("chat_engine_costs").insert({ owner_id: userId, mode: model, engine: modelId, input_tokens: inTokens, output_tokens: outTokens, reasoning_tokens: billed?.reasoning ?? 0, cost_usd: billed?.costUsd ?? null, credits });
@@ -302,7 +324,23 @@ export const Route = createFileRoute("/api/chat")({
           if (reservation) await releaseCredits(reservation);
         };
 
-        const upstream = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+        // When the provider is saturated (429) or briefly down (5xx), the same request goes at once to a backup model
+        // from another provider (modes only: the engine is never shown). Named models (flagships, agents) are retried
+        // once after a short pause instead, so the user always gets the model they chose.
+        const chatMessages = [{ role: "system", content: systemPrompt }, ...parsed.data.messages.map(m => (m.files?.length && m.role === "user" ? { role: m.role, content: toParts(m.content, m.files) } : { role: m.role, content: m.content }))];
+        const candidates = engine ?[modelId, ...backupEngines(modelId, needsVision, needsMedia)] : [modelId, modelId];
+        let upstream: Response | null = null;
+        for (let i = 0; i < candidates.length; i++) {
+          if (request.signal.aborted) break;
+          if (i > 0 && !engine) await new Promise((r) => setTimeout(r, 1500));
+          upstream = await callOpenRouter(candidates[i]!);
+          // The admin cost table records the engine that really answered.
+          modelId = candidates[i]!;
+          if (upstream?.ok || (upstream && !RETRYABLE.has(upstream.status))) break;
+          if (i < candidates.length - 1) console.warn("OpenRouter busy, trying backup", candidates[i], upstream?.status ?? "network");
+        }
+        async function callOpenRouter(id: string) {
+          return fetch("https://openrouter.ai/api/v1/chat/completions", {
           method: "POST",
           signal: request.signal,
           headers: {
@@ -312,7 +350,7 @@ export const Route = createFileRoute("/api/chat")({
             "X-Title": "TechNova AI Hub",
           },
           body: JSON.stringify({
-            model: modelId,
+            model: id,
             stream: true,
             max_tokens: maxTokens,
             usage: { include: true },
@@ -320,9 +358,10 @@ export const Route = createFileRoute("/api/chat")({
             provider: { data_collection: "deny" },
             ...(reasoning ? { reasoning: { max_tokens: Math.floor(maxTokens / 2) } } : {}),
             ...(webSearch ? { plugins: [{ id: "web", max_results: WEB_RESULTS }] } : {}),
-            messages: [{ role: "system", content: systemPrompt }, ...parsed.data.messages.map(m => (m.files?.length && m.role === "user" ? { role: m.role, content: toParts(m.content, m.files) } : { role: m.role, content: m.content }))],
+            messages: chatMessages,
           }),
-        }).catch(() => null);
+          }).catch(() => null);
+        }
         if (!upstream?.ok || !upstream.body) {
           await abandon();
           if (!upstream) return new Response("Le modèle n'a pas pu répondre, réessayez. / The model could not answer.", { status: 502 });
@@ -334,8 +373,8 @@ export const Route = createFileRoute("/api/chat")({
               : upstream.status === 401 || upstream.status === 403
                 ? "Le service de modèles est mal configuré (clé du fournisseur refusée). L'équipe TechNova doit vérifier la clé. / The model provider key was refused."
               : upstream.status === 429
-                ? "Trop de requêtes, réessayez dans un instant. / Rate limited, try again shortly."
-                : "Le modèle n'a pas pu répondre, réessayez. / The model could not answer.";
+                ? "Le service IA est très sollicité en ce moment : renvoyez votre message dans quelques secondes. Aucun crédit n'a été prélevé. / The AI service is very busy: send your message again in a few seconds. No credits were charged."
+                : "Le modèle n'a pas pu répondre, réessayez. Aucun crédit n'a été prélevé. / The model could not answer. No credits were charged.";
           return new Response(message, { status: upstream.status || 502 });
         }
 

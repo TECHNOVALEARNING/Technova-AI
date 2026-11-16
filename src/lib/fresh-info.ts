@@ -5,20 +5,21 @@
 const fold = (s: string) => s.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "");
 
 // Words that point to something happening now: news, dates, sports, politics, religion, markets, weather.
+// Everyday words that also mean something timeless ("dernier", "actuel", "résultat", "info", "récent", "score",
+// "champion") are left out on purpose: a web search adds a fee, so it runs only for clear current-events questions.
 const NOW = [
-  "actualite", "actualites", "actu", "actus", "news", "info", "infos", "nouvelles",
-  "aujourd hui", "today", "hier", "yesterday", "demain", "tomorrow", "ce soir", "tonight", "ce matin",
-  "cette semaine", "ce week end", "ce mois", "cette annee", "this week", "this month", "this year",
-  "en ce moment", "actuellement", "actuel", "actuelle", "actuels", "actuelles", "currently", "right now",
-  "dernier", "derniere", "derniers", "dernieres", "latest", "recent", "recente", "recents", "recentes", "recemment", "recently",
-  "breaking", "a jour", "up to date", "en direct",
+  "actualite", "actualites", "actu", "actus", "news", "nouvelles", "dernieres nouvelles",
+  "aujourd hui", "today", "hier", "yesterday", "ce soir", "tonight", "ce matin",
+  "cette semaine", "ce week end", "ce mois ci", "cette annee", "this week", "this month", "this year",
+  "en ce moment", "actuellement", "currently", "right now", "latest news", "recemment", "recently",
+  "breaking", "en direct",
   // sports
-  "match", "matchs", "score", "scores", "resultat", "resultats", "classement", "standings", "mercato", "transfert", "transfer",
+  "match", "matchs", "classement", "standings", "mercato", "transfert", "transfer",
   "ballon d or", "ligue des champions", "champions league", "premier league", "ligue 1", "liga", "serie a", "bundesliga",
-  "coupe du monde", "world cup", "coupe d afrique", "afcon", "jeux olympiques", "olympics", "champion", "vainqueur", "qui a gagne", "who won",
+  "coupe du monde", "world cup", "coupe d afrique", "afcon", "jeux olympiques", "olympics", "qui a gagne", "who won",
   // politics, institutions, religion
-  "election", "elections", "president", "presidente", "premier ministre", "prime minister", "gouvernement", "government", "ministre",
-  "pape", "pope", "vatican", "conclave", "archeveque", "eveque",
+  "election", "elections", "president", "presidente", "premier ministre", "prime minister", "gouvernement", "government",
+  "pape", "pope", "vatican", "conclave",
   // markets and daily life
   "bourse", "cours du", "prix du", "taux de change", "exchange rate", "bitcoin", "inflation", "meteo", "weather",
 ];
@@ -31,10 +32,10 @@ export function needsFreshInfo(text: string): boolean {
   return NOW.some((w) => t.includes(` ${w} `));
 }
 
-/** Results fetched per web search: each costs about USD 0.004 (≈ 5 credits). */
+/** Results fetched per web search (the search costs TechNova about USD 0.007, ≈ 9 credits, measured 2026-11-16). */
 export const WEB_RESULTS = 3;
-/** Worst-case credits added by one web search (results + the pages they put in the prompt). */
-export const WEB_SEARCH_CREDITS = Math.ceil(WEB_RESULTS * 0.004 * 1200);
+/** What a web search adds to the message price: a small fixed fee, TechNova absorbs the rest of the search cost. */
+export const WEB_SEARCH_FEE = 2;
 
 /** System-prompt paragraph with today's date (West Africa Time) and how to treat recent facts. */
 export function dateRule(lang: "fr" | "en", now = new Date(), withWeb = false): string {
