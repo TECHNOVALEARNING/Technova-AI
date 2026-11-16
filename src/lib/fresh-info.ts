@@ -34,8 +34,9 @@ export function needsFreshInfo(text: string): boolean {
 
 /** Results fetched per web search (the search costs TechNova about USD 0.007, ≈ 9 credits, measured 2026-11-16). */
 export const WEB_RESULTS = 3;
-/** What a web search adds to the message price: a small fixed fee, TechNova absorbs the rest of the search cost. */
-export const WEB_SEARCH_FEE = 2;
+/** What a web search adds to the message price, fixed: 9 credits ≈ its real cost × 1 200 (the platform's usual
+ *  margin rule), so a news question in Éclair costs 10 credits — predictable for the user, profitable for TechNova. */
+export const WEB_SEARCH_FEE = 9;
 
 /** System-prompt paragraph with today's date (West Africa Time) and how to treat recent facts. */
 export function dateRule(lang: "fr" | "en", now = new Date(), withWeb = false): string {
