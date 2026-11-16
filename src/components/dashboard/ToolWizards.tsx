@@ -1,5 +1,5 @@
 import { useRef, useState } from "react";
-import { AudioLines, FileAudio, Loader2, PenLine, Sparkles, Upload, X } from "lucide-react";
+import { AudioLines, FileAudio, Loader2, PenLine, Upload, X } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useServerFn } from "@tanstack/react-start";
 import { createAudioUpload } from "@/lib/audio.functions";
@@ -51,7 +51,7 @@ export function HumanizeWizard({ open, onOpenChange, lang, onStart }: { open: bo
     sub={fr ? "Collez un texte écrit par une IA : TechNova le réécrit avec un style naturel, dans le ton et le format de votre choix, sans changer les faits." : "Paste a text written by an AI: TechNova rewrites it in a natural style, in the tone and format you choose, without changing the facts."}
     footer={<>
       <button type="button" onClick={() => onOpenChange(false)} className="h-9 rounded-full px-3 text-[13px] text-muted-foreground hover:text-foreground">{fr ? "Annuler" : "Cancel"}</button>
-      <button type="button" onClick={go} className="create-chip-humanize inline-flex h-9 items-center gap-1.5 rounded-full px-4 text-[13px] font-semibold text-white"><Sparkles className="size-4" />{fr ? `Humaniser · ${price} crédits` : `Humanize · ${price} credits`}</button>
+      <button type="button" onClick={go} className="create-chip-humanize inline-flex h-9 items-center gap-1.5 rounded-full px-4 text-[13px] font-semibold text-white"><PenLine className="size-4" />{fr ? `Humaniser · ${price} crédits` : `Humanize · ${price} credits`}</button>
     </>}>
     <label className="block space-y-1">
       <span className={label}>{fr ? "1. Le texte généré par l'IA" : "1. The AI-generated text"}</span>
@@ -137,7 +137,7 @@ export function AudioWizard({ open, onOpenChange, lang, onStart }: { open: boole
     footer={<>
       <button type="button" disabled={!!progress} onClick={() => onOpenChange(false)} className="h-9 rounded-full px-3 text-[13px] text-muted-foreground hover:text-foreground disabled:opacity-50">{fr ? "Annuler" : "Cancel"}</button>
       <button type="button" disabled={!loaded || !!progress} onClick={() => void go()} className="create-chip-audio inline-flex h-9 items-center gap-1.5 rounded-full px-4 text-[13px] font-semibold text-white disabled:opacity-60">
-        {progress ? <Loader2 className="size-4 animate-spin" /> : <Sparkles className="size-4" />}{price ? (fr ? `Résumer · ${price} crédits` : `Summarize · ${price} credits`) : (fr ? "Résumer" : "Summarize")}</button>
+        {progress ? <Loader2 className="size-4 animate-spin" /> : <AudioLines className="size-4" />}{price ? (fr ? `Résumer · ${price} crédits` : `Summarize · ${price} credits`) : (fr ? "Résumer" : "Summarize")}</button>
     </>}>
     <div>
       <span className={label}>{fr ? "1. L'enregistrement" : "1. The recording"}</span>

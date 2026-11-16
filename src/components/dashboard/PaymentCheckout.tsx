@@ -33,7 +33,11 @@ export function PaymentCheckout({ pack, lang, country, onClose, onPaid }: { pack
 
   const viaHosted = method === "momo" && (cc === OTHER || net === OTHER);
   const needsPhone = !viaHosted;
-  const ready = !busy && (method === "card" || !needsPhone || phone.replace(/\D/g, "").length >= 8);
+  // Card: only a phone number (FeexPay's card checkout needs one); a local number gets the visitor's country code.
+  const [cardPhone, setCardPhone] = useState("");
+  const geoDial = FEEXPAY_COUNTRIES.find((c) => c.code === country)?.dial;
+  const cardPhoneFull = /^(\+|00)/.test(cardPhone.trim()) || !geoDial ? cardPhone.trim() : `+${geoDial}${cardPhone.replace(/\D/g, "")}`;
+  const ready = !busy && (method === "card" ? cardPhone.replace(/\D/g, "").length >= 8 : !needsPhone || phone.replace(/\D/g, "").length >= 8);
   const price = useMemo(() => pack ? `${pack.price_xof.toLocaleString("fr-FR")} FCFA` : "", [pack]);
 
   function poll(id: string, tries = 0) {
@@ -57,17 +61,26 @@ export function PaymentCheckout({ pack, lang, country, onClose, onPaid }: { pack
     const cardTab = method === "card" ? window.open("about:blank", "_blank") : null;
     try {
       const r = await start({ data: method === "card"
-        ? { slug: pack.slug, method }
+        ? { slug: pack.slug, method, phone: cardPhoneFull }
         : viaHosted ? { slug: pack.slug, method } : { slug: pack.slug, method, country: cc, network: net, phone } });
       if ("url" in r) {
         if (cardTab) { cardTab.location.href = r.url; setWaiting(r.paymentId); poll(r.paymentId); return; }
         window.location.href = r.url; return;
       }
       setWaiting(r.pendingId); poll(r.pendingId);
-    } catch {
+    } catch (err) {
       cardTab?.close();
       setBusy(false);
-      setError(fr ? "Le paiement n'a pas pu démarrer. Réessayez dans un instant." : "The payment could not start. Try again shortly.");
+      // Cards are never sent to another provider: say why FeexPay could not open the card page.
+      const msg = String((err as Error)?.message ?? "");
+      const failed = msg.match(/CARD_FAILED:(.*)/)?.[1]?.trim();
+      setError(failed
+        ? (fr ? `Le paiement par carte n'a pas pu démarrer chez FeexPay (${failed}). Vérifiez le numéro de téléphone ou payez par Mobile Money.` : `The card payment could not start at FeexPay (${failed}). Check the phone number or pay with Mobile Money.`)
+        : msg.includes("CARD_UNAVAILABLE:email")
+          ? (fr ? "Le paiement par carte demande une adresse e-mail sur votre compte." : "Card payment needs an e-mail address on your account.")
+          : msg.includes("CARD_UNAVAILABLE")
+            ? (fr ? "Le paiement par carte est momentanément indisponible. Payez par Mobile Money ou réessayez plus tard." : "Card payment is temporarily unavailable. Pay with Mobile Money or try later.")
+            : (fr ? "Le paiement n'a pas pu démarrer. Réessayez dans un instant." : "The payment could not start. Try again shortly."));
     }
   }
 
@@ -115,10 +128,15 @@ export function PaymentCheckout({ pack, lang, country, onClose, onPaid }: { pack
             <div className="flex items-center gap-2"><span className="grid h-10 shrink-0 place-items-center rounded-xl border border-input bg-secondary px-3 text-[13px]">+{countryInfo?.dial}</span>
               <Input inputMode="tel" autoComplete="tel-national" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder={cc === "BJ" ? "01 97 00 00 00" : "07 00 00 00 00"} className="h-10 rounded-xl" /></div></label>
             : <p className="rounded-xl bg-secondary px-3 py-2.5 text-[12.5px] text-muted-foreground">{fr ? "Vous choisirez votre opérateur sur la page de paiement sécurisée." : "You will pick your operator on the secure payment page."}</p>}
-        </> : <div className="grid place-items-center gap-3 rounded-2xl bg-secondary px-4 py-5 text-center">
-          <span className="flex items-center gap-1.5"><span className="rounded-md bg-[#1a1f71] px-2 py-1 text-[12px] font-bold italic text-white">VISA</span><span className="flex items-center rounded-md bg-background px-2 py-1"><i className="size-4 rounded-full bg-[#eb001b]" /><i className="-ml-2 size-4 rounded-full bg-[#f79e1b]/90" /></span></span>
-          <p className="text-[12.5px] leading-relaxed text-muted-foreground">{fr ? "Rien à remplir ici : le bouton ouvre la page de paiement sécurisée (3-D Secure) dans un nouvel onglet. Vous y saisissez votre carte, TechNova ne la voit jamais." : "Nothing to fill in here: the button opens the secure payment page (3-D Secure) in a new tab. You enter your card there; TechNova never sees it."}</p>
-        </div>}
+        </> : <>
+          <label className="grid gap-1 text-[12px] font-medium">{fr ? "Numéro de téléphone" : "Phone number"}
+            <div className="flex items-center gap-2">{geoDial && !/^(\+|00)/.test(cardPhone.trim()) && <span className="grid h-10 shrink-0 place-items-center rounded-xl border border-input bg-secondary px-3 text-[13px]">+{geoDial}</span>}
+              <Input inputMode="tel" autoComplete="tel" value={cardPhone} onChange={(e) => setCardPhone(e.target.value)} placeholder={geoDial ? "01 97 00 00 00" : "+229 01 97 00 00 00"} className="h-10 rounded-xl" /></div></label>
+          <div className="grid place-items-center gap-2.5 rounded-2xl bg-secondary px-4 py-4 text-center">
+            <span className="flex items-center gap-1.5"><span className="rounded-md bg-[#1a1f71] px-2 py-1 text-[12px] font-bold italic text-white">VISA</span><span className="flex items-center rounded-md bg-background px-2 py-1"><i className="size-4 rounded-full bg-[#eb001b]" /><i className="-ml-2 size-4 rounded-full bg-[#f79e1b]/90" /></span></span>
+            <p className="text-[12.5px] leading-relaxed text-muted-foreground">{fr ? "Le bouton ouvre la page de paiement sécurisée FeexPay (3-D Secure) dans un nouvel onglet. Vous y saisissez votre carte : TechNova ne la voit jamais. Le téléphone est demandé par FeexPay pour la vérification." : "The button opens FeexPay's secure payment page (3-D Secure) in a new tab. You enter your card there; TechNova never sees it. FeexPay asks for the phone for verification."}</p>
+          </div>
+        </>}
 
         {error && <p role="alert" className="text-[12.5px] text-destructive">{error}</p>}
         <Button type="submit" disabled={!ready} className="h-11 rounded-full">{busy ? <Loader2 className="size-4 animate-spin" /> : method === "card" ? <CreditCard className="size-4" /> : <Lock className="size-4" />}{method === "card" ? (fr ? `Payer par carte · ${price}` : `Pay by card · ${price}`) : (fr ? `Payer ${price}` : `Pay ${price}`)}</Button>

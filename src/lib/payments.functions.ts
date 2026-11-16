@@ -41,8 +41,8 @@ export const startCheckout = createServerFn({ method: "POST" })
     // Decide: FeexPay only when configured, and in sandbox only for networks its sandbox supports.
     const method = data.method;
     const network = method === "momo" ? feexpayNetwork(data.country, data.network) : null;
-    // Mobile Money needs a number of the chosen country. Cards ask nothing in the dialog: country and city come from
-    // the visitor's location (Vercel headers), the phone only if one was given; the card itself is typed on FeexPay.
+    // Mobile Money needs a number of the chosen country. Cards ask only a phone number in the dialog (FeexPay's card
+    // API needs one); country and city come from the visitor's location (Vercel headers); the card is typed on FeexPay.
     const cardPhone = data.phone?.replace(/[^\d+]/g, "") ?? "";
     const phone = method === "card" ? (cardPhone.replace(/\D/g, "").length >= 8 ? cardPhone : null)
       : data.country && data.phone ? internationalPhone(data.country, data.phone) : null;
@@ -60,6 +60,11 @@ export const startCheckout = createServerFn({ method: "POST" })
       : method === "momo" && !feex.feexpayLive() && !network?.sandbox ? "operator_not_in_feexpay_sandbox"
       : method === "card" && !email ? "card_email_missing"
       : null;
+    // Cards are paid on FeexPay only: Nyole's page has no card payment, so a card is never sent there.
+    if (method === "card" && nyoleReason) {
+      await logSecurityEvent(context.userId, "payment_card_unavailable", "warning", { reason: nyoleReason });
+      throw new Error(`CARD_UNAVAILABLE:${nyoleReason === "card_email_missing" ? "email" : "config"}`);
+    }
     const provider: "feexpay" | "nyole" = nyoleReason ? "nyole" : "feexpay";
     if (nyoleReason && nyoleReason !== "country_or_operator_not_covered") {
       await logSecurityEvent(context.userId, "payment_routed_nyole", "info", { method: method ?? null, country: data.country ?? null, network: data.network ?? null, reason: nyoleReason });
@@ -86,7 +91,14 @@ export const startCheckout = createServerFn({ method: "POST" })
         await supabaseAdmin.from("payments").update({ session_id: m.reference, checkout_url: m.paymentUrl }).eq("id", pay.id);
         return m.paymentUrl ? { url: m.paymentUrl, paymentId: pay.id } : { pendingId: pay.id, provider: "feexpay" };
       } catch (e) {
-        // FeexPay unavailable or refused: the same payment continues on Nyole.
+        const reason = String((e as Error)?.message ?? e).slice(0, 300);
+        if (method === "card") {
+          // No card page on Nyole: the payment stops here and the customer sees FeexPay's reason (it never holds a secret).
+          await logSecurityEvent(context.userId, "payment_card_failed", "warning", { payment_id: pay.id, reason });
+          await supabaseAdmin.from("payments").update({ status: "failed" }).eq("id", pay.id);
+          throw new Error(`CARD_FAILED:${reason.replace(/^FeexPay\s*/i, "").slice(0, 200)}`);
+        }
+        // Mobile Money: FeexPay unavailable or refused, the same payment continues on Nyole.
         await logSecurityEvent(context.userId, "payment_fallback_nyole", "info", { payment_id: pay.id, method, network: data.network ?? null, reason: String((e as Error)?.message ?? e).slice(0, 200) });
         await supabaseAdmin.from("payments").update({ provider: "nyole", livemode: isLiveKey(), session_id: null, checkout_url: null }).eq("id", pay.id);
       }

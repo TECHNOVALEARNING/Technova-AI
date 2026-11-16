@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link } from "@tanstack/react-router";
-import { Clapperboard, Coins, Lock, Music2, Sparkles } from "lucide-react";
+import { Clapperboard, Coins, Lock, Music2 } from "lucide-react";
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/components/ui/dialog";
 import { mediaTiers, MEDIA_VIDEO_SECONDS, type MediaRatio, type MusicOptions } from "@/lib/media-models";
 import { featureMinTier, packNames } from "@/lib/plans";
@@ -99,7 +99,7 @@ export function MusicWizard({ open, onOpenChange, lang, onCreate }: { open: bool
     title={fr ? "Créer une musique" : "Create a song"} sub={fr ? "Décrivez votre chanson ou collez vos paroles ; précisez le style si vous le souhaitez. Une chanson complète, prête à télécharger." : "Describe your song or paste your lyrics; add a style if you like. A complete song, ready to download."}
     footer={<>
       <button type="button" onClick={() => onOpenChange(false)} className="h-9 rounded-full px-3 text-[13px] text-muted-foreground hover:text-foreground">{fr ? "Annuler" : "Cancel"}</button>
-      <button type="button" onClick={create} className="create-chip-music inline-flex h-9 items-center gap-1.5 rounded-full px-4 text-[13px] font-semibold text-white"><Sparkles className="size-4" />{fr ? "Créer la chanson" : "Create the song"}</button>
+      <button type="button" onClick={create} className="create-chip-music inline-flex h-9 items-center gap-1.5 rounded-full px-4 text-[13px] font-semibold text-white"><Music2 className="size-4" />{fr ? "Créer la chanson" : "Create the song"}</button>
     </>}>
     <div className="grid grid-cols-2 gap-1.5 rounded-xl bg-secondary/70 p-1">
       {(["describe", "lyrics"] as const).map((m) => <button key={m} type="button" aria-pressed={mode === m} onClick={() => setMode(m)} className={cn("h-8 rounded-lg text-[12.5px] transition", mode === m ? "bg-card font-semibold shadow-sm" : "text-muted-foreground")}>{m === "describe" ? (fr ? "Décrire ma chanson" : "Describe my song") : (fr ? "J'ai mes paroles" : "I have my lyrics")}</button>)}
@@ -191,7 +191,7 @@ export function VideoWizard({ open, onOpenChange, lang, onCreate }: { open: bool
       ? <><span className="mr-auto text-[12px] text-muted-foreground">{fr ? `La vidéo est incluse à partir du forfait ${packNames[featureMinTier.video]}.` : `Video is included from the ${packNames[featureMinTier.video]} plan.`}</span><Link to="/dashboard/credits" className="inline-flex h-9 items-center gap-1.5 rounded-full bg-foreground px-4 text-[13px] font-semibold text-background"><Lock className="size-4" />{fr ? "Voir les forfaits" : "See plans"}</Link></>
       : <>
         <button type="button" onClick={() => onOpenChange(false)} className="h-9 rounded-full px-3 text-[13px] text-muted-foreground hover:text-foreground">{fr ? "Annuler" : "Cancel"}</button>
-        <button type="button" disabled={tier === null} onClick={create} className="create-chip-video inline-flex h-9 items-center gap-1.5 rounded-full px-4 text-[13px] font-semibold text-white disabled:opacity-60"><Sparkles className="size-4" />{fr ? `Créer la vidéo · ${price} crédits` : `Create the video · ${price} credits`}</button>
+        <button type="button" disabled={tier === null} onClick={create} className="create-chip-video inline-flex h-9 items-center gap-1.5 rounded-full px-4 text-[13px] font-semibold text-white disabled:opacity-60"><Clapperboard className="size-4" />{fr ? `Créer la vidéo · ${price} crédits` : `Create the video · ${price} credits`}</button>
       </>}>
     <label className="block space-y-1">
       <span className={label}>{fr ? "La scène" : "The scene"}</span>
