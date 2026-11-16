@@ -13,6 +13,9 @@ const checkoutInput = z.object({
   city: z.string().max(80).optional(),
 });
 
+/** City sent with a card payment when the visitor's location gives none. */
+const MAIN_CITY: Record<string, string> = { BJ: "Cotonou", TG: "Lome", CI: "Abidjan", SN: "Dakar", BF: "Ouagadougou", CG: "Brazzaville", CM: "Douala", GA: "Libreville", ML: "Bamako", NE: "Niamey", GN: "Conakry", FR: "Paris", BE: "Bruxelles", CA: "Montreal", US: "New York" };
+
 /**
  * Orchestration (src/lib/payment-routing.ts): cards → FeexPay; Mobile Money → FeexPay when it serves the country and
  * operator, else Nyole; any FeexPay failure falls back to Nyole's hosted checkout so the customer can still pay.
@@ -38,10 +41,16 @@ export const startCheckout = createServerFn({ method: "POST" })
     // Decide: FeexPay only when configured, and in sandbox only for networks its sandbox supports.
     const method = data.method;
     const network = method === "momo" ? feexpayNetwork(data.country, data.network) : null;
-    // Mobile Money needs a number of the chosen country; a card holder may be from anywhere.
+    // Mobile Money needs a number of the chosen country. Cards ask nothing in the dialog: country and city come from
+    // the visitor's location (Vercel headers), the phone only if one was given; the card itself is typed on FeexPay.
     const cardPhone = data.phone?.replace(/[^\d+]/g, "") ?? "";
     const phone = method === "card" ? (cardPhone.replace(/\D/g, "").length >= 8 ? cardPhone : null)
       : data.country && data.phone ? internationalPhone(data.country, data.phone) : null;
+    const headers = getRequest().headers;
+    const ipCountry = headers.get("x-vercel-ip-country")?.toUpperCase();
+    const cardCountry = data.country ?? (ipCountry && /^[A-Z]{2}$/.test(ipCountry) ? ipCountry : "BJ");
+    const ipCity = (() => { try { return decodeURIComponent(headers.get("x-vercel-ip-city") ?? ""); } catch { return ""; } })();
+    const cardCity = data.city?.trim() || ipCity || MAIN_CITY[cardCountry] || "Cotonou";
     // Why a payment goes to Nyole is logged (security log, "payment_routed_nyole") so routing can be checked in the admin console.
     const nyoleReason =
       !method ? "no_method"
@@ -49,7 +58,6 @@ export const startCheckout = createServerFn({ method: "POST" })
       : routePayment(method, data.country, data.network) === "nyole" ? "country_or_operator_not_covered"
       : method === "momo" && !phone ? "invalid_phone_number"
       : method === "momo" && !feex.feexpayLive() && !network?.sandbox ? "operator_not_in_feexpay_sandbox"
-      : method === "card" && (!phone || !data.city || !data.country) ? "card_details_missing"
       : method === "card" && !email ? "card_email_missing"
       : null;
     const provider: "feexpay" | "nyole" = nyoleReason ? "nyole" : "feexpay";
@@ -70,7 +78,7 @@ export const startCheckout = createServerFn({ method: "POST" })
       try {
         if (method === "card") {
           // No return page for cards: the dialog opens FeexPay in a new tab and waits for the confirmation.
-          const c = await feex.createCardCheckout({ amount: pack.price_xof, paymentId: pay.id, description, customer, phone: phone!, city: data.city!, country: data.country! });
+          const c = await feex.createCardCheckout({ amount: pack.price_xof, paymentId: pay.id, description, customer, phone, city: cardCity, country: cardCountry });
           await supabaseAdmin.from("payments").update({ session_id: c.reference, checkout_url: c.url }).eq("id", pay.id);
           return { url: c.url, paymentId: pay.id };
         }

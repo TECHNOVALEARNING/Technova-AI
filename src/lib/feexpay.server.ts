@@ -64,13 +64,13 @@ export async function requestMobileMoney(input: { network: string; phone: string
 }
 
 /** Card: FeexPay's hosted checkout (3-D Secure). Needs card payments enabled on the shop. */
-export async function createCardCheckout(input: { amount: number; paymentId: string; description: string; customer: Customer; phone: string; city: string; country: string }) {
+export async function createCardCheckout(input: { amount: number; paymentId: string; description: string; customer: Customer; phone: string | null; city: string; country: string }) {
   const { shop } = config();
   if (!input.customer.email) throw new Error("FeexPay card: e-mail required");
   const r = await call("/api/transactions/public/requesttopay/init", {
     shop, amount: String(input.amount), currency: "XOF",
     first_name: plainText(input.customer.firstName, 40) || "Client", last_name: plainText(input.customer.lastName, 40) || "TechNova",
-    email: input.customer.email, phoneNumber: input.phone.replace(/\D/g, ""), city: plainText(input.city, 60), zip: "00000", country: input.country,
+    email: input.customer.email, ...(input.phone ? { phoneNumber: input.phone.replace(/\D/g, "") } : {}), city: plainText(input.city, 60), zip: "00000", country: input.country,
     description: plainText(input.description), callback_info: input.paymentId,
   });
   const reference = typeof r["reference"] === "string" ? r["reference"] : "";

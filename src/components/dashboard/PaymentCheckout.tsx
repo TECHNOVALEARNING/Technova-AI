@@ -8,7 +8,6 @@ import { checkPayment, startCheckout } from "@/lib/payments.functions";
 import { FEEXPAY_COUNTRIES, OTHER, type PayMethod } from "@/lib/payment-routing";
 
 type Pack = { slug: string; name: string; price_xof: number; credits: number };
-const CARD_COUNTRIES = [...FEEXPAY_COUNTRIES.map((c) => [c.code, c.fr, c.en] as const), ["CM", "Cameroun", "Cameroon"], ["GA", "Gabon", "Gabon"], ["ML", "Mali", "Mali"], ["NE", "Niger", "Niger"], ["GN", "Guinée", "Guinea"], ["FR", "France", "France"], ["BE", "Belgique", "Belgium"], ["CA", "Canada", "Canada"], ["US", "États-Unis", "United States"]] as const;
 
 /**
  * Checkout for one pack: card or Mobile Money (country, operator, number). The server picks the provider
@@ -21,7 +20,7 @@ export function PaymentCheckout({ pack, lang, country, onClose, onPaid }: { pack
   const [method, setMethod] = useState<PayMethod>("momo");
   const [cc, setCc] = useState<string>(known && country ? country : FEEXPAY_COUNTRIES[0]!.code);
   const [net, setNet] = useState<string>("");
-  const [phone, setPhone] = useState(""); const [city, setCity] = useState("");
+  const [phone, setPhone] = useState("");
   const [busy, setBusy] = useState(false); const [error, setError] = useState("");
   const [waiting, setWaiting] = useState<string | null>(null);
   const timer = useRef<number | null>(null);
@@ -34,7 +33,7 @@ export function PaymentCheckout({ pack, lang, country, onClose, onPaid }: { pack
 
   const viaHosted = method === "momo" && (cc === OTHER || net === OTHER);
   const needsPhone = !viaHosted;
-  const ready = !busy && (!needsPhone || phone.replace(/\D/g, "").length >= 8) && (method !== "card" || city.trim().length > 1);
+  const ready = !busy && (method === "card" || !needsPhone || phone.replace(/\D/g, "").length >= 8);
   const price = useMemo(() => pack ? `${pack.price_xof.toLocaleString("fr-FR")} FCFA` : "", [pack]);
 
   function poll(id: string, tries = 0) {
@@ -58,7 +57,7 @@ export function PaymentCheckout({ pack, lang, country, onClose, onPaid }: { pack
     const cardTab = method === "card" ? window.open("about:blank", "_blank") : null;
     try {
       const r = await start({ data: method === "card"
-        ? { slug: pack.slug, method, country: cc === OTHER ? "BJ" : cc, phone, city }
+        ? { slug: pack.slug, method }
         : viaHosted ? { slug: pack.slug, method } : { slug: pack.slug, method, country: cc, network: net, phone } });
       if ("url" in r) {
         if (cardTab) { cardTab.location.href = r.url; setWaiting(r.paymentId); poll(r.paymentId); return; }
@@ -116,23 +115,13 @@ export function PaymentCheckout({ pack, lang, country, onClose, onPaid }: { pack
             <div className="flex items-center gap-2"><span className="grid h-10 shrink-0 place-items-center rounded-xl border border-input bg-secondary px-3 text-[13px]">+{countryInfo?.dial}</span>
               <Input inputMode="tel" autoComplete="tel-national" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder={cc === "BJ" ? "01 97 00 00 00" : "07 00 00 00 00"} className="h-10 rounded-xl" /></div></label>
             : <p className="rounded-xl bg-secondary px-3 py-2.5 text-[12.5px] text-muted-foreground">{fr ? "Vous choisirez votre opérateur sur la page de paiement sécurisée." : "You will pick your operator on the secure payment page."}</p>}
-        </> : <>
-          <div className="grid grid-cols-2 gap-2">
-            <label className="grid gap-1 text-[12px] font-medium">{fr ? "Pays" : "Country"}
-              <select className={sel} value={cc === OTHER ? "BJ" : cc} onChange={(e) => setCc(e.target.value)}>
-                {CARD_COUNTRIES.map(([code, f, en]) => <option key={code} value={code}>{fr ? f : en}</option>)}
-              </select></label>
-            <label className="grid gap-1 text-[12px] font-medium">{fr ? "Ville" : "City"}<Input value={city} onChange={(e) => setCity(e.target.value)} autoComplete="address-level2" className="h-10 rounded-xl" /></label>
-          </div>
-          <label className="grid gap-1 text-[12px] font-medium">{fr ? "Téléphone" : "Phone"}<Input inputMode="tel" autoComplete="tel" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="+229 01 97 00 00 00" className="h-10 rounded-xl" /></label>
-          <p className="rounded-xl bg-secondary px-3 py-2.5 text-[12px] leading-relaxed text-muted-foreground">
-            <span className="mb-1.5 flex items-center gap-1.5"><span className="rounded-md bg-[#1a1f71] px-1.5 py-0.5 text-[10px] font-bold italic text-white">VISA</span><span className="flex items-center rounded-md bg-background px-1.5 py-0.5"><i className="size-3 rounded-full bg-[#eb001b]" /><i className="-ml-1.5 size-3 rounded-full bg-[#f79e1b]/90" /></span></span>
-            {fr ? "Le numéro, la date et le code de votre carte se saisissent à l'étape suivante, sur la page sécurisée de notre partenaire (3-D Secure). TechNova ne les voit jamais. Le téléphone et la ville sont demandés par la banque pour vérifier le paiement." : "Your card number, expiry and code are entered at the next step, on our partner's secure page (3-D Secure). TechNova never sees them. Phone and city are required by the bank to verify the payment."}
-          </p>
-        </>}
+        </> : <div className="grid place-items-center gap-3 rounded-2xl bg-secondary px-4 py-5 text-center">
+          <span className="flex items-center gap-1.5"><span className="rounded-md bg-[#1a1f71] px-2 py-1 text-[12px] font-bold italic text-white">VISA</span><span className="flex items-center rounded-md bg-background px-2 py-1"><i className="size-4 rounded-full bg-[#eb001b]" /><i className="-ml-2 size-4 rounded-full bg-[#f79e1b]/90" /></span></span>
+          <p className="text-[12.5px] leading-relaxed text-muted-foreground">{fr ? "Rien à remplir ici : le bouton ouvre la page de paiement sécurisée (3-D Secure) dans un nouvel onglet. Vous y saisissez votre carte, TechNova ne la voit jamais." : "Nothing to fill in here: the button opens the secure payment page (3-D Secure) in a new tab. You enter your card there; TechNova never sees it."}</p>
+        </div>}
 
         {error && <p role="alert" className="text-[12.5px] text-destructive">{error}</p>}
-        <Button type="submit" disabled={!ready} className="h-11 rounded-full">{busy ? <Loader2 className="size-4 animate-spin" /> : <Lock className="size-4" />}{method === "card" ? (fr ? `Continuer vers le paiement · ${price}` : `Continue to payment · ${price}`) : (fr ? `Payer ${price}` : `Pay ${price}`)}</Button>
+        <Button type="submit" disabled={!ready} className="h-11 rounded-full">{busy ? <Loader2 className="size-4 animate-spin" /> : method === "card" ? <CreditCard className="size-4" /> : <Lock className="size-4" />}{method === "card" ? (fr ? `Payer par carte · ${price}` : `Pay by card · ${price}`) : (fr ? `Payer ${price}` : `Pay ${price}`)}</Button>
         <p className="text-center text-[11px] text-muted-foreground">{fr ? "Paiement sécurisé · Technova PAY. Nous ne voyons ni votre carte ni votre code." : "Secure payment · Technova PAY. We never see your card or PIN."}</p>
       </form>}
     </DialogContent>
