@@ -12,7 +12,7 @@ export const Route = createFileRoute("/confidentialite")({
   component: PrivacyPage,
 });
 
-const UPDATED = "29 octobre 2026";
+const UPDATED = "16 novembre 2026";
 // Single contact address for privacy questions and data-protection requests.
 const CONTACT = "support@technovaihub.com";
 
@@ -155,7 +155,7 @@ function PrivacyPage() {
             <><b>Images, vidéos et musiques générées</b> : conservées 14 jours sur nos serveurs, puis supprimées. Pensez à les télécharger.</>,
             <><b>Liens d'aperçu du Studio</b> : expirent après 30 jours.</>,
             <><b>Fichiers refusés lors de l'analyse de sécurité</b> : supprimés immédiatement.</>,
-            <><b>Journaux de sécurité</b> : 12 mois. <b>Compteurs anti-abus</b> : 24 heures.</>,
+            <><b>Journaux de sécurité</b> (événements liés à la sécurité : tentatives refusées, limites atteintes, fichiers ou sites bloqués, actions sensibles) : conservés aussi longtemps que nécessaire à la protection du service — repérer des abus qui se répètent dans le temps, enquêter sur un incident, défendre nos droits — et accessibles uniquement à l'équipe habilitée. Ils restent rattachés à un identifiant technique et ne contiennent ni vos conversations ni vos fichiers. <b>Compteurs anti-abus</b> (nombre de demandes sur une courte période) : 24 heures.</>,
             <><b>Facturation</b> : pendant la durée légale applicable en matière comptable.</>,
           ]} />
           <p>Au-delà, les données sont supprimées ou anonymisées de manière irréversible.</p>
@@ -184,7 +184,12 @@ function PrivacyPage() {
             "analyse des fichiers importés et isolation des sites publiés ;",
             "sauvegardes régulières.",
           ]} />
-          <p>En cas d'incident affectant vos données, nous appliquerons nos procédures de notification, conformément à la réglementation applicable.</p>
+          <p><b>En cas de violation de données</b> (perte, vol, accès non autorisé, modification ou suppression accidentelle de données personnelles) :</p>
+          <List items={[
+            <>nous prévenons l'autorité compétente — l'<b>APDP</b> au Bénin et, pour les personnes situées dans l'Union européenne, l'autorité de protection des données concernée — <b>dans les 72 heures</b> après en avoir eu connaissance, sauf si l'incident ne présente pas de risque pour vos droits ;</>,
+            <>lorsque l'incident présente un risque élevé pour vous, nous vous prévenons <b>par e-mail, sans retard injustifié</b>, en indiquant ce qui s'est passé, les données concernées, les mesures prises et ce que vous pouvez faire pour vous protéger (par exemple changer votre mot de passe) ;</>,
+            "chaque incident, même non déclaré, est consigné dans un registre interne avec ses causes, ses effets et les mesures prises.",
+          ]} />
         </Section>
 
         <Section id="ia" n={10} title="Intelligence artificielle">

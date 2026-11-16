@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState, type ReactNode } from "react";
-import { ArrowRight, Boxes, Route as RouteIcon, BarChart3, ShieldCheck, Check, MessageCircle, FileText, Code2, Languages, Download } from "lucide-react";
+import { ArrowRight, Boxes, Route as RouteIcon, BarChart3, ShieldCheck, Check, ShoppingBag, FileText, Code2, Languages, Download } from "lucide-react";
 import { pageHead, breadcrumbLd } from "@/lib/seo";
 import { Button } from "@/components/ui/button";
 import { Nav, Footer, PageHero, Heading, R, ActionText, useReveal, useSiteLang } from "@/components/site/SiteChrome";
@@ -86,7 +86,7 @@ const devTxt = {
     feTag: "Expérience développeur", feTitle: "Pensée pour les développeurs.",
     features: [["Une seule API", "Le même format de requête pour tous les modèles de texte."], ["Coût transparent", "Chaque réponse indique les crédits exacts débités."], ["Suivi d'usage", "Requêtes, tokens et crédits par modèle dans votre tableau de bord."], ["Clés protégées", "Clés stockées sous forme hachée, révocables à tout moment."]],
     reTag: "Cas d'usage", reTitle: "Recettes prêtes à copier.",
-    recipes: [["Assistant client WhatsApp", "Branchez votre webhook WhatsApp sur /api/ai/chat et gardez l'historique côté serveur."], ["Résumé de documents", "Découpez le texte en blocs de 4 000 jetons, résumez chaque bloc puis fusionnez les résumés."], ["Génération de code", "Utilisez un modèle spécialisé avec temperature 0.2 pour des sorties déterministes."], ["Traduction locale", "Français, anglais, fon, yoruba, wolof : précisez la langue cible dans le message système."]],
+    recipes: [["Fiches produits", "Envoyez le nom, le prix et les caractéristiques d'un article : recevez un titre et une description prêts pour votre boutique."], ["Résumé de documents", "Découpez le texte en blocs de 4 000 jetons, résumez chaque bloc puis fusionnez les résumés."], ["Génération de code", "Utilisez un modèle spécialisé avec temperature 0.2 pour des sorties déterministes."], ["Traduction locale", "Français, anglais, fon, yoruba, wolof : précisez la langue cible dans le message système."]],
     bpTitle: "À vérifier avant la mise en production.",
     bp: ["Appelez l'API depuis votre serveur, jamais depuis le navigateur.", "Envoyez une idempotency_key par requête pour ne jamais payer deux fois.", "Gérez INSUFFICIENT_CREDITS en proposant un rechargement Mobile Money.", "Prévoyez un repli sur un modèle plus léger en cas d'indisponibilité.", "Surveillez votre consommation depuis le tableau de bord."],
     stTitle: "Limites de l'API.", status: [["Requêtes", "60 par minute"], ["Messages par requête", "60 maximum"], ["Longueur de réponse", "4 096 tokens maximum"]],
@@ -99,7 +99,7 @@ const devTxt = {
     feTag: "Developer experience", feTitle: "Built for developers.",
     features: [["One API", "The same request format for every text model."], ["Transparent cost", "Every response states the exact credits charged."], ["Usage tracking", "Requests, tokens and credits per model in your dashboard."], ["Protected keys", "Keys stored hashed, revocable at any time."]],
     reTag: "Use cases", reTitle: "Copy-ready recipes.",
-    recipes: [["WhatsApp support assistant", "Connect your WhatsApp webhook to /api/ai/chat and keep history server-side."], ["Document summaries", "Split text into 4,000-token chunks, summarise each, then merge the summaries."], ["Code generation", "Use a specialised model with temperature 0.2 for deterministic output."], ["Local translation", "French, English, Fon, Yoruba, Wolof: set the target language in the system message."]],
+    recipes: [["Product descriptions", "Send an item's name, price and features: get a title and a description ready for your shop."], ["Document summaries", "Split text into 4,000-token chunks, summarise each, then merge the summaries."], ["Code generation", "Use a specialised model with temperature 0.2 for deterministic output."], ["Local translation", "French, English, Fon, Yoruba, Wolof: set the target language in the system message."]],
     bpTitle: "Check before going to production.",
     bp: ["Call the API from your server, never from the browser.", "Send one idempotency_key per request so you never pay twice.", "Handle INSUFFICIENT_CREDITS by offering a Mobile Money top-up.", "Plan a fallback to a lighter model during outages.", "Monitor usage from the dashboard."],
     stTitle: "API limits.", status: [["Requests", "60 per minute"], ["Messages per request", "60 max"], ["Response length", "4,096 tokens max"]],
@@ -112,7 +112,7 @@ const devTxt = {
     feTag: "Experiencia del desarrollador", feTitle: "Pensada para desarrolladores.",
     features: [["Una sola API", "El mismo formato de petición para todos los modelos de texto."], ["Coste transparente", "Cada respuesta indica los créditos exactos cobrados."], ["Seguimiento de uso", "Peticiones, tokens y créditos por modelo en tu panel."], ["Claves protegidas", "Claves guardadas cifradas, revocables en cualquier momento."]],
     reTag: "Casos de uso", reTitle: "Recetas listas para copiar.",
-    recipes: [["Asistente de clientes en WhatsApp", "Conecta tu webhook de WhatsApp a /api/ai/chat y guarda el historial en el servidor."], ["Resumen de documentos", "Divide el texto en bloques de 4.000 tokens, resume cada bloque y luego fusiona los resúmenes."], ["Generación de código", "Usa un modelo especializado con temperature 0.2 para obtener salidas deterministas."], ["Traducción local", "Francés, inglés, fon, yoruba, wolof: indica el idioma de destino en el mensaje de sistema."]],
+    recipes: [["Fichas de producto", "Envía el nombre, el precio y las características de un artículo: recibe un título y una descripción listos para tu tienda."], ["Resumen de documentos", "Divide el texto en bloques de 4.000 tokens, resume cada bloque y luego fusiona los resúmenes."], ["Generación de código", "Usa un modelo especializado con temperature 0.2 para obtener salidas deterministas."], ["Traducción local", "Francés, inglés, fon, yoruba, wolof: indica el idioma de destino en el mensaje de sistema."]],
     bpTitle: "Revisa esto antes de pasar a producción.",
     bp: ["Llama a la API desde tu servidor, nunca desde el navegador.", "Envía una idempotency_key por solicitud para no pagar nunca dos veces.", "Gestiona INSUFFICIENT_CREDITS proponiendo una recarga con Mobile Money.", "Prevé un modelo más ligero de respaldo en caso de indisponibilidad.", "Supervisa tu consumo desde el panel."],
     stTitle: "Límites de la API.", status: [["Peticiones", "60 por minuto"], ["Mensajes por petición", "60 como máximo"], ["Longitud de respuesta", "4.096 tokens como máximo"]],
@@ -125,7 +125,7 @@ const devTxt = {
     feTag: "Experiência do desenvolvedor", feTitle: "Pensada para desenvolvedores.",
     features: [["Uma única API", "O mesmo formato de requisição para todos os modelos de texto."], ["Custo transparente", "Cada resposta indica os créditos exatos cobrados."], ["Acompanhamento de uso", "Requisições, tokens e créditos por modelo no seu painel."], ["Chaves protegidas", "Chaves guardadas de forma protegida, revogáveis a qualquer momento."]],
     reTag: "Casos de uso", reTitle: "Receitas prontas para copiar.",
-    recipes: [["Assistente de clientes no WhatsApp", "Ligue o seu webhook do WhatsApp a /api/ai/chat e mantenha o histórico no servidor."], ["Resumo de documentos", "Divida o texto em blocos de 4.000 tokens, resuma cada bloco e depois junte os resumos."], ["Geração de código", "Use um modelo especializado com temperature 0.2 para saídas determinísticas."], ["Tradução local", "Francês, inglês, fon, iorubá, wolof: indique o idioma de destino na mensagem de sistema."]],
+    recipes: [["Fichas de produto", "Envie o nome, o preço e as características de um artigo: receba um título e uma descrição prontos para a sua loja."], ["Resumo de documentos", "Divida o texto em blocos de 4.000 tokens, resuma cada bloco e depois junte os resumos."], ["Geração de código", "Use um modelo especializado com temperature 0.2 para saídas determinísticas."], ["Tradução local", "Francês, inglês, fon, iorubá, wolof: indique o idioma de destino na mensagem de sistema."]],
     bpTitle: "Verifique antes de ir para produção.",
     bp: ["Chame a API a partir do seu servidor, nunca do navegador.", "Envie uma idempotency_key por solicitação para nunca pagar duas vezes.", "Trate INSUFFICIENT_CREDITS propondo uma recarga com Mobile Money.", "Preveja um modelo mais leve como alternativa em caso de indisponibilidade.", "Acompanhe o seu consumo no painel."],
     stTitle: "Limites da API.", status: [["Requisições", "60 por minuto"], ["Mensagens por requisição", "60 no máximo"], ["Tamanho da resposta", "4.096 tokens no máximo"]],
@@ -134,7 +134,7 @@ const devTxt = {
 };
 
 const featureIcons = [Boxes, RouteIcon, BarChart3, ShieldCheck];
-const recipeIcons = [MessageCircle, FileText, Code2, Languages];
+const recipeIcons = [ShoppingBag, FileText, Code2, Languages];
 
 function DocCard({ id, n, title, children }: { id: string; n: number; title: string; children: ReactNode }) {
   return (
