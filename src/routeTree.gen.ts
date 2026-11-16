@@ -28,6 +28,7 @@ import { Route as TarifsRouteImport } from './routes/tarifs'
 import { Route as AuthenticatedBienvenueRouteImport } from './routes/_authenticated/bienvenue'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as ApercuTokenRouteImport } from './routes/apercu.$token'
+import { Route as ApiAudioSummaryRouteImport } from './routes/api/audio-summary'
 import { Route as ApiChatRouteImport } from './routes/api/chat'
 import { Route as ApiResearchRouteImport } from './routes/api/research'
 import { Route as ApiStudioRouteImport } from './routes/api/studio'
@@ -158,6 +159,11 @@ const AuthenticatedDashboardRoute = AuthenticatedDashboardRouteImport.update({
 const ApercuTokenRoute = ApercuTokenRouteImport.update({
   id: '/apercu/$token',
   path: '/apercu/$token',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiAudioSummaryRoute = ApiAudioSummaryRouteImport.update({
+  id: '/api/audio-summary',
+  path: '/api/audio-summary',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiChatRoute = ApiChatRouteImport.update({
@@ -384,6 +390,7 @@ export interface FileRoutesByFullPath {
   '/bienvenue': typeof AuthenticatedBienvenueRoute
   '/dashboard': typeof AuthenticatedDashboardRouteWithChildren
   '/apercu/$token': typeof ApercuTokenRoute
+  '/api/audio-summary': typeof ApiAudioSummaryRoute
   '/api/chat': typeof ApiChatRoute
   '/api/research': typeof ApiResearchRoute
   '/api/studio': typeof ApiStudioRoute
@@ -440,6 +447,7 @@ export interface FileRoutesByTo {
   '/tarifs': typeof TarifsRoute
   '/bienvenue': typeof AuthenticatedBienvenueRoute
   '/apercu/$token': typeof ApercuTokenRoute
+  '/api/audio-summary': typeof ApiAudioSummaryRoute
   '/api/chat': typeof ApiChatRoute
   '/api/research': typeof ApiResearchRoute
   '/api/studio': typeof ApiStudioRoute
@@ -499,6 +507,7 @@ export interface FileRoutesById {
   '/_authenticated/bienvenue': typeof AuthenticatedBienvenueRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRouteWithChildren
   '/apercu/$token': typeof ApercuTokenRoute
+  '/api/audio-summary': typeof ApiAudioSummaryRoute
   '/api/chat': typeof ApiChatRoute
   '/api/research': typeof ApiResearchRoute
   '/api/studio': typeof ApiStudioRoute
@@ -558,6 +567,7 @@ export interface FileRouteTypes {
     | '/bienvenue'
     | '/dashboard'
     | '/apercu/$token'
+    | '/api/audio-summary'
     | '/api/chat'
     | '/api/research'
     | '/api/studio'
@@ -614,6 +624,7 @@ export interface FileRouteTypes {
     | '/tarifs'
     | '/bienvenue'
     | '/apercu/$token'
+    | '/api/audio-summary'
     | '/api/chat'
     | '/api/research'
     | '/api/studio'
@@ -672,6 +683,7 @@ export interface FileRouteTypes {
     | '/_authenticated/bienvenue'
     | '/_authenticated/dashboard'
     | '/apercu/$token'
+    | '/api/audio-summary'
     | '/api/chat'
     | '/api/research'
     | '/api/studio'
@@ -729,6 +741,7 @@ export interface RootRouteChildren {
   ResetPasswordRoute: typeof ResetPasswordRoute
   TarifsRoute: typeof TarifsRoute
   ApercuTokenRoute: typeof ApercuTokenRoute
+  ApiAudioSummaryRoute: typeof ApiAudioSummaryRoute
   ApiChatRoute: typeof ApiChatRoute
   ApiResearchRoute: typeof ApiResearchRoute
   ApiStudioRoute: typeof ApiStudioRoute
@@ -884,6 +897,13 @@ declare module '@tanstack/react-router' {
       path: '/apercu/$token'
       fullPath: '/apercu/$token'
       preLoaderRoute: typeof ApercuTokenRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/audio-summary': {
+      id: '/api/audio-summary'
+      path: '/api/audio-summary'
+      fullPath: '/api/audio-summary'
+      preLoaderRoute: typeof ApiAudioSummaryRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/chat': {
@@ -1227,6 +1247,7 @@ const rootRouteChildren: RootRouteChildren = {
   ResetPasswordRoute: ResetPasswordRoute,
   TarifsRoute: TarifsRoute,
   ApercuTokenRoute: ApercuTokenRoute,
+  ApiAudioSummaryRoute: ApiAudioSummaryRoute,
   ApiChatRoute: ApiChatRoute,
   ApiResearchRoute: ApiResearchRoute,
   ApiStudioRoute: ApiStudioRoute,

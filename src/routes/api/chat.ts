@@ -6,6 +6,7 @@ import { chatTierCredits, chatTiers, EXPERT_MIN_TIER, PRO_TIER, smartTier, textS
 import { FLAGSHIP_MIN_TIER, isFlagshipModel } from "@/lib/flagship-models";
 import { extraModels } from "@/lib/openrouter-catalog";
 import { dateRule, needsFreshInfo, WEB_RESULTS, WEB_SEARCH_CREDITS } from "@/lib/fresh-info";
+import { humanizeCredits, humanizePrompt, wordCount } from "@/lib/text-tools";
 
 const bodySchema = z.object({
   // The chat composer sends one of the three modes (or Smart); custom agents keep their own model.
@@ -13,6 +14,14 @@ const bodySchema = z.object({
   // A flagship model picked by a Creator/Pro account (src/lib/flagship-models.ts); other names are ignored.
   model: z.string().max(80).optional(),
   mode: z.enum(["chat", "create"]),
+  // "Humaniser un texte" journey (src/lib/text-tools.ts): fixed price, its own instructions, no web search.
+  task: z.object({
+    kind: z.literal("humanize"),
+    tone: z.string().max(30),
+    format: z.string().max(30),
+    length: z.string().max(30),
+    audience: z.string().max(200).optional(),
+  }).optional(),
   lang: z.enum(["fr", "en"]).optional(),
   agentId: z.string().uuid().optional(),
   // Indexed files attached in this conversation and knowledge bases chosen in the composer.
@@ -152,9 +161,10 @@ export const Route = createFileRoute("/api/chat")({
         const requestedTier = parsed.data.tier ?? "eclair";
         const chatTier: ChatTier = requestedTier === "smart" ? smartTier(lastUser, hasFile, tier) : requestedTier;
         // Flagship model chosen in the composer: Creator and Pro only, billed at its real cost (no fixed mode price).
-        const flagship = !agent && isFlagshipModel(parsed.data.model) ? parsed.data.model : null;
+        const humanize = !agent && parsed.data.mode === "chat" && parsed.data.task ? parsed.data.task : null;
+        const flagship = !agent && !humanize && isFlagshipModel(parsed.data.model) ? parsed.data.model : null;
         if (flagship && tier < FLAGSHIP_MIN_TIER) return planResponse(userId, "flagship_models");
-        if (!agent && !flagship && chatTier === "expert" && tier < EXPERT_MIN_TIER) return planResponse(userId, "expert_mode");
+        if (!agent && !flagship && !humanize && chatTier === "expert" && tier < EXPERT_MIN_TIER) return planResponse(userId, "expert_mode");
         let model: string;
         let modelId: string;
         let engine: Engine | null = null;
@@ -167,6 +177,11 @@ export const Route = createFileRoute("/api/chat")({
           const id = openRouterModelIds[model];
           if (!id) return new Response("Model not available for chat", { status: 400 });
           modelId = id;
+        } else if (humanize) {
+          // Long rewrites need room: the same engine as Équilibré with up to 8 192 output tokens.
+          engine = { ...engines.balanced, maxTokens: 8192 };
+          model = "Humaniser un texte";
+          modelId = engine.id;
         } else if (flagship) {
           // A model that cannot read the attachment (audio/video, or images for a text-only model) hands over to one that can.
           const sees = visionModels.has(flagship) || (extraModels.find((m) => m.name === flagship)?.caps.includes("vision") ?? false);
@@ -180,7 +195,7 @@ export const Route = createFileRoute("/api/chat")({
           modelId = engine.id;
         }
         // Fixed price of the mode for this message; a very long exchange costs its real price when that is higher.
-        const flat = engine ? chatTierCredits(chatTier, hasFile, tier) : 0;
+        const flat = humanize ? humanizeCredits(wordCount(lastUser)) : engine ? chatTierCredits(chatTier, hasFile, tier) : 0;
         const apiKey = process.env["OPENROUTER_API_KEY"];
         if (!apiKey) return new Response("OpenRouter is not configured", { status: 500 });
         const startedAt = Date.now();
@@ -246,10 +261,12 @@ export const Route = createFileRoute("/api/chat")({
           : "";
         // Live web search for questions about current events in the chat (modes and flagship models; agents use
         // their own web tool). Code questions skip it: words like "match" or "latest" mean something else there.
-        const webSearch = !agent && parsed.data.mode === "chat" && needsFreshInfo(lastUser) && !textSignals(lastUser).code;
+        const webSearch = !agent && !humanize && parsed.data.mode === "chat" && needsFreshInfo(lastUser) && !textSignals(lastUser).code;
         const today = dateRule(parsed.data.lang === "en" ? "en" : "fr", new Date(), webSearch || (agent ? agentTools.has("web_search") && toolContext.includes("WEB SEARCH RESULTS") : false));
         const systemPrompt = agent
           ? `You are "${agent.name}", a custom TechNova agent. Follow the owner's instructions below.${toolsRule}${today}\n\nINSTRUCTIONS:\n${agent.instructions}${agent.memory ? `\n\nMEMORY (facts to remember):\n${agent.memory}` : ""}` + toolContext + langRule
+          // The humanizer keeps the text's own language, so no reply-language rule.
+          : humanize ? humanizePrompt({ kind: "humanize", tone: humanize.tone, format: humanize.format, length: humanize.length, ...(humanize.audience ? { audience: humanize.audience } : {}) })
           : systemPrompts[parsed.data.mode] + today + toolContext + langRule;
         // Reasoning models think before answering: cap the thinking so it cannot eat the whole reply.
         const reasoning = reasoningModels.has(model);

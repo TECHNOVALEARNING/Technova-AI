@@ -10,6 +10,7 @@ export const RATE_LIMITS = {
   api: { limit: 60, window: 60 },
   admin_transfer: { limit: 20, window: 60 },
   research: { limit: 5, window: 600 },
+  audio_summary: { limit: 6, window: 600 },
   payment: { limit: 10, window: 600 },
   payment_check: { limit: 30, window: 60 },
   arena: { limit: 10, window: 300 },
@@ -29,7 +30,7 @@ export type RateBucket = keyof typeof RATE_LIMITS;
  * (database error), these are refused rather than let through unlimited; free actions stay allowed so an
  * incident does not lock people out of publishing, payments or connections.
  */
-const FAIL_CLOSED: ReadonlySet<RateBucket> = new Set<RateBucket>(["chat", "studio", "media", "api", "research", "files", "knowledge", "arena", "help_chat", "help_chat_daily", "admin_transfer"]);
+const FAIL_CLOSED: ReadonlySet<RateBucket> = new Set<RateBucket>(["chat", "studio", "media", "api", "research", "audio_summary", "files", "knowledge", "arena", "help_chat", "help_chat_daily", "admin_transfer"]);
 
 /** Returns true when the call is allowed. On a database error: refused for paid buckets, allowed otherwise. */
 export async function hitRateLimit(userId: string, bucket: RateBucket): Promise<boolean> {

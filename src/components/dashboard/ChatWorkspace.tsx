@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState, type PointerEvent as
 import { confirmDialog } from "@/components/ConfirmHost";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
-import { History, Share, ArrowRight, ArrowUp, Crown, Check, ChevronDown, Code2, MessageCircle, Pencil, Plus, Search, Trash2, Mic, Paperclip, X, Loader2, FileAudio, FileVideo, FileText, Square, Copy, Wand2, Zap, Film, Image as ImageIcon, Telescope, Music, Library, AlertCircle, LayoutTemplate, ShoppingBag, BarChart3, BadgeDollarSign, ScanEye, FileSearch, Download } from "lucide-react";
+import { History, Share, ArrowRight, ArrowUp, Crown, Check, ChevronDown, Code2, MessageCircle, Pencil, Plus, Search, Trash2, Mic, Paperclip, X, Loader2, FileAudio, FileVideo, FileText, Square, Copy, Wand2, Zap, Film, Image as ImageIcon, Telescope, Music, Library, AlertCircle, LayoutTemplate, ShoppingBag, BarChart3, BadgeDollarSign, ScanEye, FileSearch, Download, PenLine, AudioLines } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -38,6 +38,8 @@ import { ThinkingLine } from "./ThinkingSpinner";
 import { notifyCreditsChanged } from "./TopActions";
 import { SalesPageWizard } from "./SalesPageWizard";
 import { MusicWizard, VideoWizard, type MediaRequest } from "./MediaWizards";
+import { AudioWizard, HumanizeWizard } from "./ToolWizards";
+import type { AudioTask, HumanizeTask } from "@/lib/text-tools";
 import { slashCommands, type SlashCommand } from "@/lib/plugins";
 import { useInstalledPlugins } from "@/lib/plugins-client";
 import { ArtifactPanel, StudioPlan, StudioQuestions, StudioTimeline } from "./Studio";
@@ -670,7 +672,7 @@ const starterIdeas: StarterIdea[] = [
   { icon: FileSearch, mode: "chat", attach: true, fr: ["Analyser un document", "PDF, Word, Excel, PowerPoint…", "Résume le document joint en 5 points clés, puis liste les décisions et les actions à mener."], en: ["Analyse a document", "PDF, Word, Excel, PowerPoint…", "Summarise the attached document in 5 key points, then list the decisions and actions to take."] },
 ];
 
-function StarterIdeas({ choice, inputRef, onSalesPage, onMusic, onVideo }: { choice: ReturnType<typeof useWorkspaceChoice>; inputRef: React.RefObject<HTMLTextAreaElement | null>; onSalesPage: () => void; onMusic: () => void; onVideo: () => void }) {
+function StarterIdeas({ choice, inputRef, onSalesPage, onMusic, onVideo, onHumanize, onAudio }: { choice: ReturnType<typeof useWorkspaceChoice>; inputRef: React.RefObject<HTMLTextAreaElement | null>; onSalesPage: () => void; onMusic: () => void; onVideo: () => void; onHumanize: () => void; onAudio: () => void }) {
   const { lang } = useDashboard();
   function pick(idea: StarterIdea) {
     if (idea.wizard === "sales") { onSalesPage(); return; }
@@ -701,6 +703,8 @@ function StarterIdeas({ choice, inputRef, onSalesPage, onMusic, onVideo }: { cho
     <div className="flex flex-wrap justify-center gap-2">
       <button type="button" onClick={onMusic} className="create-chip create-chip-music inline-flex h-8 items-center gap-1.5 rounded-full px-3.5 text-[12px] font-semibold text-white"><Music className="size-3.5" />{lang === "en" ? "Create a song" : "Création de musique"}</button>
       <button type="button" onClick={onVideo} className="create-chip create-chip-video inline-flex h-8 items-center gap-1.5 rounded-full px-3.5 text-[12px] font-semibold text-white"><Film className="size-3.5" />{lang === "en" ? "Create a video" : "Création de vidéo"}</button>
+      <button type="button" onClick={onHumanize} className="create-chip create-chip-humanize inline-flex h-8 items-center gap-1.5 rounded-full px-3.5 text-[12px] font-semibold text-white"><PenLine className="size-3.5" />{lang === "en" ? "Humanize a text" : "Humaniser un texte"}</button>
+      <button type="button" onClick={onAudio} className="create-chip create-chip-audio inline-flex h-8 items-center gap-1.5 rounded-full px-3.5 text-[12px] font-semibold text-white"><AudioLines className="size-3.5" />{lang === "en" ? "Summarize an audio" : "Résumé d'un audio"}</button>
     </div>
   </div>;
 }
@@ -710,6 +714,13 @@ export function ChatListPage() {
   const [salesOpen, setSalesOpen] = useState(false);
   const [musicOpen, setMusicOpen] = useState(false);
   const [videoOpen, setVideoOpen] = useState(false);
+  const [humanizeOpen, setHumanizeOpen] = useState(false);
+  const [audioOpen, setAudioOpen] = useState(false);
+  // Humanize / audio summary journeys: the first message carries the request; ThreadPage runs it.
+  function startTool(part: { type: "data-tool-request"; data: HumanizeTask } | { type: "data-audio-request"; data: AudioTask }, message: string, title: string) {
+    choice.chooseMode("chat");
+    void start(message, [], title, [part as unknown as Json]);
+  }
   // Music / video journeys: the conversation's first message carries the structured request.
   function createMedia(request: MediaRequest, summary: string, title: string) {
     choice.chooseMode("chat");
@@ -770,7 +781,9 @@ export function ChatListPage() {
                 {error}
               </p>
             )}
-            <div className="mt-4"><StarterIdeas choice={choice} inputRef={composerRef} onSalesPage={() => setSalesOpen(true)} onMusic={() => setMusicOpen(true)} onVideo={() => setVideoOpen(true)} /></div>
+            <div className="mt-4"><StarterIdeas choice={choice} inputRef={composerRef} onSalesPage={() => setSalesOpen(true)} onMusic={() => setMusicOpen(true)} onVideo={() => setVideoOpen(true)} onHumanize={() => setHumanizeOpen(true)} onAudio={() => setAudioOpen(true)} /></div>
+            <HumanizeWizard open={humanizeOpen} onOpenChange={setHumanizeOpen} lang={lang === "en" ? "en" : "fr"} onStart={(task, message, title) => startTool({ type: "data-tool-request", data: task }, message, title)} />
+            <AudioWizard open={audioOpen} onOpenChange={setAudioOpen} lang={lang === "en" ? "en" : "fr"} onStart={(task, message, title) => startTool({ type: "data-audio-request", data: task }, message, title)} />
             <MusicWizard open={musicOpen} onOpenChange={setMusicOpen} lang={lang === "en" ? "en" : "fr"} onCreate={createMedia} />
             <VideoWizard open={videoOpen} onOpenChange={setVideoOpen} lang={lang === "en" ? "en" : "fr"} onCreate={createMedia} />
             <SalesPageWizard open={salesOpen} onOpenChange={setSalesOpen} lang={lang === "en" ? "en" : "fr"} onBuild={(brief, product) => { choice.chooseMode("create"); void start(brief, [], `${lang === "en" ? "Sales page" : "Page de vente"} · ${product}`); }} />
@@ -1141,7 +1154,46 @@ export function ThreadPage({ threadId }: { threadId: string }) {
   async function streamReply(history: UIMessage[]) {
     const last = history[history.length - 1];
     const request = last?.parts.map((p) => (p.type === "text" ? p.text : "")).join("").trim() ?? "";
-    if (last?.role === "user" && request && choice.research) {
+    const dataParts = last?.role === "user" ? (last.parts as unknown as Array<{ type: string; data?: unknown }>) : [];
+    const humanizeTask = dataParts.find((p) => p.type === "data-tool-request")?.data as HumanizeTask | undefined;
+    const audioTask = dataParts.find((p) => p.type === "data-audio-request")?.data as AudioTask | undefined;
+    if (audioTask) {
+      // Résumé d'audio: the server listens to the uploaded pieces, streams "§" status lines, then the summary.
+      const replyId = crypto.randomUUID();
+      const show = (text: string) => setMessages((prev) => [...prev.filter((m) => m.id !== replyId), { id: replyId, role: "assistant", parts: [{ type: "text", text }] }]);
+      setThinking(true);
+      setResearchStatus(lang === "fr" ? "Écoute de l'enregistrement…" : "Listening to the recording…");
+      let raw = "";
+      let report = "";
+      try {
+        const { data: session } = await supabase.auth.getSession();
+        const res = await fetch("/api/audio-summary", {
+          method: "POST",
+          headers: { "Content-Type": "application/json", Authorization: `Bearer ${session.session?.access_token ?? ""}` },
+          body: JSON.stringify({ ...audioTask, lang }),
+        });
+        if (!res.ok || !res.body) { await failWith(await res.text().catch(() => "")); return; }
+        const reader = res.body.getReader();
+        const decoder = new TextDecoder();
+        for (;;) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          raw += decoder.decode(value, { stream: true });
+          const parts = splitResearchStream(raw);
+          if (parts.status) setResearchStatus(parts.status);
+          if (parts.report) { report = parts.report; setThinking(false); show(report); }
+        }
+        if (report) await supabase.from("chat_messages").insert({ thread_id: threadId, sdk_id: replyId, role: "assistant", parts: [{ type: "text", text: report }] as Json });
+        notifyCreditsChanged();
+      } catch {
+        setError(t.actionError);
+      } finally {
+        setThinking(false);
+        setResearchStatus("");
+      }
+      return;
+    }
+    if (last?.role === "user" && request && choice.research && !humanizeTask) {
       const researchId = crypto.randomUUID();
       const show = (text: string) => setMessages((prev) => [...prev.filter((m) => m.id !== researchId), { id: researchId, role: "assistant", parts: [{ type: "text", text }] }]);
       setThinking(true);
@@ -1206,7 +1258,8 @@ export function ThreadPage({ threadId }: { threadId: string }) {
       finally { setThinking(false); }
       return;
     }
-    const mediaRequest = choice.mode === "chat" && /(?:^|[^\p{L}])(?:g[ée]n[éèe]r\p{L}*|cr[ée]+\p{L}*|fai[st]\p{L}*|faire|fabriqu\p{L}*|dessin\p{L}*|produi[rst]\p{L}*|r[ée]alis\p{L}*|compos\p{L}*|imagin\p{L}*|generat\p{L}*|create|make|draw|design)(?![\p{L}])[\s\S]{0,110}?(?:^|[^\p{L}])(?:image|images|photo|photos|illustration|visuel|portrait|affiche|logo|picture|vid[ée]o|vid[ée]os|clip|animation|musique|chanson|morceau|jingle|beat|music|song|track)(?![\p{L}])/iu.test(request);
+    // A text to humanize may mention "créer une image": it is still a rewrite, never a media creation.
+    const mediaRequest = choice.mode === "chat" && !humanizeTask && /(?:^|[^\p{L}])(?:g[ée]n[éèe]r\p{L}*|cr[ée]+\p{L}*|fai[st]\p{L}*|faire|fabriqu\p{L}*|dessin\p{L}*|produi[rst]\p{L}*|r[ée]alis\p{L}*|compos\p{L}*|imagin\p{L}*|generat\p{L}*|create|make|draw|design)(?![\p{L}])[\s\S]{0,110}?(?:^|[^\p{L}])(?:image|images|photo|photos|illustration|visuel|portrait|affiche|logo|picture|vid[ée]o|vid[ée]os|clip|animation|musique|chanson|morceau|jingle|beat|music|song|track)(?![\p{L}])/iu.test(request);
     if (last?.role === "user" && mediaRequest) {
       const kind: MediaKind = /\b(?:musique|chanson|morceau|jingle|beat|music|song|track)\b/i.test(request) ? "music" : /\b(?:vid[ée]o|video|clip|animation)\b/i.test(request) ? "video" : "image";
       const quality = /\b(?:hd|haute (?:qualit[ée]|d[ée]finition)|qualit[ée]|4k|high quality|quality|detailed|d[ée]taill[ée]e?)\b/i.test(request);
@@ -1225,7 +1278,7 @@ export function ThreadPage({ threadId }: { threadId: string }) {
       return;
     }
     const looksLikeBuild = /\b(cr[ée]e|cr[ée]er|construi\w*|g[ée]n[èe]re\w*|d[ée]veloppe\w*|fais|code|build|create|make|generate)\b[\s\S]{0,60}\b(site|landing|page|app|application|syst[èe]me|dashboard|tableau|boutique|portfolio|api|script|composant|component|base de donn[ée]es|database|jeu|game|formulaire|form)/i.test(request);
-    if (last?.role === "user" && request && choice.mode === "create") {
+    if (last?.role === "user" && request && choice.mode === "create" && !humanizeTask) {
       setThinking(true);
       setActivity({ steps: [{ title: lang === "fr" ? "Analyse de la demande" : "Analysing the request", detail: "", done: false }], files: [], sql: "", done: false });
       setPanelWidth(0);
@@ -1236,7 +1289,7 @@ export function ThreadPage({ threadId }: { threadId: string }) {
       setActivity(null);
       setShowArtifact(false);
       if (intent === "build" || (intent == null && looksLikeBuild)) { await askQuestions(request); return; }
-    } else if (last?.role === "user" && looksLikeBuild) {
+    } else if (last?.role === "user" && looksLikeBuild && !humanizeTask) {
       await askQuestions(request); return;
     }
     await chatReply(history);
@@ -1255,6 +1308,8 @@ export function ThreadPage({ threadId }: { threadId: string }) {
   }
   async function chatReply(history: UIMessage[]) {
     const assistantId = crypto.randomUUID();
+    const lastTurn = history[history.length - 1];
+    const humanizeTask = lastTurn?.role === "user" ? (lastTurn.parts as unknown as Array<{ type: string; data?: unknown }>).find((p) => p.type === "data-tool-request")?.data as HumanizeTask | undefined : undefined;
     const textOf = (m: UIMessage) =>
       m.parts.map((p) => (p.type === "text" ? p.text : "")).join("");
     const setAssistant = (text: string) =>
@@ -1288,9 +1343,10 @@ export function ThreadPage({ threadId }: { threadId: string }) {
         },
         body: JSON.stringify({
           tier: choice.tier,
-          ...(choice.flagship && choice.mode === "chat" && !agent ? { model: choice.flagship } : {}),
-          mode: choice.mode,
+          ...(choice.flagship && choice.mode === "chat" && !agent && !humanizeTask ? { model: choice.flagship } : {}),
+          mode: humanizeTask ? "chat" : choice.mode,
           lang,
+          ...(humanizeTask && !agent ? { task: humanizeTask } : {}),
           ...(agent ? { agentId: agent.id } : {}),
           ...(fileIds.length ? { fileIds } : {}),
           ...(choice.kbIds.length && choice.mode === "chat" ? { knowledgeBaseIds: choice.kbIds } : {}),

@@ -14,8 +14,9 @@ export class OpenRouterError extends Error {
   }
 }
 
-type OrMessage = { role: "system" | "user" | "assistant"; content: string };
-type OrOptions = { model: string; messages: OrMessage[]; maxTokens: number; webResults?: number; signal?: AbortSignal; temperature?: number };
+// Content is text, or parts (text + input_audio…) for the audio summary.
+type OrMessage = { role: "system" | "user" | "assistant"; content: string | unknown[] };
+type OrOptions = { model: string; messages: OrMessage[]; maxTokens: number; webResults?: number; signal?: AbortSignal; temperature?: number; timeoutMs?: number };
 
 /** One non-streaming completion; `usage.cost` from OpenRouter includes web search fees. */
 export async function orComplete(o: OrOptions): Promise<OrResult> {
@@ -23,7 +24,7 @@ export async function orComplete(o: OrOptions): Promise<OrResult> {
   if (!apiKey) throw new OpenRouterError(503, "OPENROUTER_API_KEY missing");
   const res = await fetch("https://openrouter.ai/api/v1/chat/completions", {
     method: "POST",
-    signal: o.signal ? AbortSignal.any([o.signal, AbortSignal.timeout(120_000)]) : AbortSignal.timeout(120_000),
+    signal: o.signal ? AbortSignal.any([o.signal, AbortSignal.timeout(o.timeoutMs ?? 120_000)]) : AbortSignal.timeout(o.timeoutMs ?? 120_000),
     headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json", "X-Title": "TechNova AI Hub" },
     body: JSON.stringify({
       model: o.model,

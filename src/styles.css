@@ -644,7 +644,6 @@ html:not(:has(.dashboard-shell))::-webkit-scrollbar-track { background: transpar
 @property --plan-angle { syntax: "<angle>"; initial-value: 0deg; inherits: false; }
 .plan-ring { position: relative; display: grid; place-items: center; flex-shrink: 0; border-radius: 9999px; padding: 2px; isolation: isolate;
   background: conic-gradient(from var(--plan-angle), var(--plan-a), var(--plan-b), var(--plan-c), var(--plan-d), var(--plan-a)); animation: plan-spin 3.6s linear infinite; }
-.plan-ring::after { content: ""; position: absolute; inset: -3px; z-index: -1; border-radius: inherit; background: inherit; filter: blur(6px); opacity: .45; }
 .plan-ring > span { border: 1.5px solid var(--card); }
 @keyframes plan-spin { to { --plan-angle: 360deg; } }
 .plan-chip { border: 1px solid color-mix(in oklab, var(--plan-a) 38%, transparent);
@@ -1145,8 +1144,11 @@ body:has(.dashboard-shell) :is([data-radix-popper-content-wrapper] > [data-state
 /* Soft violet and sage green from the About page titles (.about-title). */
 .create-chip-music { background: linear-gradient(135deg, #a77bcb, #8f78c2); box-shadow: 0 6px 16px -9px rgb(143 120 194 / .6); }
 .create-chip-video { background: linear-gradient(135deg, #6aa262, #5f9c57); box-shadow: 0 6px 16px -9px rgb(95 156 87 / .6); }
-.create-chip-music, .create-chip-video { transition: filter .2s, transform .2s; }
-.create-chip-music:hover, .create-chip-video:hover { filter: brightness(1.08); transform: translateY(-1px); }
+/* Humanize (periwinkle, from the About figures) and audio summary (soft terracotta). */
+.create-chip-humanize { background: linear-gradient(135deg, #7d93dc, #6f86d6); box-shadow: 0 6px 16px -9px rgb(111 134 214 / .6); }
+.create-chip-audio { background: linear-gradient(135deg, #cf8a64, #c27a55); box-shadow: 0 6px 16px -9px rgb(194 122 85 / .6); }
+.create-chip-music, .create-chip-video, .create-chip-humanize, .create-chip-audio { transition: filter .2s, transform .2s; }
+.create-chip-music:hover, .create-chip-video:hover, .create-chip-humanize:hover, .create-chip-audio:hover { filter: brightness(1.08); transform: translateY(-1px); }
 @media (prefers-reduced-motion: reduce) { .create-chip-music:hover, .create-chip-video:hover { transform: none; } }
 
 /* Landing "technology partners" band: grey logos scrolling slowly, faded at both ends. */

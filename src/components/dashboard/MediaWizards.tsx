@@ -17,11 +17,11 @@ export type MediaRequest =
   | { kind: "music"; prompt: string; music: MusicOptions }
   | { kind: "video"; prompt: string; aspectRatio: MediaRatio; quality: boolean };
 
-const field = "w-full rounded-xl border border-border bg-background px-3 py-2 text-[13.5px] outline-none transition focus:border-foreground/40 focus:ring-2 focus:ring-ring/20";
-const label = "text-[12px] font-medium text-foreground/80";
-const optional = (fr: boolean) => <span className="ml-1 font-normal text-muted-foreground">{fr ? "(facultatif)" : "(optional)"}</span>;
+export const field = "w-full rounded-xl border border-border bg-background px-3 py-2 text-[13.5px] outline-none transition focus:border-foreground/40 focus:ring-2 focus:ring-ring/20";
+export const label = "text-[12px] font-medium text-foreground/80";
+export const optional = (fr: boolean) => <span className="ml-1 font-normal text-muted-foreground">{fr ? "(facultatif)" : "(optional)"}</span>;
 
-function Chips<T extends string>({ items, value, onChange, multi = false, tone }: { items: [T, string][]; value: T[]; onChange: (v: T[]) => void; multi?: boolean; tone: string }) {
+export function Chips<T extends string>({ items, value, onChange, multi = false, tone }: { items: [T, string][]; value: T[]; onChange: (v: T[]) => void; multi?: boolean; tone: string }) {
   return <div className="mt-1.5 flex flex-wrap gap-1.5">{items.map(([id, text]) => {
     const on = value.includes(id);
     return <button key={id} type="button" aria-pressed={on} onClick={() => onChange(on ? value.filter((x) => x !== id) : multi ? [...value, id] : [id])}
@@ -29,11 +29,11 @@ function Chips<T extends string>({ items, value, onChange, multi = false, tone }
   })}</div>;
 }
 
-function CostNote({ children }: { children: React.ReactNode }) {
+export function CostNote({ children }: { children: React.ReactNode }) {
   return <p className="flex items-start gap-2 rounded-xl bg-secondary/70 px-3 py-2.5 text-[12px] text-muted-foreground"><Coins className="mt-0.5 size-3.5 shrink-0" /><span>{children}</span></p>;
 }
 
-function Shell({ open, onOpenChange, icon, title, sub, accent, children, footer }: { open: boolean; onOpenChange: (o: boolean) => void; icon: React.ReactNode; title: string; sub: string; accent: string; children: React.ReactNode; footer: React.ReactNode }) {
+export function Shell({ open, onOpenChange, icon, title, sub, accent, children, footer }: { open: boolean; onOpenChange: (o: boolean) => void; icon: React.ReactNode; title: string; sub: string; accent: string; children: React.ReactNode; footer: React.ReactNode }) {
   return <Dialog open={open} onOpenChange={onOpenChange}>
     <DialogContent className="max-w-[620px] gap-0 rounded-2xl p-0 sm:rounded-2xl">
       <div className="border-b border-border px-5 pb-4 pt-5 sm:px-6" style={{ background: `linear-gradient(135deg, ${accent}, transparent 70%)` }}>
