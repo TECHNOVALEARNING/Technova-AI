@@ -535,9 +535,11 @@ html:not(:has(.dashboard-shell))::-webkit-scrollbar-track { background: transpar
 :where(html:not(:has(.dashboard-shell))) :where(pre, .overflow-y-auto, .overflow-auto)::-webkit-scrollbar { display: block; width: 8px; height: 8px; }
 :where(html:not(:has(.dashboard-shell))) :where(pre, .overflow-y-auto, .overflow-auto)::-webkit-scrollbar-thumb { border: 2px solid transparent; border-radius: 999px; background: rgb(140 140 140 / .45) padding-box; }
 /* Thinking indicator: the rays step round like a classic activity spinner. */
-.thinking-spinner { animation: thinking-turn 1s steps(12) infinite; }
+/* While thinking it also breathes: grows a little and comes back to its normal size (scale composes with rotate). */
+.thinking-spinner { animation: thinking-turn 1s steps(12) infinite, thinking-pulse 1.6s ease-in-out infinite; }
 @keyframes thinking-turn { to { transform: rotate(360deg); } }
-@media (prefers-reduced-motion: reduce) { .thinking-spinner { animation-duration: 3s; } }
+@keyframes thinking-pulse { 0%, 100% { scale: 1; } 50% { scale: 1.4; } }
+@media (prefers-reduced-motion: reduce) { .thinking-spinner { animation: thinking-turn 3s steps(12) infinite; } }
 
 /* Sign-in / sign-up / onboarding: a compact, rounded Apple-style frosted glass card floating over soft colour
    glows (the glows give the blur something to frost); inputs and buttons are rounded to match. */

@@ -8,7 +8,7 @@ export type ChatMediaData = {
   kind: "image" | "video" | "music";
   model?: string;
   prompt: string;
-  /** Requested aspect ratio ("16:9", "9:16", "1:1"…): the frame in progress takes the shape of the coming image. */
+  /** Requested aspect ratio ("16:9", "9:16", "1:1"…) of the coming media (the frame in progress is always 4:3). */
   ratio?: string | null;
   status: string;
   progress?: number | null;
@@ -75,12 +75,11 @@ function GenerationStage({ data, lang }: { data: ChatMediaData; lang: "fr" | "en
   const [elapsed, setElapsed] = useState(0);
   useEffect(() => { const start = Date.now(); const id = window.setInterval(() => setElapsed(Math.floor((Date.now() - start) / 1000)), 1000); return () => window.clearInterval(id); }, []);
   const badge = progress !== null ? `${progress} %` : elapsed < 60 ? `${elapsed} s` : `${Math.floor(elapsed / 60)} min ${String(elapsed % 60).padStart(2, "0")}`;
-  // Same frame as the coming image or video: its requested ratio, up to 520 px wide and 520 px high.
-  const [rw, rh] = data.kind === "music" ? [16, 7] : (/^(\d+):(\d+)$/.exec(data.ratio ?? "") ?? ["", data.kind === "video" ? "16" : "1", data.kind === "video" ? "9" : "1"]).slice(1).map(Number) as [number, number];
-  const frameWidth = Math.min(520, Math.round((520 * rw) / rh));
-  return <div className="flex w-full flex-col gap-3" style={{ maxWidth: frameWidth }}>
+  // One elegant 4:3 frame for every creation (image, video, music), up to 640 px wide; the finished media then
+  // shows at its own ratio.
+  return <div className="flex w-full flex-col gap-3" style={{ maxWidth: 640 }}>
     <ThinkingLine fr={fr} />
-    <div role="img" aria-label={`${text.creating}${progress === null ? "" : ` — ${progress} %`}`} className="relative w-full overflow-hidden rounded-2xl bg-[#f7f7f8] dark:bg-[#0a0a0c]" style={{ aspectRatio: `${rw} / ${rh}` }}>
+    <div role="img" aria-label={`${text.creating}${progress === null ? "" : ` — ${progress} %`}`} className="relative w-full overflow-hidden rounded-2xl bg-[#f7f7f8] dark:bg-[#0a0a0c]" style={{ aspectRatio: "4 / 3" }}>
       <DotField />
       <span className="absolute bottom-3 right-3 rounded-full border border-black/10 bg-white px-4 py-1.5 text-[15px] font-medium tabular-nums text-[#1f5fbf] shadow-md dark:border-white/10 dark:bg-white/10 dark:text-[#7aa7ff]">{badge}</span>
     </div>
