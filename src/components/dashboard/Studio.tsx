@@ -347,8 +347,8 @@ export function ArtifactPanel({ build, versions = [], onPickVersion, lang, title
         </div>
       )}
       {tab === "code" && (
-        <div className="grid min-h-0 flex-1 grid-cols-[180px_minmax(0,1fr)]">
-          <div className="overflow-y-auto border-r border-border p-2">
+        <div className="grid min-h-0 flex-1 grid-cols-[minmax(120px,180px)_minmax(0,1fr)] grid-rows-[minmax(0,1fr)] overflow-hidden">
+          <div className="min-h-0 overflow-y-auto overscroll-contain border-r border-border p-2">
             {build.files.map((f) => (
               <Button key={f.path} variant="ghost" type="button" onClick={() => setSelected(f.path)}
                 className={cn("flex w-full items-center gap-1.5 truncate rounded-lg px-2 py-1.5 text-left text-xs", current?.path === f.path ? "bg-muted font-medium" : "text-muted-foreground hover:bg-muted/60")}>
@@ -357,7 +357,7 @@ export function ArtifactPanel({ build, versions = [], onPickVersion, lang, title
               </Button>
             ))}
           </div>
-          <div className="relative min-h-0 overflow-auto bg-[#1f1f24] text-[#e6e6e6]">
+          <div className="relative min-h-0 overflow-auto overscroll-contain bg-[#1f1f24] text-[#e6e6e6]">
             {current && (
               <>
                 <div className="sticky top-0 flex items-center justify-between border-b border-black/40 bg-[#2a2a30] px-3 py-1.5 text-xs text-white/60">
