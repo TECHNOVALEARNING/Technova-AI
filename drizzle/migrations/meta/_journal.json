@@ -337,6 +337,13 @@
       "when": 1795593600000,
       "tag": "0047_provider_costs_periods",
       "breakpoints": true
+    },
+    {
+      "idx": 48,
+      "version": "7",
+      "when": 1795680000000,
+      "tag": "0048_provider_usage_snapshots",
+      "breakpoints": true
     }
   ]
 }

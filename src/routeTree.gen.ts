@@ -59,6 +59,7 @@ import { Route as ApiPublicNyoleWebhookRouteImport } from './routes/api/public/n
 import { Route as ApiPublicReportSiteRouteImport } from './routes/api/public/report-site'
 import { Route as ApiPublicStudioImageRouteImport } from './routes/api/public/studio-image'
 import { Route as ApiPublicStudioWorkerRouteImport } from './routes/api/public/studio-worker'
+import { Route as ApiPublicUsageSnapshotRouteImport } from './routes/api/public/usage-snapshot'
 import { Route as ApiPublicVersionRouteImport } from './routes/api/public/version'
 import { Route as OauthConnectReturnRouteImport } from './routes/oauth.connect.return'
 import { Route as AuthenticatedDashboardChatIndexRouteImport } from './routes/_authenticated/dashboard/chat.index'
@@ -331,6 +332,11 @@ const ApiPublicStudioWorkerRoute = ApiPublicStudioWorkerRouteImport.update({
   path: '/api/public/studio-worker',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicUsageSnapshotRoute = ApiPublicUsageSnapshotRouteImport.update({
+  id: '/api/public/usage-snapshot',
+  path: '/api/public/usage-snapshot',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicVersionRoute = ApiPublicVersionRouteImport.update({
   id: '/api/public/version',
   path: '/api/public/version',
@@ -420,6 +426,7 @@ export interface FileRoutesByFullPath {
   '/api/public/report-site': typeof ApiPublicReportSiteRoute
   '/api/public/studio-image': typeof ApiPublicStudioImageRoute
   '/api/public/studio-worker': typeof ApiPublicStudioWorkerRoute
+  '/api/public/usage-snapshot': typeof ApiPublicUsageSnapshotRoute
   '/api/public/version': typeof ApiPublicVersionRoute
   '/oauth/connect/return': typeof OauthConnectReturnRoute
   '/dashboard/': typeof AuthenticatedDashboardIndexRoute
@@ -477,6 +484,7 @@ export interface FileRoutesByTo {
   '/api/public/report-site': typeof ApiPublicReportSiteRoute
   '/api/public/studio-image': typeof ApiPublicStudioImageRoute
   '/api/public/studio-worker': typeof ApiPublicStudioWorkerRoute
+  '/api/public/usage-snapshot': typeof ApiPublicUsageSnapshotRoute
   '/api/public/version': typeof ApiPublicVersionRoute
   '/oauth/connect/return': typeof OauthConnectReturnRoute
   '/dashboard': typeof AuthenticatedDashboardIndexRoute
@@ -537,6 +545,7 @@ export interface FileRoutesById {
   '/api/public/report-site': typeof ApiPublicReportSiteRoute
   '/api/public/studio-image': typeof ApiPublicStudioImageRoute
   '/api/public/studio-worker': typeof ApiPublicStudioWorkerRoute
+  '/api/public/usage-snapshot': typeof ApiPublicUsageSnapshotRoute
   '/api/public/version': typeof ApiPublicVersionRoute
   '/oauth/connect/return': typeof OauthConnectReturnRoute
   '/_authenticated/dashboard/': typeof AuthenticatedDashboardIndexRoute
@@ -597,6 +606,7 @@ export interface FileRouteTypes {
     | '/api/public/report-site'
     | '/api/public/studio-image'
     | '/api/public/studio-worker'
+    | '/api/public/usage-snapshot'
     | '/api/public/version'
     | '/oauth/connect/return'
     | '/dashboard/'
@@ -654,6 +664,7 @@ export interface FileRouteTypes {
     | '/api/public/report-site'
     | '/api/public/studio-image'
     | '/api/public/studio-worker'
+    | '/api/public/usage-snapshot'
     | '/api/public/version'
     | '/oauth/connect/return'
     | '/dashboard'
@@ -713,6 +724,7 @@ export interface FileRouteTypes {
     | '/api/public/report-site'
     | '/api/public/studio-image'
     | '/api/public/studio-worker'
+    | '/api/public/usage-snapshot'
     | '/api/public/version'
     | '/oauth/connect/return'
     | '/_authenticated/dashboard/'
@@ -757,6 +769,7 @@ export interface RootRouteChildren {
   ApiPublicReportSiteRoute: typeof ApiPublicReportSiteRoute
   ApiPublicStudioImageRoute: typeof ApiPublicStudioImageRoute
   ApiPublicStudioWorkerRoute: typeof ApiPublicStudioWorkerRoute
+  ApiPublicUsageSnapshotRoute: typeof ApiPublicUsageSnapshotRoute
   ApiPublicVersionRoute: typeof ApiPublicVersionRoute
   OauthConnectReturnRoute: typeof OauthConnectReturnRoute
   ApiPublicSiteSlugRoute: typeof ApiPublicSiteSlugRoute
@@ -1116,6 +1129,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicStudioWorkerRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/usage-snapshot': {
+      id: '/api/public/usage-snapshot'
+      path: '/api/public/usage-snapshot'
+      fullPath: '/api/public/usage-snapshot'
+      preLoaderRoute: typeof ApiPublicUsageSnapshotRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/version': {
       id: '/api/public/version'
       path: '/api/public/version'
@@ -1263,6 +1283,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicReportSiteRoute: ApiPublicReportSiteRoute,
   ApiPublicStudioImageRoute: ApiPublicStudioImageRoute,
   ApiPublicStudioWorkerRoute: ApiPublicStudioWorkerRoute,
+  ApiPublicUsageSnapshotRoute: ApiPublicUsageSnapshotRoute,
   ApiPublicVersionRoute: ApiPublicVersionRoute,
   OauthConnectReturnRoute: OauthConnectReturnRoute,
   ApiPublicSiteSlugRoute: ApiPublicSiteSlugRoute,

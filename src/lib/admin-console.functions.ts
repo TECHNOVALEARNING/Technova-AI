@@ -300,6 +300,15 @@ export const adminProviderCosts = createServerFn({ method: "POST" })
       if (row.provider !== "openrouter" || activityDays.has(dayKey(String(row.day)))) continue;
       add(dayKey(String(row.day)), "openrouter", row.model, Number(row.cost_usd) || 0, null, Number(row.calls) || 0);
     }
+    // Safety net: what OpenRouter really billed each day (readings of the account, migration 0048). Whatever the
+    // logged replies do not explain shows as « Autres appels » (help chat, tests, another key, older days…).
+    const { recordOpenRouterUsage, openRouterDailySpend } = await import("@/lib/provider-usage.server");
+    await recordOpenRouterUsage(supabaseAdmin).catch(() => undefined);
+    const real = await openRouterDailySpend(supabaseAdmin, since).catch(() => new Map<string, number>());
+    for (const [day, spend] of real) {
+      const gap = spend - (days.get(day)?.openrouter ?? 0);
+      if (gap > 0.001) add(day, "openrouter", "Autres appels (sans détail)", gap, null, 0);
+    }
     // kie.ai straight from the creations (only measured costs, never the -1 "not measured" marks).
     let kieUnmeasured = 0;
     const kie = await supabaseAdmin.from("media_generations").select("created_at,model,status,provider_credits" as never)

@@ -89,11 +89,13 @@ export const Route = createFileRoute("/api/research")({
               const credits = Math.min(RESEARCH_MAX_CREDITS, creditsFor(costUsd));
               await supabaseAdmin.from("usage_logs").insert({ owner_id: userId, model: "Deep Research", input_tokens: inputTokens, output_tokens: outputTokens, credits, latency_ms: Date.now() - startedAt });
               await settleCredits(reservation, credits);
+              await supabaseAdmin.from("chat_engine_costs").insert({ owner_id: userId, mode: "research", engine: MODEL, input_tokens: inputTokens, output_tokens: outputTokens, cost_usd: costUsd || null, credits });
             } catch (e) {
               const status = e instanceof OpenRouterError ? e.status : 502;
               // Work already paid to the provider is charged; nothing is charged if nothing ran.
               const spent = Math.min(RESEARCH_MAX_CREDITS, creditsFor(costUsd));
               if (spent > 0) await settleCredits(reservation, spent); else await releaseCredits(reservation);
+              if (costUsd > 0) await supabaseAdmin.from("chat_engine_costs").insert({ owner_id: userId, mode: "research", engine: MODEL, input_tokens: inputTokens, output_tokens: outputTokens, cost_usd: costUsd, credits: spent });
               if ((e as Error)?.name !== "AbortError") say(`\n\n⚠️ ${providerMessage(status)}`);
             } finally {
               clearInterval(ping);

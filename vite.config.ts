@@ -21,7 +21,8 @@ export default defineConfig(({ command }) => ({
               // Studio builds stream for several minutes; 300 s is the default ceiling on every plan.
               functions: { maxDuration: 300 },
               // Safety net for the daily media purge (needs CRON_SECRET in Vercel env).
-              config: { version: 3, crons: [{ path: "/api/public/media-purge", schedule: "17 3 * * *" }] },
+              // The evening reading keeps each day's real OpenRouter total for the admin consumption chart.
+              config: { version: 3, crons: [{ path: "/api/public/media-purge", schedule: "17 3 * * *" }, { path: "/api/public/usage-snapshot", schedule: "55 23 * * *" }] },
             },
           }),
         ]

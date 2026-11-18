@@ -376,6 +376,12 @@ export async function processFile(ownerId: string, fileId: string) {
     await settleCredits(reservation, credits);
     reservation = null;
     await supabaseAdmin.from("usage_logs").insert({ owner_id: ownerId, model: extracted.usd > 0 ? "Gemini 2.5 Flash" : "Embeddings", input_tokens: Math.ceil(text.length / 4), output_tokens: 0, credits, latency_ms: 0 });
+    // Admin consumption chart: the real OpenRouter cost of reading the file and of indexing it.
+    const costRows = [
+      ...(extracted.usd > 0 ? [{ owner_id: ownerId, mode: "files", engine: MEDIA_MODEL, input_tokens: Math.ceil(text.length / 4), output_tokens: 0, cost_usd: extracted.usd, credits: Math.ceil(extracted.usd * CREDITS_PER_USD) }] : []),
+      ...(embedUsd > 0 ? [{ owner_id: ownerId, mode: "files", engine: EMBED_MODEL, input_tokens: Math.ceil(text.length / 4), output_tokens: 0, cost_usd: embedUsd, credits: Math.max(0, credits - Math.ceil(extracted.usd * CREDITS_PER_USD)) }] : []),
+    ];
+    if (costRows.length) await supabaseAdmin.from("chat_engine_costs").insert(costRows);
     await supabaseAdmin.from("files").update({ status: "ready", size_bytes: bytes.byteLength, char_count: text.length, chunk_count: chunks.length, credits, updated_at: new Date().toISOString() }).eq("id", fileId);
     await stage("done");
     if (job) await supabaseAdmin.from("file_processing_jobs").update({ status: "done", finished_at: new Date().toISOString() }).eq("id", job.id);

@@ -86,6 +86,8 @@ export const Route = createFileRoute("/api/ai/chat")({
         const credits = Math.max(1, typeof out.usage?.cost === "number" ? Math.ceil(out.usage.cost * 1200) : creditCost(name, inputTokens, outputTokens));
         await supabaseAdmin.from("usage_logs").insert({ owner_id: ownerId, model: name, input_tokens: inputTokens, output_tokens: outputTokens, credits, latency_ms: Date.now() - startedAt });
         await settleCredits(reservation, credits);
+        // Admin consumption chart: what OpenRouter really billed for this API call.
+        await supabaseAdmin.from("chat_engine_costs").insert({ owner_id: ownerId, mode: "api", engine: openRouterModelIds[name] ?? name, input_tokens: inputTokens, output_tokens: outputTokens, cost_usd: typeof out.usage?.cost === "number" ? out.usage.cost : null, credits });
 
         const response = {
           id: `tn_${crypto.randomUUID()}`,
