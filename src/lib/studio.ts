@@ -175,7 +175,7 @@ export function resolvePreviewPage(files: StudioFile[], current: string, href: s
   return [target, `${target}/index.html`, `${target}.html`, target || "index.html"].find((p) => available.has(p)) ?? null;
 }
 
-export type BuildIssue = { file: string; problem: "no_index" | "unfinished" | "truncated" | "missing_asset" | "missing_page" | "missing_anchor" | "syntax_error" | "no_viewport" | "not_responsive" | "fixed_width"; target?: string };
+export type BuildIssue = { file: string; problem: "no_index" | "unfinished" | "truncated" | "missing_asset" | "missing_page" | "missing_anchor" | "syntax_error" | "no_viewport" | "not_responsive" | "fixed_width" | "missing_icons"; target?: string };
 
 /** Static check of a finished build, run in the browser (free): entry page present, every file complete, every
  *  local stylesheet, script, image and internal page that the HTML points to really generated, every "#section"
@@ -221,6 +221,7 @@ export function checkBuild(files: StudioFile[]): BuildIssue[] {
       if (![target, `${target}/index.html`, `${target}.html`, target || "index.html"].some((p) => names.has(p))) add({ file: path, problem: "missing_page", target: ref });
     }
     if (!/<meta\b[^>]*name=["']viewport["']/i.test(html)) add({ file: path, problem: "no_viewport" });
+    if (/\bclass=["'][^"']*\bfa-(solid|regular|brands)\b/i.test(html) && !/font-awesome|fontawesome/i.test(html)) add({ file: path, problem: "missing_icons" });
   }
   // Responsive design: some adaptive CSS must exist, and nothing may force a desktop width on a phone.
   const css = files.filter((f) => /\.css$/i.test(f.path)).map((f) => ({ file: norm(f.path), text: f.content }));
@@ -295,6 +296,7 @@ export function describeIssue(lang: "fr" | "en", i: BuildIssue): string {
     case "syntax_error": return fr ? `${i.file} contient du JavaScript invalide :${t}.` : `${i.file} contains invalid JavaScript:${t}.`;
     case "no_viewport": return fr ? `${i.file} n'a pas la balise viewport : sur téléphone, la page s'affiche en tout petit.` : `${i.file} has no viewport tag: on a phone the page shows tiny.`;
     case "not_responsive": return fr ? "Le site n'a aucune règle d'adaptation aux écrans (aucun @media) : il ne s'adapte ni à la tablette ni au téléphone." : "The site has no screen-adaptation rule (no @media): it does not adapt to tablets or phones.";
+    case "missing_icons": return fr ? `${i.file} utilise des icônes Font Awesome sans charger leur feuille de style : elles ne s'affichent pas.` : `${i.file} uses Font Awesome icons without loading their stylesheet: they do not show.`;
     case "fixed_width": return fr ? `${i.file} impose une largeur fixe${t}, trop large pour un téléphone.` : `${i.file} forces a fixed width${t}, too wide for a phone.`;
   }
 }
