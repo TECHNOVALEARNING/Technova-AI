@@ -10,6 +10,10 @@ export type StudioPlanData = {
   files: string[];
   imageSearches?: string[];
   database?: { needed: boolean; tables: string[]; sql: string };
+  /** A modification of an existing project: only the listed files change, the rest is kept. */
+  edit?: boolean;
+  /** The chat message (sdk_id) of the build being modified, in the same conversation. */
+  base?: string;
 };
 export type StudioStep = { title: string; detail: string; file?: string; done: boolean };
 export type StudioFile = { path: string; content: string; done: boolean };
@@ -25,11 +29,24 @@ export function parseBuild(text: string, finished: boolean): StudioBuild {
   const steps: StudioStep[] = [];
   const files: StudioFile[] = [];
   let sql = "";
-  const re = /<(step|file|sql)(?:\s+(?:title|path)="([^"]*)")?>([\s\S]*?)(<\/\1>|$)/g;
+  // A tag ends at its own closing tag or, when the model forgot or mistyped it (e.g. a file closed with </step>),
+  // where the next <step>, <file> or <sql> begins — those are never HTML elements, so a page cannot contain them.
+  const open = /<(step|file|sql)(?:\s+(?:title|path)="([^"]*)")?>/g;
   let m: RegExpExecArray | null;
-  while ((m = re.exec(text))) {
-    const [, tag, attr = "", inner = "", close] = m;
-    const done = Boolean(close) || finished;
+  while ((m = open.exec(text))) {
+    const [whole, tag = "", attr = ""] = m;
+    const start = m.index + whole.length;
+    const closeAt = text.indexOf(`</${tag}>`, start);
+    open.lastIndex = start;
+    const next = open.exec(text);
+    const nextAt = next ? next.index : -1;
+    let end: number, after: number, closed: boolean;
+    if (closeAt >= 0 && (nextAt < 0 || closeAt < nextAt)) { end = closeAt; after = closeAt + tag.length + 3; closed = true; }
+    else if (nextAt >= 0) { end = nextAt; after = nextAt; closed = true; }
+    else { end = text.length; after = text.length; closed = false; }
+    let inner = text.slice(start, end);
+    if (closeAt !== end) inner = inner.replace(/\s*<\/(step|file|sql)>\s*$/, "\n");
+    const done = closed || finished;
     if (tag === "step") {
       const file = attr.match(/(?:Écriture de|Création de|Writing|Creating|Generating)\s+(.+)$/i)?.[1]?.trim();
       steps.push({ title: attr, detail: inner.trim(), ...(file ? { file } : {}), done });
@@ -38,9 +55,9 @@ export function parseBuild(text: string, finished: boolean): StudioBuild {
       const file = { path: attr, content: inner.replace(/^\n/, ""), done };
       const at = files.findIndex((f) => f.path === attr);
       if (at >= 0) files[at] = file; else files.push(file);
-    }
-    else sql = inner.trim();
-    if (!close) break;
+    } else sql = inner.trim();
+    if (!closed) break;
+    open.lastIndex = after;
   }
   return { steps, files, sql, done: finished };
 }
@@ -59,6 +76,12 @@ function mem(){var d={};return{getItem:function(k){k=String(k);return Object.pro
 ['localStorage','sessionStorage'].forEach(function(n){var ok=true;try{window[n].getItem('x')}catch(_){ok=false}if(!ok){try{Object.defineProperty(window,n,{value:mem(),configurable:true})}catch(_){}}});
 try{document.cookie}catch(_){var jar='';try{Object.defineProperty(document,'cookie',{get:function(){return jar},set:function(v){var p=String(v).split(';')[0];jar=jar?jar+'; '+p:p},configurable:true})}catch(__){}}
 var sent=0;function report(msg,line){if(sent++<20)post({type:'technova-preview-error',message:String(msg||'Error').slice(0,300),line:line||0})}
+function name(el){var n=el.tagName.toLowerCase();if(el.id)return n+'#'+el.id;var c=typeof el.className==='string'?el.className.trim().split(/ +/)[0]:'';return c?n+'.'+c:n}
+function layout(){var d=document.documentElement,b=document.body;if(!b)return;var w=d.clientWidth,over=d.scrollWidth-w;if(over<=4){post({type:'technova-preview-layout',width:w,overflow:0});return}
+var all=b.getElementsByTagName('*'),el='';for(var i=0;i<all.length&&i<5000;i++){var r=all[i].getBoundingClientRect(),p=all[i].parentElement;if(r.width>0&&r.right>w+4){var pr=p?p.getBoundingClientRect().right:0;if(!p||pr<=w+4||p===b){el=name(all[i]);break}}}
+post({type:'technova-preview-layout',width:w,overflow:over,element:el})}
+var lt;function later(){clearTimeout(lt);lt=setTimeout(layout,500)}
+window.addEventListener('load',later);window.addEventListener('resize',later);
 window.addEventListener('error',function(e){report(e.message,e.lineno)});
 window.addEventListener('unhandledrejection',function(e){var r=e.reason;report(r&&r.message?r.message:r)});
 var EXT=/^(https?:)?[/][/]/i,SPECIAL=/^(mailto:|tel:|sms:|javascript:|data:|blob:)/i;
@@ -147,7 +170,7 @@ export function resolvePreviewPage(files: StudioFile[], current: string, href: s
   return [target, `${target}/index.html`, `${target}.html`, target || "index.html"].find((p) => available.has(p)) ?? null;
 }
 
-export type BuildIssue = { file: string; problem: "no_index" | "unfinished" | "truncated" | "missing_asset" | "missing_page" | "missing_anchor" | "syntax_error"; target?: string };
+export type BuildIssue = { file: string; problem: "no_index" | "unfinished" | "truncated" | "missing_asset" | "missing_page" | "missing_anchor" | "syntax_error" | "no_viewport" | "not_responsive" | "fixed_width"; target?: string };
 
 /** Static check of a finished build, run in the browser (free): entry page present, every file complete, every
  *  local stylesheet, script, image and internal page that the HTML points to really generated, every "#section"
@@ -192,8 +215,43 @@ export function checkBuild(files: StudioFile[]): BuildIssue[] {
       const target = resolve(path, ref);
       if (![target, `${target}/index.html`, `${target}.html`, target || "index.html"].some((p) => names.has(p))) add({ file: path, problem: "missing_page", target: ref });
     }
+    if (!/<meta\b[^>]*name=["']viewport["']/i.test(html)) add({ file: path, problem: "no_viewport" });
+  }
+  // Responsive design: some adaptive CSS must exist, and nothing may force a desktop width on a phone.
+  const css = files.filter((f) => /\.css$/i.test(f.path)).map((f) => ({ file: norm(f.path), text: f.content }));
+  for (const f of files) if (/\.html?$/i.test(f.path)) {
+    for (const m of f.content.matchAll(/<style\b[^>]*>([\s\S]*?)<\/style>/gi)) css.push({ file: norm(f.path), text: m[1] ?? "" });
+    for (const m of f.content.matchAll(/\bstyle=["']([^"']*)["']/gi)) css.push({ file: norm(f.path), text: `x{${m[1] ?? ""}}` });
+  }
+  const allCss = css.map((c) => c.text).join("\n");
+  if (files.some((f) => /\.html?$/i.test(f.path)) && !/@media\b|clamp\(|auto-fit|auto-fill|flex-wrap\s*:\s*wrap|\bmin\(/i.test(allCss)) {
+    issues.push({ file: css[0]?.file ?? "index.html", problem: "not_responsive" });
+  }
+  let fixed = 0;
+  for (const c of css) {
+    for (const m of outsideMedia(c.text).matchAll(/([^{};]*)\{([^{}]*)\}/g)) {
+      const width = /(?:^|;)\s*(min-width|width)\s*:\s*(\d{3,})px/i.exec(m[2] ?? "");
+      if (width && Number(width[2]) >= 480 && fixed < 5 && !/max-width\s*:\s*100(%|vw)/i.test(m[2] ?? "")) { fixed++; issues.push({ file: c.file, problem: "fixed_width", target: `${(m[1] ?? "").trim().slice(0, 60) || "style"} { ${width[1]}: ${width[2]}px }` }); }
+    }
   }
   return issues;
+}
+
+/** The CSS without its @media blocks (rules inside them are allowed to be wide). */
+function outsideMedia(css: string) {
+  let out = "", i = 0;
+  const text = css.replace(/\/\*[\s\S]*?\*\//g, "");
+  while (i < text.length) {
+    const at = text.indexOf("@media", i);
+    if (at < 0) { out += text.slice(i); break; }
+    out += text.slice(i, at);
+    const open = text.indexOf("{", at);
+    if (open < 0) break;
+    let depth = 0, j = open;
+    for (; j < text.length; j++) { if (text[j] === "{") depth++; else if (text[j] === "}" && --depth === 0) break; }
+    i = j + 1;
+  }
+  return out;
 }
 
 /** JavaScript that cannot even be parsed (classic scripts only: .js files and inline <script> blocks without
@@ -230,5 +288,8 @@ export function describeIssue(lang: "fr" | "en", i: BuildIssue): string {
     case "missing_page": return fr ? `${i.file} a un lien vers${t}, une page qui n'existe pas.` : `${i.file} links to${t}, a page that does not exist.`;
     case "missing_anchor": return fr ? `${i.file} a un lien vers la section${t}, introuvable dans la page.` : `${i.file} links to the section${t}, not found on the page.`;
     case "syntax_error": return fr ? `${i.file} contient du JavaScript invalide :${t}.` : `${i.file} contains invalid JavaScript:${t}.`;
+    case "no_viewport": return fr ? `${i.file} n'a pas la balise viewport : sur téléphone, la page s'affiche en tout petit.` : `${i.file} has no viewport tag: on a phone the page shows tiny.`;
+    case "not_responsive": return fr ? "Le site n'a aucune règle d'adaptation aux écrans (aucun @media) : il ne s'adapte ni à la tablette ni au téléphone." : "The site has no screen-adaptation rule (no @media): it does not adapt to tablets or phones.";
+    case "fixed_width": return fr ? `${i.file} impose une largeur fixe${t}, trop large pour un téléphone.` : `${i.file} forces a fixed width${t}, too wide for a phone.`;
   }
 }

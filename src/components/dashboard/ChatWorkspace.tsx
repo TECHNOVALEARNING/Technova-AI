@@ -844,6 +844,24 @@ export function ThreadPage({ threadId }: { threadId: string }) {
   const versions = messages.flatMap((m) => (m.parts as unknown as { type: string; data?: StudioData }[])
     .filter((p) => p.type === "data-studio" && p.data?.kind === "build" && p.data.build.done && p.data.build.files.length)
     .map((p) => (p.data as Extract<StudioData, { kind: "build" }>).build));
+  // The project a new Créer message changes: the version on screen if it is a finished one, else the latest.
+  const builtProjects = messages.flatMap((m) => (m.parts as unknown as { type: string; data?: StudioData }[])
+    .filter((p) => p.type === "data-studio" && p.data?.kind === "build" && p.data.build.done && p.data.build.files.length)
+    .map((p) => ({ id: m.id, data: p.data as Extract<StudioData, { kind: "build" }> })));
+  function currentProject(): { base: string; project: string } | null {
+    const target = builtProjects.find((b) => b.data.build === artifact) ?? builtProjects[builtProjects.length - 1];
+    if (!target) return null;
+    const first = builtProjects[0]!.data;
+    const plan = target.data.plan;
+    const lines = [
+      `Original request: ${first.request}`,
+      first.answers ? `Answers to the clarifying questions: ${first.answers}` : "",
+      first.plan ? `Original plan: ${first.plan.title} — ${first.plan.summary}\nGoals: ${first.plan.goals.join("; ")}\nFeatures: ${first.plan.features.join("; ")}` : "",
+      target.data !== first ? `Latest change applied: ${target.data.request}${plan ? ` (${plan.title})` : ""}` : "",
+      `Current files: ${target.data.build.files.map((f) => `${f.path} (${f.content.length} chars)`).join(", ")}`,
+    ].filter(Boolean);
+    return { base: target.id, project: lines.join("\n").slice(0, 60_000) };
+  }
   const artifactIsOpen = showArtifact && Boolean(panelBuild);
   useEffect(() => {
     setArtifactWorkspaceOpen(artifactIsOpen);
@@ -1065,10 +1083,12 @@ export function ThreadPage({ threadId }: { threadId: string }) {
     if (!json) return;
     await saveStudio(crypto.randomUUID(), { kind: "questions", request, intro: String(json["intro"] ?? ""), questions: Array.isArray(json["questions"]) ? (json["questions"] as Extract<StudioData, { kind: "questions" }>["questions"]).slice(0, 5) : [] });
   }
-  async function makePlan(request: string, answers: string, feedback?: string, previous?: string) {
-    const json = await studioStage("plan", { request, answers, ...(feedback ? { feedback, plan: previous } : {}) });
+  async function makePlan(request: string, answers: string, feedback?: string, previous?: string, edit?: { base: string; project: string }) {
+    const json = await studioStage("plan", { request, answers, ...(feedback ? { feedback, plan: previous } : {}), ...(edit ? { project: edit.project } : {}) });
     if (!json) return false;
-    await saveStudio(crypto.randomUUID(), { kind: "plan", request, answers, plan: json as unknown as Extract<StudioData, { kind: "plan" }>["plan"], status: "pending" });
+    const plan = json as unknown as StudioPlanData;
+    // A modification keeps a link to the version it changes: the build job starts from those files.
+    await saveStudio(crypto.randomUUID(), { kind: "plan", request, answers, plan: edit ? { ...plan, edit: true, base: edit.base } : plan, status: "pending" });
     return true;
   }
   async function runStudio(fn: () => Promise<void>) {
@@ -1086,7 +1106,8 @@ export function ThreadPage({ threadId }: { threadId: string }) {
   async function changePlan(msgId: string, data: Extract<StudioData, { kind: "plan" }>, feedback: string) {
     await runStudio(async () => {
       await saveStudio(msgId, { ...data, status: "changed" }, true);
-      await makePlan(data.request, data.answers, feedback, JSON.stringify(data.plan));
+      const edit = data.plan.edit && data.plan.base ? currentProject() : null;
+      await makePlan(data.request, data.answers, feedback, JSON.stringify(data.plan), edit && data.plan.base ? { base: data.plan.base, project: edit.project } : undefined);
     });
   }
   const [buildingId, setBuildingId] = useState<string | null>(null);
@@ -1290,11 +1311,14 @@ export function ThreadPage({ threadId }: { threadId: string }) {
       setActivity({ steps: [{ title: lang === "fr" ? "Analyse de la demande" : "Analysing the request", detail: "", done: false }], files: [], sql: "", done: false });
       setPanelWidth(0);
       setShowArtifact(true);
-      const res = await studioCall({ stage: "intent", request }).catch(() => null);
+      const project = currentProject();
+      const res = await studioCall({ stage: "intent", request, ...(project ? { project: project.project } : {}) }).catch(() => null);
       const intent = res?.ok ? ((await res.json().catch(() => null)) as { intent?: string } | null)?.intent : null;
       setThinking(false);
       setActivity(null);
       setShowArtifact(false);
+      // A change to the site of this conversation keeps its business and files: plan the change directly.
+      if (project && (intent === "edit" || (intent == null && looksLikeBuild))) { await makePlan(request, "", undefined, undefined, project); return; }
       if (intent === "build" || (intent == null && looksLikeBuild)) { await askQuestions(request); return; }
     } else if (last?.role === "user" && looksLikeBuild && !humanizeTask) {
       await askQuestions(request); return;

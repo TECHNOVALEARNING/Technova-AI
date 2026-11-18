@@ -144,16 +144,16 @@ export function StudioTimeline({ build, lang, disabled, onOpen, onRetry }: { bui
 const issueText = (lang: Lang, i: BuildIssue) => describeIssue(lang, i);
 
 /** What was really checked on the finished site: static checks plus JavaScript errors seen in the preview. */
-function VerificationBar({ lang, issues, runtime, onRequestFix }: { lang: Lang; issues: BuildIssue[]; runtime: string[]; onRequestFix?: ((text: string) => void) | undefined }) {
+function VerificationBar({ lang, issues, runtime, layout, onRequestFix }: { lang: Lang; issues: BuildIssue[]; runtime: string[]; layout: string[]; onRequestFix?: ((text: string) => void) | undefined }) {
   const [open, setOpen] = useState(false);
-  const lines = [...issues.map((i) => issueText(lang, i)), ...runtime.map((m) => tx(lang, `Erreur JavaScript dans l'aperçu : ${m}`, `JavaScript error in the preview: ${m}`))];
+  const lines = [...issues.map((i) => issueText(lang, i)), ...layout, ...runtime.map((m) => tx(lang, `Erreur JavaScript dans l'aperçu : ${m}`, `JavaScript error in the preview: ${m}`))];
   const ok = lines.length === 0;
   const fix = () => onRequestFix?.(tx(lang, "Corrige ces problèmes détectés par la vérification de l'aperçu, sans changer le reste du site :\n", "Fix these problems found by the preview check, without changing the rest of the site:\n") + lines.map((l) => `- ${l}`).join("\n"));
   return <div className={cn("shrink-0 border-b border-border px-3 py-2 text-xs", ok ? "bg-emerald-500/5" : "bg-amber-500/10")}>
     <div className="flex items-center gap-2">
       {ok ? <ShieldCheck className="size-4 shrink-0 text-emerald-600" /> : <AlertTriangle className="size-4 shrink-0 text-amber-600" />}
       <button type="button" className="min-w-0 flex-1 truncate text-left font-medium" onClick={() => setOpen((v) => !v)} aria-expanded={open} disabled={ok}>
-        {ok ? tx(lang, "Vérification : pages, liens, styles et scripts présents, aucune erreur JavaScript.", "Check: pages, links, styles and scripts present, no JavaScript error.")
+        {ok ? tx(lang, "Vérification : pages, liens, styles et scripts présents, mise en page adaptée à l'écran, aucune erreur JavaScript.", "Check: pages, links, styles and scripts present, layout fits the screen, no JavaScript error.")
           : tx(lang, `Vérification : ${lines.length} point(s) à corriger`, `Check: ${lines.length} issue(s) to fix`)}
       </button>
       {!ok && <ChevronDown className={cn("size-3.5 shrink-0 transition", open && "rotate-180")} />}
@@ -185,6 +185,11 @@ export function ArtifactPanel({ build, versions = [], onPickVersion, lang, title
   const issues = useMemo(() => (build.done ? checkBuild(build.files) : []), [build]);
   const [runtime, setRuntime] = useState<string[]>([]);
   const [reload, setReload] = useState(0);
+  const [layout, setLayout] = useState<Record<string, { width: number; overflow: number; element: string; page: string }>>({});
+  useEffect(() => { setLayout({}); }, [build]);
+  const layoutLines = Object.entries(layout).map(([key, v]) => tx(lang,
+    `Affichage ${key === "mobile" ? "téléphone" : key === "tablet" ? "tablette" : "ordinateur"} (${v.width} px) : ${v.page} déborde de ${v.overflow} px vers la droite${v.element ? ` à cause de « ${v.element} »` : ""} — la mise en page ne s'adapte pas à cet écran.`,
+    `${key === "mobile" ? "Phone" : key === "tablet" ? "Tablet" : "Desktop"} view (${v.width} px): ${v.page} overflows by ${v.overflow} px to the right${v.element ? ` because of “${v.element}”` : ""} — the layout does not adapt to this screen.`));
   useEffect(() => { setRuntime([]); }, [build]);
   useEffect(() => {
     const onMessage = (event: MessageEvent) => {
@@ -192,6 +197,18 @@ export function ArtifactPanel({ build, versions = [], onPickVersion, lang, title
       if (event.data?.type === "technova-preview-error") {
         const m = `${String(event.data.message ?? "").slice(0, 200)} (${page})`;
         setRuntime((r) => (r.includes(m) || r.length >= 10 ? r : [...r, m]));
+        return;
+      }
+      if (event.data?.type === "technova-preview-layout") {
+        // Horizontal overflow measured in the frame at its current width (desktop, tablet or phone).
+        const width = Number(event.data.width) || 0;
+        const key = width < 600 ? "mobile" : width < 1000 ? "tablet" : "desktop";
+        setLayout((l) => {
+          const next = { ...l };
+          if (Number(event.data.overflow) > 4) next[key] = { width, overflow: Math.round(Number(event.data.overflow)), element: String(event.data.element ?? "").slice(0, 80), page };
+          else delete next[key];
+          return next;
+        });
         return;
       }
       if (event.data?.type === "technova-preview-form") {
@@ -315,7 +332,7 @@ export function ArtifactPanel({ build, versions = [], onPickVersion, lang, title
           </div>}
           {sharedUrl && <div className="flex shrink-0 items-center gap-2 border-b border-border px-3 py-2"><input aria-label={tx(lang,"Lien public","Public link")} readOnly value={sharedUrl} onFocus={(e) => e.currentTarget.select()} className="min-w-0 flex-1 bg-transparent text-xs text-foreground outline-none" /><Button size="icon-sm" variant="ghost" aria-label={tx(lang,"Copier le lien","Copy link")} onClick={() => void navigator.clipboard.writeText(sharedUrl)}><Copy className="size-4" /></Button><Button size="sm" variant="ghost" className="h-7 shrink-0 text-xs" onClick={() => void revokeShare()}>{tx(lang, "Désactiver", "Disable")}</Button></div>}
           {sharedUrl && <p className="shrink-0 border-b border-border px-3 py-1.5 text-[11px] text-muted-foreground">{tx(lang, "Toute personne ayant ce lien peut voir l'aperçu pendant 30 jours. Désactivez-le à tout moment.", "Anyone with this link can view the preview for 30 days. Disable it at any time.")}</p>}
-          {build.done && <VerificationBar lang={lang} issues={issues} runtime={runtime} onRequestFix={onRequestFix} />}
+          {build.done && <VerificationBar lang={lang} issues={issues} runtime={runtime} layout={layoutLines} onRequestFix={onRequestFix} />}
           {previewError && <p role="alert" className="shrink-0 border-b border-border px-3 py-2 text-xs text-destructive">{previewError}</p>}
           {doc ? (
              <div className="flex min-h-0 flex-1 justify-center overflow-auto"><iframe key={`${page}-${reload}`} data-studio-preview title="preview" sandbox="allow-scripts allow-forms allow-modals allow-popups allow-popups-to-escape-sandbox" srcDoc={doc} className={cn("h-full shrink-0 border-0 bg-background transition-[width]", device === "mobile" ? "w-[390px]" : device === "tablet" ? "w-[768px]" : "w-full")} /></div>
