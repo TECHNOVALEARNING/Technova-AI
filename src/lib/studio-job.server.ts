@@ -1,4 +1,4 @@
-import { checkBuild, describeIssue, jsSyntaxIssues, parseBuild, STUDIO_COST, type StudioData, type StudioFile, type StudioPlanData } from "@/lib/studio";
+import { checkBuild, describeIssue, jsSyntaxIssues, parseBuild, STUDIO_COST, STUDIO_BUILD_MAX, studioBuildCredits, type StudioData, type StudioFile, type StudioPlanData } from "@/lib/studio";
 import { findStudioImages } from "@/lib/studio-images.server";
 
 const BUILD_COST = STUDIO_COST.build;
@@ -20,6 +20,8 @@ Rules: always include a self-contained index.html runnable directly in a browser
 type Job = {
   id: string; owner_id: string; thread_id: string; message_id: string; request: string; answers: string;
   plan: unknown; lang: string; output: string; attempts: number; charged: boolean; reservation_id: string | null;
+  /** Real provider cost of the previous attempts (migration 0045; absent before it is run). */
+  cost_usd?: number | string | null;
 };
 
 /** Gives back the credits held for a build that will never finish. */
@@ -59,29 +61,31 @@ Output ONLY the files you create or change, each as <file path="PATH">full file 
  *  something is wrong, asks the model once to rewrite only the faulty or missing files. The fixes are appended
  *  to the output (a later <file> with the same path replaces the earlier one) after a visible step listing what
  *  was found and what was fixed. Included in the build price; runs once per build. */
-async function autoRepair(job: Job, out: string, langRule: string, keepAlive: () => Promise<void>): Promise<string> {
+async function autoRepair(job: Job, out: string, langRule: string, keepAlive: () => Promise<void>): Promise<{ out: string; cost: number }> {
   const lang = job.lang === "en" ? "en" : "fr";
   const title = REPAIR_TITLE[lang];
-  if (out.includes(`<step title="${title}">`)) return out;
+  if (out.includes(`<step title="${title}">`)) return { out, cost: 0 };
   const build = parseBuild(out, true);
-  if (!build.files.length) return out;
+  if (!build.files.length) return { out, cost: 0 };
   const found = [...checkBuild(build.files), ...jsSyntaxIssues(build.files)].filter((i) => i.problem !== "unfinished");
   if (!found.length) {
-    return `${out}\n<step title="${title}">${lang === "fr" ? "Pages, liens, sections, styles et scripts vérifiés : aucun problème trouvé." : "Pages, links, sections, styles and scripts checked: no problem found."}</step>`;
+    return { out: `${out}\n<step title="${title}">${lang === "fr" ? "Pages, liens, sections, styles et scripts vérifiés : aucun problème trouvé." : "Pages, links, sections, styles and scripts checked: no problem found."}</step>`, cost: 0 };
   }
   const lines = found.slice(0, 40).map((i) => `- ${describeIssue(lang, i)}`).join("\n");
   // Shown in the chat while the repair runs (not saved in the job output: a resumed run starts from the build).
   await writeMessage(job, `${out}\n<step title="${title}">${lang === "fr" ? `${found.length} problème(s) trouvé(s), correction en cours…` : `${found.length} problem(s) found, fixing…`}\n${lines}`, false, "running");
   const project = build.files.map((f) => `<file path="${f.path}">\n${f.content}</file>`).join("\n").slice(0, 240_000);
   const { studioStream } = await import("@/lib/studio-gateway.server");
-  let text = "";
+  let text = "", cost = 0;
+  let run: ReturnType<typeof studioStream> | null = null;
   try {
-    const run = studioStream(null, `${REPAIR_PROMPT} ${langRule}`, [{ role: "user", content: `Problems found:\n${lines}\n\nProject files:\n${project}` }], REPAIR_MAX_TOKENS);
+    run = studioStream(null, `${REPAIR_PROMPT} ${langRule}`, [{ role: "user", content: `Problems found:\n${lines}\n\nProject files:\n${project}` }], REPAIR_MAX_TOKENS);
     let last = Date.now();
     for await (const delta of run.textStream) { text += delta; if (Date.now() - last > 10_000) { last = Date.now(); await keepAlive(); } }
   } catch (e) {
     console.error("studio auto-repair failed", (e as Error)?.message?.slice(0, 200));
   }
+  if (run) cost = await run.costUsd().catch(() => 0);
   const fixes = parseBuild(text, true).files.filter((f) => f.path && f.content.trim() && !/^\s*$/.test(f.content));
   const merged = parseBuild(`${out}\n${fixes.map((f) => `<file path="${f.path}">\n${f.content}</file>`).join("\n")}`, true).files;
   const left = [...checkBuild(merged), ...jsSyntaxIssues(merged)].filter((i) => i.problem !== "unfinished");
@@ -89,7 +93,7 @@ async function autoRepair(job: Job, out: string, langRule: string, keepAlive: ()
   const summary = lang === "fr"
     ? `${found.length} problème(s) trouvé(s) :\n${lines}\n\n${fixes.length ? `${fixedCount} corrigé(s) en réécrivant ${fixes.map((f) => f.path).join(", ")}.` : "La correction automatique n'a pas abouti."}${left.length ? `\nReste à corriger :\n${left.slice(0, 20).map((i) => `- ${describeIssue(lang, i)}`).join("\n")}` : ""}`
     : `${found.length} problem(s) found:\n${lines}\n\n${fixes.length ? `${fixedCount} fixed by rewriting ${fixes.map((f) => f.path).join(", ")}.` : "The automatic fix did not succeed."}${left.length ? `\nStill to fix:\n${left.slice(0, 20).map((i) => `- ${describeIssue(lang, i)}`).join("\n")}` : ""}`;
-  return `${out}\n<step title="${title}">${summary}</step>\n${fixes.map((f) => `<file path="${f.path}">\n${f.content}</file>`).join("\n")}`;
+  return { out: `${out}\n<step title="${title}">${summary}</step>\n${fixes.map((f) => `<file path="${f.path}">\n${f.content}</file>`).join("\n")}`, cost };
 }
 
 /** For a modification (plan.edit): the files of the build being changed, read from the same conversation. */
@@ -102,6 +106,22 @@ async function baseProjectFiles(job: Job, plan: StudioPlanData): Promise<StudioF
 }
 
 const EDIT_RULES = `EDIT MODE: you are modifying the existing project whose files are given below. Keep its business, audience, language, texts, design and pages exactly as they are, except what the approved change asks. Output the usual steps and ONLY the files you change or add, each one complete; never output a file you did not change. Keep every link between pages working.`;
+
+/** Credits held for this build (the most it may cost); the standard price when the reservation is unknown. */
+async function reservedAmount(job: Job): Promise<number> {
+  if (!job.reservation_id) return BUILD_COST;
+  const db = await admin();
+  const { data } = await db.from("credit_reservations").select("amount").eq("id", job.reservation_id).maybeSingle();
+  return Math.max(BUILD_COST, Number(data?.amount ?? BUILD_COST) || BUILD_COST);
+}
+
+/** Keeps the real cost spent so far on the job (needs migration 0045; silently skipped before it runs). */
+async function saveCost(jobId: string, costUsd: number) {
+  if (!(costUsd > 0)) return;
+  const db = await admin();
+  const { error } = await db.from("studio_jobs").update({ cost_usd: Math.round(costUsd * 1e6) / 1e6 } as never).eq("id", jobId);
+  if (error && !/cost_usd/.test(error.message)) console.error("studio cost", error.message);
+}
 
 /** Runs (or resumes) one build job; safe to call concurrently thanks to the lease claim. */
 export async function runStudioJob(jobId: string) {
@@ -150,28 +170,51 @@ export async function runStudioJob(jobId: string) {
   const started = Date.now();
   const { studioStream, studioErrorStatus, STUDIO_MAX_TOKENS } = await import("@/lib/studio-gateway.server");
   let result: ReturnType<typeof studioStream> | null = null;
+  // Real cost of the earlier attempts of this job (interrupted runs are paid to the provider too).
+  const priorCost = Number(job.cost_usd ?? 0) || 0;
+  let attemptCost = 0;
   try {
     result = studioStream(null, `${BUILD_PROMPT} ${langRule}`, [{ role: "user", content }], STUDIO_MAX_TOKENS.build);
     for await (const delta of result.textStream) { out += delta; await flush(); }
+    attemptCost += await result.costUsd().catch(() => 0);
     // Quality pass: check the finished site and fix what is missing or broken before handing it over.
     await flush(true);
     // Only the lease is extended while it runs: the chat shows the "checking" step written by autoRepair.
-    out = await autoRepair(job, out, langRule, async () => { await db.from("studio_jobs").update({ lease_until: lease(), updated_at: new Date().toISOString() }).eq("id", job.id); });
+    const repaired = await autoRepair(job, out, langRule, async () => { await db.from("studio_jobs").update({ lease_until: lease(), updated_at: new Date().toISOString() }).eq("id", job.id); });
+    out = repaired.out;
+    attemptCost += repaired.cost;
+    // Billing: the build price at least, the real provider cost × 1 200 when higher (every attempt and the
+    // repair included), never more than what was reserved before the build started.
+    const totalUsd = priorCost + attemptCost;
+    const reserved = await reservedAmount(job);
+    const credits = Math.min(reserved, studioBuildCredits(totalUsd));
+    if (!job.charged) {
+      const en = job.lang === "en";
+      out += `\n<step title="${en ? "Billing" : "Facturation"}">${credits > BUILD_COST
+        ? (en ? `${credits} credits: this site needed more work than a standard build (${BUILD_COST} credits minimum, real cost beyond, ${STUDIO_BUILD_MAX} at most). The rest of the reservation is returned to your balance.` : `${credits} crédits : ce site a demandé plus de travail qu'une construction courante (${BUILD_COST} crédits minimum, coût réel au-delà, ${STUDIO_BUILD_MAX} au plus). Le reste de la réservation revient sur votre solde.`)
+        : (en ? `${credits} credits (standard build). The rest of the reservation is returned to your balance.` : `${credits} crédits (construction courante). Le reste de la réservation revient sur votre solde.`)}</step>`;
+    }
     await db.from("studio_jobs").update({ output: out, status: "done", lease_until: null, updated_at: new Date().toISOString() }).eq("id", job.id);
+    await saveCost(job.id, totalUsd);
     await writeMessage(job, out, true, "done");
     if (!job.charged) {
       const { data: mark } = await db.from("studio_jobs").update({ charged: true }).eq("id", job.id).eq("charged", false).select("id").maybeSingle();
       if (mark) {
-        await db.from("usage_logs").insert({ owner_id: job.owner_id, model: "TechNova Studio", input_tokens: Math.ceil(content.length / 4), output_tokens: Math.ceil(out.length / 4), credits: BUILD_COST, latency_ms: Date.now() - started });
+        await db.from("usage_logs").insert({ owner_id: job.owner_id, model: "TechNova Studio", input_tokens: Math.ceil(content.length / 4), output_tokens: Math.ceil(out.length / 4), credits, latency_ms: Date.now() - started });
+        // Admin console: real cost per Studio build next to the chat modes (cost-per-mode table).
+        const { studioModel } = await import("@/lib/studio-gateway.server");
+        await db.from("chat_engine_costs").insert({ owner_id: job.owner_id, mode: "studio_build", engine: studioModel(), input_tokens: Math.ceil(content.length / 4), output_tokens: Math.ceil(out.length / 4), cost_usd: totalUsd || null, credits });
         if (job.reservation_id) {
           const { settleCredits } = await import("@/lib/credits.server");
-          await settleCredits(job.reservation_id, BUILD_COST);
+          await settleCredits(job.reservation_id, credits);
         } else {
-          await db.from("credit_transactions").insert({ owner_id: job.owner_id, amount: -BUILD_COST, kind: "usage", label: "TechNova Studio · build" });
+          await db.from("credit_transactions").insert({ owner_id: job.owner_id, amount: -credits, kind: "usage", label: "TechNova Studio · build" });
         }
       }
     }
   } catch (e) {
+    attemptCost += (await result?.costUsd().catch(() => 0)) ?? 0;
+    await saveCost(job.id, priorCost + attemptCost);
     const status = studioErrorStatus(e, result?.providerError());
     const terminal = status === 400 || status === 401 || status === 402 || status === 403;
     const msg = status === 402 ? "credits" : status === 403 ? "denied" : "interrupted";

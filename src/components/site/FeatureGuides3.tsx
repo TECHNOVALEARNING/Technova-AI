@@ -2,7 +2,7 @@ import type { ReactNode } from "react";
 import { Banknote, Bell, Bot, Check, Coins, CreditCard, Download, FileSpreadsheet, FileText, Hammer, Inbox, Link2, Lock, LogOut, MessageCircle, Package, Palette, Presentation, Puzzle, Rocket, ShieldCheck, Slash, Smartphone, Truck } from "lucide-react";
 import type { SiteLang } from "@/lib/i18n";
 import { plugins } from "@/lib/plugins";
-import { STUDIO_COST } from "@/lib/studio";
+import { STUDIO_BUILD_MAX, STUDIO_COST } from "@/lib/studio";
 import { DEFAULT_AGENT_BUDGET } from "@/lib/plans";
 
 // Feature guides, part 3: Plugins, the "Page de vente pro" journey, downloading a reply as a file and the
@@ -43,7 +43,7 @@ const g3: Record<SiteLang, Guide3> = {
       payTitle: "Moyens de paiement",
       pay: [["Mobile Money", "Votre numéro et l'opérateur (MTN, Moov, Orange, Wave…) avec un bouton « Copier le numéro » et les étapes pour envoyer la preuve."], ["Commande WhatsApp", "Le client vous écrit avec un message de commande déjà rempli (produit et prix)."], ["Lien de paiement", "Un bouton « Payer maintenant » vers votre lien https (FeexPay, Stripe, PayPal, Wave…)."], ["Paiement à la livraison", "Les zones livrées sont affichées ; le client paie à la réception."]],
       costTitle: "Coût et forfaits",
-      cost: `Environ ${studioTotal} crédits, prélevés étape par étape : questions ${STUDIO_COST.questions}, plan ${STUDIO_COST.plan}, construction ${STUDIO_COST.build}. La construction demande au moins le forfait Essential ; la mise en ligne en un clic, le forfait Creator.`,
+      cost: `Environ ${studioTotal} crédits, prélevés étape par étape : questions ${STUDIO_COST.questions}, plan ${STUDIO_COST.plan}, construction ${STUDIO_COST.build} pour une page courante (un gros site est facturé à son coût réel, ${STUDIO_BUILD_MAX} crédits au plus). La construction demande au moins le forfait Essential ; la mise en ligne en un clic, le forfait Creator.`,
       honest: "TechNova n'invente rien : pas de faux avis, pas de faux compte à rebours, pas de faux stock. Les témoignages et l'ancien prix n'apparaissent que si vous les donnez.",
     },
     exports: {
@@ -84,7 +84,7 @@ const g3: Record<SiteLang, Guide3> = {
       payTitle: "Payment methods",
       pay: [["Mobile Money", "Your number and operator (MTN, Moov, Orange, Wave…) with a “Copy number” button and the steps to send the proof."], ["WhatsApp order", "The customer messages you with a prefilled order (product and price)."], ["Payment link", "A “Pay now” button to your https link (FeexPay, Stripe, PayPal, Wave…)."], ["Cash on delivery", "Delivery areas are shown; the customer pays on delivery."]],
       costTitle: "Cost and plans",
-      cost: `About ${studioTotal} credits, charged stage by stage: questions ${STUDIO_COST.questions}, plan ${STUDIO_COST.plan}, build ${STUDIO_COST.build}. Building needs at least the Essential plan; one-click publishing needs Creator.`,
+      cost: `About ${studioTotal} credits, charged stage by stage: questions ${STUDIO_COST.questions}, plan ${STUDIO_COST.plan}, build ${STUDIO_COST.build} for a standard page (a big site is billed at its real cost, ${STUDIO_BUILD_MAX} credits at most). Building needs at least the Essential plan; one-click publishing needs Creator.`,
       honest: "TechNova invents nothing: no fake reviews, no fake countdown, no fake stock. Testimonials and a former price only appear if you give them.",
     },
     exports: {
@@ -125,7 +125,7 @@ const g3: Record<SiteLang, Guide3> = {
       payTitle: "Medios de pago",
       pay: [["Mobile Money", "Tu número y el operador (MTN, Moov, Orange, Wave…) con un botón «Copiar el número» y los pasos para enviar el comprobante."], ["Pedido por WhatsApp", "El cliente te escribe con un mensaje de pedido ya rellenado (producto y precio)."], ["Enlace de pago", "Un botón «Pagar ahora» hacia tu enlace https (FeexPay, Stripe, PayPal, Wave…)."], ["Pago contra entrega", "Se muestran las zonas de entrega; el cliente paga al recibir."]],
       costTitle: "Coste y planes",
-      cost: `Unos ${studioTotal} créditos, cobrados etapa por etapa: preguntas ${STUDIO_COST.questions}, plan ${STUDIO_COST.plan}, construcción ${STUDIO_COST.build}. La construcción requiere al menos el plan Essential; la publicación en un clic, el plan Creator.`,
+      cost: `Unos ${studioTotal} créditos, cobrados etapa por etapa: preguntas ${STUDIO_COST.questions}, plan ${STUDIO_COST.plan}, construcción ${STUDIO_COST.build} para una página estándar (un sitio grande se cobra a su coste real, ${STUDIO_BUILD_MAX} créditos como máximo). La construcción requiere al menos el plan Essential; la publicación en un clic, el plan Creator.`,
       honest: "TechNova no inventa nada: ni reseñas falsas, ni cuentas atrás falsas, ni stock falso. Los testimonios y el precio anterior solo aparecen si los das tú.",
     },
     exports: {
@@ -166,7 +166,7 @@ const g3: Record<SiteLang, Guide3> = {
       payTitle: "Meios de pagamento",
       pay: [["Mobile Money", "O seu número e a operadora (MTN, Moov, Orange, Wave…) com um botão «Copiar o número» e os passos para enviar o comprovante."], ["Pedido pelo WhatsApp", "O cliente escreve-lhe com uma mensagem de pedido já preenchida (produto e preço)."], ["Link de pagamento", "Um botão «Pagar agora» para o seu link https (FeexPay, Stripe, PayPal, Wave…)."], ["Pagamento na entrega", "As zonas de entrega são mostradas; o cliente paga ao receber."]],
       costTitle: "Custo e pacotes",
-      cost: `Cerca de ${studioTotal} créditos, cobrados etapa a etapa: perguntas ${STUDIO_COST.questions}, plano ${STUDIO_COST.plan}, construção ${STUDIO_COST.build}. A construção exige pelo menos o pacote Essential; a publicação num clique, o pacote Creator.`,
+      cost: `Cerca de ${studioTotal} créditos, cobrados etapa a etapa: perguntas ${STUDIO_COST.questions}, plano ${STUDIO_COST.plan}, construção ${STUDIO_COST.build} para uma página padrão (um site grande é cobrado pelo custo real, ${STUDIO_BUILD_MAX} créditos no máximo). A construção exige pelo menos o pacote Essential; a publicação num clique, o pacote Creator.`,
       honest: "A TechNova não inventa nada: nada de avaliações falsas, contagem regressiva falsa ou estoque falso. Depoimentos e preço anterior só aparecem se você os fornecer.",
     },
     exports: {

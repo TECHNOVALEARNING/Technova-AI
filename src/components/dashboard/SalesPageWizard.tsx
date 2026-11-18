@@ -5,7 +5,7 @@ import { listConnections } from "@/lib/connections.functions";
 import { createStripePaymentLink } from "@/lib/publishing.functions";
 import { ArrowLeft, ArrowRight, Banknote, Check, CreditCard, Hammer, Link2, MessageCircle, Package, Palette, Rocket, Smartphone, Sparkles, Truck } from "lucide-react";
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/components/ui/dialog";
-import { STUDIO_COST } from "@/lib/studio";
+import { STUDIO_BUILD_MAX, STUDIO_COST } from "@/lib/studio";
 import { featureMinTier, packNames } from "@/lib/plans";
 import { usePlanTier } from "@/lib/plan-client";
 import { cn } from "@/lib/utils";
@@ -51,7 +51,7 @@ const L = {
     pay: { momo: "Mobile Money", whatsapp: "Commande WhatsApp", link: "Lien de paiement", cod: "Paiement à la livraison" },
     payHint: { momo: "Le client envoie l'argent à votre numéro, puis vous envoie la preuve.", whatsapp: "Le client vous écrit avec un message de commande déjà rempli.", link: "FeexPay, Stripe, PayPal, Wave, Chariow… (adresse https)", cod: "Le client paie en espèces à la réception." },
     momoNumber: "Numéro Mobile Money", momoOperator: "Opérateur", momoName: "Nom affiché sur le compte", whatsapp: "Numéro WhatsApp (avec indicatif)", payLink: "Adresse du lien de paiement", codZones: "Zones livrées",
-    recap: "Récapitulatif", cost: "Coût estimé", costDetail: (q: number, p: number, b: number) => `questions ${q} + plan ${p} + construction ${b} crédits, prélevés étape par étape`,
+    recap: "Récapitulatif", cost: "Coût estimé", costDetail: (q: number, p: number, b: number) => `questions ${q} + plan ${p} + construction ${b} crédits (coût réel au-delà pour un gros site, ${STUDIO_BUILD_MAX} au plus), prélevés étape par étape`,
     planNote: (s: string, p: string) => `La construction demande au moins le forfait ${s} ; la mise en ligne en 1 clic (adresse /s/…), le forfait ${p}.`,
     after: "Ensuite : Studio vous pose 2 ou 3 questions s'il manque un détail, vous montre le plan à valider, puis construit la page. Vous la publiez avec le bouton « Publier » du panneau.",
     back: "Retour", next: "Continuer", build: "Construire ma page de vente",
@@ -73,7 +73,7 @@ const L = {
     pay: { momo: "Mobile Money", whatsapp: "WhatsApp order", link: "Payment link", cod: "Cash on delivery" },
     payHint: { momo: "The customer sends money to your number, then sends you the proof.", whatsapp: "The customer messages you with a prefilled order.", link: "FeexPay, Stripe, PayPal, Wave, Chariow… (https address)", cod: "The customer pays cash on delivery." },
     momoNumber: "Mobile Money number", momoOperator: "Operator", momoName: "Name on the account", whatsapp: "WhatsApp number (with country code)", payLink: "Payment link address", codZones: "Delivery areas",
-    recap: "Summary", cost: "Estimated cost", costDetail: (q: number, p: number, b: number) => `questions ${q} + plan ${p} + build ${b} credits, charged stage by stage`,
+    recap: "Summary", cost: "Estimated cost", costDetail: (q: number, p: number, b: number) => `questions ${q} + plan ${p} + build ${b} credits (real cost beyond for a big site, ${STUDIO_BUILD_MAX} at most), charged stage by stage`,
     planNote: (s: string, p: string) => `Building needs at least the ${s} pack; one-click publishing (/s/… address) needs ${p}.`,
     after: "Next: Studio asks 2 or 3 questions if a detail is missing, shows the plan for approval, then builds the page. Publish it with the panel's “Publish” button.",
     back: "Back", next: "Continue", build: "Build my sales page",

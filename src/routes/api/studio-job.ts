@@ -49,7 +49,14 @@ export const Route = createFileRoute("/api/studio-job")({
         }
         // The build cost stays reserved until the job finishes (charged) or fails (released).
         const { reserveCredits, releaseCredits } = await import("@/lib/credits.server");
-        const reservation = await reserveCredits(userId, BUILD_COST, "TechNova Studio · build");
+        // Reserve the most a build may cost (big sites are billed at real cost); a balance between the standard
+        // price and that maximum still builds, capped at what could be reserved.
+        const { STUDIO_BUILD_MAX } = await import("@/lib/studio");
+        let reservation: string | null = null;
+        for (const amount of [STUDIO_BUILD_MAX, Math.round((STUDIO_BUILD_MAX + BUILD_COST) / 2), BUILD_COST]) {
+          reservation = await reserveCredits(userId, amount, "TechNova Studio · build");
+          if (reservation) break;
+        }
         if (!reservation) return new Response("Crédits insuffisants — rechargez votre solde dans Crédits. / Not enough credits.", { status: 402 });
         const { data: job, error } = await supabaseAdmin.from("studio_jobs").insert({
           owner_id: userId, thread_id: d.threadId, message_id: d.messageId, request: d.request,

@@ -11,6 +11,8 @@ import {
 import { getAdminStats } from "@/lib/admin.functions";
 
 const card = "rounded-2xl border border-border bg-card/90 p-4";
+/** Studio rows of the cost table (recorded by /api/studio and the build job). */
+const studioModeLabel: Record<string, string> = { studio_build: "Studio · construction", studio_plan: "Studio · plan", studio_questions: "Studio · questions", studio_intent: "Studio · tri de la demande" };
 const th = "p-3 text-left text-xs font-medium text-muted-foreground";
 const errText = (e: unknown) => (e instanceof Error ? e.message.replace(/^FORBIDDEN$/, "Accès refusé") : "Erreur");
 
@@ -89,7 +91,7 @@ export function AdminOverview({ fr }: { fr: boolean }) {
       <div className="mt-2 overflow-x-auto"><table className="w-full text-sm"><thead><tr><th className={th}>Mode</th><th className={th}>{fr ? "Moteur" : "Engine"}</th><th className={th}>{fr ? "Réponses" : "Replies"}</th><th className={th}>{fr ? "Tokens entrée / sortie" : "Tokens in / out"}</th><th className={th}>{fr ? "dont réflexion" : "of which reasoning"}</th><th className={th}>{fr ? "Coût réel" : "Real cost"}</th><th className={th}>{fr ? "Facturé" : "Charged"}</th><th className={th}>{fr ? "Marge" : "Margin"}</th></tr></thead>
         <tbody>{o.engines.length === 0 ? <tr><td colSpan={8} className="p-3 text-muted-foreground">{fr ? "Aucune réponse enregistrée pour l'instant." : "No replies recorded yet."}</td></tr> : o.engines.map((e) => {
           const costXof = e.costUsd * 600; const m = e.credits > 0 ? Math.round((1 - costXof / e.credits) * 100) : null;
-          return <tr key={e.mode + e.engine} className="border-t border-border"><td className="p-3">{e.mode}</td><td className="p-3 font-mono text-xs">{e.engine}</td><td className="p-3 tabular-nums">{n(e.replies)}</td><td className="p-3 tabular-nums">{n(e.input)} / {n(e.output)}</td><td className="p-3 tabular-nums">{n(e.reasoning)}</td><td className="p-3 tabular-nums">{e.costUsd.toLocaleString(loc, { maximumFractionDigits: 4 })} $ <span className="text-muted-foreground">≈ {n(Math.round(costXof))} FCFA</span></td><td className="p-3 tabular-nums">{n(e.credits)} cr.</td><td className={`p-3 font-semibold tabular-nums ${m !== null && m < 30 ? "text-destructive" : ""}`}>{m === null ? "—" : `${m} %`}</td></tr>;
+          return <tr key={e.mode + e.engine} className="border-t border-border"><td className="p-3">{studioModeLabel[e.mode] ?? e.mode}</td><td className="p-3 font-mono text-xs">{e.engine}</td><td className="p-3 tabular-nums">{n(e.replies)}</td><td className="p-3 tabular-nums">{n(e.input)} / {n(e.output)}</td><td className="p-3 tabular-nums">{n(e.reasoning)}</td><td className="p-3 tabular-nums">{e.costUsd.toLocaleString(loc, { maximumFractionDigits: 4 })} $ <span className="text-muted-foreground">≈ {n(Math.round(costXof))} FCFA</span></td><td className="p-3 tabular-nums">{n(e.credits)} cr.</td><td className={`p-3 font-semibold tabular-nums ${m !== null && m < 30 ? "text-destructive" : ""}`}>{m === null ? "—" : `${m} %`}</td></tr>;
         })}</tbody></table></div>}
     </div>
 

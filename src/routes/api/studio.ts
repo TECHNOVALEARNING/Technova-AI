@@ -126,6 +126,10 @@ export const Route = createFileRoute("/api/studio")({
                   const json = parseJson<Record<string, unknown>>(text);
                   if (!json) controller.enqueue(enc.encode(JSON.stringify({ error: "Réponse illisible, réessayez. / Unreadable answer." })));
                   else { await charge(text); controller.enqueue(enc.encode(JSON.stringify(json))); }
+                  // Admin console: real cost of each Studio stage (questions, plan, intent) beside the builds.
+                  const usd = await run.costUsd().catch(() => 0);
+                  const { studioModel } = await import("@/lib/studio-gateway.server");
+                  await supabaseAdmin.from("chat_engine_costs").insert({ owner_id: userId, mode: `studio_${d.stage}`, engine: studioModel(), input_tokens: Math.ceil(content.length / 4), output_tokens: Math.ceil(text.length / 4), cost_usd: usd || null, credits: json ? cost : 0 });
                 } catch (e) {
                   const s = studioErrorStatus(e, run.providerError());
                   controller.enqueue(enc.encode(JSON.stringify({ error: s === 402 ? "Le service IA est momentanément indisponible (solde du fournisseur épuisé). / The AI provider is out of balance." : s === 429 ? "Trop de requêtes, réessayez dans un instant. / Rate limited." : "Le studio n'a pas pu répondre, réessayez. / The studio could not answer." })));

@@ -15,7 +15,7 @@ import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/compone
 import { supabase } from "@/integrations/supabase/client";
 import type { Json } from "@/integrations/supabase/types";
 import { cn } from "@/lib/utils";
-import { checkBuild, describeIssue, escapedPreviewPath, previewDoc, resolvePreviewPage, STUDIO_COST, type BuildIssue, type StudioBuild, type StudioData, type StudioPlanData, type StudioQuestion } from "@/lib/studio";
+import { checkBuild, describeIssue, escapedPreviewPath, previewDoc, resolvePreviewPage, STUDIO_BUILD_MAX, STUDIO_COST, type BuildIssue, type StudioBuild, type StudioData, type StudioPlanData, type StudioQuestion } from "@/lib/studio";
 
 type Lang = "fr" | "en";
 const tx = (lang: Lang, fr: string, en: string) => (lang === "fr" ? fr : en);
@@ -95,7 +95,7 @@ export function StudioPlan({ data, lang, disabled, onApprove, onChange, onRetry 
           <div className="mt-4 flex flex-wrap gap-2 border-t border-border pt-4">
             <Button size="sm" variant="outline" disabled={disabled} onClick={() => setReviewing(true)}><Eye className="size-4" />{tx(lang, "Examiner", "Review")}</Button>
             <Button size="sm" variant="ghost" disabled={disabled} onClick={() => setEditing(true)}><Pencil className="size-4" />{tx(lang, "Modifier", "Edit")}</Button>
-            <Button size="sm" className="ml-auto" disabled={disabled} onClick={onApprove}><Check className="size-4" />{tx(lang, `Approuver · ${STUDIO_COST.build} crédits`, `Approve · ${STUDIO_COST.build} credits`)}</Button>
+            <Button size="sm" className="ml-auto" disabled={disabled} onClick={onApprove}><Check className="size-4" />{tx(lang, `Approuver · dès ${STUDIO_COST.build} crédits`, `Approve · from ${STUDIO_COST.build} credits`)}</Button>
           </div>
         )
       ) : (
@@ -108,7 +108,8 @@ export function StudioPlan({ data, lang, disabled, onApprove, onChange, onRetry 
         <DialogContent className="flex max-h-[88dvh] w-[min(94vw,900px)] max-w-none flex-col gap-0 overflow-hidden p-0 sm:rounded-lg">
           <div className="shrink-0 border-b border-border px-5 py-4 pr-12"><DialogTitle>{tx(lang, "Plan de réalisation", "Implementation plan")}</DialogTitle><DialogDescription className="sr-only">{p.title}</DialogDescription></div>
           <div className="min-h-0 overflow-y-auto px-5 py-6 sm:px-10"><h2 className="mb-4 font-display text-xl font-semibold">{p.title}</h2>{planContent}</div>
-          {data.status === "pending" && <div className="flex shrink-0 justify-end gap-2 border-t border-border px-5 py-3"><Button variant="outline" onClick={() => { setReviewing(false); setEditing(true); }}>{tx(lang, "Demander une modification", "Request changes")}</Button><Button disabled={disabled} onClick={() => { setReviewing(false); onApprove(); }}><Check className="size-4" />{tx(lang, `Approuver · ${STUDIO_COST.build} crédits`, `Approve · ${STUDIO_COST.build} credits`)}</Button></div>}
+          {data.status === "pending" && <p className="shrink-0 border-t border-border px-5 pt-2.5 text-[11.5px] text-muted-foreground">{tx(lang, `Construction : ${STUDIO_COST.build} crédits pour un site courant ; un gros site est facturé à son coût réel, ${STUDIO_BUILD_MAX} crédits au plus. Le plafond est réservé au départ et le reste revient sur votre solde.`, `Build: ${STUDIO_COST.build} credits for a standard site; a big site is billed at its real cost, ${STUDIO_BUILD_MAX} credits at most. The cap is reserved at the start and the rest returns to your balance.`)}</p>}
+          {data.status === "pending" && <div className="flex shrink-0 justify-end gap-2 border-t border-border px-5 py-3"><Button variant="outline" onClick={() => { setReviewing(false); setEditing(true); }}>{tx(lang, "Demander une modification", "Request changes")}</Button><Button disabled={disabled} onClick={() => { setReviewing(false); onApprove(); }}><Check className="size-4" />{tx(lang, `Approuver · dès ${STUDIO_COST.build} crédits`, `Approve · from ${STUDIO_COST.build} credits`)}</Button></div>}
         </DialogContent>
       </Dialog>
     </div>

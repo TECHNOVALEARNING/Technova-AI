@@ -1,5 +1,10 @@
 /** TechNova Studio price per stage, in credits (fixed; the build covers a full multi-file site). */
 export const STUDIO_COST = { intent: 0, questions: 3, plan: 80, build: 250 } as const;
+/** A build costs STUDIO_COST.build at least, or its real provider cost × STUDIO_CREDITS_PER_USD when higher
+ *  (big multi-page sites, automatic repair, resumed runs), never more than STUDIO_BUILD_MAX — reserved up front. */
+export const STUDIO_BUILD_MAX = 800;
+export const STUDIO_CREDITS_PER_USD = 1200;
+export const studioBuildCredits = (costUsd: number) => Math.max(STUDIO_COST.build, Math.ceil(Math.max(0, costUsd) * STUDIO_CREDITS_PER_USD));
 
 export type StudioQuestion = { id: string; question: string; choices: string[] };
 export type StudioPlanData = {
