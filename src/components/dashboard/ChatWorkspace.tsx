@@ -289,12 +289,19 @@ function VoiceButton({ inputRef }: { inputRef?: React.RefObject<HTMLTextAreaElem
     rec.interimResults = true;
     rec.continuous = true;
     const base = el.value ? el.value.trimEnd() + " " : "";
+    // Sending the message (button or Enter, both submit the form) ends the dictation at once; words still in
+    // flight after that are dropped so they never refill the emptied box.
+    let sent = false;
+    const form = el.closest("form");
+    const onSend = () => { sent = true; try { rec.abort(); } catch { rec.stop(); } };
+    form?.addEventListener("submit", onSend, { capture: true });
     rec.onresult = (e: any) => {
+      if (sent) return;
       let text = "";
       for (let i = 0; i < e.results.length; i++) text += e.results[i][0].transcript;
       setTextareaValue(el, base + text);
     };
-    rec.onend = () => { setListening(false); recRef.current = null; el.focus(); };
+    rec.onend = () => { form?.removeEventListener("submit", onSend, { capture: true }); setListening(false); recRef.current = null; if (!sent) el.focus(); };
     rec.onerror = () => setListening(false);
     recRef.current = rec;
     rec.start();
