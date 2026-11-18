@@ -223,3 +223,54 @@ export const adminMarkFeedbackRead = createServerFn({ method: "POST" })
     if (error) throw new Error(error.message);
     return { ok: true };
   });
+
+export type ProviderDay = { date: string; openrouter: number; kie: number; models: { provider: "openrouter" | "kie"; model: string; usd: number; providerCredits: number | null; calls: number }[] };
+
+/** Real provider spend per day and per model over the last 30 days, for the admin consumption chart.
+ *  OpenRouter: its own activity report when OPENROUTER_MANAGEMENT_KEY is set (every call: chat, API, Studio,
+ *  files, help…), else the replies TechNova logged in chat_engine_costs. kie.ai: the credits each task really
+ *  consumed (migration 0046), at USD 0.005 per credit. */
+export const adminProviderCosts = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    await requireAdmin(context);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const days = new Map<string, ProviderDay>();
+    const dayKey = (d: string) => d.slice(0, 10);
+    const get = (date: string) => { let x = days.get(date); if (!x) { x = { date, openrouter: 0, kie: 0, models: [] }; days.set(date, x); } return x; };
+    const add = (date: string, provider: "openrouter" | "kie", model: string, usd: number, providerCredits: number | null, calls: number) => {
+      const d = get(date);
+      d[provider] += usd;
+      const m = d.models.find((x) => x.provider === provider && x.model === model);
+      if (m) { m.usd += usd; m.calls += calls; if (providerCredits != null) m.providerCredits = (m.providerCredits ?? 0) + providerCredits; }
+      else d.models.push({ provider, model, usd, providerCredits, calls });
+    };
+    let openrouterSource: "activity" | "logged" = "logged";
+    // The activity report covers finished days only: today (and any missing day) comes from the logged replies.
+    const activityDays = new Set<string>();
+    const mk = process.env["OPENROUTER_MANAGEMENT_KEY"];
+    if (mk) {
+      try {
+        const r = await fetch("https://openrouter.ai/api/v1/activity", { headers: { Authorization: `Bearer ${mk}` }, signal: AbortSignal.timeout(8000) });
+        const j = r.ok ? (await r.json()) as { data?: { date: string; model: string; usage: number; requests: number }[] } : null;
+        if (j?.data) {
+          openrouterSource = "activity";
+          for (const row of j.data) { activityDays.add(dayKey(row.date)); add(dayKey(row.date), "openrouter", row.model, Number(row.usage) || 0, null, Number(row.requests) || 0); }
+        }
+      } catch { /* fall back to the logged replies */ }
+    }
+    const { data, error } = await supabaseAdmin.rpc("admin_provider_costs", { _days: 30 });
+    for (const row of error ? [] : data ?? []) {
+      if (row.provider === "openrouter" && activityDays.has(dayKey(String(row.day)))) continue;
+      add(dayKey(String(row.day)), row.provider === "kie" ? "kie" : "openrouter", row.model, Number(row.cost_usd) || 0, row.provider_credits == null ? null : Number(row.provider_credits), Number(row.calls) || 0);
+    }
+    // Every day of the window, so the curves show quiet days at zero.
+    const out: ProviderDay[] = [];
+    for (let i = 29; i >= 0; i--) {
+      const date = new Date(Date.now() - i * 86_400_000).toLocaleDateString("en-CA", { timeZone: "Africa/Lagos" });
+      const d = days.get(date) ?? { date, openrouter: 0, kie: 0, models: [] };
+      d.models.sort((a, b) => b.usd - a.usd);
+      out.push({ ...d, openrouter: Math.round(d.openrouter * 1e4) / 1e4, kie: Math.round(d.kie * 1e4) / 1e4 });
+    }
+    return { ready: !error, openrouterSource, days: out };
+  });

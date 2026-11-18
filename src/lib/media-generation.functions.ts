@@ -182,6 +182,12 @@ export const refreshMediaGeneration = createServerFn({ method: "POST" })
       updated_at: new Date().toISOString(),
     }).eq("id", row.id).eq("owner_id", context.userId);
     if (updateError) throw new Error(updateError.message);
+    // Real provider cost of the task (kie.ai credits, USD 0.005 each) for the admin consumption chart; the column
+    // comes with migration 0046, so a failure here is ignored.
+    const consumed = Number(result["creditsConsumed"]);
+    if ((state === "success" || state === "fail") && Number.isFinite(consumed) && consumed >= 0) {
+      await supabaseAdmin.from("media_generations").update({ provider_credits: consumed } as never).eq("id", row.id);
+    }
     if (state === "success" || state === "fail") {
       // Settle once: the conditional update guarantees a single refund even with concurrent polls.
       const { data: claimed } = await supabaseAdmin.from("media_generations").update({ settled: true })

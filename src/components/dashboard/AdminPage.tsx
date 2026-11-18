@@ -6,6 +6,7 @@ import { CreditTransfer } from "./CreditTransfer";
 import { SiteModeration } from "./SiteModeration";
 import { OnboardingStats } from "./OnboardingStats";
 import { AdminIncidents } from "./AdminIncidents";
+import { AdminProviderChart } from "./AdminProviderChart";
 import { AdminFeedback, AdminOverview, AdminPacks, AdminPayments, AdminRegistryModeration, AdminUsers } from "./AdminConsole";
 
 type Ev = { id: string; user_id: string | null; kind: string; severity: string; detail: unknown; created_at: string };
@@ -30,7 +31,7 @@ export function AdminPage() {
     <div className="mt-4 flex gap-2 overflow-x-auto pb-1" role="tablist">{tabs.map(([k, l]) => <button key={k} type="button" role="tab" aria-selected={tab === k} onClick={() => setTab(k)}
       className={`h-8 shrink-0 rounded-full px-3.5 text-[12px] font-medium transition ${tab === k ? "bg-foreground text-background" : "border border-border text-muted-foreground hover:text-foreground"}`}>{l}</button>)}</div>
     <div className="mt-5">
-      {tab === "overview" && <><AdminOverview fr={fr} /><OnboardingStats fr={fr} /></>}
+      {tab === "overview" && <><AdminOverview fr={fr} /><div className="mt-4"><AdminProviderChart fr={fr} /></div><OnboardingStats fr={fr} /></>}
       {tab === "users" && <AdminUsers fr={fr} onCredit={(email) => { setCreditEmail(email); setTab("credits"); }} />}
       {tab === "feedback" && <AdminFeedback fr={fr} />}
       {tab === "payments" && <AdminPayments fr={fr} />}

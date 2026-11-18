@@ -1447,6 +1447,7 @@ export type Database = {
       admin_credit_totals: { Args: never; Returns: { consumed: number; distributed: number; granted: number; purchased: number }[] }
       touch_presence: { Args: never; Returns: undefined }
       admin_online_users: { Args: { _minutes: number }; Returns: { online: number; last_hour: number; today: number }[] }
+      admin_provider_costs: { Args: { _days?: number }; Returns: { day: string; provider: string; model: string; calls: number; cost_usd: number; provider_credits: number | null; credits: number }[] }
       admin_user_emails: { Args: { _ids: string[] }; Returns: { id: string; email: string }[] }
       admin_all_user_emails: { Args: { _limit: number; _offset: number }; Returns: { id: string; email: string }[] }
       admin_feedback_list: { Args: { _limit: number; _offset: number }; Returns: { id: string; email: string | null; rating: number | null; message: string; page: string; read_at: string | null; created_at: string }[] }
