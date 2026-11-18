@@ -50,7 +50,7 @@ import { createMediaGeneration, getVideoAccess, refreshMediaGeneration, VIDEO_UP
 import { PENDING_PACK_KEY } from "@/lib/public-pricing";
 import { RESEARCH_MAX_CREDITS, splitResearchStream } from "@/lib/research";
 import { DESIGN_DRAFT_KEY } from "@/lib/design-library";
-import { defaultImageModel, defaultMusicModel, defaultVideoModel, imageEditModel, mediaLabel, qualityImageModel, qualityVideoModel, type MediaKind } from "@/lib/media-models";
+import { defaultImageModel, defaultMusicModel, defaultVideoModel, imageEditModel, MEDIA_VIDEO_SECONDS, mediaLabel, qualityImageModel, qualityVideoModel, videoSecondsFrom, type MediaKind } from "@/lib/media-models";
 import { ChatMedia, type ChatMediaData } from "./ChatMedia";
 
 type Mode = "chat" | "create";
@@ -1264,7 +1264,7 @@ export function ThreadPage({ threadId }: { threadId: string }) {
       const aspectRatio = journey.kind === "video" ? journey.aspectRatio : "1:1";
       setThinking(true);
       try {
-        const id = await createMedia({ data: { threadId, kind, prompt: journey.prompt, aspectRatio, model: mediaModel, ...(journey.kind === "video" ? { duration: "5" as const } : { music: journey.music }) } });
+        const id = await createMedia({ data: { threadId, kind, prompt: journey.prompt, aspectRatio, model: mediaModel, ...(journey.kind === "video" ? { duration: journey.seconds ?? MEDIA_VIDEO_SECONDS } : { music: journey.music }) } });
         const media: ChatMediaData = { id, kind, model: mediaLabel(mediaModel, kind), prompt: journey.prompt, ratio: aspectRatio, status: "waiting", progress: null, urls: [], error: null };
         setMessages((prev) => [...prev, { id, role: "assistant", parts: [{ type: "data-media", data: media }] as unknown as UIMessage["parts"] }]);
       } catch (e) {
@@ -1295,7 +1295,7 @@ export function ThreadPage({ threadId }: { threadId: string }) {
       const aspectRatio = /\b(?:9:16|portrait|vertical|story|reel)\b/i.test(request) ? "9:16" : /\b(?:1:1|carr[ée]|square)\b/i.test(request) ? "1:1" : "16:9";
       setThinking(true);
       try {
-        const id = await createMedia({ data: { threadId, kind, prompt: request, aspectRatio, model: mediaModel, ...(kind === "video" ? { duration: "5" } : {}) } });
+        const id = await createMedia({ data: { threadId, kind, prompt: request, aspectRatio, model: mediaModel, ...(kind === "video" ? { duration: videoSecondsFrom(request) ?? MEDIA_VIDEO_SECONDS } : {}) } });
         const media: ChatMediaData = { id, kind, model: mediaLabel(mediaModel, kind), prompt: request, ratio: aspectRatio, status: "waiting", progress: null, urls: [], error: null };
         setMessages((prev) => [...prev, { id, role: "assistant", parts: [{ type: "data-media", data: media }] as unknown as UIMessage["parts"] }]);
       } catch (e) {

@@ -2,13 +2,14 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
-import { buildMediaInput, defaultImageModel, defaultMusicModel, defaultVideoModel, findMediaModel, mediaLabel, mediaReserve, imageEditModel, MEDIA_VIDEO_SECONDS } from "@/lib/media-models";
+import { buildMediaInput, defaultImageModel, defaultMusicModel, defaultVideoModel, findMediaModel, mediaLabel, mediaReserve, imageEditModel, MEDIA_VIDEO_SECONDS, clampVideoSeconds } from "@/lib/media-models";
 
 const createInput = z.object({
   kind: z.enum(["image", "video", "music"]),
   prompt: z.string().trim().min(3).max(5000),
   aspectRatio: z.enum(["1:1", "16:9", "9:16", "4:3", "3:4"]),
-  duration: z.enum(["5", "10"]).optional(),
+  /** Video length in seconds (4-15); 5 when absent. */
+  duration: z.union([z.string().regex(/^\d{1,2}$/), z.number().int()]).optional(),
   model: z.string().max(80).optional(),
   threadId: z.string().uuid(),
   /** A finished image of this account to edit; the edit model then receives it as its source. */
@@ -86,7 +87,7 @@ export const createMediaGeneration = createServerFn({ method: "POST" })
       }
     }
     const model = spec.id;
-    const built = buildMediaInput(spec, data.prompt, data.aspectRatio, MEDIA_VIDEO_SECONDS, spec.kind === "music" ? data.music : undefined);
+    const built = buildMediaInput(spec, data.prompt, data.aspectRatio, data.duration === undefined ? MEDIA_VIDEO_SECONDS : clampVideoSeconds(data.duration), spec.kind === "music" ? data.music : undefined);
     if (editing) {
       // The source must be a finished image of this account, still within its 14-day retention.
       const { data: source } = await context.supabase.from("media_generations")

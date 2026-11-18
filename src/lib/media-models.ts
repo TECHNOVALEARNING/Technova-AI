@@ -26,6 +26,22 @@ const img = (id: string, label: string, provider: string, size: SizeStyle, ratio
 const vid = (id: string, label: string, provider: string, size: SizeStyle, ratios: MediaRatio[], durationStyle: DurationStyle, durations: number[], extra?: Record<string, unknown>, cheap?: boolean): MediaModel =>
   ({ id, label, provider, kind: "video", size, ratios, durationStyle, durations, ...(extra ? { extra } : {}), ...(cheap ? { cheap } : {}) });
 
+/** Video length: both sold engines take any whole number of seconds from 4 to 15 (kie.ai docs: Seedance 2 Fast
+ *  4-15 s, Kling 3.0 Omni 3-15 s) and kie.ai bills them per second, so the price follows the length. */
+export const VIDEO_MIN_SECONDS = 4;
+export const VIDEO_MAX_SECONDS = 15;
+export const VIDEO_DURATION_CHOICES = [5, 8, 10, 15] as const;
+const videoRange = Array.from({ length: VIDEO_MAX_SECONDS - VIDEO_MIN_SECONDS + 1 }, (_, i) => VIDEO_MIN_SECONDS + i);
+export const clampVideoSeconds = (n: unknown) => {
+  const v = Math.round(Number(n));
+  return Number.isFinite(v) && v > 0 ? Math.min(VIDEO_MAX_SECONDS, Math.max(VIDEO_MIN_SECONDS, v)) : MEDIA_VIDEO_SECONDS;
+};
+/** A length written in the request (« 8 secondes », « 10 s », "12 sec"), or null when none is given. */
+export function videoSecondsFrom(text: string): number | null {
+  const m = /(\d{1,3})\s*-?\s*(?:s|sec|secs|seconde?s?|seconds?)(?![\p{L}])/iu.exec(text);
+  return m ? clampVideoSeconds(m[1]) : null;
+}
+
 // Every engine kie.ai offers (kept for reference); the chat only sells the five fixed-price choices below.
 const kieEngines: MediaModel[] = [
   img("nano-banana-2-lite", "Nano Banana 2 Lite", "Google", "aspect_ratio", all5, undefined, true),
@@ -55,14 +71,14 @@ const kieEngines: MediaModel[] = [
   img("qwen/text-to-image", "Qwen Image", "Alibaba", "image_size_named"),
   img("z-image", "Z-Image", "Tongyi", "aspect_ratio", all5, undefined, true),
 
-  vid("kling-3.0-omni/text-to-video", "Kling 3.0 Omni", "Kuaishou", "aspect_ratio", tri, "integer", [5, 10], { resolution: "720p" }),
+  vid("kling-3.0-omni/text-to-video", "Kling 3.0 Omni", "Kuaishou", "aspect_ratio", tri, "integer", videoRange, { resolution: "720p" }),
   vid("kling/v3-turbo-text-to-video", "Kling 3 Turbo", "Kuaishou", "aspect_ratio", tri, "string", [5, 10], { resolution: "720p" }),
   vid("kling-2.6/text-to-video", "Kling 2.6", "Kuaishou", "aspect_ratio", tri, "string", [5, 10], { sound: false }),
   vid("kling/v2-5-turbo-text-to-video-pro", "Kling 2.5 Turbo Pro", "Kuaishou", "aspect_ratio", tri, "string", [5, 10]),
   vid("kling/v2-1-master-text-to-video", "Kling 2.1 Master", "Kuaishou", "aspect_ratio", tri, "string", [5, 10]),
   vid("bytedance/seedance-2-5", "Seedance 2.5", "ByteDance", "aspect_ratio", all5, "integer", [5, 10], { resolution: "720p" }),
   vid("bytedance/seedance-2", "Seedance 2", "ByteDance", "aspect_ratio", all5, "integer", [5, 10], { resolution: "720p" }),
-  vid("bytedance/seedance-2-fast", "Seedance 2 Fast", "ByteDance", "aspect_ratio", all5, "integer", [5, 10], { resolution: "480p" }, true),
+  vid("bytedance/seedance-2-fast", "Seedance 2 Fast", "ByteDance", "aspect_ratio", all5, "integer", videoRange, { resolution: "480p" }, true),
   vid("bytedance/seedance-2-mini", "Seedance 2 Mini", "ByteDance", "aspect_ratio", all5, "integer", [5, 10], { resolution: "480p" }, true),
   vid("bytedance/seedance-1.5-pro", "Seedance 1.5 Pro", "ByteDance", "aspect_ratio", all5, "integer", [5, 10], { resolution: "720p" }),
   vid("bytedance/v1-pro-text-to-video", "Seedance 1 Pro", "ByteDance", "aspect_ratio", all5, "string", [5, 10], { resolution: "720p" }),
@@ -89,8 +105,11 @@ export const mediaTiers: Record<MediaTier, { engine: string; credits: number; fr
   video_quality: { engine: "kling-3.0-omni/text-to-video", credits: 1800, fr: "Vidéo qualité", en: "Quality video" },
   musique: { engine: "ai-music-api/generate", credits: 130, fr: "Musique", en: "Music" },
 };
-/** Videos are 5-second clips at their fixed price. */
+/** Default video length; the listed video prices are for 5 seconds and scale with the length. */
 export const MEDIA_VIDEO_SECONDS = 5;
+/** Credits for a video tier at a given length: the 5-second price × seconds / 5, rounded up. */
+export const videoCredits = (tier: "video_fast" | "video_quality", seconds: number) =>
+  Math.ceil((mediaTiers[tier].credits * clampVideoSeconds(seconds)) / MEDIA_VIDEO_SECONDS);
 
 export const mediaModels: MediaModel[] = (Object.keys(mediaTiers) as MediaTier[]).map((tier) => {
   const engine = kieEngines.find((m) => m.id === mediaTiers[tier].engine)!;
@@ -164,9 +183,11 @@ export function buildMediaInput(model: MediaModel, prompt: string, ratio: MediaR
 }
 
 /** Credits charged for one creation: the fixed price of its choice (a failed creation is refunded). */
-export function mediaReserve(model: MediaModel, _seconds?: number): number {
+export function mediaReserve(model: MediaModel, seconds?: number): number {
   if (model.id === imageEditModel.id) return IMAGE_EDIT_CREDITS;
   const tier = (Object.keys(mediaTiers) as MediaTier[]).find((t) => mediaTiers[t].engine === model.id);
   if (!tier) throw new Error("Choix de création indisponible.");
+  // Videos are billed per second like kie.ai bills them; images and music keep their fixed price.
+  if (tier === "video_fast" || tier === "video_quality") return videoCredits(tier, seconds ?? MEDIA_VIDEO_SECONDS);
   return mediaTiers[tier].credits;
 }

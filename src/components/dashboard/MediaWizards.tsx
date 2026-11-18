@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { Clapperboard, Coins, Lock, Music2 } from "lucide-react";
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/components/ui/dialog";
-import { mediaTiers, MEDIA_VIDEO_SECONDS, type MediaRatio, type MusicOptions } from "@/lib/media-models";
+import { mediaTiers, MEDIA_VIDEO_SECONDS, VIDEO_DURATION_CHOICES, videoCredits, type MediaRatio, type MusicOptions } from "@/lib/media-models";
 import { featureMinTier, packNames } from "@/lib/plans";
 import { usePlanTier } from "@/lib/plan-client";
 import { cn } from "@/lib/utils";
@@ -15,7 +15,7 @@ import { cn } from "@/lib/utils";
 type Lang = "fr" | "en";
 export type MediaRequest =
   | { kind: "music"; prompt: string; music: MusicOptions }
-  | { kind: "video"; prompt: string; aspectRatio: MediaRatio; quality: boolean };
+  | { kind: "video"; prompt: string; aspectRatio: MediaRatio; quality: boolean; seconds?: number };
 
 export const field = "w-full rounded-xl border border-border bg-background px-3 py-2 text-[13.5px] outline-none transition focus:border-foreground/40 focus:ring-2 focus:ring-ring/20";
 export const label = "text-[12px] font-medium text-foreground/80";
@@ -155,10 +155,11 @@ export function VideoWizard({ open, onOpenChange, lang, onCreate }: { open: bool
   const [light, setLight] = useState<string[]>([]);
   const [ratio, setRatio] = useState<MediaRatio>("16:9");
   const [quality, setQuality] = useState(false);
+  const [seconds, setSeconds] = useState<number>(MEDIA_VIDEO_SECONDS);
   const [avoid, setAvoid] = useState("");
   const [error, setError] = useState("");
   const tone = "border-[#5f9c57]/70 bg-[#5f9c57]/12 text-[#47783f] dark:text-[#8cc283]";
-  const price = quality ? mediaTiers.video_quality.credits : mediaTiers.video_fast.credits;
+  const price = videoCredits(quality ? "video_quality" : "video_fast", seconds);
 
   function create() {
     if (tier === null || locked) return;
@@ -171,22 +172,22 @@ export function VideoWizard({ open, onOpenChange, lang, onCreate }: { open: bool
       style.length && `Style: ${style.join(", ")}`,
       camera[0] && `Camera: ${camera[0]}`,
       light[0] && `Lighting: ${light[0]}`,
-      `${MEDIA_VIDEO_SECONDS}-second shot, smooth natural motion, coherent subject from start to end`,
+      `${seconds}-second shot, smooth natural motion, coherent subject from start to end`,
       avoid.trim() && `Avoid: ${avoid.trim()}`,
     ].filter(Boolean);
     const prompt = parts.join(". ").slice(0, 5000);
     const label = (list: [string, string][], v?: string) => list.find(([id]) => id === v)?.[1];
-    const facts = [style.map((s) => label(videoStyles[lang], s)).join(", "), label(cameras[lang], camera[0]), label(lights[lang], light[0]), ratio, quality ? (fr ? "qualité" : "quality") : (fr ? "rapide" : "quick")].filter(Boolean).join(" · ");
+    const facts = [style.map((s) => label(videoStyles[lang], s)).join(", "), label(cameras[lang], camera[0]), label(lights[lang], light[0]), ratio, `${seconds} s`, quality ? (fr ? "qualité" : "quality") : (fr ? "rapide" : "quick")].filter(Boolean).join(" · ");
     const summary = `${fr ? "Création vidéo" : "Video creation"} — ${facts}\n\n${main}${subject.trim() ? `\n${fr ? "Sujet" : "Subject"} : ${subject.trim()}` : ""}${place.trim() ? `\n${fr ? "Décor" : "Setting"} : ${place.trim()}` : ""}`;
     setError("");
-    onCreate({ kind: "video", prompt, aspectRatio: ratio, quality }, summary.slice(0, 6000), `${fr ? "Vidéo" : "Video"} · ${main.slice(0, 50)}`);
+    onCreate({ kind: "video", prompt, aspectRatio: ratio, quality, seconds }, summary.slice(0, 6000), `${fr ? "Vidéo" : "Video"} · ${main.slice(0, 50)}`);
     onOpenChange(false);
-    setScene(""); setSubject(""); setPlace(""); setStyle([]); setCamera([]); setLight([]); setRatio("16:9"); setQuality(false); setAvoid("");
+    setScene(""); setSubject(""); setPlace(""); setStyle([]); setCamera([]); setLight([]); setRatio("16:9"); setQuality(false); setSeconds(MEDIA_VIDEO_SECONDS); setAvoid("");
   }
 
   const formats: [MediaRatio, string][] = [["16:9", fr ? "16:9 · Paysage (YouTube)" : "16:9 · Landscape (YouTube)"], ["9:16", fr ? "9:16 · Vertical (TikTok, Reels, Statut)" : "9:16 · Vertical (TikTok, Reels)"], ["1:1", fr ? "1:1 · Carré" : "1:1 · Square"]];
   return <Shell open={open} onOpenChange={onOpenChange} accent="rgb(95 156 87 / .14)" icon={<Clapperboard className="size-4 text-[#5f9c57]" />}
-    title={fr ? "Créer une vidéo" : "Create a video"} sub={fr ? `Décrivez la scène ; précisez le style, la caméra et la lumière pour une vidéo de ${MEDIA_VIDEO_SECONDS} secondes réussie du premier coup.` : `Describe the scene; set the style, camera and light for a ${MEDIA_VIDEO_SECONDS}-second video that works first time.`}
+    title={fr ? "Créer une vidéo" : "Create a video"} sub={fr ? `Décrivez la scène ; précisez le style, la caméra et la lumière pour une vidéo réussie du premier coup.` : `Describe the scene; set the style, camera and light for a video that works first time.`}
     footer={locked
       ? <><span className="mr-auto text-[12px] text-muted-foreground">{fr ? `La vidéo est incluse à partir du forfait ${packNames[featureMinTier.video]}.` : `Video is included from the ${packNames[featureMinTier.video]} plan.`}</span><Link to="/dashboard/credits" className="inline-flex h-9 items-center gap-1.5 rounded-full bg-foreground px-4 text-[13px] font-semibold text-background"><Lock className="size-4" />{fr ? "Voir les forfaits" : "See plans"}</Link></>
       : <>
@@ -207,15 +208,16 @@ export function VideoWizard({ open, onOpenChange, lang, onCreate }: { open: bool
     <div><span className={label}>{fr ? "Mouvement de caméra" : "Camera movement"}{optional(fr)}</span><Chips items={cameras[lang]} value={camera} onChange={setCamera} tone={tone} /></div>
     <div><span className={label}>{fr ? "Lumière" : "Lighting"}{optional(fr)}</span><Chips items={lights[lang]} value={light} onChange={setLight} tone={tone} /></div>
     <div><span className={label}>Format</span><Chips items={formats} value={[ratio]} onChange={(v) => setRatio(v[0] ?? "16:9")} tone={tone} /></div>
+    <div><span className={label}>{fr ? "Durée" : "Length"}</span><Chips items={VIDEO_DURATION_CHOICES.map((d): [string, string] => [String(d), `${d} s`])} value={[String(seconds)]} onChange={(v) => setSeconds(Number(v[0] ?? MEDIA_VIDEO_SECONDS))} tone={tone} /></div>
     <div>
       <span className={label}>{fr ? "Qualité" : "Quality"}</span>
       <div className="mt-1.5 grid gap-2 sm:grid-cols-2">{([false, true] as const).map((q) => <button key={String(q)} type="button" aria-pressed={quality === q} onClick={() => setQuality(q)} className={cn("rounded-xl border px-3 py-2.5 text-left transition", quality === q ? tone : "border-border hover:border-foreground/30")}>
         <span className="block text-[13px] font-semibold">{q ? (fr ? "Qualité" : "Quality") : (fr ? "Rapide" : "Quick")}</span>
-        <span className="block text-[11.5px] text-muted-foreground">{q ? mediaTiers.video_quality.credits : mediaTiers.video_fast.credits} {fr ? "crédits" : "credits"} · {q ? (fr ? "rendu détaillé, plus lent" : "detailed, slower") : (fr ? "idéal pour essayer" : "great to try ideas")}</span>
+        <span className="block text-[11.5px] text-muted-foreground">{videoCredits(q ? "video_quality" : "video_fast", seconds)} {fr ? "crédits" : "credits"} · {q ? (fr ? "rendu détaillé, plus lent" : "detailed, slower") : (fr ? "idéal pour essayer" : "great to try ideas")}</span>
       </button>)}</div>
     </div>
     <label className="block space-y-1"><span className={label}>{fr ? "À éviter" : "Avoid"}{optional(fr)}</span><input className={field} value={avoid} maxLength={300} placeholder={fr ? "Ex. : texte à l'écran, flou, visages déformés" : "E.g. on-screen text, blur, distorted faces"} onChange={(e) => setAvoid(e.target.value)} /></label>
     {error && <p role="alert" className="rounded-xl border border-destructive/30 bg-destructive/5 px-3 py-2 text-[12px] text-destructive">{error}</p>}
-    <CostNote>{fr ? `Une vidéo de ${MEDIA_VIDEO_SECONDS} secondes coûte ${mediaTiers.video_fast.credits} crédits (rapide) ou ${mediaTiers.video_quality.credits} crédits (qualité), prélevés à la création et remboursés si elle échoue. Elle est conservée 14 jours : pensez à la télécharger.` : `A ${MEDIA_VIDEO_SECONDS}-second video costs ${mediaTiers.video_fast.credits} credits (quick) or ${mediaTiers.video_quality.credits} credits (quality), charged at creation and refunded if it fails. It is kept 14 days: remember to download it.`}</CostNote>
+    <CostNote>{fr ? `Prix à la seconde : ${mediaTiers.video_fast.credits / MEDIA_VIDEO_SECONDS} crédits (rapide) ou ${mediaTiers.video_quality.credits / MEDIA_VIDEO_SECONDS} crédits (qualité) par seconde — cette vidéo de ${seconds} secondes coûte ${price} crédits, prélevés à la création et remboursés si elle échoue. Elle est conservée 14 jours : pensez à la télécharger.` : `Priced per second: ${mediaTiers.video_fast.credits / MEDIA_VIDEO_SECONDS} credits (quick) or ${mediaTiers.video_quality.credits / MEDIA_VIDEO_SECONDS} credits (quality) a second — this ${seconds}-second video costs ${price} credits, charged at creation and refunded if it fails. It is kept 14 days: remember to download it.`}</CostNote>
   </Shell>;
 }
