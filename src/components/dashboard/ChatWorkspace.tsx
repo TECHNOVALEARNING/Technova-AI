@@ -1644,7 +1644,8 @@ export function ThreadPage({ threadId }: { threadId: string }) {
         style={panelWidth ? { width: `${panelWidth}px`, flex: `0 0 ${panelWidth}px` } : undefined}
       >
         <div className="h-full w-full">
-          <ArtifactPanel build={panelBuild} versions={activity ? [] : versions} onPickVersion={setArtifact} lang={lang} title={thread?.title ?? "projet"} activityView={activityView} onClose={() => setShowArtifact(false)} />
+          <ArtifactPanel build={panelBuild} versions={activity ? [] : versions} onPickVersion={setArtifact} lang={lang} title={thread?.title ?? "projet"} activityView={activityView} onClose={() => setShowArtifact(false)}
+            onRequestFix={(text) => { const el = inputRef.current; if (!el) return; setTextareaValue(el, text); el.focus(); el.setSelectionRange(text.length, text.length); }} />
         </div>
       </div>
       </>

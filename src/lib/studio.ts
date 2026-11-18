@@ -40,6 +40,53 @@ export function parseBuild(text: string, finished: boolean): StudioBuild {
   return { steps, files, sql, done: finished };
 }
 
+/** Runs first in every preview (Studio panel, shared preview, published site). The page lives in a sandboxed
+ *  iframe without same-origin, so: (1) storage and cookies are replaced by in-memory versions instead of throwing
+ *  (sites that save a cart or a theme keep working); (2) every navigation — links, target=_blank, forms, JavaScript
+ *  location changes — is caught: "#section" links scroll inside the page (in a srcdoc frame they would otherwise
+ *  resolve against TechNova's own URL), internal pages are relayed to the parent viewer, external sites open in a
+ *  new tab, so the iframe never loads TechNova itself (which cannot run sandboxed). Site scripts run first: a link
+ *  or form their own code already handles (preventDefault) is left alone; (3) JavaScript errors are reported to the
+ *  parent so they can be shown to the user. */
+const PREVIEW_BRIDGE = `<script>(function(){
+var post=function(m){try{parent.postMessage(m,'*')}catch(_){}};
+function mem(){var d={};return{getItem:function(k){k=String(k);return Object.prototype.hasOwnProperty.call(d,k)?d[k]:null},setItem:function(k,v){d[String(k)]=String(v)},removeItem:function(k){delete d[String(k)]},clear:function(){d={}},key:function(i){return Object.keys(d)[i]||null},get length(){return Object.keys(d).length}}}
+['localStorage','sessionStorage'].forEach(function(n){var ok=true;try{window[n].getItem('x')}catch(_){ok=false}if(!ok){try{Object.defineProperty(window,n,{value:mem(),configurable:true})}catch(_){}}});
+try{document.cookie}catch(_){var jar='';try{Object.defineProperty(document,'cookie',{get:function(){return jar},set:function(v){var p=String(v).split(';')[0];jar=jar?jar+'; '+p:p},configurable:true})}catch(__){}}
+var sent=0;function report(msg,line){if(sent++<20)post({type:'technova-preview-error',message:String(msg||'Error').slice(0,300),line:line||0})}
+window.addEventListener('error',function(e){report(e.message,e.lineno)});
+window.addEventListener('unhandledrejection',function(e){var r=e.reason;report(r&&r.message?r.message:r)});
+var EXT=/^(https?:)?[/][/]/i,SPECIAL=/^(mailto:|tel:|sms:|javascript:|data:|blob:)/i;
+var baseDir=function(){try{var u=new URL(document.baseURI);return u.origin+u.pathname.replace(/[^/]*$/,'')}catch(_){return''}};
+function inner(href){post({type:'technova-preview-navigate',path:href})}
+function jump(hash){var id=decodeURIComponent(hash.replace(/^#/,''));var el=id&&(document.getElementById(id)||document.getElementsByName(id)[0]);if(el&&el.scrollIntoView)el.scrollIntoView({behavior:'smooth',block:'start'});else if(!id||id==='top')window.scrollTo({top:0,behavior:'smooth'})}
+window.addEventListener('click',function(e){
+  if(e.defaultPrevented||e.button!==0)return;var t=e.target;var a=t&&t.closest?t.closest('a[href]'):null;if(!a||a.hasAttribute('download'))return;
+  var href=a.getAttribute('href')||'';if(SPECIAL.test(href))return;
+  e.preventDefault();
+  if(!href||href.charAt(0)==='#'){jump(href);return}
+  if(EXT.test(href)){window.open(a.href,'_blank','noopener');return}
+  inner(href);
+});
+window.addEventListener('submit',function(e){
+  if(e.defaultPrevented)return;var f=e.target;var act=(f&&f.getAttribute&&f.getAttribute('action'))||'';
+  if(EXT.test(act)){f.setAttribute('target','_blank');return}
+  e.preventDefault();post({type:'technova-preview-form'});
+});
+var nav=window.navigation;
+if(nav&&nav.addEventListener)nav.addEventListener('navigate',function(e){
+  if(e.hashChange||e.downloadRequest||!e.cancelable)return;var url=e.destination&&e.destination.url||'';
+  if(/^(about|javascript|data|blob):/i.test(url))return;
+  e.preventDefault();
+  if(e.formData){post({type:'technova-preview-form'});return}
+  var cut=url.indexOf('#');if(cut>=0&&url.slice(0,cut)===String(document.baseURI).split('#')[0]){jump(url.slice(cut));return}
+  var dir=baseDir();
+  if(dir&&url.indexOf(dir)===0){inner(url.slice(dir.length)||'index.html');return}
+  try{var u=new URL(url),b=new URL(document.baseURI);if(u.origin===b.origin){inner(u.pathname);return}}catch(_){}
+  window.open(url,'_blank','noopener');
+});
+})();</script>`;
+
 /** Bundle local assets into a sandboxed page; navigation is relayed to the parent viewer. */
 export function previewDoc(files: StudioFile[], page = "index.html") {
   const byName = new Map(files.map((f) => [f.path.replace(/^\.?\//, ""), f.content]));
@@ -47,7 +94,7 @@ export function previewDoc(files: StudioFile[], page = "index.html") {
   if (content === undefined) return null;
   const directory = page.includes("/") ? page.slice(0, page.lastIndexOf("/") + 1) : "";
   const asset = (src: string) => {
-    const path = src.startsWith("/") ? src.slice(1) : directory + src;
+    const path = src.split(/[?#]/)[0]!.startsWith("/") ? src.split(/[?#]/)[0]!.slice(1) : directory + src.split(/[?#]/)[0]!;
     const parts: string[] = [];
     for (const part of path.split("/")) {
       if (part === "..") parts.pop();
@@ -56,16 +103,29 @@ export function previewDoc(files: StudioFile[], page = "index.html") {
     return byName.get(parts.join("/"));
   };
   const html = content
-    .replace(/<link\b[^>]*href=["']([^"']+\.css)["'][^>]*>/gi, (all, href: string) => {
+    .replace(/<link\b[^>]*href=["']([^"']+\.css(?:\?[^"']*)?)["'][^>]*>/gi, (all, href: string) => {
       const css = asset(href);
       return css === undefined ? all : `<style>${css}</style>`;
     })
-    .replace(/<script\b([^>]*)src=["']([^"']+\.js)["']([^>]*)><\/script>/gi, (all, before: string, src: string, after: string) => {
+    .replace(/<script\b([^>]*)src=["']([^"']+\.m?js(?:\?[^"']*)?)["']([^>]*)><\/script>/gi, (all, before: string, src: string, after: string) => {
       const js = asset(src);
-      return js === undefined ? all : `<script${before.replace(/\btype=["']module["']/i, "")}${after}>${js.replace(/<\/script/gi, "<\\/script")}</script>`;
+      return js === undefined ? all : `<script${before.replace(/\btype=["']module["']/i, "")}${after}>${js.replace(/<\/script/gi, "<\/script")}</script>`;
     });
-  const bridge = `<script>(function(){document.addEventListener('click',function(e){var a=e.target.closest&&e.target.closest('a[href]');if(!a||a.target==='_blank'||a.hasAttribute('download'))return;var href=a.getAttribute('href');if(!href||href[0]==='#'||/^(https?:|mailto:|tel:|javascript:|data:)/i.test(href))return;e.preventDefault();parent.postMessage({type:'technova-preview-navigate',path:href},'*')})})();</script>`;
-  return /<\/body\s*>/i.test(html) ? html.replace(/<\/body\s*>/i, `${bridge}</body>`) : html + bridge;
+  // The bridge must run before the site's own scripts: right after <head>, else at the very start.
+  if (/<head\b[^>]*>/i.test(html)) return html.replace(/<head\b[^>]*>/i, (m) => m + PREVIEW_BRIDGE);
+  if (/<html\b[^>]*>/i.test(html)) return html.replace(/<html\b[^>]*>/i, (m) => m + PREVIEW_BRIDGE);
+  return PREVIEW_BRIDGE + html;
+}
+
+/** A preview that escaped its bridge reports the full address it reached; turn it back into a path relative to
+ *  the viewer page (the srcdoc frame resolves relative links against the viewer's own URL). */
+export function escapedPreviewPath(href: string, viewer = typeof location === "undefined" ? "" : location.href) {
+  try {
+    const u = new URL(href), v = new URL(viewer);
+    const dir = v.pathname.replace(/[^/]*$/, "");
+    const path = u.origin === v.origin && u.pathname.startsWith(dir) ? u.pathname.slice(dir.length) : u.pathname;
+    return (path || "index.html") + u.hash;
+  } catch { return "index.html"; }
 }
 
 export function resolvePreviewPage(files: StudioFile[], current: string, href: string) {
@@ -80,4 +140,53 @@ export function resolvePreviewPage(files: StudioFile[], current: string, href: s
   const target = parts.join("/");
   const available = new Set(files.map((f) => f.path.replace(/^\.?\//, "")));
   return [target, `${target}/index.html`, `${target}.html`, target || "index.html"].find((p) => available.has(p)) ?? null;
+}
+
+export type BuildIssue = { file: string; problem: "no_index" | "unfinished" | "truncated" | "missing_asset" | "missing_page" | "missing_anchor"; target?: string };
+
+/** Static check of a finished build, run in the browser (free): entry page present, every file complete, every
+ *  local stylesheet, script, image and internal page that the HTML points to really generated, every "#section"
+ *  link pointing at an existing id. Shown in the Studio panel so the user sees what was really verified. */
+export function checkBuild(files: StudioFile[]): BuildIssue[] {
+  const issues: BuildIssue[] = [];
+  const norm = (p: string) => p.replace(/^\.?\//, "");
+  const names = new Set(files.map((f) => norm(f.path)));
+  if (!names.has("index.html")) issues.push({ file: "index.html", problem: "no_index" });
+  const resolve = (from: string, ref: string) => {
+    const dir = from.includes("/") ? from.slice(0, from.lastIndexOf("/") + 1) : "";
+    const path = ref.split(/[?#]/)[0] ?? "";
+    const parts: string[] = [];
+    for (const part of (path.startsWith("/") ? path.slice(1) : dir + path).split("/")) {
+      if (part === "..") parts.pop(); else if (part && part !== ".") parts.push(part);
+    }
+    return parts.join("/");
+  };
+  const external = (ref: string) => /^([a-z][a-z0-9+.-]*:|\/\/)/i.test(ref) || ref.startsWith("{") || ref.includes("${");
+  for (const f of files) {
+    const path = norm(f.path);
+    if (!f.done) { issues.push({ file: path, problem: "unfinished" }); continue; }
+    if (!/\.html?$/i.test(path)) continue;
+    const html = f.content;
+    if (!/<\/html\s*>/i.test(html) && !/<\/body\s*>/i.test(html)) issues.push({ file: path, problem: "truncated" });
+    const ids = new Set([...html.matchAll(/\b(?:id|name)=["']([^"']+)["']/gi)].map((m) => m[1]!));
+    const seen = new Set<string>();
+    const add = (issue: BuildIssue) => { const k = `${issue.problem}|${issue.target}`; if (!seen.has(k)) { seen.add(k); issues.push(issue); } };
+    for (const m of html.matchAll(/<(link|script|img|source)\b[^>]*?\b(?:href|src)=["']([^"']+)["']/gi)) {
+      const ref = m[2]!.trim();
+      if (!ref || external(ref) || (m[1]!.toLowerCase() === "link" && !/\.css(\?|$)/i.test(ref))) continue;
+      if (!names.has(resolve(path, ref))) add({ file: path, problem: "missing_asset", target: ref });
+    }
+    for (const m of html.matchAll(/<a\b[^>]*?\bhref=["']([^"']*)["']/gi)) {
+      const ref = m[1]!.trim();
+      if (!ref || external(ref)) continue;
+      if (ref.startsWith("#")) {
+        const id = decodeURIComponent(ref.slice(1));
+        if (id && id !== "top" && !ids.has(id)) add({ file: path, problem: "missing_anchor", target: ref });
+        continue;
+      }
+      const target = resolve(path, ref);
+      if (![target, `${target}/index.html`, `${target}.html`, target || "index.html"].some((p) => names.has(p))) add({ file: path, problem: "missing_page", target: ref });
+    }
+  }
+  return issues;
 }

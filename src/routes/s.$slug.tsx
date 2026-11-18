@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
-import { previewDoc, resolvePreviewPage, type StudioFile } from "@/lib/studio";
+import { escapedPreviewPath, previewDoc, resolvePreviewPage, type StudioFile } from "@/lib/studio";
 
 export const Route = createFileRoute("/s/$slug")({
   head: ({ params }) => ({ meta: [
@@ -67,19 +67,22 @@ function PublishedSite() {
   }, [slug]);
   useEffect(() => {
     const onMessage = (e: MessageEvent) => {
-      if (!site || e.data?.type !== "technova-preview-navigate") return;
+      const escaped = e.data?.type === "technova-preview-escape";
+      if (!site || (e.data?.type !== "technova-preview-navigate" && !escaped)) return;
       if (e.source !== document.querySelector<HTMLIFrameElement>("iframe[data-site]")?.contentWindow) return;
-      const next = resolvePreviewPage(site.files, page, String(e.data.path ?? ""));
+      const next = resolvePreviewPage(site.files, page, escaped ? escapedPreviewPath(String(e.data.href ?? "")) : String(e.data.path ?? ""));
+      if (escaped) setReload((n) => n + 1);
       if (next) setPage(next);
     };
     window.addEventListener("message", onMessage);
     return () => window.removeEventListener("message", onMessage);
   }, [site, page]);
   const doc = useMemo(() => (site ? previewDoc(site.files, page) : null), [site, page]);
+  const [reload, setReload] = useState(0);
   if (status === "missing") return <main className="grid h-svh place-items-center bg-background p-6 text-center text-foreground"><div><h1 className="font-display text-2xl font-semibold">Site introuvable</h1><p className="mt-2 text-sm text-muted-foreground">Ce site n’existe pas ou a été dépublié.</p></div></main>;
   if (status === "suspended") return <main className="grid h-svh place-items-center bg-background p-6 text-center text-foreground"><div><h1 className="font-display text-2xl font-semibold">Site suspendu</h1><p className="mt-2 max-w-md text-sm text-muted-foreground">Ce site a été signalé et suspendu par mesure de sécurité, le temps d’une vérification par l’équipe TechNova.</p></div></main>;
   return <div className="h-svh w-full bg-background">
-    {doc ? <iframe key={page} data-site title={site?.title || slug} sandbox="allow-scripts allow-forms allow-modals allow-popups" srcDoc={doc} className="h-full w-full border-0" /> : <p className="pt-12 text-center text-sm text-muted-foreground">Chargement…</p>}
+    {doc ? <iframe key={`${page}-${reload}`} data-site title={site?.title || slug} sandbox="allow-scripts allow-forms allow-modals allow-popups allow-popups-to-escape-sandbox" srcDoc={doc} className="h-full w-full border-0" /> : <p className="pt-12 text-center text-sm text-muted-foreground">Chargement…</p>}
     <div className="fixed bottom-3 right-3 flex flex-col items-end gap-2">
       <ReportButton key={String(reportOpen)} slug={slug} startOpen={reportOpen} />
       <a href="/" className="rounded-full border border-border bg-card/90 px-3 py-1 text-[11px] font-medium text-muted-foreground backdrop-blur hover:text-foreground">Créé avec TECHNOVA</a>

@@ -7,14 +7,15 @@ import { toast } from "sonner";
 import { findSecrets, redactSecrets } from "@/lib/secret-scan";
 import { findPhishing, phishingMessage } from "@/lib/phishing-scan";
 import {
-  ArrowLeft, ArrowRight, Check, ChevronDown, ClipboardList, Code2, Copy, Database, Download, Eye, ExternalLink, FileCode2, Loader2, Monitor, Pencil, Search, ShieldCheck, Smartphone, Tablet, X,
+  AlertTriangle, ArrowLeft, ArrowRight, Check, ChevronDown, ClipboardList, Code2, Copy, Database, Download, Eye, ExternalLink, FileCode2, Loader2, Monitor, Pencil, Search, ShieldCheck, Smartphone, Tablet, Wrench, X,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { highlightCode } from "@/components/CodeHighlight";
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/components/ui/dialog";
 import { supabase } from "@/integrations/supabase/client";
 import type { Json } from "@/integrations/supabase/types";
 import { cn } from "@/lib/utils";
-import { previewDoc, resolvePreviewPage, STUDIO_COST, type StudioBuild, type StudioData, type StudioPlanData, type StudioQuestion } from "@/lib/studio";
+import { checkBuild, escapedPreviewPath, previewDoc, resolvePreviewPage, STUDIO_COST, type BuildIssue, type StudioBuild, type StudioData, type StudioPlanData, type StudioQuestion } from "@/lib/studio";
 
 type Lang = "fr" | "en";
 const tx = (lang: Lang, fr: string, en: string) => (lang === "fr" ? fr : en);
@@ -140,8 +141,42 @@ export function StudioTimeline({ build, lang, disabled, onOpen, onRetry }: { bui
   );
 }
 
-export function ArtifactPanel({ build, versions = [], onPickVersion, lang, title, activityView, onClose }: {
+const issueText = (lang: Lang, i: BuildIssue) => {
+  const t = i.target ? ` « ${i.target} »` : "";
+  switch (i.problem) {
+    case "no_index": return tx(lang, "Il manque la page d'accueil index.html.", "The index.html home page is missing.");
+    case "unfinished": return tx(lang, `${i.file} n'a pas été écrit jusqu'au bout.`, `${i.file} was not written to the end.`);
+    case "truncated": return tx(lang, `${i.file} semble coupé (fin de page absente).`, `${i.file} looks cut off (no page end).`);
+    case "missing_asset": return tx(lang, `${i.file} charge${t}, qui n'a pas été généré.`, `${i.file} loads${t}, which was not generated.`);
+    case "missing_page": return tx(lang, `${i.file} a un lien vers${t}, une page qui n'existe pas.`, `${i.file} links to${t}, a page that does not exist.`);
+    case "missing_anchor": return tx(lang, `${i.file} a un lien vers la section${t}, introuvable dans la page.`, `${i.file} links to the section${t}, not found on the page.`);
+  }
+};
+
+/** What was really checked on the finished site: static checks plus JavaScript errors seen in the preview. */
+function VerificationBar({ lang, issues, runtime, onRequestFix }: { lang: Lang; issues: BuildIssue[]; runtime: string[]; onRequestFix?: ((text: string) => void) | undefined }) {
+  const [open, setOpen] = useState(false);
+  const lines = [...issues.map((i) => issueText(lang, i)), ...runtime.map((m) => tx(lang, `Erreur JavaScript dans l'aperçu : ${m}`, `JavaScript error in the preview: ${m}`))];
+  const ok = lines.length === 0;
+  const fix = () => onRequestFix?.(tx(lang, "Corrige ces problèmes détectés par la vérification de l'aperçu, sans changer le reste du site :\n", "Fix these problems found by the preview check, without changing the rest of the site:\n") + lines.map((l) => `- ${l}`).join("\n"));
+  return <div className={cn("shrink-0 border-b border-border px-3 py-2 text-xs", ok ? "bg-emerald-500/5" : "bg-amber-500/10")}>
+    <div className="flex items-center gap-2">
+      {ok ? <ShieldCheck className="size-4 shrink-0 text-emerald-600" /> : <AlertTriangle className="size-4 shrink-0 text-amber-600" />}
+      <button type="button" className="min-w-0 flex-1 truncate text-left font-medium" onClick={() => setOpen((v) => !v)} aria-expanded={open} disabled={ok}>
+        {ok ? tx(lang, "Vérification : pages, liens, styles et scripts présents, aucune erreur JavaScript.", "Check: pages, links, styles and scripts present, no JavaScript error.")
+          : tx(lang, `Vérification : ${lines.length} point(s) à corriger`, `Check: ${lines.length} issue(s) to fix`)}
+      </button>
+      {!ok && <ChevronDown className={cn("size-3.5 shrink-0 transition", open && "rotate-180")} />}
+      {!ok && onRequestFix && <Button size="sm" variant="secondary" className="h-7 rounded-full text-[11px]" onClick={fix}><Wrench className="size-3" />{tx(lang, "Demander la correction", "Ask for a fix")}</Button>}
+    </div>
+    {open && !ok && <ul className="mt-2 max-h-40 space-y-1 overflow-y-auto pl-6 text-muted-foreground">{lines.map((l, i) => <li key={i} className="list-disc break-words">{l}</li>)}</ul>}
+  </div>;
+}
+
+export function ArtifactPanel({ build, versions = [], onPickVersion, lang, title, activityView, onClose, onRequestFix }: {
   build: StudioBuild; versions?: StudioBuild[]; onPickVersion?: (build: StudioBuild) => void; lang: Lang; title: string; activityView: number; onClose: () => void;
+  /** Puts a correction request in the chat composer (the user reviews and sends it). */
+  onRequestFix?: (text: string) => void;
 }) {
   const versionIndex = versions.indexOf(build);
   const [tab, setTab] = useState<"activity" | "preview" | "code" | "sql">("activity");
@@ -157,12 +192,29 @@ export function ArtifactPanel({ build, versions = [], onPickVersion, lang, title
   const [sharedUrl, setSharedUrl] = useState("");
   const [publishOpen, setPublishOpen] = useState(false);
   const doc = useMemo(() => (build.done ? previewDoc(build.files, page) : null), [build, page]);
+  const issues = useMemo(() => (build.done ? checkBuild(build.files) : []), [build]);
+  const [runtime, setRuntime] = useState<string[]>([]);
+  const [reload, setReload] = useState(0);
+  useEffect(() => { setRuntime([]); }, [build]);
   useEffect(() => {
     const onMessage = (event: MessageEvent) => {
-      if (event.source !== document.querySelector<HTMLIFrameElement>('iframe[data-studio-preview]')?.contentWindow || event.data?.type !== "technova-preview-navigate") return;
-      const next = resolvePreviewPage(build.files, page, String(event.data.path ?? ""));
-      if (next) { setHistory((h) => [...h, page]); setPage(next); setPreviewError(""); }
-      else setPreviewError(tx(lang, "Cette page n’a pas été générée.", "This page was not generated."));
+      if (event.source !== document.querySelector<HTMLIFrameElement>('iframe[data-studio-preview]')?.contentWindow) return;
+      if (event.data?.type === "technova-preview-error") {
+        const m = `${String(event.data.message ?? "").slice(0, 200)} (${page})`;
+        setRuntime((r) => (r.includes(m) || r.length >= 10 ? r : [...r, m]));
+        return;
+      }
+      if (event.data?.type === "technova-preview-form") {
+        toast.info(tx(lang, "Formulaire envoyé dans l'aperçu : rien n'est réellement transmis tant que le site n'est pas relié à un service d'envoi.", "Form sent in the preview: nothing is actually transmitted until the site is connected to a sending service."));
+        return;
+      }
+      const escaped = event.data?.type === "technova-preview-escape";
+      if (event.data?.type !== "technova-preview-navigate" && !escaped) return;
+      const next = resolvePreviewPage(build.files, page, escaped ? escapedPreviewPath(String(event.data.href ?? "")) : String(event.data.path ?? ""));
+      // An escaped frame shows nothing: always reload it, on the new page or the current one.
+      if (escaped) setReload((n) => n + 1);
+      if (next && next !== page) { setHistory((h) => [...h, page]); setPage(next); setPreviewError(""); }
+      else if (!next) setPreviewError(tx(lang, "Cette page n’a pas été générée.", "This page was not generated."));
     };
     window.addEventListener("message", onMessage);
     return () => window.removeEventListener("message", onMessage);
@@ -259,7 +311,7 @@ export function ArtifactPanel({ build, versions = [], onPickVersion, lang, title
           return <li key={index} className="relative border-l border-border pb-4 pl-5 last:border-transparent">
             <span className="absolute -left-3 top-0 grid size-6 place-items-center rounded-md border border-border bg-background">{step.done ? <Icon className="size-3.5 text-chat-glow" /> : <Loader2 className="size-3.5 animate-spin text-chat-glow" />}</span>
             <Button type="button" variant="ghost" aria-expanded={isOpen} onClick={() => setExpanded(isOpen ? null : index)} className="h-auto min-h-8 w-full justify-between gap-2 rounded-md px-2 py-1 text-left hover:bg-muted/60"><span className="min-w-0 break-words text-sm font-medium">{step.title}</span><ChevronDown className={cn("size-4 shrink-0 text-muted-foreground transition-transform", isOpen && "rotate-180")} /></Button>
-            {isOpen && <div className="min-w-0 px-2 pb-2 pt-1">{step.detail && <p className="whitespace-pre-wrap break-words text-[13px] leading-relaxed text-muted-foreground">{step.detail}</p>}{file && <pre className="mt-3 max-h-72 overflow-auto rounded-md bg-muted p-3 text-xs"><code>{file.content}</code></pre>}</div>}
+            {isOpen && <div className="min-w-0 px-2 pb-2 pt-1">{step.detail && <p className="whitespace-pre-wrap break-words text-[13px] leading-relaxed text-muted-foreground">{step.detail}</p>}{file && <pre className="mt-3 max-h-72 overflow-auto rounded-lg bg-[#1f1f24] p-3 font-mono text-xs text-[#e6e6e6]"><code>{highlightCode(file.content, file.path)}</code></pre>}</div>}
           </li>;
         })}</ol>
         {build.files.length > 0 && <Button variant="outline" size="sm" className="mt-4" onClick={() => setTab("code")}><Code2 className="size-4" />{tx(lang, `Voir les fichiers (${build.files.length})`, `View files (${build.files.length})`)}</Button>}
@@ -273,9 +325,10 @@ export function ArtifactPanel({ build, versions = [], onPickVersion, lang, title
           </div>}
           {sharedUrl && <div className="flex shrink-0 items-center gap-2 border-b border-border px-3 py-2"><input aria-label={tx(lang,"Lien public","Public link")} readOnly value={sharedUrl} onFocus={(e) => e.currentTarget.select()} className="min-w-0 flex-1 bg-transparent text-xs text-foreground outline-none" /><Button size="icon-sm" variant="ghost" aria-label={tx(lang,"Copier le lien","Copy link")} onClick={() => void navigator.clipboard.writeText(sharedUrl)}><Copy className="size-4" /></Button><Button size="sm" variant="ghost" className="h-7 shrink-0 text-xs" onClick={() => void revokeShare()}>{tx(lang, "Désactiver", "Disable")}</Button></div>}
           {sharedUrl && <p className="shrink-0 border-b border-border px-3 py-1.5 text-[11px] text-muted-foreground">{tx(lang, "Toute personne ayant ce lien peut voir l'aperçu pendant 30 jours. Désactivez-le à tout moment.", "Anyone with this link can view the preview for 30 days. Disable it at any time.")}</p>}
+          {build.done && <VerificationBar lang={lang} issues={issues} runtime={runtime} onRequestFix={onRequestFix} />}
           {previewError && <p role="alert" className="shrink-0 border-b border-border px-3 py-2 text-xs text-destructive">{previewError}</p>}
           {doc ? (
-             <div className="flex min-h-0 flex-1 justify-center overflow-auto"><iframe key={page} data-studio-preview title="preview" sandbox="allow-scripts allow-forms allow-modals allow-popups" srcDoc={doc} className={cn("h-full shrink-0 border-0 bg-background transition-[width]", device === "mobile" ? "w-[390px]" : device === "tablet" ? "w-[768px]" : "w-full")} /></div>
+             <div className="flex min-h-0 flex-1 justify-center overflow-auto"><iframe key={`${page}-${reload}`} data-studio-preview title="preview" sandbox="allow-scripts allow-forms allow-modals allow-popups allow-popups-to-escape-sandbox" srcDoc={doc} className={cn("h-full shrink-0 border-0 bg-background transition-[width]", device === "mobile" ? "w-[390px]" : device === "tablet" ? "w-[768px]" : "w-full")} /></div>
           ) : (
             <div className="grid size-full place-items-center p-6 text-center text-sm text-muted-foreground">
               {build.done ? tx(lang, "Aucun index.html à afficher. Consultez l'onglet Code.", "No index.html to preview. See the Code tab.") : (
@@ -296,25 +349,25 @@ export function ArtifactPanel({ build, versions = [], onPickVersion, lang, title
               </Button>
             ))}
           </div>
-          <div className="relative min-h-0 overflow-auto">
+          <div className="relative min-h-0 overflow-auto bg-[#1f1f24] text-[#e6e6e6]">
             {current && (
               <>
-                <div className="sticky top-0 flex items-center justify-between border-b border-border bg-background px-3 py-1.5 text-xs text-muted-foreground">
+                <div className="sticky top-0 flex items-center justify-between border-b border-black/40 bg-[#2a2a30] px-3 py-1.5 text-xs text-white/60">
                   <span className="truncate">{current.path}</span>
-                  <Button size="icon-sm" variant="ghost" className="rounded-full" aria-label="Copy" onClick={() => copy(current.content)}>{copied ? <Check /> : <Copy />}</Button>
+                  <Button size="icon-sm" variant="ghost" className="rounded-full text-white/70 hover:bg-white/10 hover:text-white" aria-label="Copy" onClick={() => copy(current.content)}>{copied ? <Check /> : <Copy />}</Button>
                 </div>
-                <pre className="p-3 text-[12px] leading-relaxed"><code>{current.content}</code></pre>
+                <pre className="p-3 font-mono text-[12px] leading-relaxed"><code>{highlightCode(current.content, current.path)}</code></pre>
               </>
             )}
           </div>
         </div>
       )}
       {tab === "sql" && (
-        <div className="relative min-h-0 flex-1 overflow-auto">
-          <div className="sticky top-0 flex justify-end border-b border-border bg-background px-3 py-1.5">
-            <Button size="sm" variant="ghost" className="rounded-full text-xs" onClick={() => copy(build.sql)}>{copied ? <Check /> : <Copy />}{tx(lang, "Copier le SQL", "Copy SQL")}</Button>
+        <div className="relative min-h-0 flex-1 overflow-auto bg-[#1f1f24] text-[#e6e6e6]">
+          <div className="sticky top-0 flex justify-end border-b border-black/40 bg-[#2a2a30] px-3 py-1.5">
+            <Button size="sm" variant="ghost" className="rounded-full text-xs text-white/70 hover:bg-white/10 hover:text-white" onClick={() => copy(build.sql)}>{copied ? <Check /> : <Copy />}{tx(lang, "Copier le SQL", "Copy SQL")}</Button>
           </div>
-          <pre className="p-3 text-[12px] leading-relaxed"><code>{build.sql}</code></pre>
+          <pre className="p-3 font-mono text-[12px] leading-relaxed"><code>{highlightCode(build.sql, "sql")}</code></pre>
         </div>
       )}
     </aside>

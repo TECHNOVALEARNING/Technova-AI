@@ -153,6 +153,9 @@ function RootShell({ children }: { children: ReactNode }) {
   return (
     <html lang="fr">
       <head>
+        {/* A Studio preview (sandboxed, opaque origin) that escaped its bridge and loaded TechNova itself: hand the
+            address back to the preview viewer and stop here, instead of crashing on storage access. */}
+        <script dangerouslySetInnerHTML={{ __html: `(function(){try{if(window.parent!==window&&window.origin==='null'){document.documentElement.style.display='none';window.parent.postMessage({type:'technova-preview-escape',href:location.href},'*');window.stop()}}catch(e){}})();` }} />
         <script dangerouslySetInnerHTML={{ __html: publicEnvScript() }} />
         <HeadContent />
       </head>
