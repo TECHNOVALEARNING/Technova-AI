@@ -1,9 +1,10 @@
 import { useEffect, useMemo, useState } from "react";
 import { Area, AreaChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { Loader2 } from "lucide-react";
-import { adminProviderCosts, type ProviderDay } from "@/lib/admin-console.functions";
+import { adminProviderCosts, type ProviderDay, type ProviderRange } from "@/lib/admin-console.functions";
 
-// Admin console → Vue d'ensemble: what the providers really charged, day by day over 30 days. Two smooth curves
+// Admin console → Vue d'ensemble: what the providers really charged, over 7 days, 30 days, 3 months or since the
+// beginning (per week when that spans more than 120 days). Two smooth curves
 // (OpenRouter, kie.ai); hovering a day lists every model with its real cost (and kie.ai credits), the number of
 // calls and the FCFA equivalent. Data from adminProviderCosts.
 
@@ -11,9 +12,12 @@ const COLORS = { openrouter: "#2563eb", kie: "#8b5cf6" } as const;
 const XOF_PER_USD = 600;
 const usd = (n: number) => `${n < 0.01 && n > 0 ? n.toFixed(4) : n.toFixed(2)} $`;
 const shortDay = (d: string) => `${d.slice(8, 10)}/${d.slice(5, 7)}`;
-const longDay = (d: string, fr: boolean) => new Date(`${d}T12:00:00Z`).toLocaleDateString(fr ? "fr-FR" : "en-GB", { weekday: "long", day: "numeric", month: "long" });
+const longDay = (d: string, fr: boolean, weekly = false) => weekly
+  ? `${fr ? "Semaine du" : "Week of"} ${new Date(`${d}T12:00:00Z`).toLocaleDateString(fr ? "fr-FR" : "en-GB", { day: "numeric", month: "long", year: "numeric" })}`
+  : new Date(`${d}T12:00:00Z`).toLocaleDateString(fr ? "fr-FR" : "en-GB", { weekday: "long", day: "numeric", month: "long", year: "numeric" });
+const RANGES: [ProviderRange, string, string][] = [["7d", "7 jours", "7 days"], ["30d", "30 jours", "30 days"], ["90d", "3 mois", "3 months"], ["all", "Depuis le début", "Since the start"]];
 
-function DayTooltip({ active, payload, fr }: { active?: boolean; payload?: { payload: ProviderDay }[]; fr: boolean }) {
+function DayTooltip({ active, payload, fr, weekly }: { active?: boolean; payload?: { payload: ProviderDay }[]; fr: boolean; weekly: boolean }) {
   const day = active ? payload?.[0]?.payload : undefined;
   if (!day) return null;
   const block = (provider: "openrouter" | "kie", label: string) => {
@@ -31,7 +35,7 @@ function DayTooltip({ active, payload, fr }: { active?: boolean; payload?: { pay
     </div>;
   };
   return <div className="max-w-[440px] rounded-xl border border-border bg-popover px-3.5 py-2.5 text-popover-foreground shadow-lg">
-    <p className="text-[13px] font-semibold capitalize">{longDay(day.date, fr)}</p>
+    <p className="text-[13px] font-semibold first-letter:uppercase">{longDay(day.date, fr, weekly)}</p>
     {block("openrouter", "OpenRouter")}
     {block("kie", "kie.ai")}
   </div>;
@@ -40,13 +44,19 @@ function DayTooltip({ active, payload, fr }: { active?: boolean; payload?: { pay
 type Data = Awaited<ReturnType<typeof adminProviderCosts>>;
 
 export function AdminProviderChart({ fr }: { fr: boolean }) {
+  const [range, setRange] = useState<ProviderRange>("30d");
   const [data, setData] = useState<Data | null | "error">(null);
-  useEffect(() => { adminProviderCosts().then(setData).catch(() => setData("error")); }, []);
-  return <ProviderChartView fr={fr} data={data} />;
+  useEffect(() => {
+    let live = true;
+    setData(null);
+    adminProviderCosts({ data: { range } }).then((d) => { if (live) setData(d); }).catch(() => { if (live) setData("error"); });
+    return () => { live = false; };
+  }, [range]);
+  return <ProviderChartView fr={fr} data={data} range={range} onRange={setRange} />;
 }
 
 /** The chart itself, fed with the server data (or null while loading, "error" when unavailable). */
-export function ProviderChartView({ fr, data }: { fr: boolean; data: Data | null | "error" }) {
+export function ProviderChartView({ fr, data, range = "30d", onRange }: { fr: boolean; data: Data | null | "error"; range?: ProviderRange; onRange?: (r: ProviderRange) => void }) {
   const totals = useMemo(() => {
     if (!data || data === "error") return null;
     const sum = (p: "openrouter" | "kie") => data.days.reduce((a, d) => a + d[p], 0);
@@ -55,9 +65,10 @@ export function ProviderChartView({ fr, data }: { fr: boolean; data: Data | null
   return <div className="rounded-2xl border border-border bg-card/90 p-4">
     <div className="flex flex-wrap items-start justify-between gap-3">
       <div>
-        <h3 className="text-sm font-semibold">{fr ? "Consommation chez les fournisseurs (30 jours)" : "Provider spend (30 days)"}</h3>
+        <h3 className="text-sm font-semibold">{fr ? "Consommation chez les fournisseurs" : "Provider spend"}</h3>
+        <div className="mt-2 flex flex-wrap gap-1.5" role="tablist">{RANGES.map(([k, f, e]) => <button key={k} type="button" role="tab" aria-selected={range === k} onClick={() => onRange?.(k)} className={`h-7 rounded-full px-3 text-[11.5px] font-medium transition ${range === k ? "bg-foreground text-background" : "border border-border text-muted-foreground hover:text-foreground"}`}>{fr ? f : e}</button>)}</div>
         <p className="mt-1 max-w-2xl text-xs text-muted-foreground">{fr
-          ? "Ce que les fournisseurs ont réellement facturé, jour par jour. Survolez la courbe pour voir chaque modèle, son coût réel et le nombre d'appels. 1 $ ≈ 600 FCFA ; 1 crédit kie.ai = 0,005 $."
+          ? "Ce que les fournisseurs ont réellement facturé, jour par jour (par semaine au-delà de 4 mois). Survolez la courbe pour voir chaque modèle, son coût réel et le nombre d'appels. 1 $ ≈ 600 FCFA ; 1 crédit kie.ai = 0,005 $."
           : "What the providers really charged, day by day. Hover the curve to see each model, its real cost and the number of calls. 1 crédit kie.ai = USD 0.005."}</p>
       </div>
       {totals && <div className="flex gap-4 text-xs">
@@ -80,7 +91,7 @@ export function ProviderChartView({ fr, data }: { fr: boolean; data: Data | null
               <CartesianGrid vertical={false} stroke="currentColor" strokeOpacity={0.08} />
               <XAxis dataKey="date" tickFormatter={shortDay} tickLine={false} axisLine={false} tick={{ fontSize: 11, fill: "currentColor", opacity: 0.6 }} minTickGap={18} />
               <YAxis tickFormatter={(v: number) => `${v} $`} tickLine={false} axisLine={false} width={52} tick={{ fontSize: 11, fill: "currentColor", opacity: 0.6 }} />
-              <Tooltip content={<DayTooltip fr={fr} />} cursor={{ stroke: "currentColor", strokeOpacity: 0.25 }} wrapperStyle={{ outline: "none", zIndex: 20 }} />
+              <Tooltip content={<DayTooltip fr={fr} weekly={data.weekly} />} cursor={{ stroke: "currentColor", strokeOpacity: 0.25 }} wrapperStyle={{ outline: "none", zIndex: 20 }} />
               <Area type="monotone" dataKey="openrouter" name="OpenRouter" stroke={COLORS.openrouter} strokeWidth={2} fill="url(#fill-openrouter)" activeDot={{ r: 4 }} />
               <Area type="monotone" dataKey="kie" name="kie.ai" stroke={COLORS.kie} strokeWidth={2} fill="url(#fill-kie)" activeDot={{ r: 4 }} />
             </AreaChart>
@@ -89,7 +100,9 @@ export function ProviderChartView({ fr, data }: { fr: boolean; data: Data | null
         <p className="mt-2 text-[11px] text-muted-foreground">{data.openrouterSource === "activity"
           ? (fr ? "OpenRouter : rapport d'activité officiel (tous les appels : chat, API, Studio, fichiers, aide)." : "OpenRouter: official activity report (every call).")
           : (fr ? "OpenRouter : réponses enregistrées par TechNova (chat, Studio, résumé audio). Ajoutez OPENROUTER_MANAGEMENT_KEY dans Vercel pour inclure aussi l'API publique, les fichiers et l'aide." : "OpenRouter: replies logged by TechNova. Add OPENROUTER_MANAGEMENT_KEY in Vercel to include every call.")}
-          {" "}{fr ? "kie.ai : coût réel de chaque création terminée depuis la migration 0046." : "kie.ai: real cost of every finished creation since migration 0046."}</p>
+          {" "}{fr ? "kie.ai : coût réel de chaque création, demandé à kie.ai (les anciennes créations sont rattrapées au fil des ouvertures de ce graphique)." : "kie.ai: real cost of each creation, asked from kie.ai (older creations are filled in each time this chart opens)."}
+          {data.kieUnmeasured > 0 && <span className="text-amber-700 dark:text-amber-300">{" "}{fr ? `${data.kieUnmeasured} création(s) réussie(s) sans coût connu sur la période (trop anciennes pour kie.ai, ou en cours de rattrapage).` : `${data.kieUnmeasured} successful creation(s) without a known cost in this period.`}</span>}
+          {!data.kieConfigured && <span className="text-destructive">{" "}{fr ? "KIE_API_KEY absente : le coût kie.ai ne peut pas être demandé." : "KIE_API_KEY missing."}</span>}</p>
       </>}
   </div>;
 }

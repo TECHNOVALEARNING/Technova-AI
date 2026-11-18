@@ -225,18 +225,50 @@ export const adminMarkFeedbackRead = createServerFn({ method: "POST" })
   });
 
 export type ProviderDay = { date: string; openrouter: number; kie: number; models: { provider: "openrouter" | "kie"; model: string; usd: number; providerCredits: number | null; calls: number }[] };
+export type ProviderRange = "7d" | "30d" | "90d" | "all";
+const RANGE_DAYS: Record<ProviderRange, number> = { "7d": 7, "30d": 30, "90d": 90, all: 36500 };
 
-/** Real provider spend per day and per model over the last 30 days, for the admin consumption chart.
- *  OpenRouter: its own activity report when OPENROUTER_MANAGEMENT_KEY is set (every call: chat, API, Studio,
- *  files, help…), else the replies TechNova logged in chat_engine_costs. kie.ai: the credits each task really
- *  consumed (migration 0046), at USD 0.005 per credit. */
-export const adminProviderCosts = createServerFn({ method: "GET" })
+/** kie.ai history: asks kie.ai the real credits of past creations that have none stored yet (newest first, a
+ *  few per load). A task kie.ai cannot report is marked -1 so it is not asked again and counts as "not measured". */
+async function backfillKieCosts(db: Awaited<typeof import("@/integrations/supabase/client.server")>["supabaseAdmin"]) {
+  const key = process.env["KIE_API_KEY"];
+  if (!key) return;
+  const { data: rows, error } = await db.from("media_generations").select("id,task_id")
+    .is("provider_credits" as never, null).in("status", ["success", "fail"]).not("task_id", "is", null)
+    .order("created_at", { ascending: false }).limit(40);
+  if (error || !rows?.length) return; // column missing (migration 0046 not run) or nothing to fill
+  const started = Date.now();
+  for (let i = 0; i < rows.length && Date.now() - started < 12_000; i += 5) {
+    await Promise.all(rows.slice(i, i + 5).map(async (row) => {
+      let credits = -1;
+      try {
+        const r = await fetch(`https://api.kie.ai/api/v1/jobs/recordInfo?taskId=${encodeURIComponent(row.task_id)}`, { headers: { Authorization: `Bearer ${key}` }, signal: AbortSignal.timeout(6000) });
+        const j = (await r.json().catch(() => null)) as { code?: number; data?: { creditsConsumed?: unknown } } | null;
+        const n = Number(j?.data?.creditsConsumed);
+        if (r.ok && j?.code === 200 && Number.isFinite(n) && n >= 0) credits = n;
+        else if (r.status === 401 || r.status === 429 || r.status >= 500) return; // try again on a later load
+      } catch { return; }
+      await db.from("media_generations").update({ provider_credits: credits } as never).eq("id", row.id);
+    }));
+  }
+}
+
+/** Real provider spend per day (or per week for long periods) and per model, for the admin consumption chart.
+ *  OpenRouter: its own activity report when OPENROUTER_MANAGEMENT_KEY is set (the last 30 finished days, every
+ *  call: chat, API, Studio, files, help…), else and before that the replies logged in chat_engine_costs. kie.ai:
+ *  the credits each task really consumed (migration 0046, past tasks filled from kie.ai), USD 0.005 per credit. */
+export const adminProviderCosts = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .handler(async ({ context }) => {
+  .inputValidator((input: { range?: ProviderRange } | undefined) => z.object({ range: z.enum(["7d", "30d", "90d", "all"]).default("30d") }).parse(input ?? {}))
+  .handler(async ({ data: input, context }) => {
     await requireAdmin(context);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    await backfillKieCosts(supabaseAdmin).catch(() => undefined);
+    const span = RANGE_DAYS[input.range];
+    const since = new Date(Date.now() - span * 86_400_000).toISOString();
     const days = new Map<string, ProviderDay>();
     const dayKey = (d: string) => d.slice(0, 10);
+    const lagosDay = (iso: string) => new Date(iso).toLocaleDateString("en-CA", { timeZone: "Africa/Lagos" });
     const get = (date: string) => { let x = days.get(date); if (!x) { x = { date, openrouter: 0, kie: 0, models: [] }; days.set(date, x); } return x; };
     const add = (date: string, provider: "openrouter" | "kie", model: string, usd: number, providerCredits: number | null, calls: number) => {
       const d = get(date);
@@ -246,7 +278,7 @@ export const adminProviderCosts = createServerFn({ method: "GET" })
       else d.models.push({ provider, model, usd, providerCredits, calls });
     };
     let openrouterSource: "activity" | "logged" = "logged";
-    // The activity report covers finished days only: today (and any missing day) comes from the logged replies.
+    // The activity report covers the last finished days only: today and older days come from the logged replies.
     const activityDays = new Set<string>();
     const mk = process.env["OPENROUTER_MANAGEMENT_KEY"];
     if (mk) {
@@ -255,22 +287,51 @@ export const adminProviderCosts = createServerFn({ method: "GET" })
         const j = r.ok ? (await r.json()) as { data?: { date: string; model: string; usage: number; requests: number }[] } : null;
         if (j?.data) {
           openrouterSource = "activity";
-          for (const row of j.data) { activityDays.add(dayKey(row.date)); add(dayKey(row.date), "openrouter", row.model, Number(row.usage) || 0, null, Number(row.requests) || 0); }
+          for (const row of j.data) {
+            if (dayKey(row.date) < dayKey(since)) continue;
+            activityDays.add(dayKey(row.date));
+            add(dayKey(row.date), "openrouter", row.model, Number(row.usage) || 0, null, Number(row.requests) || 0);
+          }
         }
       } catch { /* fall back to the logged replies */ }
     }
-    const { data, error } = await supabaseAdmin.rpc("admin_provider_costs", { _days: 30 });
+    const { data, error } = await supabaseAdmin.rpc("admin_provider_costs", { _days: span });
     for (const row of error ? [] : data ?? []) {
-      if (row.provider === "openrouter" && activityDays.has(dayKey(String(row.day)))) continue;
-      add(dayKey(String(row.day)), row.provider === "kie" ? "kie" : "openrouter", row.model, Number(row.cost_usd) || 0, row.provider_credits == null ? null : Number(row.provider_credits), Number(row.calls) || 0);
+      if (row.provider !== "openrouter" || activityDays.has(dayKey(String(row.day)))) continue;
+      add(dayKey(String(row.day)), "openrouter", row.model, Number(row.cost_usd) || 0, null, Number(row.calls) || 0);
     }
-    // Every day of the window, so the curves show quiet days at zero.
+    // kie.ai straight from the creations (only measured costs, never the -1 "not measured" marks).
+    let kieUnmeasured = 0;
+    const kie = await supabaseAdmin.from("media_generations").select("created_at,model,status,provider_credits" as never)
+      .gte("created_at", since).in("status", ["success", "fail"]).limit(20000);
+    for (const row of (kie.error ? [] : kie.data ?? []) as unknown as { created_at: string; model: string; status: string; provider_credits: number | string | null }[]) {
+      const n = row.provider_credits == null ? NaN : Number(row.provider_credits);
+      if (!(n >= 0)) { if (row.status === "success") kieUnmeasured++; continue; }
+      add(lagosDay(row.created_at), "kie", row.model, n * 0.005, n, 1);
+    }
+    // Points: every day of the window (quiet days at zero); weeks once "since the beginning" spans over 120 days.
+    const known = [...days.keys()].sort();
+    const today = lagosDay(new Date().toISOString());
+    const first = input.range === "all" ? (known[0] ?? today) : lagosDay(since);
+    const totalDays = Math.max(1, Math.round((Date.parse(today) - Date.parse(first)) / 86_400_000) + 1);
+    const weekly = input.range === "all" && totalDays > 120;
     const out: ProviderDay[] = [];
-    for (let i = 29; i >= 0; i--) {
-      const date = new Date(Date.now() - i * 86_400_000).toLocaleDateString("en-CA", { timeZone: "Africa/Lagos" });
-      const d = days.get(date) ?? { date, openrouter: 0, kie: 0, models: [] };
-      d.models.sort((a, b) => b.usd - a.usd);
-      out.push({ ...d, openrouter: Math.round(d.openrouter * 1e4) / 1e4, kie: Math.round(d.kie * 1e4) / 1e4 });
+    const round = (n: number) => Math.round(n * 1e4) / 1e4;
+    for (let i = 0; i < totalDays; i += weekly ? 7 : 1) {
+      const start = new Date(Date.parse(first) + i * 86_400_000).toISOString().slice(0, 10);
+      const bucket: ProviderDay = { date: start, openrouter: 0, kie: 0, models: [] };
+      for (let k = 0; k < (weekly ? 7 : 1); k++) {
+        const d = days.get(new Date(Date.parse(start) + k * 86_400_000).toISOString().slice(0, 10));
+        if (!d) continue;
+        bucket.openrouter += d.openrouter; bucket.kie += d.kie;
+        for (const m of d.models) {
+          const b = bucket.models.find((x) => x.provider === m.provider && x.model === m.model);
+          if (b) { b.usd += m.usd; b.calls += m.calls; if (m.providerCredits != null) b.providerCredits = (b.providerCredits ?? 0) + m.providerCredits; }
+          else bucket.models.push({ ...m });
+        }
+      }
+      bucket.models.sort((a, b) => b.usd - a.usd);
+      out.push({ ...bucket, openrouter: round(bucket.openrouter), kie: round(bucket.kie) });
     }
-    return { ready: !error, openrouterSource, days: out };
+    return { ready: !error, range: input.range, weekly, openrouterSource, kieUnmeasured, kieConfigured: Boolean(process.env["KIE_API_KEY"]), days: out };
   });
