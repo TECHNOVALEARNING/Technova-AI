@@ -34,8 +34,18 @@ function strength(p: string) {
   return Math.min(4, s);
 }
 const secText = {
-  fr: { wrong: "E-mail ou mot de passe incorrect.", tooMany: "Trop de tentatives. Patientez quelques minutes puis réessayez.", locked: (s: number) => `Trop d'essais : réessayez dans ${s} s.`, unconfirmed: "Confirmez d'abord votre adresse e-mail (lien reçu par e-mail).", weak: "Choisissez un mot de passe d'au moins 8 caractères avec des lettres et des chiffres.", levels: ["Trop faible", "Faible", "Correct", "Bon", "Excellent"] },
-  en: { wrong: "Wrong e-mail or password.", tooMany: "Too many attempts. Wait a few minutes and try again.", locked: (s: number) => `Too many attempts: try again in ${s}s.`, unconfirmed: "Please confirm your e-mail address first (link sent by e-mail).", weak: "Choose a password of at least 8 characters with letters and digits.", levels: ["Too weak", "Weak", "Fair", "Good", "Excellent"] },
+  fr: { wrong: "E-mail ou mot de passe incorrect.", tooMany: "Trop de tentatives. Patientez quelques minutes puis réessayez.", locked: (s: number) => `Trop d'essais : réessayez dans ${s} s.`, unconfirmed: "Confirmez d'abord votre adresse e-mail (lien reçu par e-mail).", weak: "Choisissez un mot de passe d'au moins 8 caractères avec des lettres et des chiffres.", levels: ["Trop faible", "Faible", "Correct", "Bon", "Excellent"],
+    mailSend: "Nous n'avons pas pu vous envoyer l'e-mail de confirmation. Réessayez dans quelques minutes, ou continuez avec Google.",
+    mailNotAllowed: "L'envoi de l'e-mail de confirmation n'est pas encore ouvert à cette adresse. Continuez avec Google en attendant, ou réessayez plus tard.",
+    badEmail: "Cette adresse e-mail n'est pas acceptée. Vérifiez-la ou utilisez une autre adresse.",
+    captcha: "La vérification anti-robot a échoué. Rechargez la page puis réessayez.",
+    closed: "Les inscriptions par e-mail sont momentanément fermées. Continuez avec Google." },
+  en: { wrong: "Wrong e-mail or password.", tooMany: "Too many attempts. Wait a few minutes and try again.", locked: (s: number) => `Too many attempts: try again in ${s}s.`, unconfirmed: "Please confirm your e-mail address first (link sent by e-mail).", weak: "Choose a password of at least 8 characters with letters and digits.", levels: ["Too weak", "Weak", "Fair", "Good", "Excellent"],
+    mailSend: "We could not send you the confirmation e-mail. Try again in a few minutes, or continue with Google.",
+    mailNotAllowed: "Confirmation e-mails cannot be sent to this address yet. Continue with Google for now, or try again later.",
+    badEmail: "This e-mail address is not accepted. Check it or use another address.",
+    captcha: "The anti-robot check failed. Reload the page and try again.",
+    closed: "E-mail sign-ups are temporarily closed. Continue with Google." },
 };
 
 export function AuthPage({ mode }: { mode: Mode }) {
@@ -63,7 +73,15 @@ export function AuthPage({ mode }: { mode: Mode }) {
   /** Only safe, generic messages reach the screen (no raw provider text, no hint that an account exists). */
   function safeMessage(error: unknown) {
     const raw = `${(error as { code?: string })?.code ?? ""} ${error instanceof Error ? error.message : ""}`.toLowerCase();
+    // The technical reason goes to the browser console only (support can read it); the screen gets a safe message
+    // that never tells whether an account exists.
+    console.warn("[auth]", (error as { status?: number })?.status ?? "", (error as { code?: string })?.code ?? "", error instanceof Error ? error.message : error);
     if (/rate|too many|over_request|over_email/.test(raw)) return sec.tooMany;
+    if (/email_address_not_authorized|not authorized/.test(raw)) return sec.mailNotAllowed;
+    if (/sending|confirmation email|smtp|mail.*(fail|error)|unexpected_failure/.test(raw)) return sec.mailSend;
+    if (/email_address_invalid|invalid.*email|email.*invalid/.test(raw)) return sec.badEmail;
+    if (/captcha/.test(raw)) return sec.captcha;
+    if (/signup_disabled|signups not allowed|email_provider_disabled/.test(raw)) return sec.closed;
     if (/not confirmed|email_not_confirmed/.test(raw)) return sec.unconfirmed;
     if (/weak|pwned|password/.test(raw) && !isLogin) return sec.weak;
     if (isLogin) return sec.wrong;
