@@ -1,4 +1,4 @@
-import { parseBuild, STUDIO_COST, type StudioData, type StudioPlanData } from "@/lib/studio";
+import { checkBuild, describeIssue, jsSyntaxIssues, parseBuild, STUDIO_COST, type StudioData, type StudioPlanData } from "@/lib/studio";
 import { findStudioImages } from "@/lib/studio-images.server";
 
 const BUILD_COST = STUDIO_COST.build;
@@ -48,6 +48,49 @@ async function writeMessage(job: Job, output: string, finished: boolean, status:
   await db.from("chat_messages").update({ parts: [{ type: "data-studio", data }] as never }).eq("thread_id", job.thread_id).eq("sdk_id", job.message_id);
 }
 
+export const REPAIR_TITLE = { fr: "Vérification automatique", en: "Automatic check" } as const;
+const REPAIR_MAX_TOKENS = 16000;
+const REPAIR_PROMPT = `You are TechNova Studio's quality pass. A website was just generated; an automatic check found real problems, listed below with the project files.
+Fix exactly these problems and nothing else: create every missing page, stylesheet or script with content that fits the site (same design, header, footer and navigation as the existing pages), complete any cut-off file, make every "#section" link point at an existing id (add the section or fix the link), and fix invalid JavaScript.
+Output ONLY the files you create or change, each as <file path="PATH">full file content</file>, with no other text. Never output a file you did not change.`;
+
+/** After the build: checks the site (missing pages, assets, anchors, cut files, invalid JavaScript) and, if
+ *  something is wrong, asks the model once to rewrite only the faulty or missing files. The fixes are appended
+ *  to the output (a later <file> with the same path replaces the earlier one) after a visible step listing what
+ *  was found and what was fixed. Included in the build price; runs once per build. */
+async function autoRepair(job: Job, out: string, langRule: string, keepAlive: () => Promise<void>): Promise<string> {
+  const lang = job.lang === "en" ? "en" : "fr";
+  const title = REPAIR_TITLE[lang];
+  if (out.includes(`<step title="${title}">`)) return out;
+  const build = parseBuild(out, true);
+  if (!build.files.length) return out;
+  const found = [...checkBuild(build.files), ...jsSyntaxIssues(build.files)].filter((i) => i.problem !== "unfinished");
+  if (!found.length) {
+    return `${out}\n<step title="${title}">${lang === "fr" ? "Pages, liens, sections, styles et scripts vérifiés : aucun problème trouvé." : "Pages, links, sections, styles and scripts checked: no problem found."}</step>`;
+  }
+  const lines = found.slice(0, 40).map((i) => `- ${describeIssue(lang, i)}`).join("\n");
+  // Shown in the chat while the repair runs (not saved in the job output: a resumed run starts from the build).
+  await writeMessage(job, `${out}\n<step title="${title}">${lang === "fr" ? `${found.length} problème(s) trouvé(s), correction en cours…` : `${found.length} problem(s) found, fixing…`}\n${lines}`, false, "running");
+  const project = build.files.map((f) => `<file path="${f.path}">\n${f.content}</file>`).join("\n").slice(0, 240_000);
+  const { studioStream } = await import("@/lib/studio-gateway.server");
+  let text = "";
+  try {
+    const run = studioStream(null, `${REPAIR_PROMPT} ${langRule}`, [{ role: "user", content: `Problems found:\n${lines}\n\nProject files:\n${project}` }], REPAIR_MAX_TOKENS);
+    let last = Date.now();
+    for await (const delta of run.textStream) { text += delta; if (Date.now() - last > 10_000) { last = Date.now(); await keepAlive(); } }
+  } catch (e) {
+    console.error("studio auto-repair failed", (e as Error)?.message?.slice(0, 200));
+  }
+  const fixes = parseBuild(text, true).files.filter((f) => f.path && f.content.trim() && !/^\s*$/.test(f.content));
+  const merged = parseBuild(`${out}\n${fixes.map((f) => `<file path="${f.path}">\n${f.content}</file>`).join("\n")}`, true).files;
+  const left = [...checkBuild(merged), ...jsSyntaxIssues(merged)].filter((i) => i.problem !== "unfinished");
+  const fixedCount = Math.max(0, found.length - left.length);
+  const summary = lang === "fr"
+    ? `${found.length} problème(s) trouvé(s) :\n${lines}\n\n${fixes.length ? `${fixedCount} corrigé(s) en réécrivant ${fixes.map((f) => f.path).join(", ")}.` : "La correction automatique n'a pas abouti."}${left.length ? `\nReste à corriger :\n${left.slice(0, 20).map((i) => `- ${describeIssue(lang, i)}`).join("\n")}` : ""}`
+    : `${found.length} problem(s) found:\n${lines}\n\n${fixes.length ? `${fixedCount} fixed by rewriting ${fixes.map((f) => f.path).join(", ")}.` : "The automatic fix did not succeed."}${left.length ? `\nStill to fix:\n${left.slice(0, 20).map((i) => `- ${describeIssue(lang, i)}`).join("\n")}` : ""}`;
+  return `${out}\n<step title="${title}">${summary}</step>\n${fixes.map((f) => `<file path="${f.path}">\n${f.content}</file>`).join("\n")}`;
+}
+
 /** Runs (or resumes) one build job; safe to call concurrently thanks to the lease claim. */
 export async function runStudioJob(jobId: string) {
   const db = await admin();
@@ -90,6 +133,10 @@ export async function runStudioJob(jobId: string) {
   try {
     result = studioStream(null, `${BUILD_PROMPT} ${langRule}`, [{ role: "user", content }], STUDIO_MAX_TOKENS.build);
     for await (const delta of result.textStream) { out += delta; await flush(); }
+    // Quality pass: check the finished site and fix what is missing or broken before handing it over.
+    await flush(true);
+    // Only the lease is extended while it runs: the chat shows the "checking" step written by autoRepair.
+    out = await autoRepair(job, out, langRule, async () => { await db.from("studio_jobs").update({ lease_until: lease(), updated_at: new Date().toISOString() }).eq("id", job.id); });
     await db.from("studio_jobs").update({ output: out, status: "done", lease_until: null, updated_at: new Date().toISOString() }).eq("id", job.id);
     await writeMessage(job, out, true, "done");
     if (!job.charged) {

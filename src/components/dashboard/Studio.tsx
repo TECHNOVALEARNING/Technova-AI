@@ -15,7 +15,7 @@ import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/compone
 import { supabase } from "@/integrations/supabase/client";
 import type { Json } from "@/integrations/supabase/types";
 import { cn } from "@/lib/utils";
-import { checkBuild, escapedPreviewPath, previewDoc, resolvePreviewPage, STUDIO_COST, type BuildIssue, type StudioBuild, type StudioData, type StudioPlanData, type StudioQuestion } from "@/lib/studio";
+import { checkBuild, describeIssue, escapedPreviewPath, previewDoc, resolvePreviewPage, STUDIO_COST, type BuildIssue, type StudioBuild, type StudioData, type StudioPlanData, type StudioQuestion } from "@/lib/studio";
 
 type Lang = "fr" | "en";
 const tx = (lang: Lang, fr: string, en: string) => (lang === "fr" ? fr : en);
@@ -141,17 +141,7 @@ export function StudioTimeline({ build, lang, disabled, onOpen, onRetry }: { bui
   );
 }
 
-const issueText = (lang: Lang, i: BuildIssue) => {
-  const t = i.target ? ` « ${i.target} »` : "";
-  switch (i.problem) {
-    case "no_index": return tx(lang, "Il manque la page d'accueil index.html.", "The index.html home page is missing.");
-    case "unfinished": return tx(lang, `${i.file} n'a pas été écrit jusqu'au bout.`, `${i.file} was not written to the end.`);
-    case "truncated": return tx(lang, `${i.file} semble coupé (fin de page absente).`, `${i.file} looks cut off (no page end).`);
-    case "missing_asset": return tx(lang, `${i.file} charge${t}, qui n'a pas été généré.`, `${i.file} loads${t}, which was not generated.`);
-    case "missing_page": return tx(lang, `${i.file} a un lien vers${t}, une page qui n'existe pas.`, `${i.file} links to${t}, a page that does not exist.`);
-    case "missing_anchor": return tx(lang, `${i.file} a un lien vers la section${t}, introuvable dans la page.`, `${i.file} links to the section${t}, not found on the page.`);
-  }
-};
+const issueText = (lang: Lang, i: BuildIssue) => describeIssue(lang, i);
 
 /** What was really checked on the finished site: static checks plus JavaScript errors seen in the preview. */
 function VerificationBar({ lang, issues, runtime, onRequestFix }: { lang: Lang; issues: BuildIssue[]; runtime: string[]; onRequestFix?: ((text: string) => void) | undefined }) {

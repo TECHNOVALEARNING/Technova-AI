@@ -33,7 +33,12 @@ export function parseBuild(text: string, finished: boolean): StudioBuild {
     if (tag === "step") {
       const file = attr.match(/(?:Écriture de|Création de|Writing|Creating|Generating)\s+(.+)$/i)?.[1]?.trim();
       steps.push({ title: attr, detail: inner.trim(), ...(file ? { file } : {}), done });
-    } else if (tag === "file") files.push({ path: attr, content: inner.replace(/^\n/, ""), done });
+    } else if (tag === "file") {
+      // A later file with the same path replaces the earlier one (the automatic repair appends fixed files).
+      const file = { path: attr, content: inner.replace(/^\n/, ""), done };
+      const at = files.findIndex((f) => f.path === attr);
+      if (at >= 0) files[at] = file; else files.push(file);
+    }
     else sql = inner.trim();
     if (!close) break;
   }
@@ -142,7 +147,7 @@ export function resolvePreviewPage(files: StudioFile[], current: string, href: s
   return [target, `${target}/index.html`, `${target}.html`, target || "index.html"].find((p) => available.has(p)) ?? null;
 }
 
-export type BuildIssue = { file: string; problem: "no_index" | "unfinished" | "truncated" | "missing_asset" | "missing_page" | "missing_anchor"; target?: string };
+export type BuildIssue = { file: string; problem: "no_index" | "unfinished" | "truncated" | "missing_asset" | "missing_page" | "missing_anchor" | "syntax_error"; target?: string };
 
 /** Static check of a finished build, run in the browser (free): entry page present, every file complete, every
  *  local stylesheet, script, image and internal page that the HTML points to really generated, every "#section"
@@ -189,4 +194,41 @@ export function checkBuild(files: StudioFile[]): BuildIssue[] {
     }
   }
   return issues;
+}
+
+/** JavaScript that cannot even be parsed (classic scripts only: .js files and inline <script> blocks without
+ *  modules). Compiles with new Function, never runs the code. */
+export function jsSyntaxIssues(files: StudioFile[]): BuildIssue[] {
+  const issues: BuildIssue[] = [];
+  const check = (file: string, code: string) => {
+    if (!code.trim() || /^\s*(import|export)\s/m.test(code)) return;
+    try { new Function(code); } catch (e) { if (e instanceof SyntaxError) issues.push({ file, problem: "syntax_error", target: e.message.slice(0, 160) }); }
+  };
+  for (const f of files) {
+    const path = f.path.replace(/^\.?\//, "");
+    if (/\.c?js$/i.test(path)) check(path, f.content);
+    else if (/\.html?$/i.test(path)) {
+      for (const m of f.content.matchAll(/<script\b([^>]*)>([\s\S]*?)<\/script>/gi)) {
+        const attrs = m[1] ?? "";
+        if (/\bsrc=/i.test(attrs) || /type=["'](?!text\/javascript|application\/javascript)[^"']+["']/i.test(attrs)) continue;
+        check(path, m[2] ?? "");
+      }
+    }
+  }
+  return issues;
+}
+
+/** One readable line per issue, for the Studio panel and the automatic repair prompt. */
+export function describeIssue(lang: "fr" | "en", i: BuildIssue): string {
+  const fr = lang === "fr";
+  const t = i.target ? ` « ${i.target} »` : "";
+  switch (i.problem) {
+    case "no_index": return fr ? "Il manque la page d'accueil index.html." : "The index.html home page is missing.";
+    case "unfinished": return fr ? `${i.file} n'a pas été écrit jusqu'au bout.` : `${i.file} was not written to the end.`;
+    case "truncated": return fr ? `${i.file} semble coupé (fin de page absente).` : `${i.file} looks cut off (no page end).`;
+    case "missing_asset": return fr ? `${i.file} charge${t}, qui n'a pas été généré.` : `${i.file} loads${t}, which was not generated.`;
+    case "missing_page": return fr ? `${i.file} a un lien vers${t}, une page qui n'existe pas.` : `${i.file} links to${t}, a page that does not exist.`;
+    case "missing_anchor": return fr ? `${i.file} a un lien vers la section${t}, introuvable dans la page.` : `${i.file} links to the section${t}, not found on the page.`;
+    case "syntax_error": return fr ? `${i.file} contient du JavaScript invalide :${t}.` : `${i.file} contains invalid JavaScript:${t}.`;
+  }
 }
