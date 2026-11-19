@@ -1,10 +1,11 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { z } from "zod";
 
-// TechNova Tableur → « Assistant IA » and « Importer un PDF ». Free for the user (no credits): one very cheap
-// engine (Gemini 2.5 Flash Lite, about USD 0.001 a request), bounded by two rate limits (sheet_ai per 10 min,
-// sheet_ai_daily per day, fail-closed) and refused for suspended accounts. The real provider cost is logged in
-// chat_engine_costs (mode "sheet") for the admin spend chart. The assistant answers in text and proposes changes
+// TechNova Tableur → « Assistant IA » (SHEET_AI_CREDITS a request) and « Tableaux d'un PDF » (SHEET_PDF_CREDITS):
+// twice the price is reserved first (reserveCredits also refuses suspended accounts), then the job is billed
+// max(price, real OpenRouter cost × 1 200), never more than the reservation; nothing is charged when it fails.
+// One cheap engine (Gemini 2.5 Flash Lite), two rate limits (sheet_ai per 10 min, sheet_ai_daily per day,
+// fail-closed); usage_logs and chat_engine_costs (mode "sheet") record it for the Usage page and the admin chart. The assistant answers in text and proposes changes
 // as validated actions that the browser applies only after the user approves them; nothing is stored.
 
 const MODEL = "google/gemini-2.5-flash-lite";
@@ -62,11 +63,25 @@ export const Route = createFileRoute("/api/sheet-ai")({
         const { hitRateLimit, rateLimitMessage } = await import("@/lib/security.server");
         if (!(await hitRateLimit(userId, "sheet_ai"))) return new Response(rateLimitMessage(d.lang, "sheet_ai"), { status: 429 });
         if (!(await hitRateLimit(userId, "sheet_ai_daily"))) return new Response(fr ? "Vous avez atteint la limite du jour de l'assistant du tableur. Elle se renouvelle dans 24 heures." : "You reached today's limit for the spreadsheet assistant. It renews within 24 hours.", { status: 429 });
-        const { assertNotSuspended } = await import("@/lib/credits.server");
-        try { await assertNotSuspended(userId); } catch { return new Response(fr ? "Compte suspendu." : "Account suspended.", { status: 403 }); }
+        const { SHEET_AI_CREDITS, SHEET_PDF_CREDITS } = await import("@/lib/sheet/limits");
+        const price = d.kind === "pdf" ? SHEET_PDF_CREDITS : SHEET_AI_CREDITS;
+        const { reserveCredits, settleCredits, releaseCredits } = await import("@/lib/credits.server");
+        let held: string | null;
+        try { held = await reserveCredits(userId, price * 2, d.kind === "pdf" ? "Tableur · tableaux d'un PDF" : "Tableur · assistant IA"); }
+        catch { return new Response(fr ? "Compte suspendu." : "Account suspended.", { status: 403 }); }
+        if (!held) return new Response(fr ? `Crédits insuffisants : ${d.kind === "pdf" ? "la lecture d'un PDF" : "une demande à l'assistant"} coûte ${price} crédits.` : `Not enough credits: ${d.kind === "pdf" ? "reading a PDF" : "an assistant request"} costs ${price} credits.`, { status: 402 });
+        const reservation = held;
+        const startedAt = Date.now();
         const { orComplete, providerMessage, OpenRouterError } = await import("@/lib/openrouter.server");
         const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-        const log = (r: { inputTokens: number; outputTokens: number; costUsd: number }) => supabaseAdmin.from("chat_engine_costs").insert({ owner_id: userId, mode: "sheet", engine: MODEL, input_tokens: r.inputTokens, output_tokens: r.outputTokens, cost_usd: r.costUsd || null, credits: 0 });
+        /** Bills the job (price, or the real cost when higher, within the reservation) and records it. */
+        const bill = async (r: { inputTokens: number; outputTokens: number; costUsd: number }) => {
+          const credits = Math.min(price * 2, Math.max(price, Math.ceil((r.costUsd || 0) * 1200)));
+          await settleCredits(reservation, credits);
+          await supabaseAdmin.from("usage_logs").insert({ owner_id: userId, model: "Tableur · assistant IA", input_tokens: r.inputTokens, output_tokens: r.outputTokens, credits, latency_ms: Date.now() - startedAt });
+          await supabaseAdmin.from("chat_engine_costs").insert({ owner_id: userId, mode: "sheet", engine: MODEL, input_tokens: r.inputTokens, output_tokens: r.outputTokens, cost_usd: r.costUsd || null, credits });
+          return credits;
+        };
         try {
           if (d.kind === "pdf") {
             if (!/^data:application\/pdf;base64,/.test(d.data)) return new Response("Invalid file", { status: 400 });
@@ -77,10 +92,10 @@ export const Route = createFileRoute("/api/sheet-ai")({
                 { role: "user", content: [{ type: "file", file: { filename: d.name.replace(/[^\w.\- ]/g, "") || "document.pdf", file_data: d.data } }, { type: "text", text: "Extract the tables." }] },
               ],
             });
-            await log(r);
             const s = r.content.indexOf("{"), e = r.content.lastIndexOf("}");
             const json = z.object({ sheets: z.array(z.object({ name: z.string().max(60), rows: z.array(z.array(z.union([z.string(), z.number()]).transform(String)).max(60)).max(2000) })).min(1).max(20) }).parse(JSON.parse(r.content.slice(s, e + 1)));
-            return Response.json(json);
+            const credits = await bill(r);
+            return Response.json({ ...json, credits });
           }
           const { sheetActions } = await import("@/lib/sheet/ai-actions");
           const r = await orComplete({
@@ -91,7 +106,6 @@ export const Route = createFileRoute("/api/sheet-ai")({
               { role: "user", content: `Workbook "${d.title}" — sheets: ${d.sheets.join(", ")} — active sheet "${d.sheet}", selection ${d.selection}.\nActive sheet content:\n${d.context || "(empty sheet)"}\n\nRequest: ${d.message}` },
             ],
           });
-          await log(r);
           const s = r.content.indexOf("{"), e = r.content.lastIndexOf("}");
           let reply = "", actions: unknown[] = [];
           try {
@@ -103,10 +117,13 @@ export const Route = createFileRoute("/api/sheet-ai")({
           const valid = actions.map((a) => sheetActions.element.safeParse(a)).filter((x) => x.success).map((x) => x.data);
           let cells = 0;
           const capped = valid.filter((a) => { if (a.type !== "set") return true; cells += Object.keys(a.cells).length; return cells <= 400; });
-          return Response.json({ reply: reply || (fr ? "Voici ma proposition." : "Here is my proposal."), actions: capped });
+          if (!reply && !capped.length) throw new Error("empty");
+          const credits = await bill(r);
+          return Response.json({ reply: reply || (fr ? "Voici ma proposition." : "Here is my proposal."), actions: capped, credits });
         } catch (e) {
+          await releaseCredits(reservation);
           if (e instanceof OpenRouterError) return new Response(providerMessage(e.status), { status: 502 });
-          return new Response(fr ? "L'assistant n'a pas pu répondre. Réessayez dans un instant." : "The assistant could not answer. Try again in a moment.", { status: 502 });
+          return new Response(fr ? "L'assistant n'a pas pu répondre. Réessayez dans un instant : aucun crédit n'a été prélevé." : "The assistant could not answer. Try again in a moment: no credit was charged.", { status: 502 });
         }
       },
     },

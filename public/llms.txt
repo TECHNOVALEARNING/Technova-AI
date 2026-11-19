@@ -7,7 +7,7 @@
 - [Accueil](https://www.technovaihub.com/): présentation, fonctionnement et questions fréquentes
 - [Modèles IA](https://www.technovaihub.com/modeles): modèles disponibles et prix en crédits ; le chat propose trois modes (Éclair, Équilibré, Expert) et TechNova Smart, qui choisit le mode pour chaque demande
 - Créativité (TechNova Design) : 210 modèles originaux de présentations, documents, CV, factures, flyers, invitations, cartes, logos et publications, avec un éditeur libre (polices libres, mise en forme, images, emojis, pages) et des exports PDF, PowerPoint, HTML ou lien à partager sur WhatsApp
-- Tableur (TechNova Tableur) : un mini Excel dans le navigateur (formules en français ou en anglais, formats FCFA, graphiques, plusieurs feuilles, imports Excel/CSV/PDF/Google Drive, exports Excel/PDF/Google Sheets) avec un assistant IA gratuit
+- Tableur (TechNova Tableur) : un mini Excel dans le navigateur (formules en français ou en anglais, formats FCFA, graphiques, plusieurs feuilles, imports Excel/CSV/PDF/Google Drive, exports Excel/PDF/Google Sheets) avec un assistant IA à 4 crédits la demande
 - [Tarifs](https://www.technovaihub.com/tarifs): packs Starter (999 FCFA, 1 000 crédits), Essential (2 499 FCFA, 2 600 crédits), Creator (4 999 FCFA, 5 500 crédits) et Pro (7 699 FCFA, 8 500 crédits)
 
 ## Développeurs

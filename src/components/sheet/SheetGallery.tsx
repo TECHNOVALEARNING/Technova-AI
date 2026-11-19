@@ -9,6 +9,7 @@ import { type Workbook, addr, display, newWorkbook } from "@/lib/sheet/model";
 import { importFile } from "@/lib/sheet/sheet-io";
 import { SHEET_GROUPS, SHEET_TEMPLATES, type SheetTemplate } from "./sheet-templates";
 import { SHEET_DRAFT_KEY, SheetEditor } from "./SheetEditor";
+import { SHEET_AI_CREDITS } from "@/lib/sheet/limits";
 
 // Registry → « Tableur et Excel »: TechNova Tableur's start page — blank workbook, open a file, resume the draft
 // kept on this device, or one of the templates (budget, sales, invoice, quote, stock, cash flow, tontine,
@@ -59,7 +60,7 @@ export function SheetGallery({ lang }: { lang: Lang }) {
         <div>
           <p className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.14em] text-[#1f7a5a]"><FileSpreadsheet className="size-3.5" />TechNova Tableur</p>
           <h2 className="mt-1.5 font-display text-[22px] font-semibold leading-tight">{tx(lang, "Vos tableaux Excel, sans installer Excel", "Your Excel spreadsheets, without installing Excel")}</h2>
-          <p className="mt-2 max-w-xl text-[13px] leading-relaxed text-muted-foreground">{tx(lang, "Formules (SOMME, SI, RECHERCHEX…), mise en forme, FCFA, graphiques, plusieurs feuilles, et un assistant IA gratuit qui vous propose les colonnes, les formules et la mise en forme. Ouvrez vos fichiers Excel, CSV, PDF ou Google Sheets, puis exportez en Excel, PDF ou lien à partager.", "Formulas (SUM, IF, XLOOKUP…), formatting, currencies, charts, several sheets, and a free AI assistant that suggests columns, formulas and formatting. Open Excel, CSV, PDF or Google Sheets files, then export to Excel, PDF or a share link.")}</p>
+          <p className="mt-2 max-w-xl text-[13px] leading-relaxed text-muted-foreground">{tx(lang, "Formules (SOMME, SI, RECHERCHEX…), mise en forme, FCFA, graphiques, plusieurs feuilles, et un assistant IA qui vous propose les colonnes, les formules et la mise en forme. Ouvrez vos fichiers Excel, CSV, PDF ou Google Sheets, puis exportez en Excel, PDF ou lien à partager.", "Formulas (SUM, IF, XLOOKUP…), formatting, currencies, charts, several sheets, and an AI assistant that suggests columns, formulas and formatting. Open Excel, CSV, PDF or Google Sheets files, then export to Excel, PDF or a share link.")}</p>
           <div className="mt-4 flex flex-wrap gap-2">
             <button type="button" onClick={() => void start(newWorkbook(tx(lang, "Classeur sans titre", "Untitled workbook")))} className="inline-flex h-10 items-center gap-2 rounded-full bg-[#1f7a5a] px-4 text-[13px] font-semibold text-white hover:brightness-110"><FilePlus2 className="size-4" />{tx(lang, "Classeur vierge", "Blank workbook")}</button>
             <button type="button" onClick={() => file.current?.click()} className="inline-flex h-10 items-center gap-2 rounded-full border border-border bg-background px-4 text-[13px] font-semibold hover:bg-secondary"><FileUp className="size-4" />{tx(lang, "Ouvrir un fichier Excel ou CSV", "Open an Excel or CSV file")}</button>
@@ -69,7 +70,7 @@ export function SheetGallery({ lang }: { lang: Lang }) {
         </div>
         <div className="grid content-start gap-3 rounded-2xl bg-secondary/50 p-4">
           {feature(<Calculator className="size-4" />, tx(lang, "Plus de 50 fonctions", "50+ functions"), tx(lang, "En français ou en anglais, avec ; ou , comme dans Excel.", "French or English names, ; or , like in Excel."))}
-          {feature(<Sparkles className="size-4" />, tx(lang, "Assistant IA gratuit", "Free AI assistant"), tx(lang, "Il propose, vous validez : aucun crédit consommé.", "It proposes, you approve: no credits used."))}
+          {feature(<Sparkles className="size-4" />, tx(lang, "Assistant IA", "AI assistant"), tx(lang, `Il propose, vous validez : ${SHEET_AI_CREDITS} crédits par demande.`, `It proposes, you approve: ${SHEET_AI_CREDITS} credits a request.`))}
           {feature(<BarChart3 className="size-4" />, tx(lang, "Graphiques", "Charts"), tx(lang, "Barres, courbes, aires, secteurs, déplaçables sur la feuille.", "Bars, lines, areas, pies, movable on the sheet."))}
           {feature(<Share2 className="size-4" />, tx(lang, "Exports et partage", "Export and share"), tx(lang, "Excel, PDF, CSV, Google Sheets, lien et WhatsApp.", "Excel, PDF, CSV, Google Sheets, link and WhatsApp."))}
         </div>

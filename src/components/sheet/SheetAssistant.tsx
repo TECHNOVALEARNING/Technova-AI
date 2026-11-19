@@ -5,10 +5,12 @@ import { cn } from "@/lib/utils";
 import { type Evaluator, isErr } from "@/lib/sheet/formula";
 import { type SheetAction, applyActions, describeAction, sheetContext } from "@/lib/sheet/ai-actions";
 import { type Workbook, addr, display } from "@/lib/sheet/model";
+import { SHEET_AI_CREDITS } from "@/lib/sheet/limits";
+import { notifyCreditsChanged } from "@/components/dashboard/TopActions";
 
 // The TechNova Tableur assistant: a side panel that reads the active sheet, answers, writes and proposes changes
 // (cells, formulas, formats, charts, sheets). Proposed changes are listed and applied only on « Appliquer »; the
-// whole thing is free for the user (one cheap engine, rate-limited on the server).
+// assistant costs SHEET_AI_CREDITS a request (real cost when higher), billed on the server only when it answers.
 
 type Lang = "fr" | "en";
 const tx = (lang: Lang, fr: string, en: string) => (lang === "fr" ? fr : en);
@@ -44,7 +46,8 @@ export function SheetAssistant({ lang, wb, si, selection, ev, onApply, onClose }
         }),
       });
       if (!res.ok) throw new Error(await res.text());
-      const json = await res.json() as { reply: string; actions: SheetAction[] };
+      const json = await res.json() as { reply: string; actions: SheetAction[]; credits?: number };
+      notifyCreditsChanged();
       setMsgs((l) => [...l, { role: "assistant", content: json.reply, ...(json.actions.length ? { actions: json.actions, state: "pending" as const } : {}) }]);
     } catch (e) {
       const t = e instanceof Error && e.message && e.message.length < 300 ? e.message : tx(lang, "L'assistant n'a pas pu répondre.", "The assistant could not answer.");
@@ -60,7 +63,7 @@ export function SheetAssistant({ lang, wb, si, selection, ev, onApply, onClose }
   return <aside className="flex w-[360px] shrink-0 flex-col border-l border-border bg-background">
     <div className="flex items-center gap-2 border-b border-border px-3 py-2.5">
       <span className="grid size-7 place-items-center rounded-lg bg-gradient-to-br from-[#1f7a5a] to-[#2b9b74] text-white"><Sparkles className="size-3.5" /></span>
-      <div className="min-w-0 flex-1"><strong className="block text-[13px]">{tx(lang, "Assistant IA du tableur", "Spreadsheet AI assistant")}</strong><span className="block text-[11px] text-muted-foreground">{tx(lang, "Gratuit · vous validez chaque changement", "Free · you approve every change")}</span></div>
+      <div className="min-w-0 flex-1"><strong className="block text-[13px]">{tx(lang, "Assistant IA du tableur", "Spreadsheet AI assistant")}</strong><span className="block text-[11px] text-muted-foreground">{tx(lang, `${SHEET_AI_CREDITS} crédits par demande · vous validez chaque changement`, `${SHEET_AI_CREDITS} credits a request · you approve every change`)}</span></div>
       <button type="button" onClick={onClose} aria-label={tx(lang, "Fermer l'assistant", "Close assistant")} className="grid size-7 place-items-center rounded-md hover:bg-secondary"><X className="size-4" /></button>
     </div>
     <div ref={list} className="min-h-0 flex-1 space-y-3 overflow-y-auto px-3 py-3">
