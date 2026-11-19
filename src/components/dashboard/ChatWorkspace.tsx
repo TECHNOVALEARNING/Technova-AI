@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState, type PointerEvent as
 import { confirmDialog } from "@/components/ConfirmHost";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
-import { History, Share, ArrowRight, ArrowUp, Crown, Check, ChevronDown, Code2, MessageCircle, Pencil, Plus, Search, Trash2, Mic, Paperclip, X, Loader2, FileAudio, FileVideo, FileText, Square, Copy, Wand2, Zap, Film, Image as ImageIcon, Telescope, Music, Library, AlertCircle, LayoutTemplate, ShoppingBag, BarChart3, BadgeDollarSign, ScanEye, FileSearch, Download, PenLine, AudioLines } from "lucide-react";
+import { History, Share, ArrowRight, ArrowUp, Crown, Check, ChevronDown, Code2, MessageCircle, Pencil, Plus, Search, Trash2, Mic, Paperclip, X, Loader2, FileAudio, FileVideo, FileText, Square, Copy, Wand2, Zap, Film, Image as ImageIcon, Telescope, Music, Library, AlertCircle, LayoutTemplate, ShoppingBag, Presentation, BadgeDollarSign, ScanEye, FileSearch, Download, PenLine, AudioLines } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -667,13 +667,13 @@ function ChatOrb() {
   return <div className="chat-orb" aria-hidden="true"><span className="chat-orb-ball"><i /><i /><i /><b /></span></div>;
 }
 
-type StarterIdea = { icon: typeof LayoutTemplate; mode: Mode; attach?: boolean; wizard?: "sales"; fr: [string, string, string]; en: [string, string, string] };
+type StarterIdea = { icon: typeof LayoutTemplate; mode: Mode; attach?: boolean; wizard?: "sales" | "design"; fr: [string, string, string]; en: [string, string, string] };
 
 // One-click starting points: [title, hint, prefilled prompt]. Brackets mark what the user completes.
 const starterIdeas: StarterIdea[] = [
   { icon: LayoutTemplate, mode: "create", fr: ["Landing page", "Une page moderne et épurée", "Crée une landing page moderne et épurée pour [mon activité] : héros percutant, trois avantages, témoignages, tarifs et appel à l'action."], en: ["Landing page", "A modern, clean page", "Build a modern, clean landing page for [my business]: strong hero, three benefits, testimonials, pricing and a call to action."] },
   { icon: ShoppingBag, mode: "create", fr: ["Boutique en ligne", "Catalogue, fiche produit, panier", "Crée une boutique en ligne élégante pour vendre [mes produits] : catalogue avec filtres, fiche produit détaillée et panier."], en: ["Online store", "Catalog, product page, cart", "Build an elegant online store to sell [my products]: filterable catalog, detailed product page and cart."] },
-  { icon: BarChart3, mode: "create", fr: ["Tableau de bord", "Données en graphiques interactifs", "Crée un tableau de bord interactif pour suivre [mes ventes / mes indicateurs] : chiffres clés, graphiques et filtres par période."], en: ["Dashboard", "Data as interactive charts", "Build an interactive dashboard to track [my sales / my metrics]: key figures, charts and period filters."] },
+  { icon: Presentation, mode: "create", wizard: "design", fr: ["Présentation", "Slides, CV, flyers, cartes…", ""], en: ["Presentation", "Slides, résumés, flyers, cards…", ""] },
   { icon: BadgeDollarSign, mode: "create", wizard: "sales", fr: ["Page de vente pro", "Offre, style, paiement : une page qui vend", ""], en: ["Pro sales page", "Offer, style, payment: a page that sells", ""] },
   { icon: ScanEye, mode: "chat", attach: true, fr: ["Design vers code", "Une capture devient une page", "Reproduis fidèlement le design de l'image jointe en une page HTML/CSS responsive, dans un seul fichier."], en: ["Design to code", "A screenshot becomes a page", "Faithfully recreate the design in the attached image as a responsive HTML/CSS page, in a single file."] },
   { icon: FileSearch, mode: "chat", attach: true, fr: ["Analyser un document", "PDF, Word, Excel, PowerPoint…", "Résume le document joint en 5 points clés, puis liste les décisions et les actions à mener."], en: ["Analyse a document", "PDF, Word, Excel, PowerPoint…", "Summarise the attached document in 5 key points, then list the decisions and actions to take."] },
@@ -681,8 +681,11 @@ const starterIdeas: StarterIdea[] = [
 
 function StarterIdeas({ choice, inputRef, onSalesPage, onMusic, onVideo, onHumanize, onAudio }: { choice: ReturnType<typeof useWorkspaceChoice>; inputRef: React.RefObject<HTMLTextAreaElement | null>; onSalesPage: () => void; onMusic: () => void; onVideo: () => void; onHumanize: () => void; onAudio: () => void }) {
   const { lang } = useDashboard();
+  const goTo = useNavigate();
   function pick(idea: StarterIdea) {
     if (idea.wizard === "sales") { onSalesPage(); return; }
+    // « Présentation » opens TechNova Design (Registry → Présentation et Canva).
+    if (idea.wizard === "design") { void goTo({ to: "/dashboard/registry", search: { section: "design" } as never }); return; }
     choice.chooseMode(idea.mode);
     const [, , prompt] = idea[lang === "en" ? "en" : "fr"];
     // Let the composer re-render in the chosen mode, then prefill and select the part to complete.

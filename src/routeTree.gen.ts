@@ -30,6 +30,7 @@ import { Route as AuthenticatedDashboardRouteImport } from './routes/_authentica
 import { Route as ApercuTokenRouteImport } from './routes/apercu.$token'
 import { Route as ApiAudioSummaryRouteImport } from './routes/api/audio-summary'
 import { Route as ApiChatRouteImport } from './routes/api/chat'
+import { Route as ApiDesignAiRouteImport } from './routes/api/design-ai'
 import { Route as ApiResearchRouteImport } from './routes/api/research'
 import { Route as ApiStudioRouteImport } from './routes/api/studio'
 import { Route as ApiStudioJobRouteImport } from './routes/api/studio-job'
@@ -170,6 +171,11 @@ const ApiAudioSummaryRoute = ApiAudioSummaryRouteImport.update({
 const ApiChatRoute = ApiChatRouteImport.update({
   id: '/api/chat',
   path: '/api/chat',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiDesignAiRoute = ApiDesignAiRouteImport.update({
+  id: '/api/design-ai',
+  path: '/api/design-ai',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiResearchRoute = ApiResearchRouteImport.update({
@@ -398,6 +404,7 @@ export interface FileRoutesByFullPath {
   '/apercu/$token': typeof ApercuTokenRoute
   '/api/audio-summary': typeof ApiAudioSummaryRoute
   '/api/chat': typeof ApiChatRoute
+  '/api/design-ai': typeof ApiDesignAiRoute
   '/api/research': typeof ApiResearchRoute
   '/api/studio': typeof ApiStudioRoute
   '/api/studio-job': typeof ApiStudioJobRoute
@@ -456,6 +463,7 @@ export interface FileRoutesByTo {
   '/apercu/$token': typeof ApercuTokenRoute
   '/api/audio-summary': typeof ApiAudioSummaryRoute
   '/api/chat': typeof ApiChatRoute
+  '/api/design-ai': typeof ApiDesignAiRoute
   '/api/research': typeof ApiResearchRoute
   '/api/studio': typeof ApiStudioRoute
   '/api/studio-job': typeof ApiStudioJobRoute
@@ -517,6 +525,7 @@ export interface FileRoutesById {
   '/apercu/$token': typeof ApercuTokenRoute
   '/api/audio-summary': typeof ApiAudioSummaryRoute
   '/api/chat': typeof ApiChatRoute
+  '/api/design-ai': typeof ApiDesignAiRoute
   '/api/research': typeof ApiResearchRoute
   '/api/studio': typeof ApiStudioRoute
   '/api/studio-job': typeof ApiStudioJobRoute
@@ -578,6 +587,7 @@ export interface FileRouteTypes {
     | '/apercu/$token'
     | '/api/audio-summary'
     | '/api/chat'
+    | '/api/design-ai'
     | '/api/research'
     | '/api/studio'
     | '/api/studio-job'
@@ -636,6 +646,7 @@ export interface FileRouteTypes {
     | '/apercu/$token'
     | '/api/audio-summary'
     | '/api/chat'
+    | '/api/design-ai'
     | '/api/research'
     | '/api/studio'
     | '/api/studio-job'
@@ -696,6 +707,7 @@ export interface FileRouteTypes {
     | '/apercu/$token'
     | '/api/audio-summary'
     | '/api/chat'
+    | '/api/design-ai'
     | '/api/research'
     | '/api/studio'
     | '/api/studio-job'
@@ -755,6 +767,7 @@ export interface RootRouteChildren {
   ApercuTokenRoute: typeof ApercuTokenRoute
   ApiAudioSummaryRoute: typeof ApiAudioSummaryRoute
   ApiChatRoute: typeof ApiChatRoute
+  ApiDesignAiRoute: typeof ApiDesignAiRoute
   ApiResearchRoute: typeof ApiResearchRoute
   ApiStudioRoute: typeof ApiStudioRoute
   ApiStudioJobRoute: typeof ApiStudioJobRoute
@@ -924,6 +937,13 @@ declare module '@tanstack/react-router' {
       path: '/api/chat'
       fullPath: '/api/chat'
       preLoaderRoute: typeof ApiChatRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/design-ai': {
+      id: '/api/design-ai'
+      path: '/api/design-ai'
+      fullPath: '/api/design-ai'
+      preLoaderRoute: typeof ApiDesignAiRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/research': {
@@ -1269,6 +1289,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApercuTokenRoute: ApercuTokenRoute,
   ApiAudioSummaryRoute: ApiAudioSummaryRoute,
   ApiChatRoute: ApiChatRoute,
+  ApiDesignAiRoute: ApiDesignAiRoute,
   ApiResearchRoute: ApiResearchRoute,
   ApiStudioRoute: ApiStudioRoute,
   ApiStudioJobRoute: ApiStudioJobRoute,

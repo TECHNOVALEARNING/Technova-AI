@@ -92,6 +92,10 @@ export const upcomingConnectors: UpcomingConnector[] = [
   c("google-business-profile", "Google Business Profile", "grow", "Fiches d'établissement, avis et statistiques", "Business locations, reviews and insights"),
   c("meta-ads", "Meta ads", "grow", "Publicités Facebook et Instagram", "Facebook and Instagram ad campaigns"),
   c("posthog", "PostHog", "grow", "Analyse produit, feature flags et événements", "Product analytics, feature flags and event capture"),
+  c("canva", "Canva", "work", "Envoyer vos créations TechNova Design dans Canva", "Send your TechNova Design creations to Canva"),
+  c("instagram", "Instagram", "grow", "Publier vos posts et stories créés dans TechNova", "Publish the posts and stories you design in TechNova"),
+  c("facebook", "Facebook", "grow", "Publier sur votre page Facebook", "Publish to your Facebook page"),
+  c("youtube", "YouTube", "grow", "Miniatures et publication de vidéos", "Thumbnails and video publishing"),
   c("tiktok", "TikTok", "grow", "Comptes et contenus TikTok", "TikTok user and content APIs"),
   c("amplitude", "Amplitude", "grow", "Analyse produit et retours utilisateurs", "Product analytics and feedback"),
 ];
