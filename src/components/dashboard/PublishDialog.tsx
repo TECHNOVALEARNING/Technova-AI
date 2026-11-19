@@ -4,6 +4,8 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { SITE_SLUG_RE, toSlug } from "@/lib/connectors";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faWhatsapp } from "@fortawesome/free-brands-svg-icons";
 import { deploySiteToNetlify, deploySiteToVercel, publishSite, pushSiteToGitHub } from "@/lib/publishing.functions";
 import { BrandLogo } from "./BrandLogo";
 import type { StudioFile } from "@/lib/studio";
@@ -28,7 +30,7 @@ const ERR: Record<string, [string, string]> = {
   secrets: ["Le code contient une clé secrète (API, mot de passe). Retirez-la avant de publier : elle serait visible par tous.", "The code contains a secret key (API, password). Remove it before publishing: it would be public."],
 };
 
-export function PublishDialog({ open, onOpenChange, title, files, lang }: { open: boolean; onOpenChange: (o: boolean) => void; title: string; files: StudioFile[]; lang: string }) {
+export function PublishDialog({ open, onOpenChange, title, files, lang, shareText }: { open: boolean; onOpenChange: (o: boolean) => void; title: string; files: StudioFile[]; lang: string; shareText?: string }) {
   const [slug, setSlug] = useState(() => toSlug(title) || "mon-site");
   const [busy, setBusy] = useState<"site" | "github" | "netlify" | "vercel" | null>(null);
   const [hosted, setHosted] = useState<{ netlify?: string; vercel?: string }>({});
@@ -74,6 +76,15 @@ export function PublishDialog({ open, onOpenChange, title, files, lang }: { open
       {error && <p role="alert" className="text-sm text-destructive">{error}</p>}
       {url && <a href={url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 truncate rounded-lg bg-muted px-3 py-2 text-sm font-medium"><Globe2 className="size-4 shrink-0" />{url}</a>}
       {(["netlify", "vercel"] as const).map((k) => hosted[k] && <a key={k} href={hosted[k]} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 truncate rounded-lg bg-muted px-3 py-2 text-sm font-medium"><BrandLogo id={k} size="sm" />{hosted[k]}</a>)}
+      {(url || hosted.netlify || hosted.vercel) && (() => {
+        // Share the live link straight away: WhatsApp (guests, clients), or the phone's own share sheet.
+        const link = url || hosted.netlify || hosted.vercel || "";
+        const text = `${shareText || title} ${link}`;
+        return <div className="flex flex-wrap gap-2">
+          <a href={`https://wa.me/?text=${encodeURIComponent(text)}`} target="_blank" rel="noopener noreferrer" className="inline-flex h-9 flex-1 items-center justify-center gap-2 rounded-full bg-[#25D366] px-4 text-sm font-semibold text-white"><FontAwesomeIcon icon={faWhatsapp} className="size-4" />{tx(lang, "Partager sur WhatsApp", "Share on WhatsApp")}</a>
+          <Button variant="outline" className="h-9 flex-1 rounded-full" onClick={() => { if (navigator.share) void navigator.share({ title, url: link }).catch(() => undefined); else void navigator.clipboard.writeText(link); }}>{tx(lang, "Copier ou partager le lien", "Copy or share the link")}</Button>
+        </div>;
+      })()}
       {repoUrl && <a href={repoUrl} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 truncate rounded-lg bg-muted px-3 py-2 text-sm font-medium"><Github className="size-4 shrink-0" />{repoUrl}</a>}
       <div className="flex flex-col gap-2 sm:flex-row">
         <Button className="flex-1" disabled={!valid || busy !== null} onClick={() => void publish()}>{busy === "site" ? <Loader2 className="size-4 animate-spin" /> : <Rocket className="size-4" />}{url ? tx(lang, "Republier", "Republish") : tx(lang, "Publier", "Publish")}</Button>

@@ -17,7 +17,7 @@ export const PALETTES: Record<string, Palette> = {
   sable: { id: "sable", fr: "Sable", en: "Sand", bg: "#f7f3ec", surface: "#fffdf9", ink: "#2b2620", muted: "#7d7468", accent: "#8a6a3d", soft: "#ede4d6", line: "#e5dccd", head: "Playfair Display", body: "Inter" },
 };
 
-export const FONTS_HREF = "https://fonts.googleapis.com/css2?family=Fraunces:wght@500;600;700&family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@500;600;700&family=DM+Sans:wght@400;500;700&family=Manrope:wght@400;600;800&family=Plus+Jakarta+Sans:wght@400;600;800&display=swap";
+export { DESIGN_FONTS_HREF as FONTS_HREF } from "@/lib/design-fonts";
 
 type V = Record<string, string>;
 type Layout = { id: string; format: DesignFormatId; fr: string; en: string; pages: number; fields: DesignField[]; render: (v: V, p: Palette, page: number) => ReactNode };
@@ -33,13 +33,14 @@ function Page({ w, h, p, children, style }: { w: number; h: number; p: Palette; 
 const H = (p: Palette, size: number, extra: CSSProperties = {}): CSSProperties => ({ fontFamily: font(p.head), fontSize: size, lineHeight: 1.08, fontWeight: 700, letterSpacing: "-0.02em", margin: 0, ...extra });
 const B = (p: Palette, size: number, extra: CSSProperties = {}): CSSProperties => ({ fontFamily: font(p.body), fontSize: size, lineHeight: 1.55, margin: 0, color: p.muted, ...extra });
 const Eyebrow = ({ p, children, size = 14 }: { p: Palette; children: ReactNode; size?: number }) => <p style={{ fontFamily: font(p.body), fontSize: size, fontWeight: 600, letterSpacing: "0.16em", textTransform: "uppercase", color: p.accent, margin: 0 }}>{children}</p>;
+// data-design-image marks a picture slot: the editor turns it into an image element (empty = « Image » placeholder).
 const Img = ({ src, p, style, label = "Photo" }: { src: string; p: Palette; style: CSSProperties; label?: string }) => src
-  ? <div style={{ backgroundImage: `url("${src}")`, backgroundSize: "cover", backgroundPosition: "center", ...style }} />
-  : <div style={{ background: p.soft, display: "flex", alignItems: "center", justifyContent: "center", color: p.muted, fontFamily: font(p.body), fontSize: 14, ...style }}>{label}</div>;
+  ? <div data-design-image={src} style={{ backgroundImage: `url("${src}")`, backgroundSize: "cover", backgroundPosition: "center", ...style }} />
+  : <div data-design-image="" style={{ background: p.soft, display: "flex", alignItems: "center", justifyContent: "center", color: p.muted, fontFamily: font(p.body), fontSize: 14, ...style }}>{label}</div>;
 const Bar = ({ p, w = 56, h = 4 }: { p: Palette; w?: number; h?: number }) => <div style={{ width: w, height: h, background: p.accent, borderRadius: h }} />;
 
 // ---------- Presentation (5 slides) ----------
-const presFields = [
+const presFieldsBase = [
   f("title", "Titre de la présentation", "Lancer notre offre en 2027"), f("subtitle", "Sous-titre", "Stratégie, étapes et chiffres clés"),
   f("author", "Présenté par", "Awa Mensah · Direction commerciale"), f("date", "Date", "Janvier 2027"),
   f("agenda", "Sommaire (une ligne par point)", "Où nous en sommes\nNotre plan d'action\nLes chiffres à retenir", "long"),
@@ -50,10 +51,19 @@ const presFields = [
   f("stat3", "Chiffre 3", "6 mois"), f("stat3Label", "Légende chiffre 3", "pour le déploiement"),
   f("closing", "Message de fin", "Merci pour votre attention"), f("contact", "Contact", "awa.mensah@entreprise.com · +229 01 00 00 00"),
 ];
-function presentation(variant: "minimal" | "split" | "editorial") {
+const presFields = presFieldsBase;
+const presPhotoFields = [f("photo", "Photo de couverture", "", "image"), ...presFieldsBase];
+function presentation(variant: "minimal" | "split" | "editorial" | "photo") {
   return (v: V, p: Palette, page: number) => {
     const W = 1280, Hh = 720, pad = 88;
     const side = variant === "split";
+    if (page === 0 && variant === "photo") return <Page w={W} h={Hh} p={p}>
+      <Img src={v["photo"] ?? ""} p={p} style={{ position: "absolute", right: 0, top: 0, width: 560, height: Hh }} label="Votre photo" />
+      <div style={{ position: "absolute", left: pad, top: 190, width: 560, display: "flex", flexDirection: "column", gap: 24 }}>
+        <Eyebrow p={p}>{v["date"]}</Eyebrow><h1 style={H(p, 62)}>{v["title"]}</h1><p style={B(p, 24)}>{v["subtitle"]}</p>
+      </div>
+      <p style={{ ...B(p, 18), position: "absolute", left: pad, bottom: 64, color: p.ink, fontWeight: 600 }}>{v["author"]}</p>
+    </Page>;
     if (page === 0) return <Page w={W} h={Hh} p={p}>
       {side && <div style={{ position: "absolute", right: 0, top: 0, width: 420, height: Hh, background: p.accent }} />}
       {variant === "editorial" && <div style={{ position: "absolute", left: pad, right: pad, top: 64, height: 1, background: p.line }} />}
@@ -153,17 +163,38 @@ const cvFields = [
   f("exp1", "Expérience 1 (poste · entreprise · dates)", "Responsable communication · MTN Bénin · 2023 – aujourd'hui"), f("exp1d", "Détail expérience 1", "Pilotage des campagnes réseaux sociaux, +45 % d'engagement en un an.", "long"),
   f("exp2", "Expérience 2", "Chargée de marketing · Agence Wouli · 2020 – 2023"), f("exp2d", "Détail expérience 2", "Création de contenus et gestion de budgets publicitaires pour 12 clients.", "long"),
   f("edu", "Formation (une ligne par diplôme)", "Master Marketing · Université d'Abomey-Calavi · 2020\nLicence Communication · ISM Adonaï · 2018", "long"),
-  f("skills", "Compétences (une ligne chacune)", "Stratégie social media\nCanva et Figma\nGoogle Ads\nRédaction\nAnglais courant", "long"),
+  f("skills", "Compétences (une ligne chacune)", "Stratégie social media\nCanva et Figma\nGoogle Ads\nRédaction", "long"),
+  f("languages", "Langues (une ligne chacune, avec le niveau)", "Français · langue maternelle\nAnglais · courant (C1)\nFon · courant", "long"),
+  f("certs", "Certifications et formations courtes", "Google Ads Search · 2025\nMeta Blueprint · 2024", "long"),
+  f("interests", "Centres d'intérêt (4 au plus)", "Photographie\nBénévolat associatif\nCourse à pied", "long"),
 ];
-function cv(variant: "sidebar" | "classic") {
+function cv(variant: "sidebar" | "classic" | "modern") {
   return (v: V, p: Palette) => {
     const side = variant === "sidebar";
     const Section = ({ t, children }: { t: string; children: ReactNode }) => <div style={{ display: "flex", flexDirection: "column", gap: 10 }}><p style={{ fontFamily: font(p.body), fontSize: 12, fontWeight: 700, letterSpacing: "0.14em", textTransform: "uppercase", color: p.accent, margin: 0 }}>{t}</p>{children}</div>;
     const left = <>
       <Section t="Contact">{lines(v["contact"] ?? "").map((t, i) => <p key={i} style={B(p, 13, { color: side ? p.bg : p.ink })}>{t}</p>)}</Section>
       <Section t="Compétences">{lines(v["skills"] ?? "").map((t, i) => <p key={i} style={B(p, 13, { color: side ? p.bg : p.ink })}>{t}</p>)}</Section>
-      <Section t="Formation">{lines(v["edu"] ?? "").map((t, i) => <p key={i} style={B(p, 12.5, { color: side ? p.line : p.muted })}>{t}</p>)}</Section>
+      <Section t="Langues">{lines(v["languages"] ?? "").map((t, i) => <p key={i} style={B(p, 13, { color: side ? p.bg : p.ink })}>{t}</p>)}</Section>
+      <Section t="Centres d'intérêt">{lines(v["interests"] ?? "").slice(0, 4).map((t, i) => <p key={i} style={B(p, 13, { color: side ? p.bg : p.ink })}>{t}</p>)}</Section>
     </>;
+    const right = <>
+      <Section t="Formation">{lines(v["edu"] ?? "").map((t, i) => <p key={i} style={B(p, 13, { color: p.ink })}>{t}</p>)}</Section>
+      <Section t="Certifications">{lines(v["certs"] ?? "").map((t, i) => <p key={i} style={B(p, 13, { color: p.muted })}>{t}</p>)}</Section>
+    </>;
+    if (variant === "modern") return <Page w={A4.w} h={A4.h} p={p} style={{ background: p.surface }}>
+      <div style={{ position: "absolute", left: 0, right: 0, top: 0, height: 190, background: p.accent }} />
+      <Img src={v["photo"] ?? ""} p={p} style={{ position: "absolute", left: 56, top: 50, width: 120, height: 120, borderRadius: 120, border: `5px solid ${p.surface}` }} />
+      <div style={{ position: "absolute", left: 200, right: 56, top: 64 }}><h1 style={H(p, 38, { color: p.surface })}>{v["name"]}</h1><p style={B(p, 17, { color: p.surface, marginTop: 8, fontWeight: 600 })}>{v["job"]}</p></div>
+      <div style={{ position: "absolute", left: 56, top: 230, width: 210, display: "flex", flexDirection: "column", gap: 26 }}>{left}</div>
+      <div style={{ position: "absolute", left: 300, right: 56, top: 230, display: "flex", flexDirection: "column", gap: 26 }}>
+        <Section t="Profil"><p style={B(p, 13.5, { color: p.ink })}>{v["profile"]}</p></Section>
+        <Section t="Expérience">{[1, 2].map((n) => <div key={n} style={{ paddingLeft: 14, borderLeft: `2px solid ${p.soft}` }}>
+          <p style={B(p, 14, { color: p.ink, fontWeight: 700 })}>{v[`exp${n}`]}</p><p style={B(p, 13, { marginTop: 4 })}>{v[`exp${n}d`]}</p>
+        </div>)}</Section>
+        {right}
+      </div>
+    </Page>;
     return <Page w={A4.w} h={A4.h} p={p} style={{ background: p.surface }}>
       {side && <div style={{ position: "absolute", left: 0, top: 0, bottom: 0, width: 260, background: p.ink }} />}
       {side && <div style={{ position: "absolute", left: 36, top: 56, width: 188, display: "flex", flexDirection: "column", gap: 30 }}>
@@ -178,7 +209,7 @@ function cv(variant: "sidebar" | "classic") {
         <Section t="Expérience">{[1, 2].map((n) => <div key={n} style={{ paddingLeft: 14, borderLeft: `2px solid ${p.soft}` }}>
           <p style={B(p, 14, { color: p.ink, fontWeight: 700 })}>{v[`exp${n}`]}</p><p style={B(p, 13, { marginTop: 4 })}>{v[`exp${n}d`]}</p>
         </div>)}</Section>
-        {!side && <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 28 }}>{left}</div>}
+        {side ? right : <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 24 }}><div style={{ display: "flex", flexDirection: "column", gap: 20 }}>{right}</div><div style={{ display: "flex", flexDirection: "column", gap: 20 }}>{left}</div></div>}
       </div>
     </Page>;
   };
@@ -260,6 +291,11 @@ function flyer(variant: "photo" | "type") {
 const inviteFields = [
   f("kicker", "Petit titre", "Vous êtes invités"), f("title", "Titre", "Mariage de\nFifamè & Jonas", "long", 80), f("date", "Date et heure", "Samedi 20 juin 2027 · 15 h"),
   f("place", "Lieu", "Jardins de la Villa Ahouandjinou, Porto-Novo"), f("text", "Message", "Nous serions heureux de partager ce jour avec vous.", "long"), f("rsvp", "Réponse souhaitée", "Merci de confirmer avant le 1er juin · +229 01 00 00 00"),
+  f("programme", "Programme (une ligne par moment)", "15 h · Cérémonie\n17 h · Cocktail\n20 h · Dîner et soirée dansante", "long"),
+  f("dresscode", "Tenue souhaitée", "Tenue de soirée · touches dorées bienvenues"),
+  f("eventDate", "Date pour le compte à rebours (AAAA-MM-JJ HH:MM)", "2027-06-20 15:00"),
+  f("mapQuery", "Adresse pour l'itinéraire", "Villa Ahouandjinou, Porto-Novo, Bénin"),
+  f("rsvpPhone", "Numéro WhatsApp pour les réponses (avec indicatif)", "+22901000000"),
 ];
 function invitation(variant: "elegant" | "party") {
   return (v: V, p: Palette) => {
@@ -267,12 +303,14 @@ function invitation(variant: "elegant" | "party") {
     return <Page w={W} h={Hh} p={p}>
       <div style={{ position: "absolute", inset: 24, border: `1px solid ${variant === "elegant" ? p.accent : p.line}`, borderRadius: variant === "elegant" ? 2 : 22 }} />
       {variant === "party" && <div style={{ position: "absolute", left: 24, right: 24, top: 24, height: 180, background: p.soft, borderRadius: "22px 22px 0 0" }} />}
-      <div style={{ position: "absolute", left: 60, right: 60, top: variant === "elegant" ? 150 : 120, display: "flex", flexDirection: "column", alignItems: "center", textAlign: "center", gap: 22 }}>
+      <div style={{ position: "absolute", left: 60, right: 60, top: variant === "elegant" ? 110 : 90, display: "flex", flexDirection: "column", alignItems: "center", textAlign: "center", gap: 16 }}>
         <Eyebrow p={p} size={12}>{v["kicker"]}</Eyebrow>
         <h1 style={H(p, 44, { whiteSpace: "pre-line", fontWeight: variant === "elegant" ? 600 : 800 })}>{v["title"]}</h1>
         <Bar p={p} w={40} h={2} />
         <p style={B(p, 17, { color: p.ink, fontWeight: 600 })}>{v["date"]}</p><p style={B(p, 15)}>{v["place"]}</p>
         <p style={B(p, 15, { fontStyle: "italic" })}>{v["text"]}</p>
+        <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>{lines(v["programme"] ?? "").slice(0, 4).map((t, i) => <p key={i} style={B(p, 12.5, { color: p.ink })}>{t}</p>)}</div>
+        <p style={B(p, 12, { color: p.accent, fontWeight: 600 })}>{v["dresscode"]}</p>
       </div>
       <p style={{ ...B(p, 12), position: "absolute", left: 60, right: 60, bottom: 64, textAlign: "center" }}>{v["rsvp"]}</p>
     </Page>;
@@ -449,10 +487,12 @@ function board(v: V, p: Palette) {
 const LAYOUTS: Layout[] = [
   { id: "pres-minimal", format: "presentation", fr: "Présentation sobre", en: "Clean deck", pages: 5, fields: presFields, render: presentation("minimal") },
   { id: "pres-split", format: "presentation", fr: "Présentation à bandeau", en: "Banner deck", pages: 5, fields: presFields, render: presentation("split") },
+  { id: "pres-photo", format: "presentation", fr: "Présentation avec photo", en: "Photo deck", pages: 5, fields: presPhotoFields, render: presentation("photo") },
   { id: "pres-editorial", format: "presentation", fr: "Présentation éditoriale", en: "Editorial deck", pages: 5, fields: presFields, render: presentation("editorial") },
   { id: "doc-report", format: "document", fr: "Rapport", en: "Report", pages: 1, fields: reportFields, render: report },
   { id: "doc-letter", format: "document", fr: "Lettre professionnelle", en: "Business letter", pages: 1, fields: letterFields, render: letter },
   { id: "cv-sidebar", format: "cv", fr: "CV à colonne", en: "Sidebar résumé", pages: 1, fields: cvFields, render: cv("sidebar") },
+  { id: "cv-modern", format: "cv", fr: "CV moderne", en: "Modern résumé", pages: 1, fields: cvFields, render: cv("modern") },
   { id: "cv-classic", format: "cv", fr: "CV classique", en: "Classic résumé", pages: 1, fields: cvFields, render: cv("classic") },
   { id: "invoice", format: "invoice", fr: "Facture", en: "Invoice", pages: 1, fields: invoiceFields, render: invoice },
   { id: "brochure", format: "brochure", fr: "Brochure 3 volets", en: "Tri-fold brochure", pages: 1, fields: brochureFields, render: brochure },
@@ -477,20 +517,12 @@ const LAYOUTS: Layout[] = [
   { id: "board-notes", format: "whiteboard", fr: "Tableau de post-it", en: "Sticky-note board", pages: 1, fields: boardFields, render: board },
 ];
 
-/** Which palettes each layout ships with (two or three each, about fifty templates in all). */
-const VARIANTS: Record<string, string[]> = {
-  "pres-minimal": ["ardoise", "ivoire", "foret"], "pres-split": ["corail", "lavande", "nuit"], "pres-editorial": ["sable", "ivoire"],
-  "doc-report": ["ardoise", "foret"], "doc-letter": ["ivoire", "ardoise"], "cv-sidebar": ["ardoise", "foret"], "cv-classic": ["ivoire", "lavande"],
-  invoice: ["ardoise", "corail"], brochure: ["foret", "ardoise"], "flyer-photo": ["corail", "ardoise"], "flyer-type": ["lavande", "nuit"],
-  "invite-elegant": ["sable", "nuit"], "invite-party": ["corail", "lavande"], "card-minimal": ["ivoire", "ardoise"], "card-bold": ["nuit", "foret"],
-  "logo-monogram": ["corail", "ardoise"], "logo-wordmark": ["ivoire"], "logo-badge": ["foret"], "ig-photo": ["ivoire", "lavande"], "ig-quote": ["sable"],
-  "ig-promo": ["corail", "ardoise"], "story-photo": ["ivoire"], "story-type": ["lavande", "foret"], "fb-post": ["ardoise", "sable"], "yt-thumb": ["nuit", "corail"],
-  "bio-card": ["lavande", "sable"], "email-news": ["ardoise", "foret"], "board-notes": ["ardoise"],
-};
+/** Every layout ships in the seven palettes (about two hundred templates); the user can still change it. */
+const ALL_PALETTES = Object.keys(PALETTES);
 
 export type DesignTemplate = { id: string; layout: Layout; palette: Palette; format: DesignFormatId; fr: string; en: string };
 
-export const DESIGN_TEMPLATES: DesignTemplate[] = LAYOUTS.flatMap((layout) => (VARIANTS[layout.id] ?? ["ardoise"]).map((pid) => {
+export const DESIGN_TEMPLATES: DesignTemplate[] = LAYOUTS.flatMap((layout) => ALL_PALETTES.map((pid) => {
   const palette = PALETTES[pid]!;
   return { id: `${layout.id}:${pid}`, layout, palette, format: layout.format, fr: `${layout.fr} · ${palette.fr}`, en: `${layout.en} · ${palette.en}` };
 }));

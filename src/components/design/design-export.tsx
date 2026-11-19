@@ -1,113 +1,140 @@
 import { renderToStaticMarkup } from "react-dom/server";
-import { formatById } from "@/lib/design-formats";
-import { FONTS_HREF, type DesignTemplate, type Palette } from "./designs";
+import { formatById, type DesignFormatId } from "@/lib/design-formats";
+import { DESIGN_FONTS_HREF } from "@/lib/design-fonts";
+import { DocPage, textLines, type DesignDoc } from "./doc";
 
-// Exports of TechNova Design, all built in the browser (nothing is sent anywhere, no credits):
-// print / PDF (the system print dialog with the exact page size), a standalone HTML file, and a native,
-// editable PowerPoint file for presentations (opens in PowerPoint, Google Slides and Canva).
+// Exports of TechNova Design, all built in the browser from the editable document (nothing is sent anywhere, no
+// credits): print / PDF at the exact page size, a standalone HTML file, a native PowerPoint file (editable text
+// boxes, shapes and images, any format), and the web page published as a share link (/s/…, Netlify, Vercel,
+// GitHub) — for invitations it adds a countdown, WhatsApp RSVP, directions and « add to calendar ».
 
-type V = Record<string, string>;
-
-function pagesMarkup(t: DesignTemplate, v: V, p: Palette) {
-  return Array.from({ length: t.layout.pages }, (_, i) => `<section class="sheet">${renderToStaticMarkup(<>{t.layout.render(v, p, i)}</>)}</section>`).join("");
+const esc = (s: string) => s.replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]!);
+const pagesMarkup = (doc: DesignDoc) => doc.pages.map((_, i) => `<section class="sheet">${renderToStaticMarkup(<DocPage doc={doc} page={i} />)}</section>`).join("");
+const slug = (s: string) => s.normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/[^a-zA-Z0-9]+/g, "-").replace(/^-|-$/g, "").toLowerCase().slice(0, 60) || "design";
+function save(blob: Blob, name: string) {
+  const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = name; a.click();
+  setTimeout(() => URL.revokeObjectURL(a.href), 1000);
 }
 
-function documentHtml(t: DesignTemplate, v: V, p: Palette, title: string) {
-  const fmt = formatById(t.format);
-  return `<!DOCTYPE html><html lang="fr"><head><meta charset="utf-8"><title>${title.replace(/[<>&]/g, "")}</title>
-<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="stylesheet" href="${FONTS_HREF}">
+function printHtml(doc: DesignDoc, format: DesignFormatId, title: string) {
+  const fmt = formatById(format);
+  return `<!DOCTYPE html><html lang="fr"><head><meta charset="utf-8"><title>${esc(title)}</title>
+<link rel="stylesheet" href="${DESIGN_FONTS_HREF}">
 <style>
 @page { size: ${fmt.print}; margin: 0; }
 * { -webkit-print-color-adjust: exact; print-color-adjust: exact; box-sizing: border-box; }
 html, body { margin: 0; padding: 0; background: #e9e9ec; }
-.sheet { width: ${fmt.w}px; height: ${fmt.h}px; margin: 24px auto; box-shadow: 0 10px 30px rgba(0,0,0,.12); overflow: hidden; page-break-after: always; break-after: page; }
-@media print {
-  html, body { background: none; }
-  .sheet { margin: 0; box-shadow: none; zoom: var(--fit, 1); }
-}
-</style></head><body>${pagesMarkup(t, v, p)}</body></html>`;
+.sheet { width: ${doc.w}px; height: ${doc.h}px; margin: 24px auto; box-shadow: 0 10px 30px rgba(0,0,0,.12); overflow: hidden; break-after: page; page-break-after: always; }
+@media print { html, body { background: none; } .sheet { margin: 0; box-shadow: none; zoom: var(--fit, 1); } }
+</style></head><body>${pagesMarkup(doc)}</body></html>`;
 }
 
 /** Opens the print dialog (Imprimer ou Enregistrer en PDF) with the design at its real page size. */
-export function printDesign(t: DesignTemplate, v: V, p: Palette, title: string) {
+export function printDoc(doc: DesignDoc, format: DesignFormatId, title: string) {
   const win = window.open("", "_blank");
   if (!win) return false;
-  const fmt = formatById(t.format);
-  win.document.open();
-  win.document.write(documentHtml(t, v, p, title));
-  win.document.close();
-  // Fit pixel designs on paper sizes (A4, A5, card): scale the sheet to the printable page width.
-  const mmWidth: Record<string, number> = { A4: 210, A5: 148, "A4 landscape": 297, "85mm 55mm": 85 };
-  const mm = mmWidth[fmt.print];
-  if (mm) win.document.documentElement.style.setProperty("--fit", String((mm * 96) / 25.4 / fmt.w));
-  const go = () => { try { win.focus(); win.print(); } catch { /* closed */ } };
-  void (win.document.fonts?.ready ?? Promise.resolve()).then(() => setTimeout(go, 300));
+  const fmt = formatById(format);
+  win.document.open(); win.document.write(printHtml(doc, format, title)); win.document.close();
+  const mm: Record<string, number> = { A4: 210, A5: 148, "A4 landscape": 297, "85mm 55mm": 85 };
+  if (mm[fmt.print]) win.document.documentElement.style.setProperty("--fit", String((mm[fmt.print]! * 96) / 25.4 / doc.w));
+  void (win.document.fonts?.ready ?? Promise.resolve()).then(() => setTimeout(() => { try { win.focus(); win.print(); } catch { /* closed */ } }, 400));
   return true;
 }
 
-export function downloadHtml(t: DesignTemplate, v: V, p: Palette, title: string) {
-  const blob = new Blob([documentHtml(t, v, p, title)], { type: "text/html;charset=utf-8" });
-  save(blob, `${slug(title)}.html`);
+export function downloadDocHtml(doc: DesignDoc, format: DesignFormatId, title: string, values: Record<string, string>) {
+  save(new Blob([shareHtml(doc, format, title, values)], { type: "text/html;charset=utf-8" }), `${slug(title)}.html`);
 }
 
-const slug = (s: string) => s.normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/[^a-zA-Z0-9]+/g, "-").replace(/^-|-$/g, "").toLowerCase().slice(0, 60) || "design";
-function save(blob: Blob, name: string) {
-  const a = document.createElement("a");
-  a.href = URL.createObjectURL(blob);
-  a.download = name;
-  a.click();
-  setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+/** The page behind the share link: every page fitted to the visitor's screen, plus the invitation extras. */
+export function shareHtml(doc: DesignDoc, format: DesignFormatId, title: string, values: Record<string, string>) {
+  const invite = format === "invitation";
+  const when = (values["eventDate"] ?? "").trim().replace(" ", "T");
+  const phone = (values["rsvpPhone"] ?? "").replace(/[^\d]/g, "");
+  const map = (values["mapQuery"] ?? values["place"] ?? "").trim();
+  const name = (values["title"] ?? title).replace(/\s+/g, " ").trim();
+  const extras = invite ? `
+<div class="bar">
+  ${when ? `<p class="count" id="count"></p>` : ""}
+  <div class="actions">
+    ${phone ? `<a class="btn main" href="https://wa.me/${phone}?text=${encodeURIComponent(`Bonjour, je confirme ma présence : ${name}.`)}" target="_blank" rel="noopener">Confirmer ma présence</a>
+    <a class="btn" href="https://wa.me/${phone}?text=${encodeURIComponent(`Bonjour, je ne pourrai malheureusement pas être présent(e) : ${name}.`)}" target="_blank" rel="noopener">Je ne pourrai pas venir</a>` : ""}
+    ${map ? `<a class="btn" href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(map)}" target="_blank" rel="noopener">Itinéraire</a>` : ""}
+    ${when ? `<button class="btn" id="cal" type="button">Ajouter au calendrier</button>` : ""}
+    <a class="btn" id="share" href="#">Partager</a>
+  </div>
+</div>` : `<div class="bar"><div class="actions"><a class="btn" id="share" href="#">Partager</a></div></div>`;
+  const script = `<script>
+(function(){
+  var W=${doc.w};
+  function fit(){document.querySelectorAll('.page').forEach(function(p){var s=Math.min(1,p.parentElement.clientWidth/W);p.style.transform='scale('+s+')';p.parentElement.style.height=(${doc.h}*s)+'px';});}
+  window.addEventListener('resize',fit);fit();
+  var sh=document.getElementById('share');
+  if(sh)sh.addEventListener('click',function(e){e.preventDefault();var u=location.href;var t=${JSON.stringify(name)};
+    if(navigator.share){navigator.share({title:t,url:u}).catch(function(){});}else{window.open('https://wa.me/?text='+encodeURIComponent(t+' '+u),'_blank');}});
+  ${when ? `var target=new Date(${JSON.stringify(when)});var c=document.getElementById('count');
+  function tick(){var d=target-new Date();if(!c)return;if(isNaN(d)){c.textContent='';return;}if(d<=0){c.textContent="C'est aujourd'hui !";return;}
+    var j=Math.floor(d/864e5),h=Math.floor(d%864e5/36e5),m=Math.floor(d%36e5/6e4);c.textContent='Plus que '+j+' j '+h+' h '+m+' min';}
+  tick();setInterval(tick,30000);
+  var cal=document.getElementById('cal');
+  if(cal)cal.addEventListener('click',function(){var s=target,e=new Date(s.getTime()+4*36e5);function f(x){return x.toISOString().replace(/[-:]/g,'').split('.')[0]+'Z';}
+    var ics=['BEGIN:VCALENDAR','VERSION:2.0','PRODID:-//TechNova Design//FR','BEGIN:VEVENT','UID:'+Date.now()+'@technovaihub.com','DTSTAMP:'+f(new Date()),'DTSTART:'+f(s),'DTEND:'+f(e),'SUMMARY:'+${JSON.stringify(name)},'LOCATION:'+${JSON.stringify(map)},'END:VEVENT','END:VCALENDAR'].join('\\r\\n');
+    var a=document.createElement('a');a.href=URL.createObjectURL(new Blob([ics],{type:'text/calendar'}));a.download='invitation.ics';a.click();});` : ""}
+})();
+</script>`;
+  return `<!DOCTYPE html><html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>${esc(name)}</title><link rel="stylesheet" href="${DESIGN_FONTS_HREF}">
+<style>
+*{box-sizing:border-box}body{margin:0;background:#f1f1f4;font-family:Inter,system-ui,sans-serif;color:#1c1917}
+main{max-width:${Math.min(doc.w, 1100)}px;margin:0 auto;padding:20px 14px 40px;display:flex;flex-direction:column;gap:18px}
+.wrap{width:100%;overflow:hidden;border-radius:14px;box-shadow:0 14px 40px -18px rgba(0,0,0,.35);background:#fff}
+.page{transform-origin:top left;width:${doc.w}px;height:${doc.h}px}
+.bar{display:flex;flex-direction:column;align-items:center;gap:14px;padding:6px 0}
+.count{margin:0;font-size:18px;font-weight:700}
+.actions{display:flex;flex-wrap:wrap;justify-content:center;gap:10px}
+.btn{appearance:none;border:1px solid #d8d8de;background:#fff;color:#1c1917;padding:12px 18px;border-radius:999px;font:600 14px Inter,system-ui,sans-serif;text-decoration:none;cursor:pointer}
+.btn.main{background:#1c1917;color:#fff;border-color:#1c1917}
+footer{text-align:center;font-size:12px;color:#8a8a94}
+</style></head><body><main>
+${doc.pages.map((_, i) => `<div class="wrap"><div class="page">${renderToStaticMarkup(<DocPage doc={doc} page={i} />)}</div></div>`).join("")}
+${extras}
+<footer>Créé avec TechNova AI Hub</footer>
+</main>${script}</body></html>`;
 }
 
-const hex = (c: string) => c.replace("#", "").toUpperCase();
-const lines = (t: string) => (t ?? "").split(/\n+/).map((x) => x.trim()).filter(Boolean);
+const hex = (c: string) => (c.startsWith("#") ? c.slice(1).toUpperCase() : "FFFFFF");
+const inch = (n: number) => n / 96;
 
-/** Native PowerPoint file (editable text boxes in the design's colours and fonts), five slides. */
-export async function downloadPptx(v: V, p: Palette, title: string) {
+/** Native PowerPoint file for any format: the document's text boxes, shapes and images, editable. */
+export async function downloadDocPptx(doc: DesignDoc, title: string) {
   const PptxGenJS = (await import("pptxgenjs")).default;
   const pptx = new PptxGenJS();
-  pptx.layout = "LAYOUT_WIDE"; // 13.33 × 7.5 in
+  pptx.defineLayout({ name: "TECHNOVA", width: inch(doc.w), height: inch(doc.h) });
+  pptx.layout = "TECHNOVA";
   pptx.title = title;
-  const head = p.head, body = p.body, ink = hex(p.ink), muted = hex(p.muted), accent = hex(p.accent), bg = hex(p.bg), surface = hex(p.surface), soft = hex(p.soft);
-  const base = () => { const s = pptx.addSlide(); s.background = { color: bg }; return s; };
-
-  let s = base();
-  s.addText(v["date"] ?? "", { x: 0.9, y: 2.0, w: 9, h: 0.4, fontFace: body, fontSize: 13, bold: true, color: accent, charSpacing: 3 });
-  s.addText(v["title"] ?? "", { x: 0.9, y: 2.45, w: 10.5, h: 1.8, fontFace: head, fontSize: 46, bold: true, color: ink, valign: "top" });
-  s.addText(v["subtitle"] ?? "", { x: 0.9, y: 4.35, w: 10, h: 0.7, fontFace: body, fontSize: 20, color: muted });
-  s.addText(v["author"] ?? "", { x: 0.9, y: 6.5, w: 10, h: 0.4, fontFace: body, fontSize: 14, bold: true, color: ink });
-
-  s = base();
-  s.addText("SOMMAIRE", { x: 0.9, y: 0.8, w: 6, h: 0.4, fontFace: body, fontSize: 13, bold: true, color: accent, charSpacing: 3 });
-  lines(v["agenda"] ?? "").slice(0, 5).forEach((t, i) => {
-    s.addShape(pptx.ShapeType.line, { x: 0.9, y: 1.7 + i * 1.0, w: 11.5, h: 0, line: { color: hex(p.line), width: 1 } });
-    s.addText(String(i + 1).padStart(2, "0"), { x: 0.9, y: 1.85 + i * 1.0, w: 1, h: 0.6, fontFace: head, fontSize: 24, bold: true, color: accent });
-    s.addText(t, { x: 2.0, y: 1.85 + i * 1.0, w: 10, h: 0.6, fontFace: head, fontSize: 26, color: ink });
-  });
-
-  s = base();
-  s.addShape(pptx.ShapeType.rect, { x: 0.9, y: 1.0, w: 0.6, h: 0.06, fill: { color: accent }, line: { color: accent } });
-  s.addText(v["contentTitle"] ?? "", { x: 0.9, y: 1.2, w: 4.2, h: 2.4, fontFace: head, fontSize: 34, bold: true, color: ink, valign: "top" });
-  lines(v["bullets"] ?? "").slice(0, 5).forEach((t, i) => {
-    s.addShape(pptx.ShapeType.roundRect, { x: 5.6, y: 1.0 + i * 1.25, w: 6.8, h: 1.05, fill: { color: surface }, line: { color: hex(p.line), width: 1 }, rectRadius: 0.12 });
-    s.addText(String(i + 1), { x: 5.8, y: 1.25 + i * 1.25, w: 0.5, h: 0.5, fontFace: body, fontSize: 14, bold: true, color: accent, align: "center", fill: { color: soft } });
-    s.addText(t, { x: 6.45, y: 1.05 + i * 1.25, w: 5.8, h: 0.95, fontFace: body, fontSize: 16, color: ink, valign: "middle" });
-  });
-
-  s = base();
-  s.addText("CHIFFRES CLÉS", { x: 0.9, y: 0.8, w: 6, h: 0.4, fontFace: body, fontSize: 13, bold: true, color: accent, charSpacing: 3 });
-  [1, 2, 3].forEach((n, i) => {
-    s.addShape(pptx.ShapeType.roundRect, { x: 0.9 + i * 3.95, y: 2.4, w: 3.6, h: 2.6, fill: { color: surface }, line: { color: hex(p.line), width: 1 }, rectRadius: 0.15 });
-    s.addText(v[`stat${n}`] ?? "", { x: 1.15 + i * 3.95, y: 2.65, w: 3.1, h: 1.1, fontFace: head, fontSize: 40, bold: true, color: accent });
-    s.addText(v[`stat${n}Label`] ?? "", { x: 1.15 + i * 3.95, y: 3.8, w: 3.1, h: 0.9, fontFace: body, fontSize: 15, color: muted, valign: "top" });
-  });
-
-  s = pptx.addSlide();
-  s.background = { color: ink };
-  s.addShape(pptx.ShapeType.rect, { x: 0.9, y: 2.6, w: 0.6, h: 0.06, fill: { color: accent }, line: { color: accent } });
-  s.addText(v["closing"] ?? "", { x: 0.9, y: 2.8, w: 11, h: 1.4, fontFace: head, fontSize: 44, bold: true, color: bg });
-  s.addText(v["contact"] ?? "", { x: 0.9, y: 4.3, w: 11, h: 0.6, fontFace: body, fontSize: 16, color: hex(p.line) });
-
+  for (const page of doc.pages) {
+    const s = pptx.addSlide();
+    s.background = { color: hex(page.bg) };
+    for (const el of page.elements) {
+      const pos = { x: inch(el.x), y: inch(el.y), w: inch(el.w), h: inch(el.h) };
+      if (el.type === "shape") {
+        if (el.fill === "transparent" && !el.border) continue;
+        s.addShape(el.radius > Math.min(el.w, el.h) / 2.2 ? pptx.ShapeType.ellipse : el.radius > 0 ? pptx.ShapeType.roundRect : pptx.ShapeType.rect, {
+          ...pos, ...(el.fill !== "transparent" ? { fill: { color: hex(el.fill), transparency: Math.round((1 - el.opacity) * 100) } } : { fill: { type: "none" } as never }),
+          line: el.border ? { color: hex(el.borderColor), width: el.border * 0.75 } : { type: "none" } as never,
+          ...(el.radius > 0 ? { rectRadius: Math.min(0.5, el.radius / Math.min(el.w, el.h)) } : {}),
+        });
+      } else if (el.type === "image") {
+        if (el.src.startsWith("data:")) s.addImage({ ...pos, data: el.src, sizing: { type: "cover", w: pos.w, h: pos.h } });
+      } else {
+        s.addText(textLines(el).replace(/^(•|\d+\.)\s/gm, el.list === "none" ? "$&" : ""), {
+          ...pos, fontFace: el.font, fontSize: Math.max(6, el.size * 0.75), bold: el.bold, italic: el.italic, ...(el.underline ? { underline: { style: "sng" as const } } : {}),
+          color: hex(el.color), align: el.align, valign: "top", margin: 0, lineSpacingMultiple: el.lineHeight, charSpacing: el.spacing * 0.75,
+          ...(el.highlight ? { highlight: hex(el.highlight) } : {}), ...(el.list === "bullet" ? { bullet: true } : el.list === "number" ? { bullet: { type: "number" } } : {}),
+          fit: "shrink",
+        });
+      }
+    }
+  }
   const blob = (await pptx.write({ outputType: "blob" })) as Blob;
   save(blob, `${slug(title)}.pptx`);
 }

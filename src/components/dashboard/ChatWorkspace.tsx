@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState, type PointerEvent as
 import { confirmDialog } from "@/components/ConfirmHost";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
-import { History, Share, ArrowRight, ArrowUp, Crown, Check, ChevronDown, Code2, MessageCircle, Pencil, Plus, Search, Trash2, Mic, Paperclip, X, Loader2, FileAudio, FileVideo, FileText, Square, Copy, Wand2, Zap, Film, Image as ImageIcon, Telescope, Music, Library, AlertCircle, LayoutTemplate, ShoppingBag, Presentation, BadgeDollarSign, ScanEye, FileSearch, Download, PenLine, AudioLines } from "lucide-react";
+import { History, Share, ArrowRight, ArrowUp, Crown, Check, ChevronDown, Code2, MessageCircle, Pencil, Plus, Search, Trash2, Mic, Paperclip, X, Loader2, FileAudio, FileVideo, FileText, Square, Copy, Wand2, Zap, Film, Image as ImageIcon, Telescope, Music, Library, AlertCircle, LayoutTemplate, ShoppingBag, Palette, BadgeDollarSign, ScanEye, FileSearch, Download, PenLine, AudioLines } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -34,6 +34,7 @@ import { faBolt, faBrain, faScaleBalanced, faWandMagicSparkles } from "@fortawes
 import { usePlanTier } from "@/lib/plan-client";
 import { FLAGSHIP_MIN_TIER, FLAGSHIP_MODELS, flagshipLabel, isFlagshipModel } from "@/lib/flagship-models";
 import { cn } from "@/lib/utils";
+import { ModelLogo } from "./ModelLogo";
 import { ThinkingLine } from "./ThinkingSpinner";
 import { notifyCreditsChanged } from "./TopActions";
 import { SalesPageWizard } from "./SalesPageWizard";
@@ -202,7 +203,7 @@ function ChoiceControls({ choice }: { choice: ReturnType<typeof useWorkspaceChoi
             aria-label={fr ? "Choisir le mode de réponse" : "Choose the answer mode"}
             className="h-8 min-w-0 gap-1.5 rounded-full px-2.5 text-[13px] font-normal text-muted-foreground hover:bg-transparent hover:text-foreground"
           >
-            <FontAwesomeIcon icon={faWandMagicSparkles} fixedWidth aria-hidden className="size-3.5" />
+            {flagship ? <ModelLogo label={flagshipLabel(flagship)} /> : <FontAwesomeIcon icon={faWandMagicSparkles} fixedWidth aria-hidden className="size-3.5" />}
             <span className="truncate">{flagship ? flagshipLabel(flagship) : tier === "smart" ? smartChoice.fr : fr ? chatTiers[tier].fr : chatTiers[tier].en}</span>
             <ChevronDown className="size-3.5 shrink-0" />
           </Button>
@@ -244,7 +245,8 @@ function ChoiceControls({ choice }: { choice: ReturnType<typeof useWorkspaceChoi
             </button>
             {flagshipOpen && FLAGSHIP_MODELS.map((m) => (
               <button key={m.name} type="button" onClick={() => { chooseFlagship(m.name); setTierOpen(false); }}
-                className="flex w-full items-center gap-2.5 rounded-xl py-2 pl-10 pr-3 text-left transition hover:bg-secondary">
+                className="flex w-full items-center gap-2.5 rounded-xl py-2 pl-8 pr-3 text-left transition hover:bg-secondary">
+                <ModelLogo label={m.label} />
                 <span className="min-w-0 flex-1">
                   <strong className="block truncate text-xs">{m.label}</strong>
                   <small className="block truncate text-[10px] font-normal text-muted-foreground">{fr ? m.fr : m.en}</small>
@@ -673,7 +675,7 @@ type StarterIdea = { icon: typeof LayoutTemplate; mode: Mode; attach?: boolean; 
 const starterIdeas: StarterIdea[] = [
   { icon: LayoutTemplate, mode: "create", fr: ["Landing page", "Une page moderne et épurée", "Crée une landing page moderne et épurée pour [mon activité] : héros percutant, trois avantages, témoignages, tarifs et appel à l'action."], en: ["Landing page", "A modern, clean page", "Build a modern, clean landing page for [my business]: strong hero, three benefits, testimonials, pricing and a call to action."] },
   { icon: ShoppingBag, mode: "create", fr: ["Boutique en ligne", "Catalogue, fiche produit, panier", "Crée une boutique en ligne élégante pour vendre [mes produits] : catalogue avec filtres, fiche produit détaillée et panier."], en: ["Online store", "Catalog, product page, cart", "Build an elegant online store to sell [my products]: filterable catalog, detailed product page and cart."] },
-  { icon: Presentation, mode: "create", wizard: "design", fr: ["Présentation", "Slides, CV, flyers, cartes…", ""], en: ["Presentation", "Slides, résumés, flyers, cards…", ""] },
+  { icon: Palette, mode: "create", wizard: "design", fr: ["Créativité", "Présentations, CV, flyers, invitations, cartes…", ""], en: ["Creativity", "Slides, résumés, flyers, invitations, cards…", ""] },
   { icon: BadgeDollarSign, mode: "create", wizard: "sales", fr: ["Page de vente pro", "Offre, style, paiement : une page qui vend", ""], en: ["Pro sales page", "Offer, style, payment: a page that sells", ""] },
   { icon: ScanEye, mode: "chat", attach: true, fr: ["Design vers code", "Une capture devient une page", "Reproduis fidèlement le design de l'image jointe en une page HTML/CSS responsive, dans un seul fichier."], en: ["Design to code", "A screenshot becomes a page", "Faithfully recreate the design in the attached image as a responsive HTML/CSS page, in a single file."] },
   { icon: FileSearch, mode: "chat", attach: true, fr: ["Analyser un document", "PDF, Word, Excel, PowerPoint…", "Résume le document joint en 5 points clés, puis liste les décisions et les actions à mener."], en: ["Analyse a document", "PDF, Word, Excel, PowerPoint…", "Summarise the attached document in 5 key points, then list the decisions and actions to take."] },
@@ -684,7 +686,7 @@ function StarterIdeas({ choice, inputRef, onSalesPage, onMusic, onVideo, onHuman
   const goTo = useNavigate();
   function pick(idea: StarterIdea) {
     if (idea.wizard === "sales") { onSalesPage(); return; }
-    // « Présentation » opens TechNova Design (Registry → Présentation et Canva).
+    // « Créativité » opens TechNova Design (Registry → Présentation et Canva).
     if (idea.wizard === "design") { void goTo({ to: "/dashboard/registry", search: { section: "design" } as never }); return; }
     choice.chooseMode(idea.mode);
     const [, , prompt] = idea[lang === "en" ? "en" : "fr"];
@@ -704,8 +706,8 @@ function StarterIdeas({ choice, inputRef, onSalesPage, onMusic, onVideo, onHuman
       const Icon = idea.icon;
       return <button key={title} type="button" onClick={() => pick(idea)}
         title={hint}
-        className="starter-chip group inline-flex h-7 shrink-0 items-center gap-[3px] rounded-full border px-[5px] text-[11.5px] text-foreground/80 transition-colors hover:text-foreground">
-        <Icon className="size-3.5 text-muted-foreground transition-colors group-hover:text-foreground" strokeWidth={1.6} />
+        className={cn("starter-chip group inline-flex h-7 shrink-0 items-center gap-[3px] rounded-full border px-[5px] text-[11.5px] text-foreground/80 transition-colors hover:text-foreground", idea.wizard === "design" && "starter-chip-design")}>
+        <Icon className="size-3.5 text-muted-foreground transition-colors group-hover:text-foreground" strokeWidth={idea.wizard === "design" ? 2 : 1.6} />
         <span className="truncate">{title}</span>
       </button>;
     })}
