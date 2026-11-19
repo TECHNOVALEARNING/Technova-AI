@@ -1,8 +1,9 @@
 import type { ReactNode } from "react";
-import { AudioLines, Bell, Brain, Clock, Coins, FileCheck2, Globe, KeyRound, Link2, Lock, PenLine, RefreshCw, Scale, ShieldCheck, Sparkles, Upload, Wand2, Zap } from "lucide-react";
+import { AudioLines, Bell, Brain, Clock, Coins, FileCheck2, Globe, KeyRound, Link2, Lock, PenLine, RefreshCw, Scale, ShieldCheck, Upload, Wand2, Zap } from "lucide-react";
 import type { SiteLang } from "@/lib/i18n";
 import { chatTierCredits } from "@/lib/chat-modes";
 import { FLAGSHIP_MODELS } from "@/lib/flagship-models";
+import { ModelLogo } from "@/components/dashboard/ModelLogo";
 import { WEB_SEARCH_FEE } from "@/lib/fresh-info";
 import {
   AUDIO_CHUNK_MINUTES, AUDIO_CREDITS_PER_MINUTE, AUDIO_MAX_MINUTES, AUDIO_MIN_CREDITS,
@@ -258,7 +259,7 @@ export function featureGuideBlocks4(lang: SiteLang): { id: string; title: string
       <h3 className={sub}>{m.flagTitle}</h3>
       {m.flag.map((x) => <p key={x} className={p}>{x}</p>)}
       <ul className="mt-4 grid gap-2 sm:grid-cols-2">{FLAGSHIP_MODELS.map((f) => <li key={f.name} className="flex items-center gap-3 rounded-xl border border-border bg-card px-3.5 py-2.5 text-sm shadow-sm">
-        <Sparkles className="size-4 shrink-0 text-muted-foreground" /><span className="min-w-0 flex-1"><b>{f.label}</b><span className="block text-xs text-muted-foreground">{f[ui]}</span></span>
+        <ModelLogo label={f.label} /><span className="min-w-0 flex-1"><b>{f.label}</b><span className="block text-xs text-muted-foreground">{f[ui]}</span></span>
         <span className="shrink-0 font-mono text-xs" aria-label={`${m.costLabel} ${f.cost}/3`}>{"●".repeat(f.cost)}<span className="opacity-25">{"●".repeat(3 - f.cost)}</span></span>
       </li>)}</ul>
     </> },

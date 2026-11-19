@@ -117,7 +117,7 @@ export function DashboardLayout({ children }: { children: ReactNode }) {
   useSessionGuard(useCallback(() => { void navigate({ to: "/connexion", replace: true }); }, [navigate]));
   async function signOut() {
     clearSessionGuard();
-    try { localStorage.removeItem("technova-inbox-read"); } catch { /* ignore */ }
+    try { localStorage.removeItem("technova-inbox-read"); localStorage.removeItem("technova-sheet-draft"); } catch { /* ignore */ }
     await supabase.auth.signOut();
     void navigate({ to: "/connexion", replace: true });
   }

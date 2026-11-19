@@ -1,6 +1,8 @@
 // Server-only security helpers (V4.1 socle): per-account rate limits and a security journal.
 // Never log secrets, tokens, prompts or private content here.
 
+import { SHEET_AI_PER_10_MIN, SHEET_AI_PER_DAY } from "@/lib/sheet/limits";
+
 export const RATE_LIMITS = {
   chat: { limit: 30, window: 60 },
   studio: { limit: 12, window: 60 },
@@ -12,6 +14,9 @@ export const RATE_LIMITS = {
   research: { limit: 5, window: 600 },
   audio_summary: { limit: 6, window: 600 },
   design_ai: { limit: 20, window: 600 },
+  // TechNova Tableur assistant: free for the user, so bounded per 10 minutes and per day.
+  sheet_ai: { limit: SHEET_AI_PER_10_MIN, window: 600 },
+  sheet_ai_daily: { limit: SHEET_AI_PER_DAY, window: 86400 },
   payment: { limit: 10, window: 600 },
   payment_check: { limit: 30, window: 60 },
   arena: { limit: 10, window: 300 },
@@ -31,7 +36,7 @@ export type RateBucket = keyof typeof RATE_LIMITS;
  * (database error), these are refused rather than let through unlimited; free actions stay allowed so an
  * incident does not lock people out of publishing, payments or connections.
  */
-const FAIL_CLOSED: ReadonlySet<RateBucket> = new Set<RateBucket>(["chat", "studio", "media", "api", "research", "audio_summary", "design_ai", "files", "knowledge", "arena", "help_chat", "help_chat_daily", "admin_transfer"]);
+const FAIL_CLOSED: ReadonlySet<RateBucket> = new Set<RateBucket>(["chat", "studio", "media", "api", "research", "audio_summary", "design_ai", "sheet_ai", "sheet_ai_daily", "files", "knowledge", "arena", "help_chat", "help_chat_daily", "admin_transfer"]);
 
 /** Returns true when the call is allowed. On a database error: refused for paid buckets, allowed otherwise. */
 export async function hitRateLimit(userId: string, bucket: RateBucket): Promise<boolean> {

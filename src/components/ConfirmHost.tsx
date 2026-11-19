@@ -17,7 +17,7 @@ export type ConfirmOptions = {
   /** "danger" for deletions, suspensions and other destructive actions. */
   tone?: "default" | "danger";
   /** Asks for a short text (e.g. a reason); the promise then resolves to that text. */
-  input?: { label: string; placeholder?: string; required?: boolean };
+  input?: { label: string; placeholder?: string; required?: boolean; defaultValue?: string };
 };
 type Request = ConfirmOptions & { resolve: (value: string | null) => void };
 
@@ -45,7 +45,7 @@ export function ConfirmHost() {
   const [value, setValue] = useState("");
   const settled = useRef(false);
   useEffect(() => {
-    open = (r) => { settled.current = false; setValue(""); setRequest(r); };
+    open = (r) => { settled.current = false; setValue(r.input?.defaultValue ?? ""); setRequest(r); };
     return () => { open = null; };
   }, []);
   const finish = (result: string | null) => {

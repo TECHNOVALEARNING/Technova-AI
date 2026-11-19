@@ -12,7 +12,7 @@ import { getAdminStats } from "@/lib/admin.functions";
 
 const card = "rounded-2xl border border-border bg-card/90 p-4";
 /** Studio rows of the cost table (recorded by /api/studio and the build job). */
-const studioModeLabel: Record<string, string> = { studio_build: "Studio · construction", studio_plan: "Studio · plan", studio_questions: "Studio · questions", studio_intent: "Studio · tri de la demande" };
+const studioModeLabel: Record<string, string> = { studio_build: "Studio · construction", studio_plan: "Studio · plan", studio_questions: "Studio · questions", studio_intent: "Studio · tri de la demande", design: "TechNova Design · rédaction IA", sheet: "Tableur · assistant IA (gratuit)" };
 const th = "p-3 text-left text-xs font-medium text-muted-foreground";
 const errText = (e: unknown) => (e instanceof Error ? e.message.replace(/^FORBIDDEN$/, "Accès refusé") : "Erreur");
 

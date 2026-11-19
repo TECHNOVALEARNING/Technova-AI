@@ -9,6 +9,7 @@ import { featureGuideBlocks } from "@/components/site/FeatureGuides";
 import { featureGuideBlocks2 } from "@/components/site/FeatureGuides2";
 import { featureGuideBlocks3 } from "@/components/site/FeatureGuides3";
 import { featureGuideBlocks4 } from "@/components/site/FeatureGuides4";
+import { featureGuideBlocks5 } from "@/components/site/FeatureGuides5";
 import { isSiteLang, type SiteLang } from "@/lib/i18n";
 import { DOC_DATE, DOC_VERSION, docPdfPath } from "@/lib/docs-version";
 import { codeSamples, useApiBase, withApiBase } from "@/lib/site-pages";
@@ -205,6 +206,8 @@ function DocsPage() {
   { const [agents, knowledge, where] = featureGuideBlocks(lang); blocks.push(agents!, knowledge!, ...featureGuideBlocks2(lang), ...featureGuideBlocks3(lang), where!); }
   // Chat modes, news questions, the humanize and audio journeys, and security & data protection.
   blocks.push(...featureGuideBlocks4(lang));
+  // Documentation 1.6: what's new, Créativité (TechNova Design), TechNova Tableur, image / music / video creations.
+  blocks.push(...featureGuideBlocks5(lang));
   blocks.push({ id: "cas-usage", title: t.reTag, body: <><p className="mt-3 leading-relaxed text-muted-foreground">{t.reTitle}</p>{recipes}</> });
   blocks.push({ id: "production", title: t.bpToc, body: <><p className="mt-3 leading-relaxed text-muted-foreground">{t.bpTitle}</p>{checklist}</> });
 

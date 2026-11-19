@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState, type PointerEvent as
 import { confirmDialog } from "@/components/ConfirmHost";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
-import { History, Share, ArrowRight, ArrowUp, Crown, Check, ChevronDown, Code2, MessageCircle, Pencil, Plus, Search, Trash2, Mic, Paperclip, X, Loader2, FileAudio, FileVideo, FileText, Square, Copy, Wand2, Zap, Film, Image as ImageIcon, Telescope, Music, Library, AlertCircle, LayoutTemplate, ShoppingBag, Palette, BadgeDollarSign, ScanEye, FileSearch, Download, PenLine, AudioLines } from "lucide-react";
+import { History, Share, ArrowRight, ArrowUp, Crown, Check, ChevronDown, Code2, MessageCircle, Pencil, Plus, Search, Trash2, Mic, Paperclip, X, Loader2, FileAudio, FileVideo, FileText, Square, Copy, Wand2, Zap, Film, Image as ImageIcon, Telescope, Music, Library, AlertCircle, LayoutTemplate, ShoppingBag, Palette, BadgeDollarSign, ScanEye, Sheet, Download, PenLine, AudioLines } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -669,7 +669,7 @@ function ChatOrb() {
   return <div className="chat-orb" aria-hidden="true"><span className="chat-orb-ball"><i /><i /><i /><b /></span></div>;
 }
 
-type StarterIdea = { icon: typeof LayoutTemplate; mode: Mode; attach?: boolean; wizard?: "sales" | "design"; fr: [string, string, string]; en: [string, string, string] };
+type StarterIdea = { icon: typeof LayoutTemplate; mode: Mode; attach?: boolean; wizard?: "sales" | "design" | "sheet"; fr: [string, string, string]; en: [string, string, string] };
 
 // One-click starting points: [title, hint, prefilled prompt]. Brackets mark what the user completes.
 const starterIdeas: StarterIdea[] = [
@@ -678,7 +678,7 @@ const starterIdeas: StarterIdea[] = [
   { icon: Palette, mode: "create", wizard: "design", fr: ["Créativité", "Présentations, CV, flyers, invitations, cartes…", ""], en: ["Creativity", "Slides, résumés, flyers, invitations, cards…", ""] },
   { icon: BadgeDollarSign, mode: "create", wizard: "sales", fr: ["Page de vente pro", "Offre, style, paiement : une page qui vend", ""], en: ["Pro sales page", "Offer, style, payment: a page that sells", ""] },
   { icon: ScanEye, mode: "chat", attach: true, fr: ["Design vers code", "Une capture devient une page", "Reproduis fidèlement le design de l'image jointe en une page HTML/CSS responsive, dans un seul fichier."], en: ["Design to code", "A screenshot becomes a page", "Faithfully recreate the design in the attached image as a responsive HTML/CSS page, in a single file."] },
-  { icon: FileSearch, mode: "chat", attach: true, fr: ["Analyser un document", "PDF, Word, Excel, PowerPoint…", "Résume le document joint en 5 points clés, puis liste les décisions et les actions à mener."], en: ["Analyse a document", "PDF, Word, Excel, PowerPoint…", "Summarise the attached document in 5 key points, then list the decisions and actions to take."] },
+  { icon: Sheet, mode: "create", wizard: "sheet", fr: ["Tableur", "Mini Excel : formules, graphiques, assistant IA", ""], en: ["Spreadsheet", "Mini Excel: formulas, charts, AI assistant", ""] },
 ];
 
 function StarterIdeas({ choice, inputRef, onSalesPage, onMusic, onVideo, onHumanize, onAudio }: { choice: ReturnType<typeof useWorkspaceChoice>; inputRef: React.RefObject<HTMLTextAreaElement | null>; onSalesPage: () => void; onMusic: () => void; onVideo: () => void; onHumanize: () => void; onAudio: () => void }) {
@@ -688,6 +688,8 @@ function StarterIdeas({ choice, inputRef, onSalesPage, onMusic, onVideo, onHuman
     if (idea.wizard === "sales") { onSalesPage(); return; }
     // « Créativité » opens TechNova Design (Registry → Présentation et Canva).
     if (idea.wizard === "design") { void goTo({ to: "/dashboard/registry", search: { section: "design" } as never }); return; }
+    // « Tableur » opens TechNova Tableur (Registry → Tableur et Excel).
+    if (idea.wizard === "sheet") { void goTo({ to: "/dashboard/registry", search: { section: "sheet" } as never }); return; }
     choice.chooseMode(idea.mode);
     const [, , prompt] = idea[lang === "en" ? "en" : "fr"];
     // Let the composer re-render in the chosen mode, then prefill and select the part to complete.
@@ -706,8 +708,8 @@ function StarterIdeas({ choice, inputRef, onSalesPage, onMusic, onVideo, onHuman
       const Icon = idea.icon;
       return <button key={title} type="button" onClick={() => pick(idea)}
         title={hint}
-        className={cn("starter-chip group inline-flex h-7 shrink-0 items-center gap-[3px] rounded-full border px-[5px] text-[11.5px] text-foreground/80 transition-colors hover:text-foreground", idea.wizard === "design" && "starter-chip-design")}>
-        <Icon className="size-3.5 text-muted-foreground transition-colors group-hover:text-foreground" strokeWidth={idea.wizard === "design" ? 2 : 1.6} />
+        className={cn("starter-chip group inline-flex h-7 shrink-0 items-center gap-[3px] rounded-full border px-[5px] text-[11.5px] text-foreground/80 transition-colors hover:text-foreground", idea.wizard === "design" && "starter-chip-design", idea.wizard === "sheet" && "starter-chip-sheet")}>
+        <Icon className="size-3.5 text-muted-foreground transition-colors group-hover:text-foreground" strokeWidth={idea.wizard === "design" || idea.wizard === "sheet" ? 2 : 1.6} />
         <span className="truncate">{title}</span>
       </button>;
     })}

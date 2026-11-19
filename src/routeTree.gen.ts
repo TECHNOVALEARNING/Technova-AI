@@ -32,6 +32,7 @@ import { Route as ApiAudioSummaryRouteImport } from './routes/api/audio-summary'
 import { Route as ApiChatRouteImport } from './routes/api/chat'
 import { Route as ApiDesignAiRouteImport } from './routes/api/design-ai'
 import { Route as ApiResearchRouteImport } from './routes/api/research'
+import { Route as ApiSheetAiRouteImport } from './routes/api/sheet-ai'
 import { Route as ApiStudioRouteImport } from './routes/api/studio'
 import { Route as ApiStudioJobRouteImport } from './routes/api/studio-job'
 import { Route as PartageTokenRouteImport } from './routes/partage.$token'
@@ -181,6 +182,11 @@ const ApiDesignAiRoute = ApiDesignAiRouteImport.update({
 const ApiResearchRoute = ApiResearchRouteImport.update({
   id: '/api/research',
   path: '/api/research',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiSheetAiRoute = ApiSheetAiRouteImport.update({
+  id: '/api/sheet-ai',
+  path: '/api/sheet-ai',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiStudioRoute = ApiStudioRouteImport.update({
@@ -406,6 +412,7 @@ export interface FileRoutesByFullPath {
   '/api/chat': typeof ApiChatRoute
   '/api/design-ai': typeof ApiDesignAiRoute
   '/api/research': typeof ApiResearchRoute
+  '/api/sheet-ai': typeof ApiSheetAiRoute
   '/api/studio': typeof ApiStudioRoute
   '/api/studio-job': typeof ApiStudioJobRoute
   '/partage/$token': typeof PartageTokenRoute
@@ -465,6 +472,7 @@ export interface FileRoutesByTo {
   '/api/chat': typeof ApiChatRoute
   '/api/design-ai': typeof ApiDesignAiRoute
   '/api/research': typeof ApiResearchRoute
+  '/api/sheet-ai': typeof ApiSheetAiRoute
   '/api/studio': typeof ApiStudioRoute
   '/api/studio-job': typeof ApiStudioJobRoute
   '/partage/$token': typeof PartageTokenRoute
@@ -527,6 +535,7 @@ export interface FileRoutesById {
   '/api/chat': typeof ApiChatRoute
   '/api/design-ai': typeof ApiDesignAiRoute
   '/api/research': typeof ApiResearchRoute
+  '/api/sheet-ai': typeof ApiSheetAiRoute
   '/api/studio': typeof ApiStudioRoute
   '/api/studio-job': typeof ApiStudioJobRoute
   '/partage/$token': typeof PartageTokenRoute
@@ -589,6 +598,7 @@ export interface FileRouteTypes {
     | '/api/chat'
     | '/api/design-ai'
     | '/api/research'
+    | '/api/sheet-ai'
     | '/api/studio'
     | '/api/studio-job'
     | '/partage/$token'
@@ -648,6 +658,7 @@ export interface FileRouteTypes {
     | '/api/chat'
     | '/api/design-ai'
     | '/api/research'
+    | '/api/sheet-ai'
     | '/api/studio'
     | '/api/studio-job'
     | '/partage/$token'
@@ -709,6 +720,7 @@ export interface FileRouteTypes {
     | '/api/chat'
     | '/api/design-ai'
     | '/api/research'
+    | '/api/sheet-ai'
     | '/api/studio'
     | '/api/studio-job'
     | '/partage/$token'
@@ -769,6 +781,7 @@ export interface RootRouteChildren {
   ApiChatRoute: typeof ApiChatRoute
   ApiDesignAiRoute: typeof ApiDesignAiRoute
   ApiResearchRoute: typeof ApiResearchRoute
+  ApiSheetAiRoute: typeof ApiSheetAiRoute
   ApiStudioRoute: typeof ApiStudioRoute
   ApiStudioJobRoute: typeof ApiStudioJobRoute
   PartageTokenRoute: typeof PartageTokenRoute
@@ -951,6 +964,13 @@ declare module '@tanstack/react-router' {
       path: '/api/research'
       fullPath: '/api/research'
       preLoaderRoute: typeof ApiResearchRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/sheet-ai': {
+      id: '/api/sheet-ai'
+      path: '/api/sheet-ai'
+      fullPath: '/api/sheet-ai'
+      preLoaderRoute: typeof ApiSheetAiRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/studio': {
@@ -1291,6 +1311,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiChatRoute: ApiChatRoute,
   ApiDesignAiRoute: ApiDesignAiRoute,
   ApiResearchRoute: ApiResearchRoute,
+  ApiSheetAiRoute: ApiSheetAiRoute,
   ApiStudioRoute: ApiStudioRoute,
   ApiStudioJobRoute: ApiStudioJobRoute,
   PartageTokenRoute: PartageTokenRoute,

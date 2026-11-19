@@ -1,4 +1,5 @@
 import { DesignGallery } from "@/components/design/DesignGallery";
+import { SheetGallery } from "@/components/sheet/SheetGallery";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { confirmDialog } from "@/components/ConfirmHost";
 import { useNavigate } from "@tanstack/react-router";
@@ -117,7 +118,8 @@ export function RegistryPage() {
     // Official items first, in catalogue order; then the newest community and personal items.
     const sorted = [...readable, ...placeholders].sort((a, b) => (a.owner_id === null) !== (b.owner_id === null) ? (a.owner_id === null ? -1 : 1) : a.owner_id === null ? a.id.localeCompare(b.id) : 0);
     setUid(u.user?.id ?? ""); setItems(sorted); setLocked(new Set(closed.map((r) => r.id))); setFavs(new Set((f ?? []).map(x => x.item_id))); setLoaded(true);
-    if (new URLSearchParams(window.location.search).get("section") === "design") setTab("design");
+    const section = new URLSearchParams(window.location.search).get("section");
+    if (section === "design" || section === "sheet") setTab(section);
     const id = new URLSearchParams(window.location.search).get("item");
     if (id) { const hit = sorted.find(x => x.id === id); if (hit) openItem(hit, closed.some((r) => r.id === id)); }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -180,14 +182,14 @@ export function RegistryPage() {
       <p className="min-w-0 flex-1 text-muted-foreground">{c.lockedBanner}</p>
       <Button size="sm" className="h-8 shrink-0 rounded-full" onClick={() => void navigate({ to: "/dashboard/credits" })}>{c.seePacks}</Button>
     </div>}
-    {tab !== "design" && <div className="relative"><Search className="absolute left-4 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" /><Input value={q} onChange={e => setQ(e.target.value)} placeholder={c.search} aria-label={c.search} className="h-11 rounded-full bg-background pl-11" /></div>}
+    {tab !== "design" && tab !== "sheet" && <div className="relative"><Search className="absolute left-4 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" /><Input value={q} onChange={e => setQ(e.target.value)} placeholder={c.search} aria-label={c.search} className="h-11 rounded-full bg-background pl-11" /></div>}
     <div className="flex gap-2 overflow-x-auto pb-1">
-      {(["design", "all", "favs", "mine", ...CATS] as string[]).map(k => <button key={k} type="button" onClick={() => setTab(k)} className={chip(tab === k)}>
-        {k === "design" ? (lang === "en" ? "Presentations & Canva" : "Présentation et Canva") : k === "all" ? c.all : k === "favs" ? c.favs : k === "mine" ? c.mine : c.cats[k as keyof typeof c.cats]}
+      {(["design", "sheet", "all", "favs", "mine", ...CATS] as string[]).map(k => <button key={k} type="button" onClick={() => setTab(k)} className={chip(tab === k)}>
+        {k === "design" ? (lang === "en" ? "Presentations & Canva" : "Présentation et Canva") : k === "sheet" ? (lang === "en" ? "Spreadsheets & Excel" : "Tableur et Excel") : k === "all" ? c.all : k === "favs" ? c.favs : k === "mine" ? c.mine : c.cats[k as keyof typeof c.cats]}
         {k in counts && <span className={`text-[10.5px] ${tab === k ? "opacity-70" : "opacity-60"}`}>{counts[k]}</span>}
       </button>)}
     </div>
-    {tab === "design" ? <DesignGallery lang={lang === "en" ? "en" : "fr"} /> : !loaded ? <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">{[0, 1, 2].map(k => <div key={k} className="aspect-[4/3] animate-pulse rounded-2xl bg-secondary" />)}</div>
+    {tab === "design" ? <DesignGallery lang={lang === "en" ? "en" : "fr"} /> : tab === "sheet" ? <SheetGallery lang={lang === "en" ? "en" : "fr"} /> : !loaded ? <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">{[0, 1, 2].map(k => <div key={k} className="aspect-[4/3] animate-pulse rounded-2xl bg-secondary" />)}</div>
       : shown.length === 0 ? <p className="py-16 text-center text-[13px] text-muted-foreground">{c.empty}</p> :
     <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">{shown.map(i => <article key={i.id} className="group flex flex-col overflow-hidden rounded-2xl border border-border bg-card shadow-sm transition hover:-translate-y-0.5 hover:shadow-lg">
       <button type="button" onClick={() => void openItem(i)} aria-label={`${c.open} : ${i.title}`} className="relative block border-b border-border text-left">

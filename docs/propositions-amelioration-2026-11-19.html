@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>TechNova AI Hub · Analyse et propositions d'amélioration · 19 novembre 2026</title>
+<style>
+  :root { --ink:#16181d; --muted:#5d6470; --line:#e6e8ee; --bg:#f6f7fa; --card:#fff; --green:#1f7a5a; --violet:#7c5cff; --rose:#e86a9e; --orange:#ea7a32; --blue:#2563eb; }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink); font: 15px/1.6 Inter, "Segoe UI", system-ui, sans-serif; }
+  main { max-width: 1080px; margin: 0 auto; padding: 40px 20px 80px; }
+  header.hero { background: linear-gradient(120deg, #1d2440, #2e2a5a 55%, #5a2d5e); color: #fff; border-radius: 24px; padding: 36px 34px; }
+  header.hero p.tag { margin: 0; font-size: 12px; letter-spacing: .16em; text-transform: uppercase; opacity: .75; }
+  header.hero h1 { margin: 8px 0 10px; font-size: 30px; line-height: 1.2; }
+  header.hero p { margin: 0; max-width: 760px; opacity: .9; }
+  h2 { font-size: 22px; margin: 44px 0 6px; }
+  h2 + p.lead { margin: 0 0 16px; color: var(--muted); }
+  h3 { font-size: 16px; margin: 0 0 6px; }
+  .grid { display: grid; gap: 14px; }
+  .g2 { grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); }
+  .g3 { grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); }
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: 18px; padding: 18px 18px 16px; box-shadow: 0 8px 24px -18px rgba(0,0,0,.25); }
+  .card p { margin: 6px 0 0; color: var(--muted); font-size: 14px; }
+  .pill { display: inline-block; font-size: 11px; font-weight: 700; border-radius: 999px; padding: 2px 9px; margin-right: 6px; }
+  .p1 { background: #fde8e8; color: #b42318; } .p2 { background: #fff1db; color: #b54708; } .p3 { background: #e7f1ff; color: #1d4ed8; }
+  .eff { background: #eef0f4; color: #374151; }
+  .strip { height: 5px; border-radius: 99px; margin-bottom: 12px; }
+  table { width: 100%; border-collapse: collapse; background: var(--card); border: 1px solid var(--line); border-radius: 16px; overflow: hidden; font-size: 14px; }
+  th, td { text-align: left; padding: 10px 12px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th { background: #f0f2f6; font-size: 12px; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); }
+  tr:last-child td { border-bottom: none; }
+  .score { display: flex; gap: 3px; } .score i { width: 14px; height: 8px; border-radius: 3px; background: #e5e7eb; } .score i.on { background: var(--green); }
+  .top { counter-reset: n; }
+  .top .card { position: relative; padding-left: 64px; }
+  .top .card::before { counter-increment: n; content: counter(n); position: absolute; left: 18px; top: 18px; width: 32px; height: 32px; border-radius: 50%; display: grid; place-items: center; color: #fff; font-weight: 700; background: linear-gradient(135deg, var(--violet), var(--rose)); }
+  .note { background: #fff; border-left: 4px solid var(--violet); border-radius: 12px; padding: 12px 16px; color: var(--muted); font-size: 14px; }
+  ul.plain { margin: 8px 0 0; padding-left: 18px; color: var(--muted); font-size: 14px; } ul.plain li { margin: 3px 0; }
+  footer { margin-top: 48px; color: var(--muted); font-size: 13px; }
+  a { color: var(--blue); }
+</style>
+</head>
+<body>
+<main>
+<header class="hero">
+  <p class="tag">TechNova AI Hub · analyse produit</p>
+  <h1>Ce que nous avons construit, et comment rendre la plateforme irrésistible</h1>
+  <p>Bilan de toutes les fonctionnalités livrées, comparaison avec ce qui se fait de mieux (ChatGPT, Genspark, Poe, Canva, Manus et les usages en Afrique), puis des propositions classées par menu et par priorité.</p>
+</header>
+
+<h2>1. Où en est TechNova aujourd'hui</h2>
+<p class="lead">Une offre déjà très large, rare sur le marché africain francophone.</p>
+<div class="grid g3">
+  <div class="card"><div class="strip" style="background:var(--blue)"></div><h3>Chat multi-modèles</h3><p>Modes Éclair / Équilibré / Expert, TechNova Smart, modèles phares avec logos, actualité avec sources, moteurs de secours, fichiers et bases de connaissances, export Word / Excel / PowerPoint / PDF.</p></div>
+  <div class="card"><div class="strip" style="background:var(--rose)"></div><h3>Création</h3><p>Images, musique, vidéos de 4 à 15 s, humaniser un texte, résumé d'audio, Créativité (210 modèles, éditeur façon Canva), Tableur (mini Excel + assistant IA gratuit).</p></div>
+  <div class="card"><div class="strip" style="background:var(--violet)"></div><h3>Studio et sites</h3><p>Création de sites en dialogue (questions, plan, code), vérification et réparation automatiques, responsive, publication /s/, GitHub, Netlify, Vercel, page de vente pro avec Mobile Money / WhatsApp.</p></div>
+  <div class="card"><div class="strip" style="background:var(--green)"></div><h3>Pro et développeurs</h3><p>Agents personnalisés, plugins et commandes « / », Registry de designs, API publique avec clés hachées, connexions (Drive, Notion, Supabase, Stripe).</p></div>
+  <div class="card"><div class="strip" style="background:var(--orange)"></div><h3>Paiement et confiance</h3><p>Crédits sans abonnement en FCFA, FeexPay / Nyole (Mobile Money et carte), prix locaux, RGPD, aucun entraînement sur les données, registre des violations, sécurité renforcée.</p></div>
+  <div class="card"><div class="strip" style="background:#0891b2"></div><h3>Pilotage</h3><p>Console admin : revenus, coûts réels OpenRouter et kie.ai par jour, coût par mode, suggestions, incidents, présence en ligne.</p></div>
+</div>
+
+<h2>2. Ce que font les meilleurs</h2>
+<p class="lead">Les tendances observées en 2026, et ce qu'elles signifient pour nous.</p>
+<table>
+  <tr><th>Acteur / tendance</th><th>Ce qu'ils font bien</th><th>Leçon pour TechNova</th></tr>
+  <tr><td><b>Genspark, ChatGPT</b> (espaces de travail)</td><td>Un seul espace pour agents, recherche, documents, présentations, design, code ; les projets regroupent tout le contexte.</td><td>Nous avons les briques : il manque le <b>fil qui les relie</b> (projets, mémoire, « Mes créations »).</td></tr>
+  <tr><td><b>Manus</b> (agent autonome)</td><td>L'IA exécute une tâche complète de bout en bout, l'utilisateur valide le résultat.</td><td>Nos agents et le Studio vont dans ce sens ; des <b>tâches planifiées</b> et des agents « qui livrent un fichier » renforceraient l'effet waouh.</td></tr>
+  <tr><td><b>Poe</b> (agrégateur)</td><td>Tous les modèles dans un abonnement, discussions de groupe avec plusieurs bots.</td><td>Notre modèle « crédits sans abonnement » est un vrai avantage ; ajouter une <b>formule mensuelle optionnelle</b> stabiliserait le revenu.</td></tr>
+  <tr><td><b>Canva</b></td><td>Redimensionnement magique, suppression d'arrière-plan, kit de marque, collaboration en direct.</td><td>Créativité peut gagner vite avec 3 outils IA ciblés (fond, redimensionnement, kit de marque).</td></tr>
+  <tr><td><b>Afrique : WhatsApp + Mobile Money</b></td><td>Assistants IA directement dans WhatsApp (ex. TimAI), paiement dans la conversation (Chat &amp; Pay), outils IA vendus via le portefeuille mobile (M-PESA).</td><td>Le canal n°1 de nos utilisateurs est WhatsApp : un <b>TechNova sur WhatsApp</b> est la plus grosse opportunité de croissance.</td></tr>
+  <tr><td><b>Croissance SaaS</b></td><td>Rétention avant acquisition, onboarding guidé, parrainage intégré aux moments de partage, communauté.</td><td>Transformer chaque partage (invitation, site, tableau) en <b>porte d'entrée parrainée</b>.</td></tr>
+</table>
+
+<h2>3. Les 8 priorités recommandées</h2>
+<p class="lead">Classées par rapport impact / effort. P1 = à lancer maintenant.</p>
+<div class="grid top">
+  <div class="card"><span class="pill p1">P1</span><span class="pill eff">1 à 2 semaines</span><h3>« Mes créations » : enregistrer présentations et tableaux dans le compte</h3><p>Aujourd'hui une création non téléchargée est perdue à la fermeture. Une table privée par compte (règles « propriétaire seulement ») avec sauvegarde automatique, liste dans Créativité et Tableur, duplication et suppression. Limite de stockage selon le forfait (argument pour monter en gamme).</p></div>
+  <div class="card"><span class="pill p1">P1</span><span class="pill eff">2 à 4 semaines</span><h3>TechNova sur WhatsApp</h3><p>Un numéro WhatsApp Business relié au compte : poser une question, envoyer une note vocale à résumer, recevoir une image, consulter son solde, recharger par Mobile Money depuis la conversation. Facturé en crédits comme le chat. C'est là que vivent nos utilisateurs.</p></div>
+  <div class="card"><span class="pill p1">P1</span><span class="pill eff">1 semaine</span><h3>Parrainage intégré aux partages</h3><p>Chaque page partagée (invitation, site publié, tableau, conversation) porte « Créé avec TechNova » + lien parrainé. Crédits offerts aux deux personnes après le premier achat du filleul (anti-fraude), tableau de suivi dans le compte.</p></div>
+  <div class="card"><span class="pill p1">P1</span><span class="pill eff">3 à 5 jours</span><h3>Premiers pas guidés après l'inscription</h3><p>Une liste de 4 actions (premier message, première création Créativité, premier tableau, premier site) avec une petite récompense en crédits à la fin. Des idées de départ par métier : commerçant, étudiant, enseignant, ONG, agence.</p></div>
+  <div class="card"><span class="pill p2">P2</span><span class="pill eff">2 à 3 semaines</span><h3>Projets : tout le contexte au même endroit</h3><p>Un projet regroupe conversations, fichiers, base de connaissances, créations et site. L'IA connaît le projet (entreprise, ton, couleurs) sans qu'on le répète, comme les « Projects » de ChatGPT et Claude.</p></div>
+  <div class="card"><span class="pill p2">P2</span><span class="pill eff">1 à 2 semaines</span><h3>Créativité « Pro » : fond, redimensionnement, kit de marque</h3><p>Suppression d'arrière-plan d'une photo, « décliner ce design » (post → story → flyer en un clic), kit de marque (logo, couleurs, polices appliqués à tous les modèles), QR code vers l'invitation ou le paiement Mobile Money.</p></div>
+  <div class="card"><span class="pill p2">P2</span><span class="pill eff">2 semaines</span><h3>Tableur avancé</h3><p>Filtres et tri par en-tête, mise en forme conditionnelle (rouge si négatif, barres de données), listes déroulantes, fusion de cellules, tableau croisé simple, et import direct des ventes d'une page de vente.</p></div>
+  <div class="card"><span class="pill p2">P2</span><span class="pill eff">1 semaine</span><h3>Formule mensuelle optionnelle</h3><p>Garder les packs sans abonnement, mais proposer « Creator mensuel » avec 15 % de crédits en plus et les fonctions Pro : revenu plus prévisible, sans retirer la liberté qui plaît.</p></div>
+</div>
+
+<h2>4. Propositions menu par menu</h2>
+<div class="grid g2">
+  <div class="card"><h3>Chat</h3><ul class="plain">
+    <li>Mémoire personnelle (activable, effaçable) : prénom, entreprise, préférences de ton.</li>
+    <li>Mode vocal : parler et écouter la réponse, utile sur téléphone.</li>
+    <li>Réponses en langues nationales quand c'est possible (fon, yoruba, wolof, haoussa) : un vrai marqueur local.</li>
+    <li>« Continuer dans… » : envoyer une réponse vers Créativité (présentation) ou Tableur (tableau) en un clic.</li>
+  </ul></div>
+  <div class="card"><h3>Créativité</h3><ul class="plain">
+    <li>Sauvegarde dans « Mes créations » (P1) et collaboration par lien d'édition.</li>
+    <li>Génération d'images directement dans un cadre « Image » (crédits image habituels).</li>
+    <li>Modèles saisonniers et locaux : Tabaski, Noël, rentrée scolaire, fête de l'indépendance, deuil, baptême.</li>
+    <li>Liste des invités reliée au Tableur : réponses WhatsApp comptées automatiquement.</li>
+  </ul></div>
+  <div class="card"><h3>Tableur</h3><ul class="plain">
+    <li>Fonctions avancées (P2) et plus de modèles : paie simple, suivi de crédit client, caisse journalière, coopérative.</li>
+    <li>Assistant : « Analyse ce fichier » qui produit un mini rapport + graphiques.</li>
+    <li>Export direct vers Google Drive (la connexion existe déjà en lecture ; ajouter l'écriture).</li>
+  </ul></div>
+  <div class="card"><h3>Studio et sites</h3><ul class="plain">
+    <li>Nom de domaine personnalisé pour les sites publiés.</li>
+    <li>Formulaires de contact qui fonctionnent vraiment (messages reçus dans la boîte TechNova ou par e-mail).</li>
+    <li>Statistiques simples et respectueuses de la vie privée pour chaque site publié (visites, clics WhatsApp).</li>
+  </ul></div>
+  <div class="card"><h3>Agents et plugins</h3><ul class="plain">
+    <li>Tâches planifiées : « chaque lundi, résume l'actualité de mon secteur et envoie-la sur WhatsApp ».</li>
+    <li>Galerie d'agents partagés par la communauté (avec notation), en plus des plugins officiels.</li>
+  </ul></div>
+  <div class="card"><h3>Tarifs, crédits et paiement</h3><ul class="plain">
+    <li>Cartes cadeaux de crédits (à offrir par WhatsApp).</li>
+    <li>Compte équipe / entreprise : crédits partagés, membres, facture unique.</li>
+    <li>Recharge automatique optionnelle quand le solde passe sous un seuil.</li>
+  </ul></div>
+  <div class="card"><h3>Site public et confiance</h3><ul class="plain">
+    <li>Vrais témoignages et études de cas (commerçante, école, agence) avec résultats chiffrés.</li>
+    <li>Galerie publique de créations (avec accord) : invitations, sites, présentations.</li>
+    <li>Page de statut du service et page « Nouveautés » mise à jour à chaque version.</li>
+  </ul></div>
+  <div class="card"><h3>Console admin</h3><ul class="plain">
+    <li>Entonnoir d'activation sans outil tiers : inscrits → e-mail confirmé → premier message → premier achat.</li>
+    <li>Rétention par cohorte (semaine d'inscription) et revenu par fonctionnalité.</li>
+    <li>Alerte quand le coût réel d'un mode dépasse son prix (marge négative).</li>
+  </ul></div>
+</div>
+
+<h2>5. Comment mesurer le succès</h2>
+<table>
+  <tr><th>Indicateur</th><th>Pourquoi</th><th>Objectif à 3 mois</th></tr>
+  <tr><td>Activation (premier usage utile dans les 24 h)</td><td>Un utilisateur qui crée quelque chose revient</td><td>60 % des inscrits confirmés</td></tr>
+  <tr><td>Rétention à 30 jours</td><td>La croissance durable vient de ceux qui restent</td><td>+10 points</td></tr>
+  <tr><td>Part des inscriptions venant d'un partage</td><td>Mesure l'effet du parrainage et des pages partagées</td><td>25 % des nouvelles inscriptions</td></tr>
+  <tr><td>Conversion en premier achat</td><td>Valide l'offre et les prix locaux</td><td>+5 points</td></tr>
+  <tr><td>Marge par mode et par création</td><td>Les fonctions gratuites (assistant Tableur) doivent rester soutenables</td><td>Marge positive partout</td></tr>
+</table>
+
+<p class="note" style="margin-top:20px">Notes : les comparaisons s'appuient sur des articles publics de 2026, souvent écrits par des éditeurs concurrents ; leurs chiffres sont indicatifs. Les durées sont des estimations pour l'équipe actuelle. Sources principales : <a href="https://www.eesel.ai/fr/blog/genspark-ai-alternatives">eesel.ai (alternatives à Genspark)</a>, <a href="https://aiidelist.com/blog/genspark-vs-manus.md">Genspark vs Manus</a>, <a href="https://flowith.io/blog/flowith-vs-manus-vs-genspark">Flowith vs Manus vs Genspark</a>, <a href="https://launchbaseafrica.com/2026/06/24/from-tax-bots-to-farm-finance-hyper-local-ai-is-south-africas-new-battleground/">LaunchBase Africa (IA hyper-locale, TimAI sur WhatsApp)</a>, <a href="https://techcabal.com/2026/04/14/chat-pay/">TechCabal (Chat &amp; Pay)</a>, <a href="https://techtrendske.co.ke/2026/03/11/africa-whatsapp-commerce/">TechTrends (commerce WhatsApp en Afrique)</a>, <a href="https://userpilot.com/blog/product-retention-saas/">Userpilot (rétention SaaS)</a>, <a href="https://saastock.com/blog/customer-onboarding-in-saas-where-most-companies-fail">SaaStock (onboarding)</a>.</p>
+
+<footer>TechNova AI Hub · Analyse produit du 19 novembre 2026 · document interne.</footer>
+</main>
+</body>
+</html>
