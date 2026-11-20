@@ -361,7 +361,7 @@ function Ecosystem({ t }: { t: T }) {
             <ul className="eco-banner-meta">{b.c.map((c, i) => { const Icon = metaIcons[i] ?? GraduationCap; return <li key={c}><Icon className="size-4" strokeWidth={1.7} />{c}</li>; })}</ul>
           </div>
           <div className="eco-banner-cta">
-            <a href={b.url} target="_blank" rel="noreferrer" aria-label={`${t.eco.visit} TechNova Learning`} className="eco-banner-button">{t.eco.visit}<ArrowRight className="size-4" /></a>
+            <Button asChild variant="pill" size="pill" className="eco-banner-button action-pill action-pill-light px-6 py-3 text-sm font-semibold"><a href={b.url} target="_blank" rel="noreferrer" aria-label={`${t.eco.visit} TechNova Learning`}><ActionText>{t.eco.visit}</ActionText><ArrowRight className="h-4 w-4" /></a></Button>
             <span className="eco-banner-note">technovalearning.com</span>
           </div>
           <div className="eco-banner-media"><img src={ecoLearningBanner} alt="TechNova Learning" width={780} height={490} loading="lazy" /></div>

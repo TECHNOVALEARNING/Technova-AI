@@ -17,7 +17,7 @@ export const Route = createFileRoute("/a-propos")({
 const team = [
   { name: "AGONAN Isidore Abraham", photo: "/team/isidore-agonan.webp", linkedin: "https://www.linkedin.com/in/isidore-agonan-807b6b347/" },
   { name: "TOUDONOU Cédric Ulrich", photo: "/team/cedric-toudonou.webp", linkedin: "https://www.linkedin.com/in/c%C3%A9dric-toudonou-5a5401122" },
-  // The co-founder who works on the web development: his card says so (without taking credit from the others) and invites projects through LinkedIn.
+  // The full-stack developer co-founder: his card says so (without taking credit from the others) and invites projects through LinkedIn.
   { name: "AYELESSO Précieux", photo: "/team/precieux-ayelesso.webp", linkedin: "https://www.linkedin.com/in/pr%C3%A9cieux-ayelesso-a09850327/", dev: true },
 ];
 
@@ -39,7 +39,7 @@ const text = {
     statLabels: { models: "modèles d'IA disponibles", languages: "langues : français, anglais, espagnol, portugais", payments: "moyens de paiement, dont 4 Mobile Money", registry: "modèles et ressources prêts à l'emploi", subscription: "abonnement : vous ne payez que ce que vous utilisez" },
     valuesTag: "Nos valeurs", valuesTitle: "Ce qui guide chacune de nos décisions.",
     values: [["Accessibilité", "Des prix justes, un paiement simple et une interface pensée pour être comprise dès la première minute."], ["Exigence", "Les meilleurs modèles, une qualité de finition irréprochable et des réponses fiables."], ["Confiance", "Vos données vous appartiennent : elles sont protégées, jamais vendues, et vos contenus n'entraînent aucun modèle."]],
-    teamTag: "L'équipe", teamTitle: "Les fondateurs de TechNova AI Hub.", role: "Cofondateur", devRole: "Cofondateur & Développeur web", devBadge: "Développeur web", devText: "Il fait partie de l'équipe qui a développé TechNova AI Hub, côté web. Disponible pour vos projets web et IA.", devCta: "Me confier un projet", linkedinSoon: "Profil LinkedIn bientôt disponible", linkedinOpen: "Voir le profil LinkedIn de",
+    teamTag: "L'équipe", teamTitle: "Les fondateurs de TechNova AI Hub.", role: "Cofondateur", devRole: "Cofondateur & Développeur full stack", devBadge: "Développeur full stack", devText: "Développeur full stack de TechNova AI Hub : il conçoit et fait évoluer la plateforme, du site à l'IA en passant par les paiements. Disponible pour vos projets web et IA.", devCta: "Me confier un projet", linkedinSoon: "Profil LinkedIn bientôt disponible", linkedinOpen: "Voir le profil LinkedIn de",
     ctaTitle: "Prêt à créer avec l'IA ?", ctaText: "Créez votre compte et recevez 50 crédits Technova offerts.", cta: "Commencer gratuitement",
   },
   en: {
@@ -56,7 +56,7 @@ const text = {
     statLabels: { models: "AI models available", languages: "languages: French, English, Spanish, Portuguese", payments: "payment methods, including 4 Mobile Money", registry: "ready-to-use templates and resources", subscription: "subscription: you only pay for what you use" },
     valuesTag: "Our values", valuesTitle: "What guides every decision we make.",
     values: [["Accessibility", "Fair prices, simple payment and an interface that makes sense from the first minute."], ["Excellence", "The best models, polished craftsmanship and reliable answers."], ["Trust", "Your data is yours: protected, never sold, and your content never trains any model."]],
-    teamTag: "The team", teamTitle: "The founders of TechNova AI Hub.", role: "Co-founder", devRole: "Co-founder & Web developer", devBadge: "Web developer", devText: "He is part of the team that built TechNova AI Hub, on the web side. Available for your web and AI projects.", devCta: "Hire me for a project", linkedinSoon: "LinkedIn profile coming soon", linkedinOpen: "View the LinkedIn profile of",
+    teamTag: "The team", teamTitle: "The founders of TechNova AI Hub.", role: "Co-founder", devRole: "Co-founder & Full-stack developer", devBadge: "Full-stack developer", devText: "Full-stack developer of TechNova AI Hub: he designs and grows the platform, from the website to AI and payments. Available for your web and AI projects.", devCta: "Hire me for a project", linkedinSoon: "LinkedIn profile coming soon", linkedinOpen: "View the LinkedIn profile of",
     ctaTitle: "Ready to build with AI?", ctaText: "Create your account and get 50 free Technova credits.", cta: "Start for free",
   },
   es: {
@@ -73,7 +73,7 @@ const text = {
     statLabels: { models: "modelos de IA disponibles", languages: "idiomas: francés, inglés, español, portugués", payments: "medios de pago, incluidos 4 Mobile Money", registry: "plantillas y recursos listos para usar", subscription: "suscripciones: solo pagas lo que usas" },
     valuesTag: "Nuestros valores", valuesTitle: "Lo que guía cada una de nuestras decisiones.",
     values: [["Accesibilidad", "Precios justos, pago sencillo y una interfaz que se entiende desde el primer minuto."], ["Exigencia", "Los mejores modelos, un acabado impecable y respuestas fiables."], ["Confianza", "Tus datos son tuyos: protegidos, nunca vendidos, y tus contenidos no entrenan ningún modelo."]],
-    teamTag: "El equipo", teamTitle: "Los fundadores de TechNova AI Hub.", role: "Cofundador", devRole: "Cofundador y desarrollador web", devBadge: "Desarrollador web", devText: "Forma parte del equipo que desarrolló TechNova AI Hub, en la parte web. Disponible para sus proyectos web e IA.", devCta: "Confíeme un proyecto", linkedinSoon: "Perfil de LinkedIn disponible pronto", linkedinOpen: "Ver el perfil de LinkedIn de",
+    teamTag: "El equipo", teamTitle: "Los fundadores de TechNova AI Hub.", role: "Cofundador", devRole: "Cofundador y desarrollador full stack", devBadge: "Desarrollador full stack", devText: "Desarrollador full stack de TechNova AI Hub: diseña y hace evolucionar la plataforma, del sitio a la IA y los pagos. Disponible para sus proyectos web e IA.", devCta: "Confíeme un proyecto", linkedinSoon: "Perfil de LinkedIn disponible pronto", linkedinOpen: "Ver el perfil de LinkedIn de",
     ctaTitle: "¿Listo para crear con IA?", ctaText: "Crea tu cuenta y recibe 50 créditos Technova de regalo.", cta: "Empezar gratis",
   },
   pt: {
@@ -90,7 +90,7 @@ const text = {
     statLabels: { models: "modelos de IA disponíveis", languages: "idiomas: francês, inglês, espanhol, português", payments: "meios de pagamento, incluindo 4 Mobile Money", registry: "modelos e recursos prontos para usar", subscription: "assinaturas: você só paga o que usa" },
     valuesTag: "Nossos valores", valuesTitle: "O que orienta cada uma das nossas decisões.",
     values: [["Acessibilidade", "Preços justos, pagamento simples e uma interface compreensível desde o primeiro minuto."], ["Excelência", "Os melhores modelos, acabamento impecável e respostas confiáveis."], ["Confiança", "Seus dados são seus: protegidos, nunca vendidos, e seus conteúdos não treinam nenhum modelo."]],
-    teamTag: "A equipe", teamTitle: "Os fundadores da TechNova AI Hub.", role: "Cofundador", devRole: "Cofundador e desenvolvedor web", devBadge: "Desenvolvedor web", devText: "Faz parte da equipe que desenvolveu a TechNova AI Hub, na parte web. Disponível para seus projetos web e de IA.", devCta: "Confie-me um projeto", linkedinSoon: "Perfil do LinkedIn em breve", linkedinOpen: "Ver o perfil do LinkedIn de",
+    teamTag: "A equipe", teamTitle: "Os fundadores da TechNova AI Hub.", role: "Cofundador", devRole: "Cofundador e desenvolvedor full stack", devBadge: "Desenvolvedor full stack", devText: "Desenvolvedor full stack da TechNova AI Hub: concebe e faz evoluir a plataforma, do site à IA e aos pagamentos. Disponível para seus projetos web e de IA.", devCta: "Confie-me um projeto", linkedinSoon: "Perfil do LinkedIn em breve", linkedinOpen: "Ver o perfil do LinkedIn de",
     ctaTitle: "Pronto para criar com IA?", ctaText: "Crie sua conta e receba 50 créditos Technova grátis.", cta: "Começar grátis",
   },
 } satisfies Record<SiteLang, unknown>;
