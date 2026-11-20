@@ -4,7 +4,7 @@ import { toast } from "sonner";
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/components/ui/dialog";
 import { confirmDialog } from "@/components/ConfirmHost";
 import { supabase } from "@/integrations/supabase/client";
-import { designAiCredits, formatById } from "@/lib/design-formats";
+import { formatById } from "@/lib/design-formats";
 import { notifyCreditsChanged } from "@/components/dashboard/TopActions";
 import { PublishDialog } from "@/components/dashboard/PublishDialog";
 import { cn } from "@/lib/utils";
@@ -12,11 +12,12 @@ import { PALETTES, fieldValues, templateById, type Palette } from "./designs";
 import { DesignPreview, useDesignFonts } from "./DesignPreview";
 import { DesignEditor, readImage } from "./DesignEditor";
 import { SaveToProject } from "@/components/projects/SaveToProject";
+import { confirmAiCredits } from "@/lib/ai-credit-notice";
 import { saveCreation, saveErrorText } from "@/lib/creations";
 import { DocPage, resizeDoc, templateToDoc, uid, type DesignDoc } from "./doc";
 import { downloadDocHtml, downloadDocPptx, printDoc, shareHtml } from "./design-export";
 
-// TechNova Design: the creation window opened from Registry → « Présentation et Canva ». A guided journey —
+// TechNova Design: the creation window opened from Templates → « Présentation et Canva ». A guided journey —
 // 1 Contenu (texts, photos, « Rédiger avec l'IA »), 2 Style (palette, accent), 3 Mise en forme (free editor: move,
 // resize, fonts, bold, italic, underline, highlight, colours, alignment, bullets, emojis, images, shapes, pages),
 // 4 Exporter et partager (share link + WhatsApp, Netlify, Vercel, GitHub; print / PDF, PowerPoint, HTML; Google
@@ -68,7 +69,6 @@ export function DesignStudio({ templateId, open, onOpenChange, lang, saved, onDe
   if (!template || !palette) return null;
   const fmt = formatById(template.format);
   const steps = [tx(lang, "Contenu", "Content"), tx(lang, "Style", "Style"), tx(lang, "Mise en forme", "Layout"), tx(lang, "Exporter et partager", "Export & share")];
-  const price = designAiCredits(template.format);
   const title = (values["title"] || values["name"] || template[lang]).replace(/\n/g, " ");
   const maxH = typeof window === "undefined" ? 640 : Math.max(320, window.innerHeight * 0.62);
   const previewWidth = Math.max(160, Math.min(boxWidth - 48, (maxH * fmt.w) / fmt.h));
@@ -95,7 +95,7 @@ export function DesignStudio({ templateId, open, onOpenChange, lang, saved, onDe
     setStep(to);
   }
 
-  /** Saves texts, style and layout in the account (Projects), kept 14 days after the last save. */
+  /** Saves texts, style and layout in the account (Projects), deleted 14 days after it was first saved. */
   async function saveTo(name: string, projectId: string | null) {
     const row = await saveCreation({ id: savedRef?.id ?? null, kind: "design", title: name, subtitle: `${fmt[lang]} · ${template![lang]}`, data: { templateId: templateId!, values, palette: palette!, doc } satisfies SavedDesign, projectId });
     setSavedRef({ id: row.id, projectId: row.project_id });
@@ -105,6 +105,7 @@ export function DesignStudio({ templateId, open, onOpenChange, lang, saved, onDe
 
   async function writeWithAi() {
     if (brief.trim().length < 5 || aiBusy) return;
+    if (!(await confirmAiCredits("design", lang))) return;
     setAiBusy(true);
     try {
       const { data: s } = await supabase.auth.getSession();
@@ -161,7 +162,7 @@ export function DesignStudio({ templateId, open, onOpenChange, lang, saved, onDe
                     placeholder={tx(lang, "Ex. : invitation au mariage de Fifamè et Jonas le 20 juin à Porto-Novo, cérémonie à 15 h puis dîner", "E.g. wedding invitation for Fifamè and Jonas on 20 June, ceremony at 3 pm then dinner")} />
                   <button type="button" disabled={aiBusy || brief.trim().length < 5} onClick={() => void writeWithAi()}
                     className="mt-2 inline-flex h-9 items-center gap-1.5 rounded-full bg-foreground px-4 text-[12.5px] font-semibold text-background disabled:opacity-50">
-                    {aiBusy ? <Loader2 className="size-4 animate-spin" /> : <PenLine className="size-4" />}{tx(lang, `Rédiger · ${price} crédits`, `Write · ${price} credits`)}
+                    {aiBusy ? <Loader2 className="size-4 animate-spin" /> : <PenLine className="size-4" />}{tx(lang, "Rédiger", "Write")}
                   </button>
                 </div>
                 {template.layout.fields.map((x) => <label key={x.key} className="block space-y-1">
@@ -203,7 +204,7 @@ export function DesignStudio({ templateId, open, onOpenChange, lang, saved, onDe
                 {exportRow(ExternalLink, "Canva", tx(lang, "Télécharge le .pptx puis ouvre Canva : Créer un design → Importer.", "Downloads the .pptx and opens Canva: Create a design → Import."), () => { void downloadDocPptx(doc, title); openTab("https://www.canva.com/"); })}
                 <p className="rounded-xl bg-secondary/50 p-3 text-[11.5px] text-muted-foreground">{tx(lang, "Connexion directe à Canva, Google Slides, PowerPoint et aux réseaux sociaux (Instagram, Facebook, TikTok, YouTube) : bientôt, dans Plugins → connecteurs à venir.", "Direct connection to Canva, Google Slides, PowerPoint and social networks: coming soon, in Plugins → upcoming connectors.")}</p>
               </div>}
-              <p className="mt-5 flex gap-2 rounded-xl border border-border p-3 text-[11.5px] text-muted-foreground"><Coins className="mt-0.5 size-3.5 shrink-0" />{tx(lang, `Modèles, mise en forme et exports gratuits (la publication en ligne suit votre forfait). Seule la rédaction par l'IA coûte ${price} crédits. Enregistrez-la dans un projet (gardée 14 jours après le dernier enregistrement), téléchargez-la ou publiez-la.`, `Templates, layout and exports are free (publishing follows your plan). Only AI writing costs ${price} credits. Save it to a project (kept 14 days after the last save), download or publish it.`)}</p>
+              <p className="mt-5 flex gap-2 rounded-xl border border-border p-3 text-[11.5px] text-muted-foreground"><Coins className="mt-0.5 size-3.5 shrink-0" />{tx(lang, `Modèles, mise en forme et exports gratuits (la publication en ligne suit votre forfait). Seule la rédaction par l'IA consomme quelques crédits. Enregistrez-la dans un projet (supprimée 14 jours après sa création), téléchargez-la ou publiez-la.`, `Templates, layout and exports are free (publishing follows your plan). Only AI writing uses a few credits. Save it to a project (deleted 14 days after it was created), download or publish it.`)}</p>
             </div>
             <div className="flex min-h-0 flex-col bg-secondary/40">
               <div ref={previewBox} className="flex min-h-0 flex-1 items-center justify-center overflow-auto p-5">

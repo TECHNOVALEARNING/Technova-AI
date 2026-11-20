@@ -1167,13 +1167,13 @@ body:has(.dashboard-shell) :is([data-radix-popper-content-wrapper] > [data-state
 /* « Créativité » starter chip (TechNova Design): a designer's gradient — rose, violet, then a warm orange touch. */
 .starter-chip.starter-chip-design,
 :root .dashboard-shell[class*="look-"] .starter-chip.starter-chip-design {
-  background: linear-gradient(120deg, #e86a9e 0%, #a46be0 55%, #f0955a 100%);
+  background: #c026d3;
   border-color: transparent; color: #fff; font-weight: 600; padding-inline: 8px;
   box-shadow: 0 6px 16px -9px rgb(164 107 224 / .7);
 }
 .starter-chip.starter-chip-design svg { color: #fff; }
 .starter-chip.starter-chip-design:hover,
-:root .dashboard-shell[class*="look-"] .starter-chip.starter-chip-design:hover { background: linear-gradient(120deg, #e86a9e 0%, #a46be0 55%, #f0955a 100%); filter: brightness(1.08); color: #fff; }
+:root .dashboard-shell[class*="look-"] .starter-chip.starter-chip-design:hover { background: #c026d3; filter: brightness(1.08); color: #fff; }
 
 /* « Tableur » starter chip (TechNova Tableur): spreadsheet green, the same family as Excel without copying it. */
 .starter-chip.starter-chip-sheet,
@@ -1195,10 +1195,10 @@ body:has(.dashboard-shell) :is([data-radix-popper-content-wrapper] > [data-state
 }
 
 /* Créativité and Tableur on their own line under the chat box: a little larger, a soft glow to stand out. */
-.starter-chip.featured-chip { box-shadow: 0 10px 24px -12px rgb(120 80 200 / .55); transition: transform .2s, filter .2s; }
+.starter-chip.featured-chip { box-shadow: 0 10px 24px -12px rgb(192 38 211 / .6); transition: transform .2s, filter .2s; }
 .starter-chip.featured-chip.starter-chip-sheet { box-shadow: 0 10px 24px -12px rgb(31 122 90 / .6); }
 .starter-chip.featured-chip:hover { transform: translateY(-1px); }
 @media (prefers-reduced-motion: reduce) { .starter-chip.featured-chip:hover { transform: none; } }
 .starter-chip.featured-chip.starter-chip-design, .starter-chip.featured-chip.starter-chip-sheet,
 :root .dashboard-shell[class*="look-"] .starter-chip.featured-chip.starter-chip-design,
-:root .dashboard-shell[class*="look-"] .starter-chip.featured-chip.starter-chip-sheet { padding-inline: 20px; }
+:root .dashboard-shell[class*="look-"] .starter-chip.featured-chip.starter-chip-sheet { padding-inline: 12px; }

@@ -36,7 +36,7 @@ export function ReferralPage() {
     : [[Share2, "Share your link", "On WhatsApp, by e-mail or on social media."], [MailCheck, "Your friend signs up", "With your link, then confirms their e-mail address."], [Gift, `${REFERRAL_CREDITS} credits each`, "They reach both accounts on their first visit to the dashboard."]] as const;
   return <div className="mx-auto max-w-[980px] space-y-4">
     <div className="overflow-hidden rounded-3xl border border-border bg-card">
-      <div className="bg-gradient-to-br from-[#5b3fd6] via-[#8a4fd8] to-[#e86a9e] px-6 py-7 text-white">
+      <div className="bg-gradient-to-br from-[#0b1430] via-[#13234f] to-[#1e3a8a] px-6 py-8 text-white">
         <p className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.16em] opacity-80"><Gift className="size-3.5" />{fr ? "Parrainage" : "Referrals"}</p>
         <h1 className="mt-2 font-display text-[26px] font-semibold leading-tight">{fr ? `Invitez vos amis : ${REFERRAL_CREDITS} crédits pour vous, ${REFERRAL_CREDITS} pour eux` : `Invite your friends: ${REFERRAL_CREDITS} credits for you, ${REFERRAL_CREDITS} for them`}</h1>
         <p className="mt-2 max-w-2xl text-[13.5px] opacity-90">{fr ? "Chaque ami qui crée son compte avec votre lien et confirme son e-mail vous rapporte des crédits, et lui en offre autant." : "Every friend who creates an account with your link and confirms their e-mail earns you credits, and gets the same."}</p>
@@ -46,21 +46,21 @@ export function ReferralPage() {
         <div className="mt-2 flex flex-col gap-2 sm:flex-row">
           <div className="flex min-w-0 flex-1 items-center gap-2 rounded-full border border-border bg-background px-4 py-2.5"><Link2 className="size-4 shrink-0 text-muted-foreground" /><span className="truncate font-mono text-[13px]">{link || (fr ? "Préparation du lien…" : "Preparing your link…")}</span></div>
           <button type="button" disabled={!link} onClick={() => void copy()} className="inline-flex h-11 items-center justify-center gap-2 rounded-full border border-border bg-background px-5 text-[13px] font-semibold hover:bg-secondary disabled:opacity-50">{copied ? <Check className="size-4 text-emerald-600" /> : <Copy className="size-4" />}{copied ? (fr ? "Copié" : "Copied") : (fr ? "Copier" : "Copy")}</button>
-          <a href={link ? `https://wa.me/?text=${encodeURIComponent(message)}` : undefined} target="_blank" rel="noopener noreferrer" aria-disabled={!link} className="inline-flex h-11 items-center justify-center gap-2 rounded-full bg-[#25D366] px-5 text-[13px] font-semibold text-white hover:brightness-105"><FontAwesomeIcon icon={faWhatsapp} className="size-4" />WhatsApp</a>
-          <button type="button" disabled={!link} onClick={() => void share()} className="inline-flex h-11 items-center justify-center gap-2 rounded-full bg-foreground px-5 text-[13px] font-semibold text-background disabled:opacity-50"><Share2 className="size-4" />{fr ? "Partager" : "Share"}</button>
+          <a href={link ? `https://wa.me/?text=${encodeURIComponent(message)}` : undefined} target="_blank" rel="noopener noreferrer" aria-disabled={!link} className="inline-flex h-11 items-center justify-center gap-2 rounded-full bg-[#15803d] px-5 text-[13px] font-semibold text-white transition hover:bg-[#166534]"><FontAwesomeIcon icon={faWhatsapp} className="size-4" />WhatsApp</a>
+          <button type="button" disabled={!link} onClick={() => void share()} className="inline-flex h-11 items-center justify-center gap-2 rounded-full border border-border bg-background px-5 text-[13px] font-semibold hover:bg-secondary disabled:opacity-50"><Share2 className="size-4" />{fr ? "Partager" : "Share"}</button>
         </div>
       </div>
     </div>
 
     <div className="grid gap-3 sm:grid-cols-3">
       {([[Users, fr ? "Amis parrainés" : "Friends referred", stats?.referred], [Gift, fr ? "Crédits gagnés" : "Credits earned", stats?.credits], [ShieldCheck, fr ? "Ce mois-ci" : "This month", stats ? `${stats.this_month} / ${REFERRAL_MONTHLY_CAP}` : undefined]] as [typeof Users, string, string | number | undefined][]).map(([I, label, value], i) =>
-        <div key={i} className="rounded-2xl border border-border bg-card p-4"><div className="flex items-center gap-2 text-[12px] text-muted-foreground"><I className="size-4" />{label}</div><p className="mt-2 font-display text-[26px] font-semibold tabular-nums">{value ?? "—"}</p></div>)}
+        <div key={i} className="rounded-2xl border border-border bg-card p-4"><div className="flex items-center gap-2 text-[12px] text-muted-foreground"><span className="grid size-7 place-items-center rounded-lg bg-[#1e3a8a]/10 text-[#1e3a8a] dark:text-blue-300"><I className="size-3.5" /></span>{label}</div><p className="mt-2 font-display text-[26px] font-semibold tabular-nums">{value ?? "—"}</p></div>)}
     </div>
 
     <div className="rounded-2xl border border-border bg-card p-5">
       <p className="font-display text-[15px] font-semibold">{fr ? "Comment ça marche" : "How it works"}</p>
       <ol className="mt-4 grid gap-3 sm:grid-cols-3">{steps.map(([I, t, d], i) => <li key={t} className="rounded-xl bg-secondary/60 p-4">
-        <span className="flex items-center gap-2"><span className="grid size-7 place-items-center rounded-full bg-foreground text-[12px] font-bold text-background">{i + 1}</span><I className="size-4 text-muted-foreground" /></span>
+        <span className="flex items-center gap-2"><span className="grid size-7 place-items-center rounded-full bg-[#13234f] text-[12px] font-bold text-white">{i + 1}</span><I className="size-4 text-muted-foreground" /></span>
         <p className="mt-2 text-[13.5px] font-semibold">{t}</p><p className="mt-0.5 text-[12px] text-muted-foreground">{d}</p>
       </li>)}</ol>
       <ul className="mt-4 space-y-1.5 text-[12px] text-muted-foreground">

@@ -28,7 +28,7 @@ function DocsHub() {
   const internal = [
     { to: "/dashboard/api" as const, icon: KeyRound, title: fr ? "Clés API" : "API keys", text: fr ? "Créez et supprimez vos clés." : "Create and delete your keys." },
     { to: "/dashboard/usage" as const, icon: Activity, title: fr ? "Utilisation" : "Usage", text: fr ? "Journal des requêtes et export CSV." : "Request log and CSV export." },
-    { to: "/dashboard/registry" as const, icon: Library, title: "Registry", text: fr ? "Prompts et workflows prêts à l'emploi." : "Ready-made prompts and workflows." },
+    { to: "/dashboard/registry" as const, icon: Library, title: "Templates", text: fr ? "Prompts et workflows prêts à l'emploi." : "Ready-made prompts and workflows." },
   ];
   const card = "group flex h-full flex-col gap-2 rounded-2xl border border-border bg-card p-5 shadow-sm transition hover:-translate-y-0.5 hover:border-foreground/20";
   return <div className="space-y-6">

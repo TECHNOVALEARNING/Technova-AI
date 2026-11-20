@@ -1,13 +1,13 @@
 import { createFileRoute } from "@tanstack/react-router";
 
-/** Called daily by the scheduler: deletes archived media older than 14 days, saved creations 14 days after their last save, accounts past their 30-day deletion delay, and re-checks unpaid checkouts. */
+/** Called daily by the scheduler: deletes archived media older than 14 days, saved creations 14 days after their creation, accounts past their 30-day deletion delay, and re-checks unpaid checkouts. */
 async function run(request: Request) {
   const { authenticateCronRequest } = await import("@/integrations/supabase/cron-auth");
   const denied = await authenticateCronRequest(request);
   if (denied) return denied;
   const { purgeExpiredMedia } = await import("@/lib/media-archive.server");
   const purged = await purgeExpiredMedia();
-  // Saved presentations and spreadsheets (Projects) 14 days after their last save.
+  // Saved presentations and spreadsheets (Projects) 14 days after their creation (no renewal, migration 0055).
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
   const creations = await supabaseAdmin.from("user_creations").delete({ count: "exact" }).lt("expires_at", new Date().toISOString())
     .then((r) => r.count ?? 0, (e) => { console.error("creations purge", e); return null; });

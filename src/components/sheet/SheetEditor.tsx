@@ -15,7 +15,7 @@ import {
   addr, colName, display, newSheet, parseAddr, parseLiteral, parseRange, rangeText, uid,
 } from "@/lib/sheet/model";
 import { exportCsv, exportXlsx, importFile, printWorkbook, sheetFromRows, usedSize } from "@/lib/sheet/sheet-io";
-import { SHEET_AI_CREDITS, SHEET_PDF_CREDITS } from "@/lib/sheet/limits";
+import { confirmAiCredits } from "@/lib/ai-credit-notice";
 import { notifyCreditsChanged } from "@/components/dashboard/TopActions";
 import { SheetChartView } from "./SheetChart";
 import { usePlanTier } from "@/lib/plan-client";
@@ -497,6 +497,7 @@ export function SheetEditor({ initial, lang, onClose, saved }: { initial: Workbo
     } finally { setBusy(null); }
   };
   const importPdf = async (file: File) => {
+    if (!(await confirmAiCredits("pdf", lang))) return;
     if (file.size > 8 * 1024 * 1024) return void toast.error(tx(lang, "PDF trop lourd (8 Mo au plus).", "PDF too large (8 MB max)."));
     setBusy(tx(lang, "Lecture des tableaux du PDF…", "Reading the PDF tables…"));
     try {
@@ -510,7 +511,7 @@ export function SheetEditor({ initial, lang, onClose, saved }: { initial: Workbo
       const sheets = json.sheets.map((t, i) => sheetFromRows((t.name || `PDF ${i + 1}`).replace(/[\\/?*[\]:!']/g, "").slice(0, 30), t.rows));
       commit((w) => ({ ...w, sheets: [...w.sheets, ...sheets.map((s) => ({ ...s, name: w.sheets.some((x) => x.name === s.name) ? `${s.name} (PDF)` : s.name }))] }));
       setSi(wb.sheets.length);
-      toast.success(tx(lang, `${sheets.length} tableau(x) importé(s) du PDF (${json.credits ?? SHEET_PDF_CREDITS} crédits). Vérifiez les chiffres.`, `${sheets.length} table(s) imported from the PDF (${json.credits ?? SHEET_PDF_CREDITS} credits). Check the figures.`));
+      toast.success(tx(lang, `${sheets.length} tableau(x) importé(s) du PDF${json.credits ? ` · ${json.credits} crédits utilisés` : ""}. Vérifiez les chiffres.`, `${sheets.length} table(s) imported from the PDF${json.credits ? ` · ${json.credits} credits used` : ""}. Check the figures.`));
     } catch (e) {
       toast.error(e instanceof Error && e.message && e.message.length < 200 ? e.message : tx(lang, "Le PDF n'a pas pu être lu.", "The PDF could not be read."));
     } finally { setBusy(null); }
@@ -703,7 +704,7 @@ export function SheetEditor({ initial, lang, onClose, saved }: { initial: Workbo
       <div className="ml-auto flex items-center gap-1.5">
         <Menu label={tx(lang, "Ouvrir", "Open")} icon={<FileUp className="size-4" />}>{(close) => <>
           <MenuItem icon={<FileSpreadsheet className="size-4" />} onClick={() => { close(); fileInput.current?.click(); }} hint=".xlsx · .csv">{tx(lang, "Fichier Excel ou CSV", "Excel or CSV file")}</MenuItem>
-          <MenuItem icon={<FileUp className="size-4" />} onClick={() => { close(); pdfInput.current?.click(); }} hint={tx(lang, `Tableaux lus par l'IA · ${SHEET_PDF_CREDITS} crédits`, `Tables read by AI · ${SHEET_PDF_CREDITS} credits`)}>{tx(lang, "Tableaux d'un PDF", "Tables from a PDF")}</MenuItem>
+          <MenuItem icon={<FileUp className="size-4" />} onClick={() => { close(); pdfInput.current?.click(); }} hint={tx(lang, "Tableaux lus par l'IA", "Tables read by AI")}>{tx(lang, "Tableaux d'un PDF", "Tables from a PDF")}</MenuItem>
           <MenuItem icon={<svg viewBox="0 0 87.3 78" className="size-4"><path d="m6.6 66.85 3.85 6.65c.8 1.4 1.95 2.5 3.3 3.3l13.75-23.8H0c0 1.55.4 3.1 1.2 4.5z" fill="#0066da" /><path d="M43.65 25 29.9 1.2c-1.35.8-2.5 1.9-3.3 3.3L1.2 48.5A9 9 0 0 0 0 53h27.5z" fill="#00ac47" /><path d="M73.55 76.8c1.35-.8 2.5-1.9 3.3-3.3l1.6-2.75 7.65-13.25c.8-1.4 1.2-2.95 1.2-4.5H59.8l5.85 11.5z" fill="#ea4335" /><path d="M43.65 25 57.4 1.2C56.05.4 54.5 0 52.9 0H34.4c-1.6 0-3.15.45-4.5 1.2z" fill="#00832d" /><path d="M59.8 53H27.5L13.75 76.8c1.35.8 2.9 1.2 4.5 1.2h50.8c1.6 0 3.15-.45 4.5-1.2z" fill="#2684fc" /><path d="M73.4 26.5 60.7 4.5c-.8-1.4-1.95-2.5-3.3-3.3L43.65 25 59.8 53h27.45c0-1.55-.4-3.1-1.2-4.5z" fill="#ffba00" /></svg>} onClick={() => { close(); setDriveOpen(true); }} hint="Google Sheets · .xlsx">{tx(lang, "Depuis Google Drive", "From Google Drive")}</MenuItem>
         </>}</Menu>
         <Menu label={tx(lang, "Exporter", "Export")} icon={<Download className="size-4" />}>{(close) => <>
@@ -717,7 +718,7 @@ export function SheetEditor({ initial, lang, onClose, saved }: { initial: Workbo
         <button type="button" onClick={quickSave} title="Ctrl+S" className="inline-flex h-8 items-center gap-1.5 rounded-full border border-border px-3 text-[12.5px] font-semibold hover:bg-secondary"><Save className="size-3.5" />{savedRef ? tx(lang, "Enregistrer", "Save") : tx(lang, "Enregistrer dans un projet", "Save to a project")}</button>
         <button type="button" onClick={() => setAssistant((a) => !a)} aria-pressed={assistant}
           className={cn("inline-flex h-8 items-center gap-1.5 rounded-full px-3 text-[12.5px] font-semibold transition", assistant ? "bg-[#1f7a5a] text-white" : "bg-gradient-to-r from-[#1f7a5a] to-[#2b9b74] text-white hover:brightness-110")}>
-          <Sparkles className="size-3.5" />{tx(lang, "Assistant IA", "AI assistant")}<span className="rounded-full bg-white/20 px-1.5 text-[10px]">{tx(lang, `${SHEET_AI_CREDITS} crédits`, `${SHEET_AI_CREDITS} credits`)}</span>
+          <Sparkles className="size-3.5" />{tx(lang, "Assistant IA", "AI assistant")}
         </button>
         <button type="button" onClick={onClose} aria-label={tx(lang, "Fermer", "Close")} className="grid size-8 place-items-center rounded-full hover:bg-secondary"><X className="size-4" /></button>
       </div>

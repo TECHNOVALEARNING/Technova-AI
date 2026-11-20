@@ -2,7 +2,7 @@ import type { ReactNode } from "react";
 import { Check, Clock3, Copy, Database, Download, Eye, GitFork, Globe2, Heart, KeyRound, Library, Lock, Plug, ShieldCheck, Wand2 } from "lucide-react";
 import type { SiteLang } from "@/lib/i18n";
 
-// Feature guides, part 2: the Registry and Connections, written from what the product does today
+// Feature guides, part 2: Templates and Connections, written from what the product does today
 // (RegistryPage, ConnectionsPage, connectors.ts, publishing and Supabase OAuth); illustrations drawn in code.
 
 type Guide2 = {
@@ -13,8 +13,8 @@ type Guide2 = {
 const g2: Record<SiteLang, Guide2> = {
   fr: {
     registry: {
-      title: "Registry",
-      intro: ["Le Registry est une bibliothèque de ressources prêtes à l'emploi : pages complètes, consoles, kits d'interface, composants, animations, polices, prompts et workflows. Il sert à démarrer plus vite : au lieu de partir d'une page blanche, vous partez d'une ressource éprouvée.", "On y trouve les modèles officiels TechNova, et vos propres ressources, que vous pouvez garder privées ou partager."],
+      title: "Templates",
+      intro: ["Templates est une bibliothèque de ressources prêtes à l'emploi : pages complètes, consoles, kits d'interface, composants, animations, polices, prompts et workflows. Il sert à démarrer plus vite : au lieu de partir d'une page blanche, vous partez d'une ressource éprouvée.", "On y trouve les modèles officiels TechNova, et vos propres ressources, que vous pouvez garder privées ou partager."],
       catsTitle: "Ce qu'on y trouve",
       cats: ["Landing pages", "Consoles", "Kits UI & UX", "Modèles", "Composants", "Animations", "Polices", "Prompts", "Workflows"],
       actionsTitle: "Ce que vous pouvez faire avec une ressource",
@@ -40,8 +40,8 @@ const g2: Record<SiteLang, Guide2> = {
   },
   en: {
     registry: {
-      title: "Registry",
-      intro: ["The Registry is a library of ready-to-use resources: full pages, consoles, UI kits, components, animations, fonts, prompts and workflows. It helps you start faster: instead of a blank page, you start from a proven resource.", "It holds the official TechNova designs and your own resources, which you can keep private or share."],
+      title: "Templates",
+      intro: ["Templates is a library of ready-to-use resources: full pages, consoles, UI kits, components, animations, fonts, prompts and workflows. It helps you start faster: instead of a blank page, you start from a proven resource.", "It holds the official TechNova designs and your own resources, which you can keep private or share."],
       catsTitle: "What you will find",
       cats: ["Landing pages", "Consoles", "UI & UX kits", "Templates", "Components", "Animations", "Fonts", "Prompts", "Workflows"],
       actionsTitle: "What you can do with a resource",
@@ -67,8 +67,8 @@ const g2: Record<SiteLang, Guide2> = {
   },
   es: {
     registry: {
-      title: "Registry",
-      intro: ["El Registry es una biblioteca de recursos listos para usar: páginas completas, consolas, kits de interfaz, componentes, animaciones, fuentes, prompts y workflows. Sirve para empezar más rápido: en lugar de una página en blanco, partes de un recurso probado.", "Contiene los modelos oficiales de TechNova y tus propios recursos, que puedes mantener privados o compartir."],
+      title: "Templates",
+      intro: ["Templates es una biblioteca de recursos listos para usar: páginas completas, consolas, kits de interfaz, componentes, animaciones, fuentes, prompts y workflows. Sirve para empezar más rápido: en lugar de una página en blanco, partes de un recurso probado.", "Contiene los modelos oficiales de TechNova y tus propios recursos, que puedes mantener privados o compartir."],
       catsTitle: "Qué encontrarás",
       cats: ["Landing pages", "Consolas", "Kits UI y UX", "Plantillas", "Componentes", "Animaciones", "Fuentes", "Prompts", "Workflows"],
       actionsTitle: "Qué puedes hacer con un recurso",
@@ -94,8 +94,8 @@ const g2: Record<SiteLang, Guide2> = {
   },
   pt: {
     registry: {
-      title: "Registry",
-      intro: ["O Registry é uma biblioteca de recursos prontos para usar: páginas completas, consoles, kits de interface, componentes, animações, fontes, prompts e workflows. Ele ajuda a começar mais rápido: em vez de uma página em branco, você parte de um recurso testado.", "Ele reúne os modelos oficiais do TechNova e os seus próprios recursos, que você pode manter privados ou compartilhar."],
+      title: "Templates",
+      intro: ["Templates é uma biblioteca de recursos prontos para usar: páginas completas, consoles, kits de interface, componentes, animações, fontes, prompts e workflows. Ele ajuda a começar mais rápido: em vez de uma página em branco, você parte de um recurso testado.", "Ele reúne os modelos oficiais do TechNova e os seus próprios recursos, que você pode manter privados ou compartilhar."],
       catsTitle: "O que você encontra",
       cats: ["Landing pages", "Consoles", "Kits UI e UX", "Modelos", "Componentes", "Animações", "Fontes", "Prompts", "Workflows"],
       actionsTitle: "O que você pode fazer com um recurso",

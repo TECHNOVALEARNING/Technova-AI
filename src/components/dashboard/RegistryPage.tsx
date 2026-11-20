@@ -22,7 +22,7 @@ const EXTS = ["txt", "md", "html", "css", "js", "tsx", "json", "sql"] as const;
 
 const T = {
   fr: {
-    title: "Registry", sub: "Bibliothèque de ressources réutilisables : pages, animations, polices, kits, prompts, modèles, composants et workflows.",
+    title: "Templates", sub: "Bibliothèque de ressources réutilisables : pages, animations, polices, kits, prompts, modèles, composants et workflows.",
     search: "Rechercher une ressource…", all: "Tout", favs: "Favoris", mine: "Mes ressources", add: "Ajouter",
     cats: { landing: "Landing pages", dashboard: "Consoles", animation: "Animations", font: "Polices", ui_kit: "Kits UI & UX", prompt: "Prompts", template: "Modèles", component: "Composants", workflow: "Workflows" },
     locked: "Creator · Pro", free: "Offert", lockedTitle: "Réservé aux forfaits Creator et Pro", lockedText: (t: string) => `« ${t} » fait partie des modèles officiels TechNova inclus avec les packs Creator et Pro : code complet, aperçu, téléchargement et remix. Votre forfait actuel donne accès à un modèle offert.`, seePacks: "Voir les packs", lockedBanner: "Les modèles officiels sont inclus avec les packs Creator et Pro. Votre forfait vous donne accès au modèle offert « Halo ».",
@@ -35,10 +35,10 @@ const T = {
     publicNeedsRights: "Une ressource publique doit autoriser la redistribution.", save: "Enregistrer", cancel: "Annuler", saved: "Ressource enregistrée", error: "Action impossible. Réessayez.",
     delConfirm: "Supprimer cette ressource ?", remixOf: "Remix d'une ressource",
     open: "Ouvrir", preview: "Aperçu", code: "Code", desktop: "Ordinateur", mobile: "Mobile", copy: "Copier", copiedCode: "Code copié", usePrompt: "Utiliser dans le chat",
-    brief: (title: string, desc: string, cat: string) => `Crée un site pour mon activité en t'inspirant de la ressource « ${title} » (${cat}) du Registry TechNova : ${desc}\nReprends son niveau de finition, sa structure, sa typographie et sa palette, adaptés à mon activité.\nMon activité : `,
+    brief: (title: string, desc: string, cat: string) => `Crée un site pour mon activité en t'inspirant de la ressource « ${title} » (${cat}) des Templates TechNova : ${desc}\nReprends son niveau de finition, sa structure, sa typographie et sa palette, adaptés à mon activité.\nMon activité : `,
   },
   en: {
-    title: "Registry", sub: "Reusable resource library: landing pages, animations, fonts, UI kits, prompts, templates, components and workflows.",
+    title: "Templates", sub: "Reusable resource library: landing pages, animations, fonts, UI kits, prompts, templates, components and workflows.",
     search: "Search resources…", all: "All", favs: "Favorites", mine: "My resources", add: "Add",
     cats: { landing: "Landing pages", dashboard: "Consoles", animation: "Animations", font: "Fonts", ui_kit: "UI & UX kits", prompt: "Prompts", template: "Templates", component: "Components", workflow: "Workflows" },
     locked: "Creator · Pro", free: "Free", lockedTitle: "Included with Creator and Pro", lockedText: (t: string) => `"${t}" is one of the official TechNova designs included with the Creator and Pro packs: full code, preview, download and remix. Your current plan includes one free design.`, seePacks: "See packs", lockedBanner: "Official designs come with the Creator and Pro packs. Your plan includes the free \"Halo\" design.",
@@ -51,7 +51,7 @@ const T = {
     publicNeedsRights: "A public resource must allow redistribution.", save: "Save", cancel: "Cancel", saved: "Resource saved", error: "Action failed. Try again.",
     delConfirm: "Delete this resource?", remixOf: "Remix of a resource",
     open: "Open", preview: "Preview", code: "Code", desktop: "Desktop", mobile: "Mobile", copy: "Copy", copiedCode: "Code copied", usePrompt: "Use in chat",
-    brief: (title: string, desc: string, cat: string) => `Build a website for my business inspired by the "${title}" resource (${cat}) from the TechNova Registry: ${desc}\nKeep its level of polish, structure, typography and palette, adapted to my business.\nMy business: `,
+    brief: (title: string, desc: string, cat: string) => `Build a website for my business inspired by the "${title}" resource (${cat}) from the TechNova Templates: ${desc}\nKeep its level of polish, structure, typography and palette, adapted to my business.\nMy business: `,
   },
 };
 

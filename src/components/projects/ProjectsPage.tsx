@@ -10,7 +10,7 @@ import { PROJECT_COLORS, RETENTION_DAYS, createProject, daysLeft, listProjects, 
 import { useDashboard } from "@/components/dashboard/DashboardLayout";
 
 // Projets: the account's projects with their conversations and saved files (TechNova Design presentations and
-// documents, TechNova Tableur workbooks). Saved files are kept 14 days after their last save: each card shows the
+// documents, TechNova Tableur workbooks). Saved files are deleted 14 days after creation (no renewal): each card shows the
 // date, files ending within 3 days are flagged, and the page explains how to keep them (save again or download).
 
 type Filter = "all" | "none" | string;
@@ -55,7 +55,7 @@ export function ProjectsPage() {
   };
   const moveFile = async (c: Omit<Creation, "data">, projectId: string | null) => {
     const { error } = await supabase.from("user_creations").update({ project_id: projectId }).eq("id", c.id);
-    if (error) toast.error(saveErrorText("", fr)); else { toast.success(fr ? "Fichier déplacé (gardé 14 jours de plus)." : "File moved (kept 14 more days)."); void load(); }
+    if (error) toast.error(saveErrorText("", fr)); else { toast.success(fr ? "Fichier déplacé." : "File moved."); void load(); }
   };
   const openFile = (c: Omit<Creation, "data">) => void navigate({ to: "/dashboard/registry", search: { section: c.kind === "sheet" ? "sheet" : "design", creation: c.id } as never });
   const detachThread = async (id: string) => { await supabase.from("chat_threads").update({ project_id: null }).eq("id", id); void reload(); };
@@ -73,9 +73,9 @@ export function ProjectsPage() {
 
     <div className="flex items-start gap-3 rounded-2xl border border-amber-500/40 bg-amber-500/[0.07] px-4 py-3 text-[12.5px]">
       <Clock className="mt-0.5 size-4 shrink-0 text-amber-600" />
-      <p><strong>{fr ? `Les fichiers enregistrés sont gardés ${RETENTION_DAYS} jours après leur dernier enregistrement.` : `Saved files are kept ${RETENTION_DAYS} days after their last save.`}</strong> {fr ? "Pour les garder plus longtemps : rouvrez-les et enregistrez-les à nouveau (14 jours de plus), ou téléchargez-les en PDF, PowerPoint ou Excel. Vous êtes prévenu 3 jours avant dans votre boîte de réception. Les conversations, elles, restent." : "To keep them longer: reopen and save them again (14 more days), or download them as PDF, PowerPoint or Excel. Your Inbox warns you 3 days before. Conversations stay."}</p>
+      <p><strong>{fr ? `Les fichiers enregistrés sont supprimés ${RETENTION_DAYS} jours après leur création, sans prolongation possible.` : `Saved files are deleted ${RETENTION_DAYS} days after they were created, with no extension.`}</strong> {fr ? "Pour les garder : ouvrez-les, téléchargez-les en PDF, PowerPoint ou Excel, puis rangez-les dans votre Google Drive ou Notion. Vous êtes prévenu 3 jours avant dans votre boîte de réception. Les conversations, elles, restent." : "To keep them: open them, download them as PDF, PowerPoint or Excel, then store them in your Google Drive or Notion. Your Inbox warns you 3 days before. Conversations stay."}</p>
     </div>
-    {soon.length > 0 && <div className="flex items-center gap-2 rounded-2xl border border-red-500/40 bg-red-500/[0.06] px-4 py-2.5 text-[12.5px] text-red-700 dark:text-red-300"><AlertTriangle className="size-4 shrink-0" />{fr ? `${soon.length} fichier(s) supprimé(s) dans 3 jours ou moins : ouvrez-les pour les prolonger ou téléchargez-les.` : `${soon.length} file(s) deleted within 3 days: open them to extend or download them.`}</div>}
+    {soon.length > 0 && <div className="flex items-center gap-2 rounded-2xl border border-red-500/40 bg-red-500/[0.06] px-4 py-2.5 text-[12.5px] text-red-700 dark:text-red-300"><AlertTriangle className="size-4 shrink-0" />{fr ? `${soon.length} fichier(s) supprimé(s) dans 3 jours ou moins : téléchargez-les maintenant pour les garder.` : `${soon.length} file(s) deleted within 3 days: download them now to keep them.`}</div>}
 
     <div className="flex flex-wrap gap-1.5">
       {[["all", fr ? "Tout" : "All", creations.length], ["none", fr ? "Sans projet" : "No project", creations.filter((c) => !c.project_id).length]].map(([id, label, n]) => <button key={id as string} type="button" onClick={() => setFilter(id as string)} className={cn("h-8 rounded-full border px-3.5 text-[12.5px]", filter === id ? "border-foreground bg-foreground text-background" : "border-border bg-card hover:bg-secondary")}>{label} <span className="opacity-60">{n}</span></button>)}

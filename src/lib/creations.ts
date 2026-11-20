@@ -1,8 +1,8 @@
 import { supabase } from "@/integrations/supabase/client";
 import type { Json, Tables } from "@/integrations/supabase/types";
 
-// Projects and saved creations (migration 0051). Everything is owner-scoped by row security; a saved creation is
-// kept 14 days after its last save (the database sets expires_at), then deleted by the daily purge.
+// Projects and saved creations (migrations 0051, 0055). Everything is owner-scoped by row security; a saved creation
+// is deleted exactly 14 days after it was first saved (later saves never push the date back; 50 MB per account).
 
 export type Project = Tables<"projects">;
 export type Creation = Tables<"user_creations">;
@@ -31,7 +31,7 @@ export async function saveCreation(input: { id?: string | null; kind: CreationKi
   const { data, error } = await q;
   if (error || !data) {
     const m = error?.message ?? "";
-    throw new Error(m.includes("CREATION_TOO_LARGE") ? "TOO_LARGE" : m.includes("CREATIONS_LIMIT") ? "LIMIT" : "SAVE_FAILED");
+    throw new Error(m.includes("CREATION_TOO_LARGE") ? "TOO_LARGE" : m.includes("CREATIONS_LIMIT") ? "LIMIT" : m.includes("CREATIONS_STORAGE_FULL") ? "STORAGE_FULL" : "SAVE_FAILED");
   }
   return data;
 }
@@ -43,6 +43,7 @@ export async function loadCreation(id: string): Promise<Creation | null> {
 export function saveErrorText(code: string, fr: boolean) {
   if (code === "TOO_LARGE") return fr ? "Fichier trop lourd pour être enregistré (5 Mo au plus) : réduisez ou retirez des images, ou téléchargez-le." : "File too large to save (5 MB max): shrink or remove pictures, or download it.";
   if (code === "LIMIT") return fr ? "Vous avez atteint 300 fichiers enregistrés : supprimez-en dans Projets." : "You reached 300 saved files: delete some in Projects.";
+  if (code === "STORAGE_FULL") return fr ? "Votre espace de Projets est plein (50 Mo) : téléchargez puis supprimez d'anciens fichiers." : "Your Projects space is full (50 MB): download then delete older files.";
   if (code === "PROJECTS_LIMIT") return fr ? "50 projets au plus." : "50 projects at most.";
   return fr ? "Enregistrement impossible. Réessayez." : "Could not save. Try again.";
 }

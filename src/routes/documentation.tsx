@@ -150,10 +150,10 @@ function DocCard({ id, n, title, children }: { id: string; n: number; title: str
 }
 
 const pdfText = {
-  fr: { download: "Télécharger en PDF", version: "Version", date: "Mise à jour le", contents: "Sommaire", footer: "TechNova AI Hub · Documentation", intro: "Guide complet de la plateforme et de son API : démarrage, intégration, agents IA, connaissances, Registry, connexions, plugins, page de vente pro, téléchargements et mise en production." },
-  en: { download: "Download as PDF", version: "Version", date: "Updated on", contents: "Contents", footer: "TechNova AI Hub · Documentation", intro: "Complete guide to the platform and its API: getting started, integration, AI agents, knowledge, Registry, connections, plugins, pro sales page, downloads and going to production." },
-  es: { download: "Descargar en PDF", version: "Versión", date: "Actualizado el", contents: "Índice", footer: "TechNova AI Hub · Documentación", intro: "Guía completa de la plataforma y su API: inicio, integración, agentes de IA, conocimiento, Registry, conexiones, plugins, página de venta pro, descargas y paso a producción." },
-  pt: { download: "Baixar em PDF", version: "Versão", date: "Atualizado em", contents: "Sumário", footer: "TechNova AI Hub · Documentação", intro: "Guia completo da plataforma e da sua API: início, integração, agentes de IA, conhecimento, Registry, conexões, plugins, página de vendas pro, downloads e ida para produção." },
+  fr: { download: "Télécharger en PDF", version: "Version", date: "Mise à jour le", contents: "Sommaire", footer: "TechNova AI Hub · Documentation", intro: "Guide complet de la plateforme et de son API : démarrage, intégration, agents IA, connaissances, Templates, connexions, plugins, page de vente pro, téléchargements et mise en production." },
+  en: { download: "Download as PDF", version: "Version", date: "Updated on", contents: "Contents", footer: "TechNova AI Hub · Documentation", intro: "Complete guide to the platform and its API: getting started, integration, AI agents, knowledge, Templates, connections, plugins, pro sales page, downloads and going to production." },
+  es: { download: "Descargar en PDF", version: "Versión", date: "Actualizado el", contents: "Índice", footer: "TechNova AI Hub · Documentación", intro: "Guía completa de la plataforma y su API: inicio, integración, agentes de IA, conocimiento, Templates, conexiones, plugins, página de venta pro, descargas y paso a producción." },
+  pt: { download: "Baixar em PDF", version: "Versão", date: "Atualizado em", contents: "Sumário", footer: "TechNova AI Hub · Documentação", intro: "Guia completo da plataforma e da sua API: início, integração, agentes de IA, conhecimento, Templates, conexões, plugins, página de vendas pro, downloads e ida para produção." },
 } satisfies Record<SiteLang, unknown>;
 
 function DocsPage() {
@@ -202,7 +202,7 @@ function DocsPage() {
     </> });
     if (s.id === "demarrage") blocks.push({ id: "exemples", title: t.exTag, body: <><p className="mt-3 leading-relaxed text-muted-foreground">{t.exTitle}</p>{examples}</> });
   }
-  // Feature guides: AI agents, knowledge bases, Registry, Connections, Plugins, sales page, downloads,
+  // Feature guides: AI agents, knowledge bases, Templates, Connections, Plugins, sales page, downloads,
   // the everyday workspace, then where agents and knowledge can be used.
   { const [agents, knowledge, where] = featureGuideBlocks(lang); blocks.push(agents!, knowledge!, ...featureGuideBlocks2(lang), ...featureGuideBlocks3(lang), where!); }
   // Chat modes, news questions, the humanize and audio journeys, and security & data protection.

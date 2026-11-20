@@ -431,7 +431,7 @@ function ChatComposer({
   const { lang } = useDashboard();
   const ownRef = useRef<HTMLTextAreaElement>(null);
   const textareaRef = inputRef ?? ownRef;
-  // A Registry item arrives as a draft: switch to its mode and prefill the brief.
+  // A Templates item arrives as a draft: switch to its mode and prefill the brief.
   useEffect(() => {
     let raw: string | null = null;
     try { raw = sessionStorage.getItem(DESIGN_DRAFT_KEY); sessionStorage.removeItem(DESIGN_DRAFT_KEY); } catch { return; }
@@ -692,9 +692,9 @@ function StarterIdeas({ choice, inputRef, onSalesPage, onMusic, onVideo, onHuman
   const goTo = useNavigate();
   function pick(idea: StarterIdea) {
     if (idea.wizard === "sales") { onSalesPage(); return; }
-    // « Créativité » opens TechNova Design (Registry → Présentation et Canva).
+    // « Créativité » opens TechNova Design (Templates → Présentation et Canva).
     if (idea.wizard === "design") { void goTo({ to: "/dashboard/registry", search: { section: "design" } as never }); return; }
-    // « Tableur » opens TechNova Tableur (Registry → Tableur et Excel).
+    // « Tableur » opens TechNova Tableur (Templates → Tableur et Excel).
     if (idea.wizard === "sheet") { void goTo({ to: "/dashboard/registry", search: { section: "sheet" } as never }); return; }
     choice.chooseMode(idea.mode);
     const [, , prompt] = idea[lang === "en" ? "en" : "fr"];
@@ -707,40 +707,32 @@ function StarterIdeas({ choice, inputRef, onSalesPage, onMusic, onVideo, onHuman
       if (idea.attach) document.querySelector<HTMLInputElement>("input[data-chat-attach]")?.click();
     }, 0);
   }
-  // Three rows: four starting points and four creation buttons of the same width, then Créativité and Tableur
-  // highlighted on their own line.
-  const plain = starterIdeas.filter((idea) => idea.wizard !== "design" && idea.wizard !== "sheet");
-  const featured = starterIdeas.filter((idea) => idea.wizard === "design" || idea.wizard === "sheet");
+  // Three rows: Boutique en ligne · Créativité · Tableur · Page de vente pro (the two highlighted ones in the middle),
+  // then the four creation buttons of the same width, then Landing page and Design vers code centred.
+  const byWizard = (w: string) => starterIdeas.find((idea) => idea.wizard === w)!;
+  const byTitle = (t: string) => starterIdeas.find((idea) => idea.fr[0] === t)!;
+  const top = [byTitle("Boutique en ligne"), byWizard("design"), byWizard("sheet"), byWizard("sales")];
+  const bottom = [byTitle("Landing page"), byTitle("Design vers code")];
   const cell = "inline-flex h-9 w-full min-w-0 items-center justify-center gap-1.5 rounded-full px-3 text-[12px]";
+  const chip = (idea: StarterIdea) => {
+    const [title, hint] = idea[lang === "en" ? "en" : "fr"];
+    const Icon = idea.icon;
+    const featured = idea.wizard === "design" || idea.wizard === "sheet";
+    return <button key={title} type="button" onClick={() => pick(idea)} title={hint}
+      className={cn("starter-chip group border transition-colors", cell, featured ? cn("featured-chip font-semibold", idea.wizard === "design" ? "starter-chip-design" : "starter-chip-sheet") : "text-foreground/80 hover:text-foreground")}>
+      <Icon className={cn("size-3.5 shrink-0", featured ? "" : "text-muted-foreground transition-colors group-hover:text-foreground")} strokeWidth={featured ? 2 : 1.6} />
+      <span className="truncate">{title}</span>
+    </button>;
+  };
   return <div className="mx-auto w-full max-w-[680px] space-y-2">
-    <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
-    {plain.map((idea) => {
-      const [title, hint] = idea[lang === "en" ? "en" : "fr"];
-      const Icon = idea.icon;
-      return <button key={title} type="button" onClick={() => pick(idea)} title={hint}
-        className={cn("starter-chip group border text-foreground/80 transition-colors hover:text-foreground", cell)}>
-        <Icon className="size-3.5 shrink-0 text-muted-foreground transition-colors group-hover:text-foreground" strokeWidth={1.6} />
-        <span className="truncate">{title}</span>
-      </button>;
-    })}
-    </div>
+    <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">{top.map(chip)}</div>
     <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
       <button type="button" onClick={onMusic} className={cn("create-chip create-chip-music font-semibold text-white", cell)}><Music className="size-3.5 shrink-0" /><span className="truncate">{lang === "en" ? "Create a song" : "Création de musique"}</span></button>
       <button type="button" onClick={onVideo} className={cn("create-chip create-chip-video font-semibold text-white", cell)}><Film className="size-3.5 shrink-0" /><span className="truncate">{lang === "en" ? "Create a video" : "Création de vidéo"}</span></button>
       <button type="button" onClick={onHumanize} className={cn("create-chip create-chip-humanize font-semibold text-white", cell)}><PenLine className="size-3.5 shrink-0" /><span className="truncate">{lang === "en" ? "Humanize a text" : "Humaniser un texte"}</span></button>
       <button type="button" onClick={onAudio} className={cn("create-chip create-chip-audio font-semibold text-white", cell)}><AudioLines className="size-3.5 shrink-0" /><span className="truncate">{lang === "en" ? "Summarize an audio" : "Résumé d'un audio"}</span></button>
     </div>
-    <div className="flex justify-center gap-2.5 pt-1">
-    {featured.map((idea) => {
-      const [title, hint] = idea[lang === "en" ? "en" : "fr"];
-      const Icon = idea.icon;
-      return <button key={title} type="button" onClick={() => pick(idea)} title={hint}
-        className={cn("starter-chip featured-chip inline-flex h-10 min-w-[150px] items-center justify-center gap-2 rounded-full border px-5 text-[13px]", idea.wizard === "design" ? "starter-chip-design" : "starter-chip-sheet")}>
-        <Icon className="size-4 shrink-0" strokeWidth={2} />
-        <span>{title}</span>
-      </button>;
-    })}
-    </div>
+    <div className="mx-auto grid max-w-[336px] grid-cols-2 gap-2">{bottom.map(chip)}</div>
   </div>;
 }
 

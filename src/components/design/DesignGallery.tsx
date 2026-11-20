@@ -2,13 +2,13 @@ import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { loadCreation } from "@/lib/creations";
 import { FilePlus2, Search, Sparkles } from "lucide-react";
-import { DESIGN_FORMATS, designAiCredits, type DesignFormatId } from "@/lib/design-formats";
+import { DESIGN_FORMATS, type DesignFormatId } from "@/lib/design-formats";
 import { cn } from "@/lib/utils";
 import { DESIGN_TEMPLATES, blankTemplate, fieldValues } from "./designs";
 import { DesignPreview, useDesignFonts } from "./DesignPreview";
 import { DesignStudio, type SavedDesign } from "./DesignStudio";
 
-// Registry → « Présentation et Canva »: a mini design studio. Format chips (presentations, documents, social
+// Templates → « Présentation et Canva »: a mini design studio. Format chips (presentations, documents, social
 // posts, cards…), a blank page per format, and the original TechNova templates as live thumbnails; a click opens
 // the guided creation window (DesignStudio).
 
@@ -44,8 +44,8 @@ export function DesignGallery({ lang }: { lang: Lang }) {
       <p className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground"><Sparkles className="size-3.5" />TechNova Design</p>
       <h2 className="mt-1.5 font-display text-xl font-semibold">{tx(lang, "Présentations, documents, réseaux sociaux et cartes", "Presentations, documents, social posts and cards")}</h2>
       <p className="mt-1 max-w-3xl text-[13px] text-muted-foreground">{tx(lang,
-        `Choisissez un modèle ou partez d'une page blanche, ajoutez vos textes et photos (ou laissez l'IA les rédiger pour ${designAiCredits("document")} crédits), choisissez le style, puis imprimez, enregistrez en PDF ou ouvrez dans PowerPoint, Google Slides ou Canva. Modèles, modifications et exports gratuits.`,
-        `Pick a template or start from a blank page, add your text and photos (or let the AI write them for ${designAiCredits("document")} credits), pick the style, then print, save as PDF or open in PowerPoint, Google Slides or Canva. Templates, edits and exports are free.`)}</p>
+        `Choisissez un modèle ou partez d'une page blanche, ajoutez vos textes et photos (ou laissez l'IA les rédiger), choisissez le style, puis imprimez, enregistrez en PDF ou ouvrez dans PowerPoint, Google Slides ou Canva. Modèles, modifications et exports gratuits.`,
+        `Pick a template or start from a blank page, add your text and photos (or let the AI write them), pick the style, then print, save as PDF or open in PowerPoint, Google Slides or Canva. Templates, edits and exports are free.`)}</p>
     </div>
 
     <div className="flex flex-wrap items-center gap-2">

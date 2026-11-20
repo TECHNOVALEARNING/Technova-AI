@@ -30,7 +30,7 @@ const necessary: Row[] = [
   ["tn-pending-pack", "Retenir le pack choisi avant la connexion, pour reprendre l'achat ensuite.", "Jusqu'au paiement"],
   ["technova-supabase-oauth-state", "Protéger la connexion à votre propre projet Supabase contre la falsification de requête.", "Quelques minutes"],
   ["technova-active-agent", "Ouvrir le chat avec l'agent que vous venez de choisir.", "Jusqu'au prochain choix"],
-  ["technova-research, brouillon de design", "Garder une action en cours pendant la visite (recherche approfondie, modèle du Registry ouvert dans le chat).", "Fin de l'onglet"],
+  ["technova-research, brouillon de design", "Garder une action en cours pendant la visite (recherche approfondie, modèle des Templates ouvert dans le chat).", "Fin de l'onglet"],
   ["Cache de l'application", "Afficher l'application installée et une page hors connexion (service worker).", "Jusqu'à la mise à jour suivante"],
 ];
 

@@ -95,7 +95,7 @@ function PrivacyPage() {
           <p>Nous appliquons un principe strict de minimisation : nous ne traitons que les données nécessaires au fonctionnement du service, à la sécurité des comptes et au respect de nos obligations légales.</p>
           <div className="grid gap-3">
             <Sub title="Données de compte">Nom, adresse e-mail, mot de passe (haché par notre prestataire d'authentification, jamais lisible), langue et préférences d'affichage. Si vous vous connectez avec Google : les nom, e-mail et photo de profil transmis par Google. Les réponses facultatives au questionnaire d'accueil : type de compte, organisation, domaine d'activité et manière dont vous nous avez connus.</Sub>
-            <Sub title="Vos contenus">Conversations et instructions envoyées aux modèles ; fichiers joints et documents ajoutés à vos bases de connaissances (avec le texte qui en est extrait et ses représentations numériques servant à la recherche) ; sites et projets créés avec le Studio ; images, vidéos et musiques générées ; agents personnalisés et ressources enregistrées dans le Registry.</Sub>
+            <Sub title="Vos contenus">Conversations et instructions envoyées aux modèles ; fichiers joints et documents ajoutés à vos bases de connaissances (avec le texte qui en est extrait et ses représentations numériques servant à la recherche) ; sites et projets créés avec le Studio ; images, vidéos et musiques générées ; agents personnalisés et ressources enregistrées dans Templates.</Sub>
             <Sub title="Utilisation et facturation">Solde et mouvements de crédits Technova, journal d'utilisation (modèle utilisé, volume de texte traité, crédits débités, date), clés API (conservées sous forme hachée et affichées une seule fois lors de leur création).</Sub>
             <Sub title="Projets, créations et parrainage">Les projets que vous créez, les conversations que vous y rangez, les présentations, documents et tableaux que vous choisissez d'enregistrer, votre kit de marque (forfait Pro : couleurs, polices, logo) et, si vous utilisez le parrainage, le lien entre votre compte et celui qui vous a invité ou que vous avez invité. Les créations ouvertes sans être enregistrées restent dans votre navigateur.</Sub>
             <Sub title="Services connectés (facultatif)">Si vous reliez GitHub, Google Drive, Notion ou votre propre projet Supabase, nous conservons les jetons d'accès de manière chiffrée et ne les utilisons que pour les actions que vous déclenchez.</Sub>
@@ -154,7 +154,7 @@ function PrivacyPage() {
             <><b>Après une demande de suppression du compte</b> (Paramètres → Supprimer mon compte) : vos données sont conservées 30 jours, pendant lesquels une simple reconnexion annule la demande ; elles sont ensuite supprimées définitivement, crédits restants compris. Les pièces de facturation restent conservées pour la durée légale.</>,
             <><b>Conversations, fichiers, bases de connaissances, projets et agents</b> : jusqu'à ce que vous les supprimiez, ou jusqu'à la suppression de votre compte.</>,
             <><b>Images, vidéos et musiques générées</b> : conservées 14 jours sur nos serveurs, puis supprimées. Pensez à les télécharger.</>,
-            <><b>Présentations, documents et tableaux enregistrés dans vos Projets</b> : conservés 14 jours après leur dernier enregistrement, puis supprimés automatiquement (prévenu 3 jours avant). Une photo envoyée pour en retirer l'arrière-plan est supprimée de nos serveurs dès le résultat renvoyé. <b>Kit de marque et lien de parrainage</b> : tant que votre compte existe.</>,
+            <><b>Présentations, documents et tableaux enregistrés dans vos Projets</b> : supprimés automatiquement 14 jours après leur création, sans prolongation (prévenu 3 jours avant). Une photo envoyée pour en retirer l'arrière-plan est supprimée de nos serveurs dès le résultat renvoyé. <b>Kit de marque et lien de parrainage</b> : tant que votre compte existe.</>,
             <><b>Liens d'aperçu du Studio</b> : expirent après 30 jours.</>,
             <><b>Fichiers refusés lors de l'analyse de sécurité</b> : supprimés immédiatement.</>,
             <><b>Journaux de sécurité</b> (événements liés à la sécurité : tentatives refusées, limites atteintes, fichiers ou sites bloqués, actions sensibles) : conservés aussi longtemps que nécessaire à la protection du service — repérer des abus qui se répètent dans le temps, enquêter sur un incident, défendre nos droits — et accessibles uniquement à l'équipe habilitée. Ils restent rattachés à un identifiant technique et ne contiennent ni vos conversations ni vos fichiers. <b>Compteurs anti-abus</b> (nombre de demandes sur une courte période) : 24 heures.</>,
@@ -210,7 +210,7 @@ function PrivacyPage() {
           <List items={[
             "une conversation partagée est lisible par toute personne disposant du lien, jusqu'à ce que vous désactiviez le partage ;",
             "un site publié est accessible publiquement à son adresse ;",
-            "une ressource du Registry rendue publique est visible des autres utilisateurs ;",
+            "une ressource des Templates rendue publique est visible des autres utilisateurs ;",
             "les votes de l'Arena sont comptabilisés de façon agrégée et anonyme dans le classement public.",
           ]} />
         </Section>

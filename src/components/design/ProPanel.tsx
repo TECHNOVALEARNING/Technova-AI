@@ -5,12 +5,13 @@ import qrcode from "qrcode-generator";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { usePlanTier } from "@/lib/plan-client";
-import { BG_REMOVE_CREDITS, DESIGN_FORMATS, type DesignFormatId } from "@/lib/design-formats";
+import { DESIGN_FORMATS, type DesignFormatId } from "@/lib/design-formats";
+import { confirmAiCredits } from "@/lib/ai-credit-notice";
 import { DESIGN_FONTS } from "@/lib/design-fonts";
 import { notifyCreditsChanged } from "@/components/dashboard/TopActions";
 import type { DesignDoc, ImageEl } from "./doc";
 
-// Créativité Pro (Pro plan or Mensuel Pro): remove a picture's background (kie.ai, BG_REMOVE_CREDITS), adapt the
+// Créativité Pro (Pro plan or Mensuel Pro): remove a picture's background (kie.ai, a few credits at real cost), adapt the
 // design to another format in one click, a brand kit (colours, fonts, logo; saved in brand_kits) applied to the
 // whole design, and QR codes (link, WhatsApp, phone, Mobile Money, text) drawn in the browser. The server
 // re-checks the plan (design_pro) for the paid action and the brand kit.
@@ -57,6 +58,7 @@ export function ProPanel({ lang, doc, image, onImage, onAddImage, onBrand, onDer
 
   const removeBg = async () => {
     if (!image || !image.src.startsWith("data:")) { toast.error(tx(lang, "Sélectionnez d'abord une photo importée.", "First select an imported photo.")); return; }
+    if (!(await confirmAiCredits("background", lang))) return;
     setBusy(true);
     try {
       const png = await toPng(image.src);
@@ -95,7 +97,7 @@ export function ProPanel({ lang, doc, image, onImage, onAddImage, onBrand, onDer
     <p className="flex items-center gap-1.5 text-[12px] font-semibold text-amber-700 dark:text-amber-300"><Crown className="size-3.5" />{tx(lang, "Outils Pro", "Pro tools")}</p>
     <div className="space-y-2">
       <p className={h}><Eraser className="size-3.5" />{tx(lang, "Arrière-plan", "Background")}</p>
-      <button type="button" disabled={busy || !image} onClick={() => void removeBg()} className="flex w-full items-center justify-center gap-2 rounded-xl bg-foreground px-3 py-2.5 text-[12.5px] font-semibold text-background disabled:opacity-50">{busy ? <Loader2 className="size-4 animate-spin" /> : <Eraser className="size-4" />}{tx(lang, `Supprimer le fond · ${BG_REMOVE_CREDITS} crédits`, `Remove background · ${BG_REMOVE_CREDITS} credits`)}</button>
+      <button type="button" disabled={busy || !image} onClick={() => void removeBg()} className="flex w-full items-center justify-center gap-2 rounded-xl bg-foreground px-3 py-2.5 text-[12.5px] font-semibold text-background disabled:opacity-50">{busy ? <Loader2 className="size-4 animate-spin" /> : <Eraser className="size-4" />}{tx(lang, "Supprimer le fond", "Remove background")}</button>
       <p className="text-[11px] text-muted-foreground">{image ? tx(lang, "Le fond de la photo sélectionnée devient transparent.", "The selected photo's background becomes transparent.") : tx(lang, "Sélectionnez une photo sur la page.", "Select a photo on the page.")}</p>
     </div>
     <div className="space-y-2">

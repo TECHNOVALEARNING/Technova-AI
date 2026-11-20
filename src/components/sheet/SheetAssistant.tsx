@@ -5,16 +5,17 @@ import { cn } from "@/lib/utils";
 import { type Evaluator, isErr } from "@/lib/sheet/formula";
 import { type SheetAction, applyActions, describeAction, sheetContext } from "@/lib/sheet/ai-actions";
 import { type Workbook, addr, display } from "@/lib/sheet/model";
-import { SHEET_AI_CREDITS } from "@/lib/sheet/limits";
+import { confirmAiCredits } from "@/lib/ai-credit-notice";
 import { notifyCreditsChanged } from "@/components/dashboard/TopActions";
 
 // The TechNova Tableur assistant: a side panel that reads the active sheet, answers, writes and proposes changes
 // (cells, formulas, formats, charts, sheets). Proposed changes are listed and applied only on « Appliquer »; the
-// assistant costs SHEET_AI_CREDITS a request (real cost when higher), billed on the server only when it answers.
+// assistant uses a few credits per request (real cost under TechNova's pricing), billed on the server only when it
+// answers; the first request of the tab asks for confirmation (confirmAiCredits) and no fixed price is shown.
 
 type Lang = "fr" | "en";
 const tx = (lang: Lang, fr: string, en: string) => (lang === "fr" ? fr : en);
-type Msg = { role: "user" | "assistant"; content: string; actions?: SheetAction[]; state?: "pending" | "applied" | "ignored" };
+type Msg = { role: "user" | "assistant"; content: string; cost?: number; actions?: SheetAction[]; state?: "pending" | "applied" | "ignored" };
 
 export function SheetAssistant({ lang, wb, si, selection, ev, onApply, onClose }: { lang: Lang; wb: Workbook; si: number; selection: string; ev: Evaluator; onApply: (wb: Workbook) => void; onClose: () => void }) {
   const [msgs, setMsgs] = useState<Msg[]>([]);
@@ -31,6 +32,7 @@ export function SheetAssistant({ lang, wb, si, selection, ev, onApply, onClose }
 
   async function send(message: string) {
     const m = message.trim(); if (!m || busy) return;
+    if (!(await confirmAiCredits("sheet", lang))) return;
     setText("");
     const history = msgs.slice(-6).map((x) => ({ role: x.role, content: x.content.slice(0, 3800) }));
     setMsgs((l) => [...l, { role: "user", content: m }]);
@@ -48,7 +50,7 @@ export function SheetAssistant({ lang, wb, si, selection, ev, onApply, onClose }
       if (!res.ok) throw new Error(await res.text());
       const json = await res.json() as { reply: string; actions: SheetAction[]; credits?: number };
       notifyCreditsChanged();
-      setMsgs((l) => [...l, { role: "assistant", content: json.reply, ...(json.actions.length ? { actions: json.actions, state: "pending" as const } : {}) }]);
+      setMsgs((l) => [...l, { role: "assistant", content: json.reply, ...(json.credits ? { cost: json.credits } : {}), ...(json.actions.length ? { actions: json.actions, state: "pending" as const } : {}) }]);
     } catch (e) {
       const t = e instanceof Error && e.message && e.message.length < 300 ? e.message : tx(lang, "L'assistant n'a pas pu répondre.", "The assistant could not answer.");
       setMsgs((l) => [...l, { role: "assistant", content: t }]);
@@ -63,7 +65,7 @@ export function SheetAssistant({ lang, wb, si, selection, ev, onApply, onClose }
   return <aside className="flex w-[360px] shrink-0 flex-col border-l border-border bg-background">
     <div className="flex items-center gap-2 border-b border-border px-3 py-2.5">
       <span className="grid size-7 place-items-center rounded-lg bg-gradient-to-br from-[#1f7a5a] to-[#2b9b74] text-white"><Sparkles className="size-3.5" /></span>
-      <div className="min-w-0 flex-1"><strong className="block text-[13px]">{tx(lang, "Assistant IA du tableur", "Spreadsheet AI assistant")}</strong><span className="block text-[11px] text-muted-foreground">{tx(lang, `${SHEET_AI_CREDITS} crédits par demande · vous validez chaque changement`, `${SHEET_AI_CREDITS} credits a request · you approve every change`)}</span></div>
+      <div className="min-w-0 flex-1"><strong className="block text-[13px]">{tx(lang, "Assistant IA du tableur", "Spreadsheet AI assistant")}</strong><span className="block text-[11px] text-muted-foreground">{tx(lang, "Vous validez chaque changement", "You approve every change")}</span></div>
       <button type="button" onClick={onClose} aria-label={tx(lang, "Fermer l'assistant", "Close assistant")} className="grid size-7 place-items-center rounded-md hover:bg-secondary"><X className="size-4" /></button>
     </div>
     <div ref={list} className="min-h-0 flex-1 space-y-3 overflow-y-auto px-3 py-3">
@@ -78,6 +80,7 @@ export function SheetAssistant({ lang, wb, si, selection, ev, onApply, onClose }
       {msgs.map((m, i) => <div key={i} className={cn("flex", m.role === "user" ? "justify-end" : "justify-start")}>
         <div className={cn("max-w-[92%] rounded-2xl px-3 py-2 text-[12.5px] leading-relaxed", m.role === "user" ? "bg-[#1f7a5a] text-white" : "bg-secondary text-foreground")}>
           <p className="whitespace-pre-wrap">{m.content}</p>
+          {m.cost ? <p className="mt-1 text-[10.5px] text-muted-foreground">{tx(lang, `${m.cost} crédits utilisés`, `${m.cost} credits used`)}</p> : null}
           {m.actions && <div className="mt-2 rounded-xl border border-border bg-background p-2 text-foreground">
             <p className="mb-1 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">{tx(lang, "Changements proposés", "Proposed changes")}</p>
             <ul className="space-y-0.5">{m.actions.slice(0, 12).map((a, k) => <li key={k} className="flex gap-1.5 text-[12px]"><span className="text-[#1f7a5a]">•</span><span className="min-w-0">{describeAction(a, lang === "fr")}</span></li>)}</ul>

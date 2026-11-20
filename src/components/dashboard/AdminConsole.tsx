@@ -221,7 +221,7 @@ export function AdminPacks({ fr }: { fr: boolean }) {
   </div>;
 }
 
-// ---------- Registry moderation ----------
+// ---------- Templates moderation ----------
 type RegItem = Awaited<ReturnType<typeof adminListPublicRegistry>>[number];
 
 export function AdminRegistryModeration({ fr }: { fr: boolean }) {
@@ -229,11 +229,11 @@ export function AdminRegistryModeration({ fr }: { fr: boolean }) {
   const load = useCallback(() => { adminListPublicRegistry().then(setItems).catch((e) => toast.error(errText(e))); }, []);
   useEffect(load, [load]);
   async function unpublish(i: RegItem) {
-    if (!(await confirmDialog({ title: fr ? "Retirer cette ressource du public ?" : "Unpublish this resource?", description: fr ? `« ${i.title} » redeviendra privée et disparaîtra du Registry public.` : `"${i.title}" will become private and leave the public Registry.`, tone: "danger", confirmLabel: fr ? "Retirer" : "Unpublish" }))) return;
+    if (!(await confirmDialog({ title: fr ? "Retirer cette ressource du public ?" : "Unpublish this resource?", description: fr ? `« ${i.title} » redeviendra privée et disparaîtra des Templates publics.` : `"${i.title}" will become private and leave the public Templates.`, tone: "danger", confirmLabel: fr ? "Retirer" : "Unpublish" }))) return;
     try { await adminUnpublishRegistryItem({ data: { id: i.id } }); toast.success(fr ? "Ressource retirée du public" : "Resource unpublished"); load(); } catch (e) { toast.error(errText(e)); }
   }
   return <section className="mt-6">
-    <h2 className="font-display text-lg font-semibold">{fr ? "Ressources publiques du Registry" : "Public Registry resources"}</h2>
+    <h2 className="font-display text-lg font-semibold">{fr ? "Ressources publiques des Templates" : "Public template resources"}</h2>
     <p className="mt-1 text-xs text-muted-foreground">{fr ? "Ressources rendues publiques par les utilisateurs (les ressources officielles ne sont pas listées)." : "Resources made public by users (official items are not listed)."}</p>
     <div className="mt-2 overflow-x-auto rounded-2xl border border-border bg-card/90"><table className="w-full text-sm">
       <thead><tr><th className={th}>{fr ? "Titre" : "Title"}</th><th className={th}>{fr ? "Catégorie" : "Category"}</th><th className={th}>{fr ? "Téléchargements" : "Downloads"}</th><th className={th}>Date</th><th className={th} /></tr></thead>

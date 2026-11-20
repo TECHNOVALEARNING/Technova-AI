@@ -20,7 +20,7 @@ const CONTACT = "support@technovaihub.com";
 const sections = [
   ["objet", "Objet et acceptation"], ["service", "Le service"], ["compte", "Votre compte"], ["credits", "Crédits Technova et forfaits"],
   ["paiements", "Paiements"], ["contenus", "Vos contenus et les contenus générés"], ["ia", "Limites de l'intelligence artificielle"],
-  ["interdits", "Usages interdits"], ["publication", "Sites publiés, partages et Registry"], ["api", "API et clés API"],
+  ["interdits", "Usages interdits"], ["publication", "Sites publiés, partages et Templates"], ["api", "API et clés API"],
   ["propriete", "Propriété intellectuelle de TechNova"], ["disponibilite", "Disponibilité et évolutions"], ["suspension", "Suspension et résiliation"],
   ["responsabilite", "Responsabilité"], ["donnees", "Données personnelles"], ["droit", "Droit applicable et litiges"], ["modifications", "Modifications et contact"],
 ] as const;
@@ -100,7 +100,7 @@ function TermsPage() {
             "le chat avec plusieurs modèles, dont TechNova Smart qui choisit automatiquement un modèle adapté, la recherche web et l'analyse de fichiers ;",
             "la génération d'images, de vidéos et de musique, et la modification d'images ;",
             "TechNova Studio, qui crée des sites et applications à partir d'une description, après validation d'un plan par vous, et leur publication ;",
-            "les bases de connaissances, les agents personnalisés et le Registry de designs ;",
+            "les bases de connaissances, les agents personnalisés et les Templates ;",
             "l'API, utilisable avec des clés API personnelles ;",
             "les connexions facultatives à GitHub, Google Drive, Notion ou à votre propre projet Supabase.",
           ]} />
@@ -141,7 +141,7 @@ function TermsPage() {
             <><b>Les contenus générés</b> pour vous (textes, codes, images, vidéos, musiques, sites) vous appartiennent, dans la limite des droits des tiers et des conditions des fournisseurs de modèles. TechNova ne revendique aucun droit sur eux.</>,
             <><b>Aucun entraînement</b> : TechNova n'utilise pas vos conversations, fichiers, codes ou projets pour entraîner des modèles d'IA.</>,
             <>Vous garantissez disposer des droits nécessaires sur les contenus que vous importez, et vous restez responsable de l'usage que vous faites des contenus générés.</>,
-            <>Les images, vidéos et musiques générées sont conservées <b>14 jours</b> sur nos serveurs, puis supprimées : téléchargez celles que vous souhaitez garder. Les présentations, documents et tableaux enregistrés dans vos Projets sont conservés <b>14 jours après leur dernier enregistrement</b>, puis supprimés ; vous êtes prévenu 3 jours avant. Les liens d'aperçu du Studio expirent après 30 jours.</>,
+            <>Les images, vidéos et musiques générées sont conservées <b>14 jours</b> sur nos serveurs, puis supprimées : téléchargez celles que vous souhaitez garder. Les présentations, documents et tableaux enregistrés dans vos Projets sont supprimés <b>14 jours après leur création</b>, sans prolongation possible (un nouvel enregistrement ne repousse pas la date) ; vous êtes prévenu 3 jours avant. Les liens d'aperçu du Studio expirent après 30 jours.</>,
           ]} />
         </Section>
 
@@ -165,12 +165,12 @@ function TermsPage() {
           <p>Les fichiers importés sont analysés pour des raisons de sécurité, et nous pouvons refuser ou retirer un contenu qui enfreint ces règles.</p>
         </Section>
 
-        <Section id="publication" n={9} title="Sites publiés, partages et Registry">
+        <Section id="publication" n={9} title="Sites publiés, partages et Templates">
           <List items={[
             "Un site publié avec TechNova Studio est accessible publiquement à son adresse. Vous en êtes l'éditeur et le seul responsable : contenu, mentions légales éventuelles, données collectées auprès de ses visiteurs.",
             "Toute personne peut signaler un site frauduleux ou abusif ; nous pouvons dépublier un site qui enfreint ces Conditions, sans préavis en cas d'urgence.",
             "Une conversation partagée est lisible par toute personne disposant du lien, jusqu'à ce que vous désactiviez le partage.",
-            "Les designs officiels du Registry sont des créations de TechNova. Selon votre forfait, vous pouvez les utiliser et les modifier dans vos propres projets ; vous ne pouvez pas les revendre ou les redistribuer en tant que tels.",
+            "Les designs officiels des Templates sont des créations de TechNova. Selon votre forfait, vous pouvez les utiliser et les modifier dans vos propres projets ; vous ne pouvez pas les revendre ou les redistribuer en tant que tels.",
           ]} />
         </Section>
 

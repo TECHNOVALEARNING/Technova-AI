@@ -10,9 +10,8 @@ import { importFile } from "@/lib/sheet/sheet-io";
 import { loadCreation } from "@/lib/creations";
 import { SHEET_GROUPS, SHEET_TEMPLATES, type SheetTemplate } from "./sheet-templates";
 import { SHEET_DRAFT_KEY, SheetEditor } from "./SheetEditor";
-import { SHEET_AI_CREDITS } from "@/lib/sheet/limits";
 
-// Registry → « Tableur et Excel »: TechNova Tableur's start page — blank workbook, open a file, resume the draft
+// Templates → « Tableur et Excel »: TechNova Tableur's start page — blank workbook, open a file, resume the draft
 // kept on this device, or one of the templates (budget, sales, invoice, quote, stock, cash flow, tontine,
 // grades, guests, project, content calendar, dashboard, to-do, expenses). Opens the editor full screen.
 
@@ -82,7 +81,7 @@ export function SheetGallery({ lang }: { lang: Lang }) {
         </div>
         <div className="grid content-start gap-3 rounded-2xl bg-secondary/50 p-4">
           {feature(<Calculator className="size-4" />, tx(lang, "Plus de 50 fonctions", "50+ functions"), tx(lang, "En français ou en anglais, avec ; ou , comme dans Excel.", "French or English names, ; or , like in Excel."))}
-          {feature(<Sparkles className="size-4" />, tx(lang, "Assistant IA", "AI assistant"), tx(lang, `Il propose, vous validez : ${SHEET_AI_CREDITS} crédits par demande.`, `It proposes, you approve: ${SHEET_AI_CREDITS} credits a request.`))}
+          {feature(<Sparkles className="size-4" />, tx(lang, "Assistant IA", "AI assistant"), tx(lang, "Il propose, vous validez chaque changement.", "It proposes, you approve every change."))}
           {feature(<BarChart3 className="size-4" />, tx(lang, "Graphiques", "Charts"), tx(lang, "Barres, courbes, aires, secteurs, déplaçables sur la feuille.", "Bars, lines, areas, pies, movable on the sheet."))}
           {feature(<Share2 className="size-4" />, tx(lang, "Exports et partage", "Export and share"), tx(lang, "Excel, PDF, CSV, Google Sheets, lien et WhatsApp.", "Excel, PDF, CSV, Google Sheets, link and WhatsApp."))}
         </div>
