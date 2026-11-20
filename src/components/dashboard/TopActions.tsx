@@ -34,17 +34,12 @@ function useAvailableCredits(enabled: boolean) {
   return enabled ? available : null;
 }
 
-// Top-right actions of every dashboard page: install the app (PWA) and move to a higher pack.
-// "Get the app" is hidden once the app is installed; "Upgrade" is hidden on the Pro pack (tier 3).
-// On chat pages (home and conversations) the remaining credits show first, linking to Tarifs et crédits.
-export function TopActions({ lang, tier, showCredits = false }: { lang: "fr" | "en"; tier: number | null; showCredits?: boolean }) {
-  const fr = lang === "fr";
-  const credits = useAvailableCredits(showCredits);
+/** "Get the app": the browser's install prompt, or install instructions (iPhone/iPad, other browsers); `installed`
+    is true when TechNova already runs as the installed app (read after mount). Shared by the top bar and the profile menu. */
+export function useGetApp(fr: boolean) {
   const { mode, install } = useInstallApp();
-  // Read after mount: the server cannot know whether the app is installed.
   const [installed, setInstalled] = useState(false);
   useEffect(() => { setInstalled(isStandaloneApp()); }, []);
-
   async function getApp() {
     if (mode === "prompt") { await install(); return; }
     if (mode === "ios") {
@@ -53,6 +48,16 @@ export function TopActions({ lang, tier, showCredits = false }: { lang: "fr" | "
     }
     toast(fr ? "Installer TechNova" : "Install TechNova", { description: fr ? "Dans Chrome ou Edge, ouvrez le menu ⋮ puis « Installer TechNova » (ou l'icône d'installation dans la barre d'adresse)." : "In Chrome or Edge, open the ⋮ menu then “Install TechNova” (or the install icon in the address bar)." });
   }
+  return { installed, getApp };
+}
+
+// Top-right actions of every dashboard page: install the app (PWA) and move to a higher pack.
+// "Get the app" is hidden once the app is installed; "Upgrade" is hidden on the Pro pack (tier 3).
+// On chat pages (home and conversations) the remaining credits show first, linking to Tarifs et crédits.
+export function TopActions({ lang, tier, showCredits = false }: { lang: "fr" | "en"; tier: number | null; showCredits?: boolean }) {
+  const fr = lang === "fr";
+  const credits = useAvailableCredits(showCredits);
+  const { installed, getApp } = useGetApp(fr);
 
   const pill = "inline-flex h-8 items-center gap-1.5 rounded-full px-3.5 text-[12px] font-semibold shadow-sm transition";
   return <div className="flex items-center gap-2">

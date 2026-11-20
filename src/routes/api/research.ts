@@ -33,6 +33,7 @@ export const Route = createFileRoute("/api/research")({
         const { userIdFromRequest } = await import("@/lib/auth.server");
         const userId = await userIdFromRequest(request);
         if (!userId) return new Response("Unauthorized", { status: 401 });
+        { const { orgFeatureResponse } = await import("@/lib/org.server"); const blocked = await orgFeatureResponse(userId, "research"); if (blocked) return blocked; }
         const parsed = body.safeParse(await request.json().catch(() => null));
         if (!parsed.success) return new Response("Invalid request", { status: 400 });
         const { question, lang } = parsed.data;

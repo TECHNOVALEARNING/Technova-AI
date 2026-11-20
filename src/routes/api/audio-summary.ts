@@ -31,6 +31,7 @@ export const Route = createFileRoute("/api/audio-summary")({
         const { userIdFromRequest } = await import("@/lib/auth.server");
         const userId = await userIdFromRequest(request);
         if (!userId) return new Response("Unauthorized", { status: 401 });
+        { const { orgFeatureResponse } = await import("@/lib/org.server"); const blocked = await orgFeatureResponse(userId, "audio"); if (blocked) return blocked; }
         const parsed = body.safeParse(await request.json().catch(() => null));
         if (!parsed.success) return new Response("Invalid request", { status: 400 });
         const d = parsed.data;

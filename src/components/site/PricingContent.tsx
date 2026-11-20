@@ -9,12 +9,14 @@ import { fallbackMonthly, fallbackPacks, monthlyCopy, packCopy, PENDING_PACK_KEY
 import type { SiteLang } from "@/lib/i18n";
 import { formatLocalPrice, isCfa } from "@/lib/geo-pricing";
 import { useGeoPrice } from "@/lib/geo-price-client";
+import { NoCommitment } from "./NoCommitment";
+import { OrgPlansDialog } from "./OrgPlans";
 
 const text = {
-  fr: { title: "Des forfaits simples et flexibles", sub: "Quatre packs de crédits Technova prépayés, sans abonnement, pour discuter, créer et développer.", once: "Paiement unique", terms: "Paiement unique • crédits prépayés • aucun renouvellement automatique", choose: "Choisir", popular: "LE PLUS POPULAIRE", credits: "crédits Technova", tabPacks: "Packs · paiement unique", tabMonthly: "Formule mensuelle", perMonth: "par mois", monthlyTerms: "Payée une fois par mois • crédits ajoutés aussitôt, sans date d'expiration • aucun prélèvement automatique : un rappel vous prévient avant la fin du mois", monthlySub: "Pour un usage régulier : le meilleur prix au crédit et toutes les fonctions du forfait, renouvelé quand vous le décidez.", save: "Le crédit le moins cher" },
-  en: { title: "Simple, flexible plans", sub: "Four prepaid Technova credit packs, no subscription, to chat, create and build.", once: "One-time payment", terms: "One-time payment • prepaid credits • no automatic renewal", choose: "Choose", popular: "MOST POPULAR", credits: "Technova credits", tabPacks: "Packs · one-time payment", tabMonthly: "Monthly plan", perMonth: "per month", monthlyTerms: "Paid once a month • credits added at once, never expiring • no automatic charge: a reminder tells you before the month ends", monthlySub: "For regular use: the best price per credit and every feature of the plan, renewed when you decide.", save: "Cheapest credits" },
-  es: { title: "Planes sencillos y flexibles", sub: "Cuatro packs de créditos Technova prepagados, sin suscripción, para conversar, crear y desarrollar.", once: "Pago único", terms: "Pago único • créditos prepagados • sin renovación automática", choose: "Elegir", popular: "EL MÁS POPULAR", credits: "créditos Technova", tabPacks: "Packs · pago único", tabMonthly: "Fórmula mensual", perMonth: "al mes", monthlyTerms: "Se paga una vez al mes • créditos añadidos al instante, sin caducidad • sin cobro automático: un aviso le avisa antes de fin de mes", monthlySub: "Para un uso regular: el mejor precio por crédito y todas las funciones del plan, renovado cuando usted decida.", save: "El crédito más barato" },
-  pt: { title: "Planos simples e flexíveis", sub: "Quatro pacotes de créditos Technova pré-pagos, sem assinatura, para conversar, criar e desenvolver.", once: "Pagamento único", terms: "Pagamento único • créditos pré-pagos • sem renovação automática", choose: "Escolher", popular: "O MAIS POPULAR", credits: "créditos Technova", tabPacks: "Pacotes · pagamento único", tabMonthly: "Plano mensal", perMonth: "por mês", monthlyTerms: "Pago uma vez por mês • créditos adicionados na hora, sem expiração • sem cobrança automática: um lembrete avisa antes do fim do mês", monthlySub: "Para uso regular: o melhor preço por crédito e todas as funções do plano, renovado quando você decidir.", save: "O crédito mais barato" },
+  fr: { title: "Des forfaits simples et flexibles", sub: "Quatre packs de crédits Technova prépayés, sans abonnement, pour discuter, créer et développer.", once: "Paiement unique", terms: "Paiement unique • crédits prépayés • aucun renouvellement automatique", choose: "Choisir", popular: "LE PLUS POPULAIRE", credits: "crédits Technova", tabPacks: "Packs · paiement unique", tabMonthly: "Formule mensuelle", perMonth: "par mois", monthlyTerms: "Payée une fois par mois • crédits ajoutés aussitôt, à utiliser dans le mois (remis à zéro au bout de 30 jours) • aucun prélèvement automatique", monthlySub: "Pour un usage régulier : le meilleur prix au crédit et toutes les fonctions du forfait, renouvelé quand vous le décidez.", save: "Le crédit le moins cher" },
+  en: { title: "Simple, flexible plans", sub: "Four prepaid Technova credit packs, no subscription, to chat, create and build.", once: "One-time payment", terms: "One-time payment • prepaid credits • no automatic renewal", choose: "Choose", popular: "MOST POPULAR", credits: "Technova credits", tabPacks: "Packs · one-time payment", tabMonthly: "Monthly plan", perMonth: "per month", monthlyTerms: "Paid once a month • credits added at once, to use within the month (reset after 30 days) • no automatic charge", monthlySub: "For regular use: the best price per credit and every feature of the plan, renewed when you decide.", save: "Cheapest credits" },
+  es: { title: "Planes sencillos y flexibles", sub: "Cuatro packs de créditos Technova prepagados, sin suscripción, para conversar, crear y desarrollar.", once: "Pago único", terms: "Pago único • créditos prepagados • sin renovación automática", choose: "Elegir", popular: "EL MÁS POPULAR", credits: "créditos Technova", tabPacks: "Packs · pago único", tabMonthly: "Fórmula mensual", perMonth: "al mes", monthlyTerms: "Se paga una vez al mes • créditos añadidos al instante, para usar en el mes (vuelven a cero a los 30 días) • sin cobro automático", monthlySub: "Para un uso regular: el mejor precio por crédito y todas las funciones del plan, renovado cuando usted decida.", save: "El crédito más barato" },
+  pt: { title: "Planos simples e flexíveis", sub: "Quatro pacotes de créditos Technova pré-pagos, sem assinatura, para conversar, criar e desenvolver.", once: "Pagamento único", terms: "Pagamento único • créditos pré-pagos • sem renovação automática", choose: "Escolher", popular: "O MAIS POPULAR", credits: "créditos Technova", tabPacks: "Pacotes · pagamento único", tabMonthly: "Plano mensal", perMonth: "por mês", monthlyTerms: "Pago uma vez por mês • créditos adicionados na hora, para usar no mês (voltam a zero após 30 dias) • sem cobrança automática", monthlySub: "Para uso regular: o melhor preço por crédito e todas as funções do plano, renovado quando você decidir.", save: "O crédito mais barato" },
 };
 
 const geoText = {
@@ -23,12 +25,12 @@ const geoText = {
   es: { billed: "Se factura" },
   pt: { billed: "Cobrado" },
 } satisfies Record<SiteLang, unknown>;
-// Bar under the packs: the API for developers, custom terms for companies (no extra pack or modal).
+// Bar under the packs: the API for developers, the company plans (Team / Entreprise) behind « Détails ».
 const barText = {
-  fr: { api: "Connectez-vous et utilisez notre API", apiSub: "Une clé, tous les modèles, facturés en crédits.", apiCta: "Utiliser l'API", pro: "Entreprise ?", proSub: "Contactez-nous pour des tarifs adaptés à votre volume.", proCta: "Nous contacter", subject: "Tarifs entreprise" },
-  en: { api: "Sign in and use our API", apiSub: "One key, every model, billed in credits.", apiCta: "Use the API", pro: "A company?", proSub: "Contact us for pricing that fits your volume.", proCta: "Contact us", subject: "Enterprise pricing" },
-  es: { api: "Inicia sesión y usa nuestra API", apiSub: "Una clave, todos los modelos, facturados en créditos.", apiCta: "Usar la API", pro: "¿Empresa?", proSub: "Contáctanos para precios adaptados a tu volumen.", proCta: "Contactar", subject: "Precios para empresas" },
-  pt: { api: "Entre e use a nossa API", apiSub: "Uma chave, todos os modelos, cobrados em créditos.", apiCta: "Usar a API", pro: "Empresa?", proSub: "Fale conosco para preços adaptados ao seu volume.", proCta: "Fale conosco", subject: "Preços para empresas" },
+  fr: { api: "Connectez-vous et utilisez notre API", apiSub: "Une clé, tous les modèles, facturés en crédits.", apiCta: "Utiliser l'API", pro: "Entreprise ?", proSub: "TechNova Team et TechNova Entreprise : un administrateur, des sous-comptes, des crédits partagés.", proCta: "Détails" },
+  en: { api: "Sign in and use our API", apiSub: "One key, every model, billed in credits.", apiCta: "Use the API", pro: "A company?", proSub: "TechNova Team and TechNova Entreprise: an administrator, sub-accounts, shared credits.", proCta: "Details" },
+  es: { api: "Inicia sesión y usa nuestra API", apiSub: "Una clave, todos los modelos, facturados en créditos.", apiCta: "Usar la API", pro: "¿Empresa?", proSub: "TechNova Team y TechNova Entreprise: un administrador, subcuentas, créditos compartidos.", proCta: "Detalles" },
+  pt: { api: "Entre e use a nossa API", apiSub: "Uma chave, todos os modelos, cobrados em créditos.", apiCta: "Usar a API", pro: "Empresa?", proSub: "TechNova Team e TechNova Entreprise: um administrador, subcontas, créditos compartilhados.", proCta: "Detalhes" },
 } satisfies Record<SiteLang, unknown>;
 const locales: Record<SiteLang, string> = { fr: "fr-FR", en: "en-US", es: "es-ES", pt: "pt-BR" };
 
@@ -95,14 +97,16 @@ export function PricingContent({ lang, glass = false }: { lang: SiteLang; glass?
         </article>;
       })}</div>
 
+      {mode === "monthly" && <div className="mt-6"><NoCommitment lang={lang} /></div>}
       <PricingBar lang={lang} glass={glass} />
     </div>
   </section>;
 }
 
-/** Bar under the packs: the API for developers and custom terms for companies (landing, Tarifs, dashboard). */
+/** Bar under the packs: the API for developers and the company plans (« Détails » opens them) — landing, Tarifs, dashboard. */
 export function PricingBar({ lang, glass = false }: { lang: SiteLang; glass?: boolean }) {
   const b = barText[lang];
+  const [orgOpen, setOrgOpen] = useState(false);
   return <div className={`mt-6 grid overflow-hidden rounded-2xl border md:grid-cols-2 ${glass ? "glass-card" : "border-border bg-card"}`}>
     <div className="flex flex-col gap-4 p-5 sm:flex-row sm:items-center sm:p-6">
       <span className="grid size-11 shrink-0 place-items-center rounded-xl bg-ink text-ink-foreground"><Code2 className="size-5" /></span>
@@ -112,7 +116,8 @@ export function PricingBar({ lang, glass = false }: { lang: SiteLang; glass?: bo
     <div className="flex flex-col gap-4 border-t border-border p-5 sm:flex-row sm:items-center sm:p-6 md:border-l md:border-t-0">
       <span className="grid size-11 shrink-0 place-items-center rounded-xl bg-secondary"><Building2 className="size-5" /></span>
       <div className="min-w-0 flex-1"><p className="font-display font-semibold">{b.pro}</p><p className="text-sm text-muted-foreground">{b.proSub}</p></div>
-      <a href={`mailto:support@technovaihub.com?subject=${encodeURIComponent(b.subject)}`} className="inline-flex h-10 shrink-0 items-center justify-center gap-1.5 rounded-full border border-border px-5 text-sm font-semibold transition hover:border-foreground/40">{b.proCta}<ArrowUpRight className="size-3.5" /></a>
+      <button type="button" onClick={() => setOrgOpen(true)} className="inline-flex h-10 shrink-0 items-center justify-center gap-1.5 rounded-full border border-border px-5 text-sm font-semibold transition hover:border-foreground/40">{b.proCta}<ArrowUpRight className="size-3.5" /></button>
     </div>
+    <OrgPlansDialog lang={lang} open={orgOpen} onOpenChange={setOrgOpen} />
   </div>;
 }

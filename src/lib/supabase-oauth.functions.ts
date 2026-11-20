@@ -36,6 +36,7 @@ export const startSupabaseConnect = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d) => z.object({ state: z.string().min(16).max(128) }).parse(d))
   .handler(async ({ data, context }) => {
+    await (await import("@/lib/org.server")).requireOrgFeature(context.userId, "connections");
     const { requirePlan } = await import("@/lib/plan.server");
     await requirePlan(context.userId, "supabase");
     const { clientId, scope } = oauthConfig();

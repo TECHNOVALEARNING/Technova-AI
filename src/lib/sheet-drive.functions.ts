@@ -17,6 +17,7 @@ export const listDriveSheets = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: { q?: string }) => z.object({ q: z.string().max(80).optional() }).parse(input))
   .handler(async ({ data, context }) => {
+    await (await import("@/lib/org.server")).requireOrgFeature(context.userId, "connections");
     const { getAccessToken } = await import("@/lib/connections.server");
     const access = await getAccessToken(context.userId, "google_drive");
     if (!access) return { connected: false as const, files: [] };
@@ -38,6 +39,7 @@ export const fetchDriveSheet = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: { id: string }) => z.object({ id: z.string().regex(/^[\w-]{10,120}$/) }).parse(input))
   .handler(async ({ data, context }) => {
+    await (await import("@/lib/org.server")).requireOrgFeature(context.userId, "connections");
     const { hitRateLimit } = await import("@/lib/security.server");
     if (!(await hitRateLimit(context.userId, "files"))) throw new Error("RATE_LIMITED");
     const { getAccessToken } = await import("@/lib/connections.server");

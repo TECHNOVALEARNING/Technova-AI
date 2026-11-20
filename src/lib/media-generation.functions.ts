@@ -92,8 +92,9 @@ async function hasVideoAccess(userId: string) {
 export const getVideoAccess = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
-    const { data: ledger } = await context.supabase.from("credit_transactions").select("amount").eq("owner_id", context.userId);
-    return { allowed: await hasVideoAccess(context.userId), balance: (ledger ?? []).reduce((sum, row) => sum + row.amount, 0) };
+    const { data: wallet } = await context.supabase.rpc("get_wallet_balance", { _owner: context.userId });
+    const w = (wallet ?? null) as { balance?: number } | null;
+    return { allowed: await hasVideoAccess(context.userId), balance: w?.balance ?? 0 };
   });
 
 export const createMediaGeneration = createServerFn({ method: "POST" })
@@ -108,6 +109,7 @@ export const createMediaGeneration = createServerFn({ method: "POST" })
     const editing = data.kind === "image" && !!data.sourceId;
     const spec = editing ? imageEditModel : (data.model && findMediaModel(data.model)) || findMediaModel(data.kind === "image" ? defaultImageModel : data.kind === "music" ? defaultMusicModel : defaultVideoModel)!;
     if (spec.kind !== data.kind) throw new Error("Ce modèle ne correspond pas au type demandé.");
+    await (await import("@/lib/org.server")).requireOrgFeature(context.userId, spec.kind === "image" ? "images" : spec.kind);
     if (spec.kind === "video" && !(await hasVideoAccess(context.userId))) {
       const { logSecurityEvent } = await import("@/lib/security.server");
       await logSecurityEvent(context.userId, "video_blocked_insufficient_plan", "info", { model: spec.id });
@@ -159,7 +161,8 @@ export const createMediaGeneration = createServerFn({ method: "POST" })
     const { data: ok, error: reserveError } = await supabaseAdmin.rpc("reserve_credits", { _owner: context.userId, _amount: reserve, _label: spec.label });
     if (reserveError) throw new Error(reserveError.message);
     if (!ok) throw new Error(`Crédits insuffisants : cette création demande jusqu’à ${reserve} crédits. / Not enough credits (${reserve} needed).`);
-    const refund = (label: string) => supabaseAdmin.from("credit_transactions").insert({ owner_id: context.userId, amount: reserve, kind: "refund", label });
+    const ledgerOwner = await (await import("@/lib/org.server")).billingOwner(context.userId);
+    const refund = (label: string) => supabaseAdmin.from("credit_transactions").insert({ owner_id: ledgerOwner, amount: reserve, kind: "refund", label });
     let taskId: unknown;
     try {
       const result = await kie("createTask", { method: "POST", body: JSON.stringify({ model, input: built.input }) });
@@ -267,7 +270,7 @@ export const refreshMediaGeneration = createServerFn({ method: "POST" })
         await supabaseAdmin.from("media_generations").update({ charged_credits: charged }).eq("id", row.id);
         if (charged > 0) await supabaseAdmin.from("usage_logs").insert({ owner_id: context.userId, model: `Média · ${mediaLabel(row.model, row.kind)}`, input_tokens: 0, output_tokens: 0, credits: charged, latency_ms: 0 });
         if (reserved - charged > 0) await supabaseAdmin.from("credit_transactions").insert({
-          owner_id: context.userId, amount: reserved - charged, kind: "refund",
+          owner_id: await (await import("@/lib/org.server")).billingOwner(context.userId), amount: reserved - charged, kind: "refund",
           label: `${mediaLabel(row.model, row.kind)} (${state === "fail" ? "échec remboursé" : "ajustement"})`,
         });
       }

@@ -21,6 +21,7 @@ export const createFileUpload = createServerFn({ method: "POST" })
     knowledgeBaseId: z.string().uuid().optional(),
   }).parse(data))
   .handler(async ({ data, context }) => {
+    await (await import("@/lib/org.server")).requireOrgFeature(context.userId, "files");
     await limited(context.userId, "files");
     const check = checkFile(data.filename, data.size);
     if (!check.ok) throw new Error(`file_${check.reason}`);
@@ -73,6 +74,7 @@ export const createKnowledgeBase = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((data) => z.object({ name: z.string().trim().min(1).max(80), description: z.string().trim().max(500).default("") }).parse(data))
   .handler(async ({ data, context }) => {
+    await (await import("@/lib/org.server")).requireOrgFeature(context.userId, "files");
     await limited(context.userId, "knowledge");
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { count } = await supabaseAdmin.from("knowledge_bases").select("id", { count: "exact", head: true }).eq("owner_id", context.userId);
@@ -118,6 +120,7 @@ export const addFilesToKnowledgeBase = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((data) => z.object({ knowledgeBaseId: z.string().uuid(), fileIds: z.array(z.string().uuid()).min(1).max(50) }).parse(data))
   .handler(async ({ data, context }) => {
+    await (await import("@/lib/org.server")).requireOrgFeature(context.userId, "files");
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data: kb } = await supabaseAdmin.from("knowledge_bases").select("id").eq("id", data.knowledgeBaseId).eq("owner_id", context.userId).maybeSingle();
     if (!kb) throw new Error("not_found");

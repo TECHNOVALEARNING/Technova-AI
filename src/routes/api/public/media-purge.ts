@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 
-/** Called daily by the scheduler: deletes archived media older than 14 days, saved creations 14 days after their creation, accounts past their 30-day deletion delay, and re-checks unpaid checkouts. */
+/** Called daily by the scheduler: deletes archived media older than 14 days, saved creations 14 days after their creation, accounts past their 30-day deletion delay, re-checks unpaid checkouts and closes ended monthly periods. */
 async function run(request: Request) {
   const { authenticateCronRequest } = await import("@/integrations/supabase/cron-auth");
   const denied = await authenticateCronRequest(request);
@@ -17,7 +17,10 @@ async function run(request: Request) {
   // Daily safety net: credit payments whose webhook never arrived.
   const { reconcilePendingPayments } = await import("@/lib/payments.server");
   const payments = await reconcilePendingPayments().catch((e) => { console.error("reconcile pending", e); return null; });
-  return Response.json({ purged, creations, payments, accounts });
+  // Monthly formulas and company plans: unused credits of ended months go back to zero (migration 0056).
+  const months = await supabaseAdmin.rpc("close_monthly_periods" as never, { _owner: null } as never)
+    .then((r) => (r.error ? null : r.data), () => null);
+  return Response.json({ purged, creations, payments, accounts, months });
 }
 
 export const Route = createFileRoute("/api/public/media-purge")({

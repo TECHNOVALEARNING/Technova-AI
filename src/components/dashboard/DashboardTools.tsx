@@ -1,4 +1,5 @@
 import { PENDING_PACK_KEY } from "@/lib/public-pricing";
+import { NoCommitment } from "@/components/site/NoCommitment";
 import { confirmDialog } from "@/components/ConfirmHost";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link, useNavigate } from "@tanstack/react-router";
@@ -157,13 +158,13 @@ function MonthlyStatus({ lang, onRenew }: { lang: "fr" | "en"; onRenew: (slug: s
   if (!plan) return null;
   const end = new Date(plan.ends_at);
   const days = Math.ceil((end.getTime() - Date.now()) / 86_400_000);
-  const name = plan.slug === "mensuel-pro" ? "Mensuel Pro" : "Mensuel Plus";
+  const name = ({ "mensuel-pro": "Mensuel Pro", "mensuel-plus": "Mensuel Plus", team: "TechNova Team", entreprise: "TechNova Entreprise" } as Record<string, string>)[plan.slug] ?? plan.slug;
   const active = days > 0;
   const date = end.toLocaleDateString(lang === "en" ? "en-GB" : "fr-FR", { day: "numeric", month: "long", year: "numeric" });
   return <div className={`${card} flex flex-col gap-3 sm:flex-row sm:items-center ${active && days > 5 ? "" : "border-amber-500/50 ring-1 ring-amber-500/25"}`}>
     <div className="min-w-0 flex-1">
       <p className="text-[13.5px] font-semibold">{active ? (lang === "en" ? `${name} active until ${date}` : `${name} active jusqu'au ${date}`) : (lang === "en" ? `${name} ended on ${date}` : `${name} terminée le ${date}`)}</p>
-      <p className="mt-0.5 text-[12px] text-muted-foreground">{active ? (lang === "en" ? `${days} day(s) left. Renewing now adds 30 days after this date; your credits never expire.` : `Encore ${days} jour(s). Renouveler maintenant ajoute 30 jours après cette date ; vos crédits n'expirent pas.`) : (lang === "en" ? "Renew to get this month's credits; nothing is charged automatically." : "Renouvelez pour recevoir les crédits du mois ; rien n'est prélevé automatiquement.")}</p>
+      <p className="mt-0.5 text-[12px] text-muted-foreground">{active ? (lang === "en" ? `${days} day(s) left. This month's unused credits go back to zero on that date; renewing starts a new month at once with a fresh balance.` : `Encore ${days} jour(s). Les crédits du mois non utilisés repartent à zéro à cette date ; renouveler démarre aussitôt un nouveau mois avec un solde neuf.`) : (lang === "en" ? "Renew to get this month's credits; nothing is charged automatically." : "Renouvelez pour recevoir les crédits du mois ; rien n'est prélevé automatiquement.")}</p>
     </div>
     <Button className="h-9 shrink-0 rounded-full text-[12.5px]" onClick={() => onRenew(plan.slug)}>{lang === "en" ? "Renew" : "Renouveler"}</Button>
   </div>;
@@ -193,7 +194,7 @@ function Packs({ cur }: { cur: ReturnType<typeof useCurrency> }) {
   return <div className="space-y-4"><PaymentCheckout pack={checkout} lang={lang === "en" ? "en" : "fr"} country={geo.country} onClose={() => setCheckout(null)} onPaid={(r) => { setCheckout(null); setPaid(r); }} /><PaymentSuccess open={!!paid} pack={paid?.pack ?? null} credits={paid?.credits ?? null} lang={lang === "en" ? "en" : "fr"} onClose={() => { setPaid(null); window.location.reload(); }} />{pendingPack && <div className={`${card} border-primary/60 ring-1 ring-primary/30`} role="region" aria-label={pendingPack.name}>
     <p className="text-[13.5px] font-semibold">{c.confirmPack}</p>
     <p className="mt-1 text-[13px]">{pendingPack.name} · {pendingPack.price_xof.toLocaleString("fr-FR")} FCFA → {pendingPack.credits.toLocaleString()} {c.credits}</p>
-    <p className="mt-1 text-[11.5px] text-muted-foreground">{c.oneTime}</p>
+    <p className="mt-1 text-[11.5px] text-muted-foreground">{(pendingPack.metadata as { billing?: string } | null)?.billing === "monthly" ? (lang === "en" ? "Monthly plan: 30 days, credits reset at the end of the month, no automatic renewal." : "Formule mensuelle : 30 jours, crédits remis à zéro à la fin du mois, aucun renouvellement automatique.") : c.oneTime}</p>
     <div className="mt-3 flex gap-2"><Button className="h-9 rounded-full text-[12.5px]" onClick={() => buy(pendingPack.slug)}>{c.confirmPay}</Button><Button variant="ghost" className="h-9 rounded-full text-[12.5px]" onClick={() => setPending(null)}>{c.cancel}</Button></div>
   </div>}
   <MonthlyStatus lang={lang === "en" ? "en" : "fr"} onRenew={buy} />
@@ -202,7 +203,7 @@ function Packs({ cur }: { cur: ReturnType<typeof useCurrency> }) {
       {m === "once" ? (lang === "en" ? "Packs · one-time" : "Packs · paiement unique") : (lang === "en" ? "Monthly plan" : "Formule mensuelle")}
     </button>)}
   </div>
-  {mode === "monthly" && <p className="text-[12px] text-muted-foreground">{lang === "en" ? "Paid once a month, credits added at once and never expiring, no automatic charge: a reminder tells you before the month ends." : "Payée une fois par mois, crédits ajoutés aussitôt et sans date d'expiration, aucun prélèvement automatique : un rappel vous prévient avant la fin du mois."}</p>}
+  {mode === "monthly" && <NoCommitment lang={lang === "en" ? "en" : "fr"} compact />}
   <div className={`grid gap-4 sm:grid-cols-2 ${mode === "once" ? "xl:grid-cols-4" : "xl:grid-cols-2"}`}>{packs.filter((p) => (mode === "once" ? packCopy : monthlyCopy)[p.slug]).map(p => { const copy = (mode === "once" ? packCopy : monthlyCopy)[p.slug]?.[lang === "en" ? "en" : "fr"]; return <div key={p.id} className={`${card} flex flex-col ${p.featured ? "border-primary/60 ring-1 ring-primary/30" : ""}`}>
     <div className="flex items-center justify-between"><p className="text-[13.5px] font-semibold">{p.name}</p>{p.featured && <span className="rounded-full bg-primary px-2 py-0.5 text-[10px] font-semibold text-primary-foreground">{c.popular}</span>}</div>
     <p className="mt-2 font-display text-[24px] font-semibold">{cur.format(p.price_xof)}{mode === "monthly" && <span className="text-[13px] font-normal text-muted-foreground"> / {lang === "en" ? "month" : "mois"}</span>}</p>

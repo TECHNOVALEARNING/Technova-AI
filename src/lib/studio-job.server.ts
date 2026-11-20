@@ -209,7 +209,8 @@ export async function runStudioJob(jobId: string) {
           const { settleCredits } = await import("@/lib/credits.server");
           await settleCredits(job.reservation_id, credits);
         } else {
-          await db.from("credit_transactions").insert({ owner_id: job.owner_id, amount: -credits, kind: "usage", label: "TechNova Studio · build" });
+          const { billingOwner } = await import("@/lib/org.server");
+          await db.from("credit_transactions").insert({ owner_id: await billingOwner(job.owner_id), amount: -credits, kind: "usage", label: "TechNova Studio · build" });
         }
       }
     }

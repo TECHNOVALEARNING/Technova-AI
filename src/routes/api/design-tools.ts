@@ -28,6 +28,7 @@ export const Route = createFileRoute("/api/design-tools")({
         const { userIdFromRequest } = await import("@/lib/auth.server");
         const userId = await userIdFromRequest(request);
         if (!userId) return new Response("Unauthorized", { status: 401 });
+        { const { orgFeatureResponse } = await import("@/lib/org.server"); const blocked = await orgFeatureResponse(userId, "design"); if (blocked) return blocked; }
         const parsed = body.safeParse(await request.json().catch(() => null));
         if (!parsed.success) return new Response("Image invalide (PNG, JPEG ou WebP, 5 Mo au plus). / Invalid image.", { status: 400 });
         const { lang, image } = parsed.data;

@@ -19,6 +19,7 @@ export const publishSite = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: { slug: string; title: string; files: unknown }) => z.object({ slug: z.string().regex(SITE_SLUG_RE), title: z.string().max(120), files: filesSchema }).parse(input))
   .handler(async ({ data, context }) => {
+    await (await import("@/lib/org.server")).requireOrgFeature(context.userId, "share");
     const { hitRateLimit, logSecurityEvent } = await import("@/lib/security.server");
     const { getTier, allows } = await import("@/lib/plan.server");
     if (!allows(await getTier(context.userId), "publish")) { await logSecurityEvent(context.userId, "plan_limit_blocked", "info", { feature: "publish" }); return { ok: false as const, error: "plan_publish" }; }
@@ -67,6 +68,7 @@ export const pushSiteToGitHub = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: { repo: string; files: unknown }) => z.object({ repo: z.string().regex(/^[A-Za-z0-9._-]{1,90}$/), files: filesSchema }).parse(input))
   .handler(async ({ data, context }) => {
+    await (await import("@/lib/org.server")).requireOrgFeature(context.userId, "connections");
     const { getAccessToken, githubFetch } = await import("@/lib/connections.server");
     const { hitRateLimit, logSecurityEvent } = await import("@/lib/security.server");
     const { getTier, allows } = await import("@/lib/plan.server");
@@ -108,6 +110,7 @@ export const createPreviewLink = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: { title: string; files: unknown }) => z.object({ title: z.string().max(120), files: filesSchema }).parse(input))
   .handler(async ({ data, context }) => {
+    await (await import("@/lib/org.server")).requireOrgFeature(context.userId, "share");
     const { hitRateLimit, logSecurityEvent } = await import("@/lib/security.server");
     if (!(await hitRateLimit(context.userId, "publish"))) return { ok: false as const, error: "rate" };
     if (data.files.reduce((n, f) => n + f.content.length, 0) > MAX_PREVIEW_CHARS) return { ok: false as const, error: "size" };
@@ -150,6 +153,7 @@ export const deploySiteToNetlify = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: { name: string; files: unknown }) => z.object({ name: z.string().regex(SITE_SLUG_RE), files: filesSchema }).parse(input))
   .handler(async ({ data, context }) => {
+    await (await import("@/lib/org.server")).requireOrgFeature(context.userId, "share");
     const blocked = await checkOutgoingSite(context.userId, data.files, "netlify_deploy");
     if (blocked) return { ok: false as const, error: blocked };
     const { getAccessToken, netlifyFetch } = await import("@/lib/connections.server");
@@ -202,6 +206,7 @@ export const deploySiteToVercel = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: { name: string; files: unknown }) => z.object({ name: z.string().regex(SITE_SLUG_RE), files: filesSchema }).parse(input))
   .handler(async ({ data, context }) => {
+    await (await import("@/lib/org.server")).requireOrgFeature(context.userId, "share");
     const blocked = await checkOutgoingSite(context.userId, data.files, "vercel_deploy");
     if (blocked) return { ok: false as const, error: blocked };
     const { getAccessToken, vercelFetch } = await import("@/lib/connections.server");
@@ -238,6 +243,7 @@ export const createStripePaymentLink = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: { product: string; amount: string; currency: string }) => z.object({ product: z.string().trim().min(1).max(120), amount: z.string().trim().max(20), currency: z.string().max(8) }).parse(input))
   .handler(async ({ data, context }) => {
+    await (await import("@/lib/org.server")).requireOrgFeature(context.userId, "connections");
     const { getTier, allows } = await import("@/lib/plan.server");
     if (!allows(await getTier(context.userId), "site")) return { ok: false as const, error: "plan_site" };
     const { hitRateLimit } = await import("@/lib/security.server");

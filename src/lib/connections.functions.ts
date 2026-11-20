@@ -24,6 +24,7 @@ export const startConnect = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: { connectorId: string }) => ({ connectorId: connectorSchema.parse(input.connectorId) }))
   .handler(async ({ data, context }) => {
+    await (await import("@/lib/org.server")).requireOrgFeature(context.userId, "connections");
     const { isConfigured, appOrigin, authorizationUrl, signState, RETURN_PATH } = await import("@/lib/connections.server");
     const { hitRateLimit } = await import("@/lib/security.server");
     if (!(await hitRateLimit(context.userId, "connect"))) throw new Error("CONNECT_RATE_LIMITED");

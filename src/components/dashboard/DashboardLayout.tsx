@@ -2,7 +2,7 @@ import { createContext, useCallback, useContext, useEffect, useState, type React
 import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import { savePref } from "@/lib/consent";
 import { planKeyOf, planLabels, usePlan } from "@/lib/plan-client";
-import { BookMarked, Bot, ChevronUp, ExternalLink, FolderKanban, Library, MessageSquareHeart, Plug, ShieldAlert, Puzzle } from "lucide-react";
+import { BookMarked, Bot, Building2, ChevronUp, Download, ExternalLink, FolderKanban, Library, MessageSquareHeart, Plug, ShieldAlert, Puzzle } from "lucide-react";
 import { getMyRole } from "@/lib/admin.functions";
 import { Activity, ArrowLeft, CalendarDays, Check, Palette, Crown, Bell, BookOpen, Boxes, ChevronDown, ChevronRight, Code2, CreditCard, Diamond, Gift, Globe2, Inbox, LayoutDashboard, LogOut, Menu, MessageCircle, Moon, PanelLeftClose, PanelLeftOpen, Search, Settings2, Sun, Wallet, X, Wrench } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -17,7 +17,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { ThreadItem } from "./ThreadItem";
 import { PendingDeletionBanner } from "./PendingDeletionBanner";
 import { IncidentBanner } from "./IncidentBanner";
-import { TopActions } from "./TopActions";
+import { TopActions, useGetApp } from "./TopActions";
 import { SuggestionBox } from "./SuggestionBox";
 import { usePresence } from "@/lib/presence";
 import { claimPendingReferral, REFERRAL_CREDITS } from "@/lib/referral";
@@ -25,6 +25,8 @@ import { toast } from "sonner";
 import { InboxDialog, useInbox } from "./Inbox";
 import { clearSessionGuard, useSessionGuard } from "@/lib/session-guard";
 import { DashboardContext, type Thread } from "./dashboard-context";
+import { useMyOrganization, useOrgDisabled } from "@/lib/org-client";
+import type { OrgFeature } from "@/lib/org-features";
 export { useDashboard, type Thread } from "./dashboard-context";
 
 // Arena is hidden from the site for now (its routes redirect).
@@ -43,8 +45,13 @@ const links = [
   { key: "billing", to: "/dashboard/billing", icon: CreditCard },
   { key: "connections", to: "/dashboard/connexions", icon: Plug },
   { key: "referral", to: "/dashboard/parrainage", icon: Gift },
+  { key: "company", to: "/dashboard/entreprise", icon: Building2 },
   { key: "settings", to: "/dashboard/settings", icon: Settings2 },
 ] as const;
+/** Sidebar pages hidden from a company sub-account when its administrator unticked every feature they serve. */
+const linkFeatures: Partial<Record<(typeof links)[number]["key"], OrgFeature[]>> = {
+  agents: ["agents"], plugins: ["agents"], knowledge: ["files"], registry: ["templates", "design", "sheet"], api: ["api"], connections: ["connections"],
+};
 /** Always visible; the rest unfolds under "Plus" so the history gets the room. */
 const primaryKeys: readonly string[] = ["overview", "chat", "projects", "agents", "credits"];
 
@@ -116,6 +123,7 @@ export function DashboardLayout({ children }: { children: ReactNode }) {
   const [inboxOpen, setInboxOpen] = useState(false);
   const [accountView, setAccountView] = useState<"menu" | "themes">("menu");
   const [suggestOpen, setSuggestOpen] = useState(false);
+  const app = useGetApp(lang !== "en");
   usePresence();
   // A referral link opened before sign-up: claimed once the e-mail is confirmed (both accounts credited).
   useEffect(() => {
@@ -144,11 +152,17 @@ export function DashboardLayout({ children }: { children: ReactNode }) {
   const current = links.find(l => pathname === l.to)?.key ?? (pathname.startsWith("/dashboard/chat") ? "chat" : pathname === "/dashboard/docs" ? "docs" : "overview");
   const filtered = threads.filter(thread => thread.title.toLocaleLowerCase().includes(search.toLocaleLowerCase())).sort((a, b) => Number(b.pinned) - Number(a.pinned));
   // Sidebar wording: the models page is about prices per mode, the credits page holds packs and balance.
-  const navLabel = (key: (typeof links)[number]["key"] | "docs") => key === "models" ? "Modes" : key === "credits" ? (lang === "fr" ? "Tarifs et crédits" : "Pricing & credits") : t[key];
+  const navLabel = (key: (typeof links)[number]["key"] | "docs") => key === "models" ? "Modes" : key === "credits" ? (lang === "fr" ? "Tarifs et crédits" : "Pricing & credits") : key === "company" ? (lang === "fr" ? "Entreprise" : "Company") : t[key];
   const matchingSections = [...links, { key: "docs", to: "/dashboard/docs", icon: BookOpen } as const].filter(item => navLabel(item.key).toLocaleLowerCase().includes(search.toLocaleLowerCase()));
   const initials = (name || email || "T").charAt(0).toUpperCase();
   // The secondary links stay unfolded while one of them is the open page (and in the icon-only menu).
-  const onSecondary = !primaryKeys.includes(current) || pathname === "/dashboard/admin";
+  // Company plans: members and administrators get « Entreprise » among the primary links; unticked features are hidden.
+  const myOrg = useMyOrganization();
+  const orgDisabled = useOrgDisabled();
+  const inCompany = !!myOrg?.membership || (myOrg?.invitations.length ?? 0) > 0;
+  const primary = inCompany ? [...primaryKeys, "company"] : primaryKeys;
+  const visibleLinks = links.filter((item) => !(linkFeatures[item.key]?.every((f) => orgDisabled.has(f)) ?? false));
+  const onSecondary = !primary.includes(current) || pathname === "/dashboard/admin";
   const showAll = mini || moreOpen || onSecondary;
   // Plan badge and avatar ring colours follow the highest pack bought (display only).
   const plan = usePlan();
@@ -171,7 +185,7 @@ export function DashboardLayout({ children }: { children: ReactNode }) {
         </div>
         <div className="flex min-h-0 flex-1 flex-col px-3">
           <nav aria-label={t.navigation} className="shrink-0 space-y-px">
-            {links.filter(item => showAll || primaryKeys.includes(item.key)).map(item => <Link key={item.key} to={item.to} title={navLabel(item.key)} aria-current={current === item.key ? "page" : undefined} className={`side-link flex h-8 items-center gap-2.5 rounded-lg px-2.5 text-[12.5px] font-medium transition-colors ${mini ? "lg:justify-center lg:px-0" : ""} ${current === item.key ? "is-active text-foreground" : "text-muted-foreground hover:text-foreground"}`}><item.icon className="size-[15px] shrink-0" strokeWidth={1.7} /><span className={mini ? "lg:hidden" : ""}>{navLabel(item.key)}</span></Link>)}
+            {visibleLinks.filter(item => showAll || primary.includes(item.key)).map(item => <Link key={item.key} to={item.to} title={navLabel(item.key)} aria-current={current === item.key ? "page" : undefined} className={`side-link flex h-8 items-center gap-2.5 rounded-lg px-2.5 text-[12.5px] font-medium transition-colors ${mini ? "lg:justify-center lg:px-0" : ""} ${current === item.key ? "is-active text-foreground" : "text-muted-foreground hover:text-foreground"}`}><item.icon className="size-[15px] shrink-0" strokeWidth={1.7} /><span className={mini ? "lg:hidden" : ""}>{navLabel(item.key)}</span></Link>)}
             {isAdmin && showAll && <Link to="/dashboard/admin" title="Administration" aria-current={pathname === "/dashboard/admin" ? "page" : undefined} className={`side-link flex h-8 items-center gap-2.5 rounded-lg px-2.5 text-[12.5px] font-medium transition-colors ${mini ? "lg:justify-center lg:px-0" : ""} ${pathname === "/dashboard/admin" ? "is-active text-foreground" : "text-muted-foreground hover:text-foreground"}`}><ShieldAlert className="size-[15px] shrink-0" strokeWidth={1.7} /><span className={mini ? "lg:hidden" : ""}>Administration</span></Link>}
             {!mini && !onSecondary && <button type="button" onClick={() => setMoreOpen(v => !v)} aria-expanded={moreOpen}
               className="side-link flex h-8 w-full items-center gap-2.5 rounded-lg px-2.5 text-[12.5px] font-medium text-muted-foreground transition-colors hover:text-foreground">
@@ -213,6 +227,10 @@ export function DashboardLayout({ children }: { children: ReactNode }) {
                 <span className={`plan-ring plan-${planKey ?? "free"}`}><span className="grid size-9 place-items-center rounded-full bg-card text-[13px] font-semibold text-foreground">{initials}</span></span>
                 <span className="min-w-0 flex-1"><span className="block truncate text-[13px] font-semibold">{name || t.accountName}</span><span className="block truncate text-[11.5px] text-muted-foreground">{planName || (lang === "fr" ? "Gratuit" : "Free")}</span></span>
               </div>
+              {/* "Get the app": a coloured line of its own so it stands out from the rest of the menu (hidden once installed). */}
+              {!app.installed && <button type="button" onClick={() => { setAccountOpen(false); void app.getApp(); }} className="get-app-item mt-0.5 flex w-full items-center gap-3 rounded-xl px-2.5 py-2 text-left text-[13.5px] font-semibold transition">
+                <Download className="size-[18px]" strokeWidth={2} /><span className="flex-1">{lang === "fr" ? "Obtenir l'application" : "Get the app"}</span><span className="rounded-full bg-white/20 px-2 py-0.5 text-[10.5px] font-semibold">{lang === "fr" ? "Gratuit" : "Free"}</span>
+              </button>}
               <div className="my-1 h-px bg-border" />
               <button type="button" onClick={() => { setAccountOpen(false); setInboxOpen(true); }} className="flex w-full items-center gap-3 rounded-xl px-2.5 py-2 text-left text-[13.5px] transition hover:bg-secondary">
                 <span className="relative"><Inbox className="size-[18px] text-muted-foreground" strokeWidth={1.7} />{inbox.unread > 0 && <span className="absolute -right-0.5 -top-0.5 size-2 rounded-full bg-sky-500 ring-2 ring-popover" />}</span>

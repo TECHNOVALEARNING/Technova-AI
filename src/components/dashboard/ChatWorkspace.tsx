@@ -49,6 +49,7 @@ import { featureMinTier, packSlugs, upgradeFeatureOf, upgradeSentence, type Plan
 import { savePref } from "@/lib/consent";
 import { createMediaGeneration, getVideoAccess, refreshMediaGeneration, VIDEO_UPGRADE_REQUIRED } from "@/lib/media-generation.functions";
 import { PENDING_PACK_KEY } from "@/lib/public-pricing";
+import { useOrgDisabled } from "@/lib/org-client";
 import { RESEARCH_MAX_CREDITS, splitResearchStream } from "@/lib/research";
 import { DESIGN_DRAFT_KEY } from "@/lib/design-library";
 import { defaultImageModel, defaultMusicModel, defaultVideoModel, imageEditModel, MEDIA_VIDEO_SECONDS, mediaLabel, qualityImageModel, qualityVideoModel, videoSecondsFrom, type MediaKind } from "@/lib/media-models";
@@ -144,7 +145,8 @@ function ChoiceControls({ choice }: { choice: ReturnType<typeof useWorkspaceChoi
   const fr = copy.locale.startsWith("fr");
   const plan = usePlanTier();
   // Flagship models: only Creator and Pro see them (Starter and Essential keep the four modes).
-  const canFlagship = plan !== null && plan >= FLAGSHIP_MIN_TIER;
+  const orgOff = useOrgDisabled();
+  const canFlagship = plan !== null && plan >= FLAGSHIP_MIN_TIER && !orgOff.has("flagship");
   const flagship = canFlagship ? choice.flagship : null;
   const [flagshipOpen, setFlagshipOpen] = useState(false);
   useEffect(() => { if (tierOpen) setFlagshipOpen(Boolean(flagship)); }, [tierOpen, flagship]);
@@ -167,7 +169,7 @@ function ChoiceControls({ choice }: { choice: ReturnType<typeof useWorkspaceChoi
           align="start"
           className="w-64 rounded-2xl border-border bg-popover p-1.5 shadow-soft"
         >
-          {(["chat", "create"] as const).map((item) => (
+          {(["chat", "create"] as const).filter((item) => !(item === "create" && orgOff.has("studio"))).map((item) => (
             <Button
               key={item}
               type="button"
@@ -209,7 +211,7 @@ function ChoiceControls({ choice }: { choice: ReturnType<typeof useWorkspaceChoi
           </Button>
         </PopoverTrigger>
         <PopoverContent align="end" collisionPadding={12} className="max-h-[min(var(--radix-popover-content-available-height),560px)] w-72 overflow-y-auto rounded-2xl border-border bg-popover p-1.5 shadow-soft">
-          {[...chatTierIds, "smart" as const].map((id) => {
+          {[...chatTierIds, "smart" as const].filter((id) => !(id === "expert" && orgOff.has("expert"))).map((id) => {
             const smart = id === "smart";
             const locked = id === "expert" && plan !== null && plan < EXPERT_MIN_TIER;
             const name = smart ? smartChoice.fr : fr ? chatTiers[id].fr : chatTiers[id].en;
@@ -690,6 +692,9 @@ const starterIdeas: StarterIdea[] = [
 function StarterIdeas({ choice, inputRef, onSalesPage, onMusic, onVideo, onHumanize, onAudio }: { choice: ReturnType<typeof useWorkspaceChoice>; inputRef: React.RefObject<HTMLTextAreaElement | null>; onSalesPage: () => void; onMusic: () => void; onVideo: () => void; onHumanize: () => void; onAudio: () => void }) {
   const { lang } = useDashboard();
   const goTo = useNavigate();
+  // Company sub-accounts do not see what their administrator unticked (the server refuses it anyway).
+  const off = useOrgDisabled();
+  const ideaOff = (idea: StarterIdea) => idea.wizard === "design" ? off.has("design") : idea.wizard === "sheet" ? off.has("sheet") : idea.mode === "create" && off.has("studio");
   function pick(idea: StarterIdea) {
     if (idea.wizard === "sales") { onSalesPage(); return; }
     // « Créativité » opens TechNova Design (Templates → Présentation et Canva).
@@ -715,6 +720,7 @@ function StarterIdeas({ choice, inputRef, onSalesPage, onMusic, onVideo, onHuman
   const bottom = [byTitle("Landing page"), byTitle("Design vers code")];
   const cell = "inline-flex h-9 w-full min-w-0 items-center justify-center gap-1.5 rounded-full px-3 text-[12px]";
   const chip = (idea: StarterIdea) => {
+    if (ideaOff(idea)) return null;
     const [title, hint] = idea[lang === "en" ? "en" : "fr"];
     const Icon = idea.icon;
     const featured = idea.wizard === "design" || idea.wizard === "sheet";
@@ -727,10 +733,10 @@ function StarterIdeas({ choice, inputRef, onSalesPage, onMusic, onVideo, onHuman
   return <div className="mx-auto w-full max-w-[680px] space-y-2">
     <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">{top.map(chip)}</div>
     <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
-      <button type="button" onClick={onMusic} className={cn("create-chip create-chip-music font-semibold text-white", cell)}><Music className="size-3.5 shrink-0" /><span className="truncate">{lang === "en" ? "Create a song" : "Création de musique"}</span></button>
-      <button type="button" onClick={onVideo} className={cn("create-chip create-chip-video font-semibold text-white", cell)}><Film className="size-3.5 shrink-0" /><span className="truncate">{lang === "en" ? "Create a video" : "Création de vidéo"}</span></button>
-      <button type="button" onClick={onHumanize} className={cn("create-chip create-chip-humanize font-semibold text-white", cell)}><PenLine className="size-3.5 shrink-0" /><span className="truncate">{lang === "en" ? "Humanize a text" : "Humaniser un texte"}</span></button>
-      <button type="button" onClick={onAudio} className={cn("create-chip create-chip-audio font-semibold text-white", cell)}><AudioLines className="size-3.5 shrink-0" /><span className="truncate">{lang === "en" ? "Summarize an audio" : "Résumé d'un audio"}</span></button>
+      {!off.has("music") && <button type="button" onClick={onMusic} className={cn("create-chip create-chip-music font-semibold text-white", cell)}><Music className="size-3.5 shrink-0" /><span className="truncate">{lang === "en" ? "Create a song" : "Création de musique"}</span></button>}
+      {!off.has("video") && <button type="button" onClick={onVideo} className={cn("create-chip create-chip-video font-semibold text-white", cell)}><Film className="size-3.5 shrink-0" /><span className="truncate">{lang === "en" ? "Create a video" : "Création de vidéo"}</span></button>}
+      {!off.has("humanize") && <button type="button" onClick={onHumanize} className={cn("create-chip create-chip-humanize font-semibold text-white", cell)}><PenLine className="size-3.5 shrink-0" /><span className="truncate">{lang === "en" ? "Humanize a text" : "Humaniser un texte"}</span></button>}
+      {!off.has("audio") && <button type="button" onClick={onAudio} className={cn("create-chip create-chip-audio font-semibold text-white", cell)}><AudioLines className="size-3.5 shrink-0" /><span className="truncate">{lang === "en" ? "Summarize an audio" : "Résumé d'un audio"}</span></button>}
     </div>
     <div className="mx-auto grid max-w-[336px] grid-cols-2 gap-2">{bottom.map(chip)}</div>
   </div>;

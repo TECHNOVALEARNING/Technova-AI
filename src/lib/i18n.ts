@@ -49,10 +49,10 @@ export const content = {
       title: "Comment ça marche",
       sub: "De l'inscription à votre première création en moins de 2 minutes.",
       steps: [
-        { t: "Créez votre compte", d: "Inscription gratuite, 50 crédits Technova offerts immédiatement." },
-        { t: "Rechargez votre compte", d: "Mobile Money ou carte bancaire. Vos crédits n'expirent jamais." },
-        { t: "Choisissez un modèle", d: "Chat, image, vidéo ou code : plus de 200 modèles disponibles." },
-        { t: "Créez sans limites", d: "Utilisez l'interface ou intégrez l'API à vos produits." },
+        { k: "Étape 01 · Inscription", t: "Créez votre compte", d: "Inscription gratuite, 50 crédits Technova offerts dès la confirmation de votre e-mail.", c: ["E-mail ou Google", "50 crédits offerts", "Sans carte bancaire"] },
+        { k: "Étape 02 · Recharge", t: "Rechargez votre compte", d: "Choisissez un pack ou la formule mensuelle et payez par Mobile Money ou carte. Les crédits arrivent dès que le paiement est validé.", c: ["Mobile Money", "Carte bancaire", "Prix en FCFA"] },
+        { k: "Étape 03 · Modèle", t: "Choisissez un modèle", d: "Éclair, Équilibré, Expert ou TechNova Smart qui choisit pour vous : plus de 200 modèles pour discuter, coder et créer.", c: ["TechNova Smart", "200+ modèles", "Image, vidéo, musique"] },
+        { k: "Étape 04 · Création", t: "Créez sans limites", d: "Sites avec TechNova Studio, présentations avec Créativité, tableaux avec le Tableur, ou l'API dans vos propres produits.", c: ["Studio", "Créativité", "API"] },
       ],
     },
     eco: {
@@ -60,11 +60,7 @@ export const content = {
       title: "Bien plus qu'une plateforme IA",
       sub: "La famille de produits TechNova, ouverte au monde.",
       visit: "Visiter le site",
-      soon: "Bientôt disponible",
-      items: [
-        { n: "Technova Learning", d: "Formations et ebooks pour maîtriser l'IA, la data et la cybersécurité.", url: "https://www.technovalearning.com/", k: "Formation", f: ["Formations tech en ligne", "IA, data et cybersécurité", "Ebooks prêts à l'emploi"] },
-        { n: "Technova Connect", d: "Connectivité et services mobiles pour le quotidien.", k: "Connectivité", f: ["Services mobiles", "Connectivité", "Paiements du quotidien"] },
-      ],
+      band: { k: "La famille TechNova", t: "Allez plus loin avec TechNova Learning", d: "Formations, ebooks et outils digitaux pour maîtriser l'IA, la data et la cybersécurité.", c: ["Formations en ligne", "Ebooks", "Outils digitaux"], url: "https://www.technovalearning.com/" },
     },
     tech: { tag: "Modèles", title: "Les meilleurs laboratoires d'IA", sub: "Connectés à TechNova, accessibles avec un seul compte." },
     pricing: {
@@ -167,10 +163,10 @@ export const content = {
       title: "How it works",
       sub: "From sign-up to your first creation in under 2 minutes.",
       steps: [
-        { t: "Create your account", d: "Free sign-up, 50 Technova credits instantly." },
-        { t: "Top up your account", d: "Mobile Money or bank card. Credits never expire." },
-        { t: "Pick a model", d: "Chat, image, video or code: 200+ models available." },
-        { t: "Build without limits", d: "Use the app or plug the API into your products." },
+        { k: "Step 01 · Sign-up", t: "Create your account", d: "Free sign-up, 50 Technova credits as soon as your e-mail is confirmed.", c: ["E-mail or Google", "50 free credits", "No bank card"] },
+        { k: "Step 02 · Top-up", t: "Top up your account", d: "Pick a pack or the monthly plan and pay by Mobile Money or card. Credits arrive as soon as the payment is confirmed.", c: ["Mobile Money", "Bank card", "Prices in FCFA"] },
+        { k: "Step 03 · Model", t: "Pick a model", d: "Flash, Balanced, Expert or TechNova Smart, which picks for you: 200+ models to chat, code and create.", c: ["TechNova Smart", "200+ models", "Image, video, music"] },
+        { k: "Step 04 · Create", t: "Build without limits", d: "Websites with TechNova Studio, slides with Creativity, tables with the Spreadsheet, or the API in your own products.", c: ["Studio", "Creativity", "API"] },
       ],
     },
     eco: {
@@ -178,11 +174,7 @@ export const content = {
       title: "Much more than an AI platform",
       sub: "The TechNova family of products, open to the world.",
       visit: "Visit the site",
-      soon: "Coming soon",
-      items: [
-        { n: "Technova Learning", d: "Courses and ebooks to master AI, data and cybersecurity.", url: "https://www.technovalearning.com/", k: "Learning", f: ["Online tech courses", "AI, data and cybersecurity", "Ready-to-use ebooks"] },
-        { n: "Technova Connect", d: "Connectivity and mobile services for everyday life.", k: "Connectivity", f: ["Mobile services", "Connectivity", "Everyday payments"] },
-      ],
+      band: { k: "The TechNova family", t: "Go further with TechNova Learning", d: "Courses, ebooks and digital tools to master AI, data and cybersecurity.", c: ["Online courses", "Ebooks", "Digital tools"], url: "https://www.technovalearning.com/" },
     },
     tech: { tag: "Models", title: "The world's leading AI labs", sub: "Connected to TechNova, available with one account." },
     pricing: {
@@ -285,10 +277,10 @@ export const content = {
       title: "Cómo funciona",
       sub: "Del registro a tu primera creación en menos de 2 minutos.",
       steps: [
-        { t: "Crea tu cuenta", d: "Registro gratuito, 50 créditos Technova al instante." },
-        { t: "Recarga tu cuenta", d: "Mobile Money o tarjeta bancaria. Tus créditos nunca caducan." },
-        { t: "Elige un modelo", d: "Chat, imagen, vídeo o código: más de 200 modelos disponibles." },
-        { t: "Crea sin límites", d: "Usa la interfaz o integra la API en tus productos." },
+        { k: "Paso 01 · Registro", t: "Crea tu cuenta", d: "Registro gratuito, 50 créditos Technova en cuanto confirmas tu e-mail.", c: ["E-mail o Google", "50 créditos gratis", "Sin tarjeta"] },
+        { k: "Paso 02 · Recarga", t: "Recarga tu cuenta", d: "Elige un pack o la fórmula mensual y paga con Mobile Money o tarjeta. Los créditos llegan en cuanto se valida el pago.", c: ["Mobile Money", "Tarjeta bancaria", "Precios en FCFA"] },
+        { k: "Paso 03 · Modelo", t: "Elige un modelo", d: "Rápido, Equilibrado, Experto o TechNova Smart, que elige por ti: más de 200 modelos para conversar, programar y crear.", c: ["TechNova Smart", "200+ modelos", "Imagen, vídeo, música"] },
+        { k: "Paso 04 · Creación", t: "Crea sin límites", d: "Sitios con TechNova Studio, presentaciones con Creatividad, tablas con la Hoja de cálculo, o la API en tus productos.", c: ["Studio", "Creatividad", "API"] },
       ],
     },
     eco: {
@@ -296,11 +288,7 @@ export const content = {
       title: "Mucho más que una plataforma de IA",
       sub: "La familia de productos TechNova, abierta al mundo.",
       visit: "Visitar el sitio",
-      soon: "Próximamente",
-      items: [
-        { n: "Technova Learning", d: "Formaciones y ebooks para dominar la IA, los datos y la ciberseguridad.", url: "https://www.technovalearning.com/", k: "Formación", f: ["Cursos tech en línea", "IA, datos y ciberseguridad", "Ebooks listos para usar"] },
-        { n: "Technova Connect", d: "Conectividad y servicios móviles para el día a día.", k: "Conectividad", f: ["Servicios móviles", "Conectividad", "Pagos cotidianos"] },
-      ],
+      band: { k: "La familia TechNova", t: "Ve más lejos con TechNova Learning", d: "Cursos, ebooks y herramientas digitales para dominar la IA, los datos y la ciberseguridad.", c: ["Cursos en línea", "Ebooks", "Herramientas digitales"], url: "https://www.technovalearning.com/" },
     },
     tech: { tag: "Modelos", title: "Los mejores laboratorios de IA", sub: "Conectados a TechNova, accesibles con una sola cuenta." },
     pricing: {
@@ -403,10 +391,10 @@ export const content = {
       title: "Como funciona",
       sub: "Do cadastro à sua primeira criação em menos de 2 minutos.",
       steps: [
-        { t: "Crie sua conta", d: "Cadastro gratuito, 50 créditos Technova na hora." },
-        { t: "Recarregue sua conta", d: "Mobile Money ou cartão bancário. Seus créditos nunca expiram." },
-        { t: "Escolha um modelo", d: "Chat, imagem, vídeo ou código: mais de 200 modelos disponíveis." },
-        { t: "Crie sem limites", d: "Use a interface ou integre a API aos seus produtos." },
+        { k: "Etapa 01 · Cadastro", t: "Crie sua conta", d: "Cadastro gratuito, 50 créditos Technova assim que seu e-mail for confirmado.", c: ["E-mail ou Google", "50 créditos grátis", "Sem cartão"] },
+        { k: "Etapa 02 · Recarga", t: "Recarregue sua conta", d: "Escolha um pacote ou o plano mensal e pague por Mobile Money ou cartão. Os créditos chegam assim que o pagamento é validado.", c: ["Mobile Money", "Cartão bancário", "Preços em FCFA"] },
+        { k: "Etapa 03 · Modelo", t: "Escolha um modelo", d: "Rápido, Equilibrado, Especialista ou TechNova Smart, que escolhe por você: mais de 200 modelos para conversar, programar e criar.", c: ["TechNova Smart", "200+ modelos", "Imagem, vídeo, música"] },
+        { k: "Etapa 04 · Criação", t: "Crie sem limites", d: "Sites com o TechNova Studio, apresentações com Criatividade, tabelas com a Planilha, ou a API nos seus produtos.", c: ["Studio", "Criatividade", "API"] },
       ],
     },
     eco: {
@@ -414,11 +402,7 @@ export const content = {
       title: "Muito mais que uma plataforma de IA",
       sub: "A família de produtos TechNova, aberta ao mundo.",
       visit: "Visitar o site",
-      soon: "Em breve",
-      items: [
-        { n: "Technova Learning", d: "Cursos e ebooks para dominar IA, dados e cibersegurança.", url: "https://www.technovalearning.com/", k: "Formação", f: ["Cursos tech online", "IA, dados e cibersegurança", "Ebooks prontos para usar"] },
-        { n: "Technova Connect", d: "Conectividade e serviços móveis para o dia a dia.", k: "Conectividade", f: ["Serviços móveis", "Conectividade", "Pagamentos do dia a dia"] },
-      ],
+      band: { k: "A família TechNova", t: "Vá mais longe com o TechNova Learning", d: "Cursos, ebooks e ferramentas digitais para dominar IA, dados e cibersegurança.", c: ["Cursos online", "Ebooks", "Ferramentas digitais"], url: "https://www.technovalearning.com/" },
     },
     tech: { tag: "Modelos", title: "Os melhores laboratórios de IA", sub: "Conectados à TechNova, acessíveis com uma única conta." },
     pricing: {

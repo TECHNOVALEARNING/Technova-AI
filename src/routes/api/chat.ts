@@ -165,6 +165,11 @@ export const Route = createFileRoute("/api/chat")({
         const { getTier, planResponse } = await import("@/lib/plan.server");
         const { PREMIUM_CHAT_MODELS, STARTER_SMART_FALLBACK, DEFAULT_AGENT_BUDGET } = await import("@/lib/plans");
         const tier = await getTier(userId);
+        // Company sub-accounts: features unticked by the administrator are refused (Expert picked by Smart falls back).
+        const { orgFeatureAllowed, orgFeatureResponse } = await import("@/lib/org.server");
+        for (const [used, feature] of [[!!parsed.data.agentId, "agents"], [!!parsed.data.task, "humanize"], [isFlagshipModel(parsed.data.model), "flagship"], [parsed.data.tier === "expert", "expert"], [(parsed.data.fileIds?.length ?? 0) > 0 || (parsed.data.knowledgeBaseIds?.length ?? 0) > 0, "files"]] as const) {
+          if (used) { const blocked = await orgFeatureResponse(userId, feature); if (blocked) return blocked; }
+        }
         let agent: { name: string; instructions: string; memory: string; model: string; max_tokens: number; max_cost: number; tools: string[]; knowledge_base_ids: string[] } | null = null;
         if (parsed.data.agentId) {
           if (tier < 2) return planResponse(userId, "agents");
@@ -176,7 +181,8 @@ export const Route = createFileRoute("/api/chat")({
         // Mode chosen in the composer (Éclair by default when an old client sends a model name).
         const hasFile = allFiles.length > 0 || (parsed.data.fileIds?.length ?? 0) > 0;
         const requestedTier = parsed.data.tier ?? "eclair";
-        const chatTier: ChatTier = requestedTier === "smart" ? smartTier(lastUser, hasFile, tier) : requestedTier;
+        const smartPicked: ChatTier | null = requestedTier === "smart" ? smartTier(lastUser, hasFile, tier) : null;
+        const chatTier: ChatTier = smartPicked === "expert" && !(await orgFeatureAllowed(userId, "expert")) ? "equilibre" : (smartPicked ?? (requestedTier as ChatTier));
         // Flagship model chosen in the composer: Creator and Pro only, billed at its real cost (no fixed mode price).
         const humanize = !agent && parsed.data.mode === "chat" && parsed.data.task ? parsed.data.task : null;
         const flagship = !agent && !humanize && isFlagshipModel(parsed.data.model) ? parsed.data.model : null;

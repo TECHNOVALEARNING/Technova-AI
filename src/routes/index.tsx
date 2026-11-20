@@ -14,8 +14,10 @@ import serviceCreative from "@/assets/service-creative-depth.png";
 import serviceCode from "@/assets/service-code-depth.png";
 import serviceApi from "@/assets/service-api-depth.png";
 import serviceAnalytics from "@/assets/service-analytics-depth.png";
-import ecoLearning from "@/assets/eco-learning.webp";
-import ecoConnect from "@/assets/eco-connect.webp";
+import howStep1 from "@/assets/how-step-1.webp";
+import howStep2 from "@/assets/how-step-2.webp";
+import howStep3 from "@/assets/how-step-3.webp";
+import howStep4 from "@/assets/how-step-4.webp";
 import { content, labs, type SiteLang } from "@/lib/i18n";
 import { Nav, Footer, Heading, Tag, R, ActionText, useReveal, useSiteLang } from "@/components/site/SiteChrome";
 import { InstallAppPrompt } from "@/components/site/InstallAppPrompt";
@@ -192,7 +194,7 @@ function Intro({ t }: { t: T }) {
           onClick={() => setVideoOpen(true)}
           className="group relative z-10 h-auto w-full max-w-[760px] overflow-hidden rounded-[36px] border border-border/70 bg-card p-0 shadow-lift transition-transform duration-300 hover:scale-[1.01] hover:bg-card focus-visible:ring-2 focus-visible:ring-ring sm:w-[72%] md:rounded-[68px]"
         >
-          <img src={media.aboutPoster} alt="" loading="lazy" width={3840} height={2160} className="aspect-video w-full object-cover" />
+          <img src={media.aboutPoster} alt="" loading="lazy" width={1920} height={1080} className="aspect-video w-full object-cover" />
           <span className="absolute inset-0 bg-ink/10 transition-colors group-hover:bg-ink/20" />
           <span className="absolute left-1/2 top-1/2 grid h-16 w-16 -translate-x-1/2 -translate-y-1/2 place-items-center rounded-full border border-ink-foreground/60 bg-ink-foreground/85 text-ink shadow-lift backdrop-blur-sm transition-transform group-hover:scale-110 md:h-20 md:w-20"><Play className="ml-1 h-7 w-7 fill-current md:h-8 md:w-8" /></span>
         </Button>
@@ -204,6 +206,7 @@ function Intro({ t }: { t: T }) {
             <video ref={videoRef} poster={media.aboutPoster} controls playsInline autoPlay preload="metadata" className="aspect-video w-full rounded-lg bg-ink object-contain shadow-lift">
               <source src={media.aboutWebm} type="video/webm" />
               <source src={media.aboutVideo} type="video/mp4" />
+              <track kind="captions" src={media.aboutCaptions} srcLang="fr" label="Français" />
             </video>
           </div>
         </div>
@@ -302,102 +305,56 @@ function Services({ t }: { t: T }) {
   );
 }
 
+/** "Comment ça marche": a horizontal accordion of four portraits. Hovering, focusing or tapping a step opens it
+    (photo on the left, details on a night-blue panel); on phones the steps stack and open one at a time. */
 function How({ t }: { t: T }) {
-  const trackRef = useRef<HTMLDivElement>(null);
-  const [progress, setProgress] = useState(0);
-  const icons = [UserRoundPlus, WalletCards, Boxes, TechNovaMark];
-
-  useEffect(() => {
-    let frame = 0;
-    const update = () => {
-      cancelAnimationFrame(frame);
-      frame = requestAnimationFrame(() => {
-        const track = trackRef.current;
-        if (!track) return;
-        const first = track.querySelector<HTMLElement>(".process-step:first-of-type .process-node");
-        const last = track.querySelector<HTMLElement>(".process-step:last-child .process-node");
-        if (!first || !last) return;
-        const start = first.getBoundingClientRect().top + first.offsetHeight / 2;
-        const end = last.getBoundingClientRect().top + last.offsetHeight / 2;
-        setProgress(Math.max(0, Math.min(1, (window.innerHeight * 0.48 - start) / Math.max(1, end - start))));
-      });
-    };
-    update();
-    window.addEventListener("scroll", update, { passive: true });
-    window.addEventListener("resize", update);
-    return () => {
-      cancelAnimationFrame(frame);
-      window.removeEventListener("scroll", update);
-      window.removeEventListener("resize", update);
-    };
-  }, []);
-
+  const [active, setActive] = useState(0);
+  const photos = [howStep1, howStep2, howStep3, howStep4];
   return (
     <section className="px-4 py-6 sm:py-8">
       <Heading tag={t.how.tag} title={t.how.title} sub={t.how.sub} />
-      <div ref={trackRef} className="process-track mx-auto max-w-6xl" style={{ "--process-progress": progress } as CSSProperties}>
-        <div className="process-spine" aria-hidden="true"><span className="process-spine-fill" /></div>
-        {t.how.steps.map((st, i) => {
-          const Icon = icons[i] ?? TechNovaMark;
-          const stepPosition = i / (t.how.steps.length - 1);
-          const fill = Math.max(0, Math.min(1, (progress - stepPosition + (i === 0 ? 0 : 0.04)) * 25));
-          const active = fill > 0.02;
-          return (
-            <article key={st.t} className={`process-step ${i % 2 ? "process-step-reverse" : ""} ${active ? "process-step-active" : ""}`} style={{ "--step-fill": fill } as CSSProperties}>
-              <div className="process-node" aria-hidden="true"><span /></div>
-              <div className="process-icon" aria-hidden="true"><Icon size={22} strokeWidth={2.4} /></div>
-              <span className="process-number" aria-hidden="true">{String(i + 1).padStart(2, "0")}</span>
-              <div className="process-copy">
-                <h3>{st.t}</h3>
-                <p>{st.d}</p>
-              </div>
-            </article>
-          );
-        })}
-      </div>
-    </section>
-  );
-}
-
-const ECO = [
-  // Square poster with text at the top and bottom: shown whole over a blurred copy of itself, never cropped.
-  { img: ecoLearning, bg: "var(--eco-learning)", contain: true },
-  // 16:9 poster: it already matches the picture area, so it fills it.
-  { img: ecoConnect, bg: "var(--eco-connect)" },
-];
-
-/** One frosted-glass card per product: the picture (what the product does) fills three quarters, the text one quarter. */
-function Ecosystem({ t }: { t: T }) {
-  const items = t.eco.items;
-  return (
-    <section className="px-4 py-6 sm:py-8">
-      <Heading tag={t.eco.tag} title={t.eco.title} sub={t.eco.sub} />
-      <R className="glass-stage relative mx-auto max-w-6xl">
-        <div className="relative grid gap-5 md:grid-cols-2">
-          {items.map((it, j) => {
-            const url = "url" in it ? it.url : undefined;
+      <R className="mx-auto max-w-6xl">
+        <div className="how-accordion">
+          {t.how.steps.map((st, i) => {
+            const open = i === active;
             return (
-              <article key={it.n} className="eco-card group flex aspect-[4/5] flex-col rounded-[2rem] p-2.5 sm:aspect-[5/4]" style={{ animationDelay: `${j * 80}ms` }}>
-                <div className="relative min-h-0 flex-[3] overflow-hidden rounded-[1.6rem]" style={{ backgroundImage: ECO[j]!.bg }}>
-                  {"contain" in ECO[j]! && <img src={ECO[j]!.img} alt="" aria-hidden="true" loading="lazy" className="absolute inset-0 h-full w-full scale-125 object-cover opacity-80 blur-2xl" />}
-                  <img src={ECO[j]!.img} alt={it.n} width={1600} height={"contain" in ECO[j]! ? 1600 : 900} loading="lazy" className={`relative h-full w-full ${"contain" in ECO[j]! ? "object-contain" : "object-cover"} transition duration-700 ease-out group-hover:scale-[1.04]`} />
-                  <span className="eco-chip absolute left-3.5 top-3.5 rounded-full px-2.5 py-1 text-[10.5px] font-semibold uppercase tracking-widest">{it.k}</span>
-                </div>
-                <div className="flex min-h-0 flex-1 items-center gap-4 px-3 pt-2.5 sm:px-4">
-                  <div className="min-w-0 flex-1">
-                    <h3 className="font-display text-lg font-semibold tracking-tight sm:text-xl">{it.n}</h3>
-                    <p className="mt-0.5 line-clamp-2 text-[13px] leading-snug text-muted-foreground sm:text-sm">{it.d}</p>
-                  </div>
-                  {/* Products without a public site (e.g. Technova Connect) show no link. */}
-                  {url ? (
-                    <Button asChild variant="pill" size="pill" className="action-pill action-pill-dark shrink-0 px-4 py-2.5 text-sm font-medium"><a href={url} target="_blank" rel="noreferrer" aria-label={`${t.eco.visit} ${it.n}`}><ActionText>{t.eco.visit}</ActionText><ArrowUpRight className="h-4 w-4" /></a></Button>
-                  ) : (
-                    <span className="eco-soon shrink-0 rounded-full px-4 py-2.5 text-sm font-medium text-muted-foreground">{t.eco.soon}</span>
-                  )}
+              <article key={st.t} className={`how-panel ${open ? "is-open" : ""}`} role="button" tabIndex={0} aria-expanded={open} aria-label={st.t}
+                onMouseEnter={() => setActive(i)} onFocus={() => setActive(i)} onClick={() => setActive(i)}
+                onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); setActive(i); } }}>
+                <div className="how-photo"><img src={photos[i]} alt="" width={600} height={800} loading="lazy" /><span className="how-index" aria-hidden="true">{String(i + 1).padStart(2, "0")}</span></div>
+                <p className="how-mini" aria-hidden="true">{st.t}</p>
+                <div className="how-body" aria-hidden={!open}>
+                  <p className="how-kicker">{st.k}</p>
+                  <h3>{st.t}</h3>
+                  <p className="how-text">{st.d}</p>
+                  <ul className="how-chips">{st.c.map((c) => <li key={c}>{c}</li>)}</ul>
                 </div>
               </article>
             );
           })}
+        </div>
+      </R>
+    </section>
+  );
+}
+
+/** Écosystème: one band for the TechNova family (TechNova Learning), with a link to its site. */
+function Ecosystem({ t }: { t: T }) {
+  const b = t.eco.band;
+  return (
+    <section className="px-4 py-6 sm:py-8">
+      <Heading tag={t.eco.tag} title={t.eco.title} sub={t.eco.sub} />
+      <R className="mx-auto max-w-6xl">
+        <div className="eco-band">
+          <span className="eco-band-sheen" aria-hidden="true" />
+          <div className="eco-band-mark" aria-hidden="true"><TechNovaMark className="h-7 w-7" /></div>
+          <div className="relative min-w-0 flex-1">
+            <p className="eco-band-kicker">{b.k}</p>
+            <h3 className="mt-1.5 font-display text-2xl font-semibold tracking-tight text-white md:text-[28px]">{b.t}</h3>
+            <p className="mt-2 max-w-xl text-[15px] leading-relaxed text-white/80">{b.d}</p>
+            <ul className="mt-4 flex flex-wrap gap-2">{b.c.map((c) => <li key={c} className="eco-band-chip">{c}</li>)}</ul>
+          </div>
+          <Button asChild variant="pill" size="pill" className="action-pill action-pill-light relative shrink-0 px-6 py-3 text-sm font-semibold"><a href={b.url} target="_blank" rel="noreferrer" aria-label={`${t.eco.visit} TechNova Learning`}><ActionText>{t.eco.visit}</ActionText><ArrowUpRight className="h-4 w-4" /></a></Button>
         </div>
       </R>
     </section>

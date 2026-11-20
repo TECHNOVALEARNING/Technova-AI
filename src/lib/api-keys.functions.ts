@@ -6,6 +6,7 @@ export const createApiKey = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((data) => z.object({ name: z.string().trim().min(1).max(60) }).parse(data))
   .handler(async ({ data, context }) => {
+    await (await import("@/lib/org.server")).requireOrgFeature(context.userId, "api");
     const { requirePlan } = await import("@/lib/plan.server");
     await requirePlan(context.userId, "api");
     const bytes = crypto.getRandomValues(new Uint8Array(24));

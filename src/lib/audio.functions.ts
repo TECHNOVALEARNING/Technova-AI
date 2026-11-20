@@ -13,6 +13,7 @@ export const createAudioUpload = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d) => z.object({ pieces: z.number().int().min(1).max(MAX_PIECES), seconds: z.number().positive().max(AUDIO_MAX_MINUTES * 60 + 60) }).parse(d))
   .handler(async ({ data, context }) => {
+    await (await import("@/lib/org.server")).requireOrgFeature(context.userId, "audio");
     const { hitRateLimit } = await import("@/lib/security.server");
     if (!(await hitRateLimit(context.userId, "files"))) throw new Error("rate_limited");
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");

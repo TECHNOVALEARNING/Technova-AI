@@ -31,6 +31,7 @@ export const Route = createFileRoute("/api/studio-job")({
       POST: async ({ request }) => {
         const userId = await verifyUser(request);
         if (!userId) return new Response("Unauthorized", { status: 401 });
+        { const { orgFeatureResponse } = await import("@/lib/org.server"); const blocked = await orgFeatureResponse(userId, "studio"); if (blocked) return blocked; }
         const parsed = body.safeParse(await request.json().catch(() => null));
         if (!parsed.success) return new Response("Invalid request", { status: 400 });
         const d = parsed.data;

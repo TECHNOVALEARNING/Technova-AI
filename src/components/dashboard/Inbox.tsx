@@ -77,10 +77,10 @@ export function useInbox(lang: "fr" | "en") {
       if (plan) {
         const end = new Date(plan.ends_at); const days = Math.ceil((end.getTime() - Date.now()) / 86_400_000);
         if (days <= 5 && days > -10) {
-          const name = plan.slug === "mensuel-pro" ? "Mensuel Pro" : "Mensuel Plus";
+          const name = ({ "mensuel-pro": "Mensuel Pro", "mensuel-plus": "Mensuel Plus", team: "TechNova Team", entreprise: "TechNova Entreprise" } as Record<string, string>)[plan.slug] ?? plan.slug;
           out.push({ id: `monthly-${end.toISOString().slice(0, 10)}-${days > 0 ? "soon" : "ended"}`, tone: "credit", icon: Wallet, date: end.toLocaleDateString(fr ? "fr-FR" : "en-US"),
             title: days > 0 ? (fr ? `Votre formule ${name} se termine dans ${days} jour${days > 1 ? "s" : ""}` : `Your ${name} plan ends in ${days} day${days > 1 ? "s" : ""}`) : (fr ? `Votre formule ${name} est terminée` : `Your ${name} plan has ended`),
-            body: fr ? "Rien n'est prélevé automatiquement : renouvelez par Mobile Money ou carte pour recevoir les crédits du mois suivant. Vos crédits restants ne disparaissent pas." : "Nothing is charged automatically: renew by Mobile Money or card to get next month's credits. Your remaining credits do not disappear.",
+            body: days > 0 ? (fr ? "Utilisez vos crédits du mois avant cette date : ceux qui restent repartent à zéro à la fin du mois. Rien n'est prélevé automatiquement : renouvelez par Mobile Money ou carte si vous souhaitez continuer." : "Use this month's credits before that date: what is left goes back to zero at the end of the month. Nothing is charged automatically: renew by Mobile Money or card if you want to continue.") : (fr ? "Rien n'est prélevé automatiquement : renouvelez par Mobile Money ou carte pour recevoir les crédits d'un nouveau mois." : "Nothing is charged automatically: renew by Mobile Money or card to get a new month's credits."),
             link: { to: "/dashboard/credits", label: fr ? "Renouveler" : "Renew" } });
         }
       }
