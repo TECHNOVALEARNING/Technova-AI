@@ -48,3 +48,6 @@ export const DESIGN_AI_CREDITS = 4;
 /** A whole presentation (five slides of text) costs a little more. */
 export const DESIGN_AI_CREDITS_PRESENTATION = 6;
 export const designAiCredits = (format: DesignFormatId) => (format === "presentation" ? DESIGN_AI_CREDITS_PRESENTATION : DESIGN_AI_CREDITS);
+
+/** Créativité Pro (Pro plan): background removal price (real kie.ai cost when higher, see /api/design-tools). */
+export const BG_REMOVE_CREDITS = 8;

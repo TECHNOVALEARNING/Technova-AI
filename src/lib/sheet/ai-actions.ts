@@ -21,6 +21,10 @@ export const sheetAction = z.discriminatedUnion("type", [
   z.object({ type: z.literal("addSheet"), name: z.string().min(1).max(40) }),
   z.object({ type: z.literal("width"), sheet: sheetName, col: z.string().regex(/^[A-Za-z]{1,3}$/), px: z.number().min(30).max(600) }),
   z.object({ type: z.literal("clear"), sheet: sheetName, range: rangeRef }),
+  z.object({ type: z.literal("merge"), sheet: sheetName, range: rangeRef }),
+  z.object({ type: z.literal("list"), sheet: sheetName, range: rangeRef, items: z.array(z.string().max(80)).min(1).max(50) }),
+  z.object({ type: z.literal("cond"), sheet: sheetName, range: rangeRef, kind: z.enum(["gt", "lt", "between", "eq", "contains", "neg", "dup", "top", "bars", "scale"]), a: z.union([z.string(), z.number()]).transform(String).optional(), b: z.union([z.string(), z.number()]).transform(String).optional(), color: z.enum(["red", "green", "yellow", "blue"]).optional() }),
+  z.object({ type: z.literal("filter"), sheet: sheetName, range: rangeRef }),
 ]);
 export type SheetAction = z.infer<typeof sheetAction>;
 export const sheetActions = z.array(sheetAction).max(60);
@@ -79,6 +83,16 @@ export function applyActions(input: Workbook, si: number, actions: SheetAction[]
       }
     } else if (a.type === "chart") {
       sh.charts.push({ id: uid(), kind: a.kind, range: a.range, title: a.title, x: 40 + sh.charts.length * 30, y: 60 + sh.charts.length * 30, w: 480, h: 290 });
+    } else if (a.type === "merge") {
+      const r = parseRange(a.range); if (!r || (r.c1 === r.c2 && r.r1 === r.r2)) continue;
+      sh.merges = [...(sh.merges ?? []).filter((m) => m !== a.range.toUpperCase()), a.range.toUpperCase()];
+    } else if (a.type === "list") {
+      sh.lists = [...(sh.lists ?? []), { id: uid(), range: a.range.toUpperCase(), items: a.items }];
+    } else if (a.type === "cond") {
+      const colors = { red: { bg: "#fde2e2", color: "#b42318" }, green: { bg: "#dcfce7", color: "#166534" }, yellow: { bg: "#fef3c7", color: "#92400e" }, blue: { bg: "#dbeafe", color: "#1e40af" } } as const;
+      sh.cond = [...(sh.cond ?? []), { id: uid(), range: a.range.toUpperCase(), kind: a.kind, ...(a.a !== undefined ? { a: a.a } : {}), ...(a.b !== undefined ? { b: a.b } : {}), ...(a.kind === "bars" ? { style: { bg: "#60a5fa" } } : a.kind === "scale" ? {} : { style: { ...colors[a.color ?? "red"] } }) }];
+    } else if (a.type === "filter") {
+      sh.filter = { range: a.range.toUpperCase(), hide: {} };
     } else if (a.type === "width") {
       sh.colW[colIndex(a.col)] = a.px;
     }
@@ -95,5 +109,9 @@ export function describeAction(a: SheetAction, fr: boolean): string {
     case "addSheet": return fr ? `Nouvelle feuille « ${a.name} »` : `New sheet "${a.name}"`;
     case "width": return fr ? `Largeur de la colonne ${a.col.toUpperCase()}` : `Width of column ${a.col.toUpperCase()}`;
     case "clear": return fr ? `Effacer ${a.range}` : `Clear ${a.range}`;
+    case "merge": return fr ? `Fusionner ${a.range}` : `Merge ${a.range}`;
+    case "list": return fr ? `Liste déroulante sur ${a.range} (${a.items.length} choix)` : `Dropdown on ${a.range} (${a.items.length} choices)`;
+    case "cond": return fr ? `Mise en forme conditionnelle sur ${a.range}` : `Conditional formatting on ${a.range}`;
+    case "filter": return fr ? `Filtre sur ${a.range}` : `Filter on ${a.range}`;
   }
 }

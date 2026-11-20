@@ -1,10 +1,12 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { toast } from "sonner";
+import { loadCreation } from "@/lib/creations";
 import { FilePlus2, Search, Sparkles } from "lucide-react";
 import { DESIGN_FORMATS, designAiCredits, type DesignFormatId } from "@/lib/design-formats";
 import { cn } from "@/lib/utils";
 import { DESIGN_TEMPLATES, blankTemplate, fieldValues } from "./designs";
 import { DesignPreview, useDesignFonts } from "./DesignPreview";
-import { DesignStudio } from "./DesignStudio";
+import { DesignStudio, type SavedDesign } from "./DesignStudio";
 
 // Registry → « Présentation et Canva »: a mini design studio. Format chips (presentations, documents, social
 // posts, cards…), a blank page per format, and the original TechNova templates as live thumbnails; a click opens
@@ -18,6 +20,18 @@ export function DesignGallery({ lang }: { lang: Lang }) {
   const [format, setFormat] = useState<DesignFormatId | "all">("all");
   const [q, setQ] = useState("");
   const [openId, setOpenId] = useState<string | null>(null);
+  const [saved, setSaved] = useState<{ id: string; projectId: string | null; data: SavedDesign } | null>(null);
+  // Opened from Projects: /dashboard/registry?section=design&creation=ID
+  useEffect(() => {
+    const id = new URLSearchParams(window.location.search).get("creation");
+    if (!id) return;
+    void loadCreation(id).then((c) => {
+      if (!c || c.kind !== "design") { if (!c) toast.error(lang === "fr" ? "Ce fichier n'existe plus (supprimé après 14 jours ?)." : "This file no longer exists (deleted after 14 days?)."); return; }
+      const data = c.data as unknown as SavedDesign;
+      setSaved({ id: c.id, projectId: c.project_id, data }); setOpenId(data.templateId);
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
   const shown = useMemo(() => {
     const s = q.trim().toLowerCase();
     return DESIGN_TEMPLATES.filter((t) => (format === "all" || t.format === format) && (!s || `${t.fr} ${t.en} ${DESIGN_FORMATS.find((f) => f.id === t.format)?.fr}`.toLowerCase().includes(s)));
@@ -60,7 +74,7 @@ export function DesignGallery({ lang }: { lang: Lang }) {
     </div>
     {shown.length === 0 && <p className="py-10 text-center text-sm text-muted-foreground">{tx(lang, "Aucun modèle ne correspond. Essayez la page blanche.", "No template matches. Try the blank page.")}</p>}
 
-    <DesignStudio templateId={openId} open={Boolean(openId)} onOpenChange={(v) => { if (!v) setOpenId(null); }} lang={lang} />
+    <DesignStudio templateId={openId} open={Boolean(openId)} onOpenChange={(v) => { if (!v) { setOpenId(null); setSaved(null); } }} lang={lang} saved={saved} onDerive={(preset) => { setSaved({ id: "", projectId: null, data: preset }); setOpenId(preset.templateId); }} />
   </div>;
 }
 

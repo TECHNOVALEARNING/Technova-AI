@@ -7,11 +7,11 @@ export const PLAN_UPGRADE = "PLAN_UPGRADE_REQUIRED";
 
 export type PlanFeature =
   | "premium_models" | "expert_mode" | "image_quota" | "video" | "site" | "site_limit" | "share" | "publish"
-  | "agents" | "agent_budget" | "api" | "github" | "supabase" | "usage_details" | "flagship_models";
+  | "agents" | "agent_budget" | "api" | "github" | "supabase" | "usage_details" | "flagship_models" | "design_pro" | "sheet_advanced";
 
 export const featureMinTier: Record<PlanFeature, Tier> = {
   premium_models: 1, expert_mode: 2, image_quota: 1, video: 2, site: 1, site_limit: 2, share: 1, publish: 2,
-  agents: 2, agent_budget: 3, api: 3, github: 3, supabase: 3, usage_details: 3, flagship_models: 2,
+  agents: 2, agent_budget: 3, api: 3, github: 3, supabase: 3, usage_details: 3, flagship_models: 2, design_pro: 3, sheet_advanced: 3,
 };
 
 /** Chat models outside the Starter plan ("Partiel"): the most expensive ones (extra catalogue: 6 000+ credits per million output tokens). */
@@ -50,6 +50,8 @@ export const featureText: Record<PlanFeature, { fr: string; en: string }> = {
   supabase: { fr: "La connexion à votre propre Supabase", en: "Connecting your own Supabase" },
   usage_details: { fr: "Le suivi détaillé de la consommation", en: "Detailed usage tracking" },
   flagship_models: { fr: "Le choix des modèles phares dans le chat", en: "Choosing flagship models in the chat" },
+  design_pro: { fr: "Créativité Pro (arrière-plan, déclinaisons, kit de marque, QR code)", en: "Creativity Pro (background removal, resize, brand kit, QR code)" },
+  sheet_advanced: { fr: "Le Tableur avancé (filtres, mise en forme conditionnelle, listes déroulantes, fusion, tableau récapitulatif)", en: "The advanced Spreadsheet (filters, conditional formatting, dropdowns, merge, summary table)" },
 };
 
 /** "…est réservé(e) aux forfaits X et Y." for the upgrade card. */

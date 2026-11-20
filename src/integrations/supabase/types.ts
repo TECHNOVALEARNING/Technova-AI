@@ -552,12 +552,31 @@ export type Database = {
           },
         ]
       }
+      projects: {
+        Row: { color: string; created_at: string; description: string; id: string; name: string; owner_id: string; updated_at: string }
+        Insert: { color?: string; created_at?: string; description?: string; id?: string; name: string; owner_id?: string; updated_at?: string }
+        Update: { color?: string; created_at?: string; description?: string; id?: string; name?: string; owner_id?: string; updated_at?: string }
+        Relationships: []
+      }
+      user_creations: {
+        Row: { created_at: string; data: Json; expires_at: string; id: string; kind: string; owner_id: string; project_id: string | null; size_bytes: number; subtitle: string; title: string; updated_at: string }
+        Insert: { created_at?: string; data: Json; expires_at?: string; id?: string; kind: string; owner_id?: string; project_id?: string | null; size_bytes?: number; subtitle?: string; title: string; updated_at?: string }
+        Update: { created_at?: string; data?: Json; expires_at?: string; id?: string; kind?: string; owner_id?: string; project_id?: string | null; size_bytes?: number; subtitle?: string; title?: string; updated_at?: string }
+        Relationships: []
+      }
+      brand_kits: {
+        Row: { colors: Json; created_at: string; font_body: string; font_head: string; logo: string | null; name: string; owner_id: string; updated_at: string }
+        Insert: { colors?: Json; created_at?: string; font_body?: string; font_head?: string; logo?: string | null; name?: string; owner_id?: string; updated_at?: string }
+        Update: { colors?: Json; created_at?: string; font_body?: string; font_head?: string; logo?: string | null; name?: string; owner_id?: string; updated_at?: string }
+        Relationships: []
+      }
       chat_threads: {
         Row: {
           created_at: string
           id: string
           owner_id: string
           pinned: boolean
+          project_id: string | null
           share_token: string | null
           title: string
           updated_at: string
@@ -567,6 +586,7 @@ export type Database = {
           id?: string
           owner_id?: string
           pinned?: boolean
+          project_id?: string | null
           share_token?: string | null
           title?: string
           updated_at?: string
@@ -576,6 +596,7 @@ export type Database = {
           id?: string
           owner_id?: string
           pinned?: boolean
+          project_id?: string | null
           share_token?: string | null
           title?: string
           updated_at?: string
@@ -1474,6 +1495,10 @@ export type Database = {
       admin_set_site_suspension: { Args: { _admin: string; _reason: string; _slug: string; _suspend: boolean }; Returns: boolean }
       admin_onboarding_stats: { Args: never; Returns: Json }
       claim_welcome_bonus: { Args: never; Returns: number }
+      claim_referral: { Args: { _code: string }; Returns: string }
+      my_referral_code: { Args: never; Returns: string }
+      my_monthly_plan: { Args: never; Returns: { slug: string; ends_at: string }[] }
+      my_referral_stats: { Args: never; Returns: { referred: number; this_month: number; credits: number }[] }
       confirm_credits: {
         Args: { _real_amount: number; _reservation: string }
         Returns: boolean

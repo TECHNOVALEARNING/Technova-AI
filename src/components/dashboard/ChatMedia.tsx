@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import { ThinkingLine } from "./ThinkingSpinner";
+import { MusicAlbum, type MusicMeta } from "./MusicAlbum";
 import { AlertCircle, Download, Loader2, Pencil, X } from "lucide-react";
 
 export type ChatMediaData = {
@@ -16,6 +17,8 @@ export type ChatMediaData = {
   error: string | null;
   /** True once the 14-day retention has ended and the files were deleted. */
   expired?: boolean;
+  /** Songs: title, lyrics, style, duration and whether the user wrote the lyrics (album card). */
+  meta?: MusicMeta | null;
 };
 
 const copyFor = (kind: ChatMediaData["kind"], fr: boolean) => ({
@@ -130,6 +133,8 @@ export function ChatMedia({ data, lang, onBroken, onEdit }: { data: ChatMediaDat
     </p>;
   }
   const label = copyFor(data.kind, fr).label;
+  if (data.kind === "music") return <MusicAlbum id={data.id} urls={urls} meta={data.meta ?? null} prompt={data.prompt} lang={lang} saving={saving !== null}
+    onBroken={broken} onDownload={(url) => { setSaving(url); void downloadFile(url, "music", data.id, 0).finally(() => setSaving(null)); }} />;
   return <div className="my-2 flex w-full max-w-[520px] flex-col gap-4">
     {urls.map((url, index) => <figure key={url} className="m-0">
       {data.kind === "music"

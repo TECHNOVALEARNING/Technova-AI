@@ -2,7 +2,7 @@ import { createContext, useCallback, useContext, useEffect, useState, type React
 import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import { savePref } from "@/lib/consent";
 import { planKeyOf, planLabels, usePlan } from "@/lib/plan-client";
-import { BookMarked, Bot, ChevronUp, ExternalLink, Library, MessageSquareHeart, Plug, ShieldAlert, Puzzle } from "lucide-react";
+import { BookMarked, Bot, ChevronUp, ExternalLink, FolderKanban, Library, MessageSquareHeart, Plug, ShieldAlert, Puzzle } from "lucide-react";
 import { getMyRole } from "@/lib/admin.functions";
 import { Activity, ArrowLeft, CalendarDays, Check, Palette, Crown, Bell, BookOpen, Boxes, ChevronDown, ChevronRight, Code2, CreditCard, Diamond, Gift, Globe2, Inbox, LayoutDashboard, LogOut, Menu, MessageCircle, Moon, PanelLeftClose, PanelLeftOpen, Search, Settings2, Sun, Wallet, X, Wrench } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -20,6 +20,8 @@ import { IncidentBanner } from "./IncidentBanner";
 import { TopActions } from "./TopActions";
 import { SuggestionBox } from "./SuggestionBox";
 import { usePresence } from "@/lib/presence";
+import { claimPendingReferral, REFERRAL_CREDITS } from "@/lib/referral";
+import { toast } from "sonner";
 import { InboxDialog, useInbox } from "./Inbox";
 import { clearSessionGuard, useSessionGuard } from "@/lib/session-guard";
 import { DashboardContext, type Thread } from "./dashboard-context";
@@ -29,6 +31,7 @@ export { useDashboard, type Thread } from "./dashboard-context";
 const links = [
   { key: "overview", to: "/dashboard", icon: LayoutDashboard },
   { key: "chat", to: "/dashboard/chat", icon: MessageCircle },
+  { key: "projects", to: "/dashboard/projets", icon: FolderKanban },
   { key: "agents", to: "/dashboard/agents", icon: Bot },
   { key: "plugins", to: "/dashboard/plugins", icon: Puzzle },
   { key: "knowledge", to: "/dashboard/knowledge", icon: BookMarked },
@@ -39,10 +42,11 @@ const links = [
   { key: "usage", to: "/dashboard/usage", icon: Activity },
   { key: "billing", to: "/dashboard/billing", icon: CreditCard },
   { key: "connections", to: "/dashboard/connexions", icon: Plug },
+  { key: "referral", to: "/dashboard/parrainage", icon: Gift },
   { key: "settings", to: "/dashboard/settings", icon: Settings2 },
 ] as const;
 /** Always visible; the rest unfolds under "Plus" so the history gets the room. */
-const primaryKeys: readonly string[] = ["overview", "chat", "agents", "credits"];
+const primaryKeys: readonly string[] = ["overview", "chat", "projects", "agents", "credits"];
 
 /** One line of the account menu. */
 function AccountItem({ to, icon: Icon, label, chevron = false }: { to: "/dashboard/credits" | "/dashboard/settings" | "/dashboard/connexions" | "/dashboard/usage" | "/dashboard/api" | "/dashboard/docs"; icon: typeof Plug; label: string; chevron?: boolean }) {
@@ -113,6 +117,11 @@ export function DashboardLayout({ children }: { children: ReactNode }) {
   const [accountView, setAccountView] = useState<"menu" | "themes">("menu");
   const [suggestOpen, setSuggestOpen] = useState(false);
   usePresence();
+  // A referral link opened before sign-up: claimed once the e-mail is confirmed (both accounts credited).
+  useEffect(() => {
+    void claimPendingReferral().then((r) => { if (r === "ok") toast.success(lang === "fr" ? `Parrainage validé : ${REFERRAL_CREDITS} crédits offerts !` : `Referral confirmed: ${REFERRAL_CREDITS} free credits!`); });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
   // Sessions end after a week without activity (see session-guard.ts).
   useSessionGuard(useCallback(() => { void navigate({ to: "/connexion", replace: true }); }, [navigate]));
   async function signOut() {
@@ -211,6 +220,7 @@ export function DashboardLayout({ children }: { children: ReactNode }) {
                 {inbox.unread > 0 && <span className="rounded-full bg-sky-500/15 px-2 py-0.5 text-[11px] font-semibold text-sky-600 dark:text-sky-300">{inbox.unread}</span>}
               </button>
               {(plan?.tier ?? 0) < 3 && <AccountItem to="/dashboard/credits" icon={Crown} label={lang === "fr" ? "Passer à l'offre supérieure" : "Upgrade your plan"} />}
+              <Link to="/dashboard/parrainage" className="flex items-center gap-3 rounded-xl px-2.5 py-2 text-[13.5px] transition hover:bg-secondary"><Gift className="size-[18px] text-muted-foreground" strokeWidth={1.7} /><span className="flex-1">{lang === "fr" ? "Parrainer un ami" : "Refer a friend"}</span><span className="rounded-full bg-violet-500/15 px-2 py-0.5 text-[11px] font-semibold text-violet-600 dark:text-violet-300">+{REFERRAL_CREDITS}</span></Link>
               <AccountItem to="/dashboard/settings" icon={Settings2} label={lang === "fr" ? "Paramètres" : "Settings"} />
               <AccountItem to="/dashboard/connexions" icon={Plug} label={lang === "fr" ? "Connexions" : "Connections"} />
               <AccountItem to="/dashboard/usage" icon={Activity} label={lang === "fr" ? "Utilisation" : "Usage"} />
@@ -241,7 +251,7 @@ export function DashboardLayout({ children }: { children: ReactNode }) {
         <main className={`relative z-10 mx-auto w-full max-w-[1640px] px-4 pt-6 sm:px-6 lg:px-3 ${isThread ? "min-h-[calc(100svh-48px)] pb-8 lg:min-h-[calc(100svh-2rem)] lg:pb-4" : "min-h-[calc(100svh-148px)] pb-4 lg:min-h-[calc(100svh-124px)]"}`}>{error && <div role="alert" className="mb-5 flex items-center justify-between border-l-2 border-destructive bg-secondary px-4 py-3 text-sm"><span>{error}</span><Button variant="ghost" size="sm" onClick={() => void reload()}>{t.retry}</Button></div>}<PendingDeletionBanner fr={lang === "fr"} />{isAdmin && <IncidentBanner fr={lang !== "en"} />}<div key={pathname} className="dashboard-page-enter">{children}</div></main>
         {/* "Sites à visiter": the TechNova family sites, at the bottom of the dashboard. */}
         {!isThread && <div className="relative z-10 px-4 pb-4 sm:px-6 lg:px-3 lg:pb-0"><div className="dashboard-marquee mx-auto flex h-8 max-w-[1640px] items-center overflow-hidden rounded-full border border-border bg-card lg:h-9">
-          <span className="flex shrink-0 items-center gap-1.5 border-r border-border px-3.5 text-[9.5px] font-medium uppercase tracking-[0.16em] text-muted-foreground"><span className="size-1.5 rounded-full bg-foreground/60" />{lang === "fr" ? "Sites à visiter" : "Sites to visit"}</span>
+          <span className="flex shrink-0 items-center gap-1.5 px-3.5 text-[9.5px] font-medium uppercase tracking-[0.16em] text-muted-foreground"><span className="size-1.5 rounded-full bg-foreground/60" />{lang === "fr" ? "Sites à visiter" : "Sites to visit"}</span>
           <div className="min-w-0 flex-1 overflow-hidden [mask-image:linear-gradient(90deg,transparent,black_6%,black_94%,transparent)]"><div className="dashboard-marquee-track flex w-max items-center gap-9 whitespace-nowrap px-6 text-[11px] text-muted-foreground">{[0, 1, 2, 3].map((copy) => <span key={copy} className="contents" aria-hidden={copy > 0 ? true : undefined}>{marqueeItems.map((site) => <a key={site} href={`https://${site}/`} target="_blank" rel="noopener noreferrer" tabIndex={copy > 0 ? -1 : undefined} className="inline-flex items-center gap-1.5 transition-colors hover:text-foreground"><Globe2 className="size-3.5" strokeWidth={1.6} />{site}</a>)}</span>)}</div></div>
         </div></div>}
       </div>

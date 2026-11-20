@@ -1,5 +1,5 @@
 import { type Evaluator, isErr, makeEvaluator, toExcelFormula } from "./formula";
-import { type Cell, type CellStyle, DEFAULT_COL_W, type NumFmt, type Sheet, type Workbook, addr, colName, display, newSheet, serialToDate, uid } from "./model";
+import { type Cell, type CellStyle, DEFAULT_COL_W, type NumFmt, type Sheet, type Workbook, addr, colName, display, newSheet, parseRange, serialToDate, uid } from "./model";
 
 // Import and export of TechNova Tableur, all in the browser: .xlsx (exceljs, loaded on demand: values, formulas,
 // styles, widths, frozen header, gridlines, charts as pictures), .csv, and a print page for PDF. Nothing is sent
@@ -104,6 +104,10 @@ export async function importXlsx(file: File | ArrayBuffer, title: string): Promi
     const view = ws.views?.[0] as { showGridLines?: boolean; state?: string; ySplit?: number } | undefined;
     if (view?.showGridLines === false) sh.grid = false;
     if (view?.state === "frozen" && (view.ySplit ?? 0) >= 1) sh.freeze = true;
+    const merges = (ws.model as { merges?: string[] }).merges;
+    if (merges?.length) sh.merges = merges.filter((m) => !!parseRange(m)).slice(0, 500);
+    const af = ws.autoFilter as unknown;
+    if (typeof af === "string" && parseRange(af)) sh.filter = { range: af, hide: {} };
     ws.eachRow({ includeEmpty: false }, (row, rn) => {
       if (rn > 2000) return;
       row.eachCell({ includeEmpty: false }, (cell, cn) => {
@@ -205,6 +209,31 @@ export async function exportXlsx(wb: Workbook) {
       if (s.align || s.wrap) x.alignment = { ...(s.align ? { horizontal: s.align } : {}), ...(s.wrap ? { wrapText: true } : {}), vertical: "middle" };
       if (s.border) { const t = { style: "thin" as const, color: { argb: "FFD4D4D8" } }; x.border = { top: t, left: t, bottom: t, right: t }; }
       const nf = EXCEL_FMT[s.fmt ?? "general"](s.dec); if (nf) x.numFmt = nf;
+    }
+    // Merged cells, dropdown lists, the column filter and conditional formatting, as Excel stores them.
+    for (const m of sh.merges ?? []) { try { ws.mergeCells(m); } catch { /* overlapping merge */ } }
+    for (const l of sh.lists ?? []) {
+      const r = parseRange(l.range); if (!r) continue;
+      const list = `"${l.items.join(",").replace(/"/g, "").slice(0, 250)}"`;
+      for (let row = r.r1; row <= Math.min(r.r2, r.r1 + 999); row++) for (let c = r.c1; c <= r.c2; c++) ws.getCell(addr(c, row)).dataValidation = { type: "list", allowBlank: true, formulae: [list] };
+    }
+    if (sh.filter) ws.autoFilter = sh.filter.range;
+    for (const rule of sh.cond ?? []) {
+      const r = parseRange(rule.range); if (!r) continue;
+      const first = addr(r.c1, r.r1), abs = `$${colName(r.c1)}$${r.r1 + 1}:$${colName(r.c2)}$${r.r2 + 1}`;
+      const style = { ...(rule.style?.bg ? { fill: { type: "pattern", pattern: "solid", bgColor: { argb: argb(rule.style.bg) } } } : {}), font: { ...(rule.style?.color ? { color: { argb: argb(rule.style.color) } } : {}), ...(rule.style?.b ? { bold: true } : {}) } };
+      const num = (v?: string) => String(Number(String(v ?? "0").replace(/\s/g, "").replace(",", ".")) || 0);
+      const cf = rule.kind === "gt" ? { type: "cellIs", operator: "greaterThan", formulae: [num(rule.a)], style }
+        : rule.kind === "lt" ? { type: "cellIs", operator: "lessThan", formulae: [num(rule.a)], style }
+        : rule.kind === "between" ? { type: "cellIs", operator: "between", formulae: [num(rule.a), num(rule.b)], style }
+        : rule.kind === "neg" ? { type: "cellIs", operator: "lessThan", formulae: ["0"], style }
+        : rule.kind === "eq" ? { type: "expression", formulae: [`LOWER(${first})="${String(rule.a ?? "").toLowerCase().replace(/"/g, "")}"`], style }
+        : rule.kind === "contains" ? { type: "containsText", operator: "containsText", text: String(rule.a ?? ""), style }
+        : rule.kind === "dup" ? { type: "expression", formulae: [`COUNTIF(${abs},${first})>1`], style }
+        : rule.kind === "top" ? { type: "top10", rank: Number(rule.a) || 3, style }
+        : rule.kind === "bars" ? { type: "dataBar", cfvo: [{ type: "min" }, { type: "max" }], color: { argb: "FF60A5FA" } }
+        : { type: "colorScale", cfvo: [{ type: "min" }, { type: "percentile", value: 50 }, { type: "max" }], color: [{ argb: "FFF8B4B4" }, { argb: "FFFDE6A0" }, { argb: "FFAADCB4" }] };
+      try { ws.addConditionalFormatting({ ref: rule.range, rules: [{ priority: 1, ...cf } as never] }); } catch { /* unsupported rule */ }
     }
     for (const ch of sh.charts) {
       const png = await chartPng(ch.id);

@@ -39,6 +39,16 @@ async function kie(path: string, init?: RequestInit) {
   return payload.data ?? {};
 }
 
+/** Saved details of a song (title, lyrics, tags, duration, whether the lyrics are the user's); null before migration 0054. */
+export type MusicMeta = { title?: string | null; lyrics?: string | null; tags?: string | null; duration?: number | null; ownLyrics?: boolean; instrumental?: boolean };
+async function musicMeta(id: string): Promise<MusicMeta | null> {
+  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+  const { data, error } = await supabaseAdmin.from("media_generations").select("result_meta" as never).eq("id", id).maybeSingle();
+  if (error || !data) return null;
+  const m = (data as { result_meta?: unknown }).result_meta;
+  return m && typeof m === "object" ? m as MusicMeta : null;
+}
+
 /** Error code the chat turns into the upgrade message (video requires a Creator or Pro purchase). */
 export const VIDEO_UPGRADE_REQUIRED = "VIDEO_UPGRADE_REQUIRED";
 
@@ -125,6 +135,12 @@ export const createMediaGeneration = createServerFn({ method: "POST" })
       aspect_ratio: aspectRatio, duration: built.duration === null ? null : String(built.duration), reserved_credits: reserve,
     }).select("id").single();
     if (error || !row) throw new Error(`La création a démarré, mais son suivi n’a pas pu être enregistré : ${error?.message ?? "unknown"}`);
+    // Music: whether the lyrics come from the user (or there are none), for the album card (migration 0054).
+    if (data.kind === "music") {
+      const ownLyrics = !!data.music?.lyrics?.trim();
+      const instrumental = !!data.music?.instrumental;
+      await supabaseAdmin.from("media_generations").update({ result_meta: { ownLyrics, instrumental, title: data.music?.title?.trim() || null } } as never).eq("id", row.id).then(() => undefined, () => undefined);
+    }
     const part = { type: "data-media", data: { id: row.id, kind: data.kind, model: spec.label, prompt: data.prompt, ratio: aspectRatio, status: "waiting", progress: null, urls: [], error: null } };
     const { error: messageError } = await context.supabase.from("chat_messages").insert({
       thread_id: data.threadId, sdk_id: row.id, role: "assistant", parts: [part],
@@ -150,7 +166,8 @@ export const refreshMediaGeneration = createServerFn({ method: "POST" })
       // Past the 14-day retention the files are gone: say so instead of serving dead provider links.
       const expired = row.status === "success" && !!row.expires_at && new Date(row.expires_at).getTime() < Date.now();
       const urls = expired ? [] : archived ?? (row.status === "success" ? row.result_urls : []);
-      const done = { id: row.id, kind: row.kind, model: mediaLabel(row.model, row.kind), prompt: row.prompt, ratio: row.aspect_ratio, status: row.status, urls, error: row.error, expired };
+      const meta = row.kind === "music" ? await musicMeta(row.id) : null;
+      const done = { id: row.id, kind: row.kind, model: mediaLabel(row.model, row.kind), prompt: row.prompt, ratio: row.aspect_ratio, status: row.status, urls, error: row.error, expired, ...(meta ? { meta } : {}) };
       if (archived?.length || expired) {
         await context.supabase.from("chat_messages").update({ parts: [{ type: "data-media", data: done }] })
           .eq("thread_id", data.threadId).eq("sdk_id", row.id);
@@ -165,14 +182,26 @@ export const refreshMediaGeneration = createServerFn({ method: "POST" })
     const progress = typeof reportedProgress === "number" && Number.isFinite(reportedProgress) && reportedProgress >= 0 && reportedProgress <= 100
       ? Math.round(reportedProgress) : null;
     let urls: string[] = [];
+    let musicFound: MusicMeta | null = null;
     if (state === "success" && typeof result["resultJson"] === "string") {
       try {
         // Images/videos: { resultUrls: [...] }; music (Suno): { data: [{ audio_url, ... }] }.
-        const parsed = JSON.parse(result["resultJson"]) as { resultUrls?: unknown; data?: { audio_url?: unknown }[] };
-        const found = Array.isArray(parsed.resultUrls) ? parsed.resultUrls : Array.isArray(parsed.data) ? parsed.data.map((track) => track?.audio_url) : [];
+        const parsed = JSON.parse(result["resultJson"]) as { resultUrls?: unknown; data?: Record<string, unknown>[] };
+        const found = Array.isArray(parsed.resultUrls) ? parsed.resultUrls : Array.isArray(parsed.data) ? parsed.data.map((track) => track?.["audio_url"]) : [];
         urls = found.filter((url): url is string => typeof url === "string" && /^https:\/\//i.test(url));
-        // Suno always returns two takes for the price of one request; TechNova keeps a single song.
-        if (row.kind === "music") urls = urls.slice(0, 1);
+        // Suno always returns two takes for the price of one request; TechNova keeps a single song, with its cover.
+        if (row.kind === "music") {
+          urls = urls.slice(0, 1);
+          const take = Array.isArray(parsed.data) ? parsed.data[0] : undefined;
+          const cover = take?.["image_url"] ?? take?.["imageUrl"];
+          if (urls.length && typeof cover === "string" && /^https:\/\//i.test(cover)) urls.push(cover);
+          if (take) musicFound = {
+            title: typeof take["title"] === "string" ? take["title"].slice(0, 120) : null,
+            lyrics: typeof take["prompt"] === "string" ? take["prompt"].slice(0, 6000) : null,
+            tags: typeof take["tags"] === "string" ? take["tags"].slice(0, 200) : null,
+            duration: typeof take["duration"] === "number" ? Math.round(take["duration"]) : null,
+          };
+        }
       } catch { /* no usable media returned */ }
     }
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
@@ -214,7 +243,12 @@ export const refreshMediaGeneration = createServerFn({ method: "POST" })
         if (signed?.length) urls = signed;
       }
     }
-    const media = { id: row.id, kind: row.kind, model: mediaLabel(row.model, row.kind), prompt: row.prompt, ratio: row.aspect_ratio, status: state, progress, urls, error: state === "fail" ? String(result["failMsg"] || "La création a échoué.") : null };
+    let meta: MusicMeta | null = null;
+    if (row.kind === "music" && state === "success") {
+      meta = { ...(await musicMeta(row.id) ?? {}), ...(musicFound ?? {}) };
+      if (musicFound) await supabaseAdmin.from("media_generations").update({ result_meta: meta } as never).eq("id", row.id).then(() => undefined, () => undefined);
+    }
+    const media = { id: row.id, kind: row.kind, model: mediaLabel(row.model, row.kind), prompt: row.prompt, ratio: row.aspect_ratio, status: state, progress, urls, error: state === "fail" ? String(result["failMsg"] || "La création a échoué.") : null, ...(meta ? { meta } : {}) };
     const { error: partError } = await context.supabase.from("chat_messages").update({ parts: [{ type: "data-media", data: media }] })
       .eq("thread_id", data.threadId).eq("sdk_id", row.id);
     if (partError) throw new Error(partError.message);

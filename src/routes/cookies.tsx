@@ -13,7 +13,7 @@ export const Route = createFileRoute("/cookies")({
   component: CookiePolicyPage,
 });
 
-const UPDATED = "19 novembre 2026";
+const UPDATED = "20 novembre 2026";
 const CONTACT = "support@technovaihub.com";
 
 type Row = [name: string, purpose: string, duration: string];
@@ -26,6 +26,7 @@ const necessary: Row[] = [
   ["technova-last-active", "Heure de votre dernière activité dans le tableau de bord : après 7 jours sans activité, la session se ferme pour protéger votre compte.", "Jusqu'à la déconnexion"],
   ["technova-inbox-read", "Retenir les messages de votre boîte de réception que vous avez déjà lus.", "Jusqu'à la déconnexion"],
   ["technova-sheet-draft", "Garder sur votre appareil le classeur que vous modifiez dans TechNova Tableur (brouillon), pour ne pas perdre votre travail si la fenêtre se ferme. Il n'est jamais envoyé à TechNova.", "Jusqu'à la déconnexion ou au prochain classeur"],
+  ["tn-ref", "Retenir le code du lien de parrainage que vous avez ouvert, pour créditer votre compte et celui de votre parrain après votre inscription.", "30 jours ou jusqu'à la validation"],
   ["tn-pending-pack", "Retenir le pack choisi avant la connexion, pour reprendre l'achat ensuite.", "Jusqu'au paiement"],
   ["technova-supabase-oauth-state", "Protéger la connexion à votre propre projet Supabase contre la falsification de requête.", "Quelques minutes"],
   ["technova-active-agent", "Ouvrir le chat avec l'agent que vous venez de choisir.", "Jusqu'au prochain choix"],

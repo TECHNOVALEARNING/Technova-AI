@@ -14,7 +14,7 @@ export const Route = createFileRoute("/conditions-utilisation")({
   component: TermsPage,
 });
 
-const UPDATED = "5 novembre 2026";
+const UPDATED = "20 novembre 2026";
 const CONTACT = "support@technovaihub.com";
 
 const sections = [
@@ -26,7 +26,7 @@ const sections = [
 ] as const;
 
 const essentials = [
-  { icon: Coins, title: "Crédits prépayés.", text: "Pas d'abonnement ni de renouvellement automatique. Vos crédits Technova n'expirent pas et ne sont débités qu'à l'usage." },
+  { icon: Coins, title: "Crédits prépayés.", text: "Aucun renouvellement automatique, même pour la formule mensuelle. Vos crédits Technova n'expirent pas et ne sont débités qu'à l'usage." },
   { icon: FileLock2, title: "Vos contenus restent à vous.", text: "Vous gardez vos droits sur ce que vous créez. TechNova n'entraîne aucun modèle avec vos conversations, fichiers ou projets." },
   { icon: TechNovaMark, title: "L'IA peut se tromper.", text: "Les réponses sont générées automatiquement : vérifiez toujours les informations importantes avant de les utiliser." },
   { icon: ShieldCheck, title: "Un usage responsable.", text: "Pas de contenu illégal, de fraude ni d'atteinte aux droits d'autrui. Les abus peuvent entraîner la suspension du compte." },
@@ -121,6 +121,8 @@ function TermsPage() {
           <div className="grid gap-3">
             <Sub title="Fonctionnement">L'utilisation du Service se paie en crédits Technova. Chaque requête débite un nombre de crédits qui dépend du modèle et du volume traité (texte, image, vidéo, musique), selon les prix affichés sur la page Modèles. Le solde et le détail de chaque mouvement sont consultables dans votre espace.</Sub>
             <Sub title="Packs prépayés">Les crédits s'achètent par packs, en paiement unique : il n'y a ni abonnement ni renouvellement automatique. Les crédits achetés n'ont pas de date d'expiration tant que votre compte existe.</Sub>
+            <Sub title="Formule mensuelle (facultative)">Les formules Mensuel Plus (10 000 FCFA) et Mensuel Pro (15 000 FCFA) se paient une fois par mois, par Mobile Money ou carte, et ajoutent aussitôt leurs crédits (12 000 ou 18 000) à votre solde, sans date d'expiration. Elles ouvrent respectivement les fonctions des forfaits Creator et Pro. Rien n'est prélevé automatiquement : la formule est active 30 jours après le paiement, un rappel vous prévient avant la fin, et vous la renouvelez si vous le souhaitez (un renouvellement anticipé ajoute 30 jours après la date en cours).</Sub>
+            <Sub title="Parrainage">Chaque compte dispose d'un lien de parrainage. Lorsqu'une nouvelle personne crée son compte avec ce lien et confirme son adresse e-mail, les deux comptes reçoivent 5 crédits, une seule fois par compte parrainé et dans la limite de 30 parrainages récompensés par mois. Se parrainer soi-même, créer de faux comptes ou détourner le programme est interdit : les crédits obtenus ainsi peuvent être retirés et le compte suspendu.</Sub>
             <Sub title="Forfait">Votre forfait correspond au pack le plus élevé que vous avez acheté. Il détermine les fonctionnalités accessibles et certaines limites d'usage, détaillées sur la page Tarifs. Ces règles sont vérifiées par nos serveurs à chaque action.</Sub>
             <Sub title="Réservations et échecs">Pour certaines générations, des crédits sont réservés au lancement puis ajustés au coût réel. Si une génération échoue, les crédits réservés vous sont restitués automatiquement.</Sub>
             <Sub title="Crédits offerts">Les crédits offerts (bonus de bienvenue, gestes commerciaux) n'ont pas de valeur monétaire et ne peuvent être ni remboursés ni échangés.</Sub>
@@ -139,7 +141,7 @@ function TermsPage() {
             <><b>Les contenus générés</b> pour vous (textes, codes, images, vidéos, musiques, sites) vous appartiennent, dans la limite des droits des tiers et des conditions des fournisseurs de modèles. TechNova ne revendique aucun droit sur eux.</>,
             <><b>Aucun entraînement</b> : TechNova n'utilise pas vos conversations, fichiers, codes ou projets pour entraîner des modèles d'IA.</>,
             <>Vous garantissez disposer des droits nécessaires sur les contenus que vous importez, et vous restez responsable de l'usage que vous faites des contenus générés.</>,
-            <>Les images, vidéos et musiques générées sont conservées <b>14 jours</b> sur nos serveurs, puis supprimées : téléchargez celles que vous souhaitez garder. Les liens d'aperçu du Studio expirent après 30 jours.</>,
+            <>Les images, vidéos et musiques générées sont conservées <b>14 jours</b> sur nos serveurs, puis supprimées : téléchargez celles que vous souhaitez garder. Les présentations, documents et tableaux enregistrés dans vos Projets sont conservés <b>14 jours après leur dernier enregistrement</b>, puis supprimés ; vous êtes prévenu 3 jours avant. Les liens d'aperçu du Studio expirent après 30 jours.</>,
           ]} />
         </Section>
 

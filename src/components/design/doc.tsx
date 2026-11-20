@@ -145,3 +145,20 @@ export function DocPage({ doc, page, selected, editing, onPointerDown, onDoubleC
     })}
   </div>;
 }
+
+/** « Décliner » (Créativité Pro): the same design on another page size. Positions follow the page proportionally,
+ *  sizes (text, pictures, shapes) scale by the smaller ratio so nothing is stretched, then stay inside the page. */
+export function resizeDoc(doc: DesignDoc, w: number, h: number): DesignDoc {
+  const sx = w / doc.w, sy = h / doc.h, k = Math.min(sx, sy);
+  return {
+    w, h,
+    pages: doc.pages.map((p) => ({ ...p, id: uid(), elements: p.elements.map((e) => {
+      const cx = (e.x + e.w / 2) * sx, cy = (e.y + e.h / 2) * sy;
+      const nw = Math.round(e.w * k), nh = Math.round(e.h * k);
+      const base = { ...e, id: uid(), w: Math.min(w, nw), h: Math.min(h, nh), x: Math.round(Math.max(0, Math.min(w - nw, cx - nw / 2))), y: Math.round(Math.max(0, Math.min(h - nh, cy - nh / 2))) };
+      if (e.type === "text") return { ...base, size: Math.max(6, Math.round(e.size * k * 10) / 10), spacing: e.spacing * k } as DesignEl;
+      if (e.type === "shape") return { ...base, radius: e.radius * k, border: e.border * k } as DesignEl;
+      return { ...base, radius: (e as ImageEl).radius * k } as DesignEl;
+    }) })),
+  };
+}

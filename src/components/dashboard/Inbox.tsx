@@ -11,7 +11,7 @@ import { Modal } from "./Modal";
 // agents). Nothing is sent by e-mail; read state is kept in this browser (technova-inbox-read, see /cookies).
 
 type Tone = "warning" | "credit" | "tip" | "info";
-export type InboxMessage = { id: string; tone: Tone; icon: typeof InboxIcon; title: string; body: string; date?: string; link?: { to: "/dashboard/credits" | "/dashboard/chat" | "/dashboard/agents" | "/dashboard/models" | "/dashboard/usage"; label: string } };
+export type InboxMessage = { id: string; tone: Tone; icon: typeof InboxIcon; title: string; body: string; date?: string; link?: { to: "/dashboard/credits" | "/dashboard/chat" | "/dashboard/agents" | "/dashboard/models" | "/dashboard/usage" | "/dashboard/projets"; label: string } };
 
 const READ_KEY = "technova-inbox-read";
 const readIds = (): string[] => { try { return JSON.parse(localStorage.getItem(READ_KEY) ?? "[]") as string[]; } catch { return []; } };
@@ -46,9 +46,11 @@ export function useInbox(lang: "fr" | "en") {
       const uid = auth.user?.id;
       if (!uid) return;
       const soon = new Date(Date.now() + 3 * 86_400_000).toISOString();
-      const [gens, wallet] = await Promise.all([
+      const [gens, wallet, monthly, saved] = await Promise.all([
         supabase.from("media_generations").select("id, kind, expires_at").eq("status", "success").gt("expires_at", new Date().toISOString()).lt("expires_at", soon).order("expires_at").limit(50),
         supabase.rpc("get_wallet_balance", { _owner: uid }),
+        supabase.rpc("my_monthly_plan"),
+        supabase.from("user_creations").select("id, title, expires_at").gt("expires_at", new Date().toISOString()).lt("expires_at", soon).order("expires_at").limit(50),
       ]);
       if (!alive) return;
       const out: InboxMessage[] = [];
@@ -60,6 +62,27 @@ export function useInbox(lang: "fr" | "en") {
           title: fr ? `${expiring.length} création${expiring.length > 1 ? "s" : ""} bientôt supprimée${expiring.length > 1 ? "s" : ""}` : `${expiring.length} creation${expiring.length > 1 ? "s" : ""} will soon be deleted`,
           body: fr ? `Dès le ${first.toLocaleDateString("fr-FR", { day: "numeric", month: "long" })}, certaines de vos images, vidéos ou musiques arrivent au bout des 14 jours de conservation. Ouvrez vos conversations pour les télécharger.` : `From ${first.toLocaleDateString("en-US", { day: "numeric", month: "long" })}, some of your images, videos or songs reach the end of the 14-day retention. Open your conversations to download them.`,
           link: { to: "/dashboard/chat", label: fr ? "Mes conversations" : "My conversations" } });
+      }
+      // Saved presentations and spreadsheets (Projects) reaching the end of their 14 days.
+      const savedSoon = saved.data ?? [];
+      if (savedSoon.length) {
+        const first = new Date(savedSoon[0]!.expires_at);
+        out.push({ id: `saved-expiring-${first.toISOString().slice(0, 10)}-${savedSoon.length}`, tone: "warning", icon: AlertTriangle, date: first.toLocaleDateString(fr ? "fr-FR" : "en-US"),
+          title: fr ? `${savedSoon.length} fichier${savedSoon.length > 1 ? "s" : ""} de vos projets bientôt supprimé${savedSoon.length > 1 ? "s" : ""}` : `${savedSoon.length} project file${savedSoon.length > 1 ? "s" : ""} will soon be deleted`,
+          body: fr ? `« ${savedSoon[0]!.title} »${savedSoon.length > 1 ? " et d'autres" : ""} sera supprimé le ${first.toLocaleDateString("fr-FR", { day: "numeric", month: "long" })}. Ouvrez-le pour le prolonger de 14 jours en l'enregistrant, ou téléchargez-le (PDF, PowerPoint, Excel) pour le garder.` : `"${savedSoon[0]!.title}"${savedSoon.length > 1 ? " and others" : ""} will be deleted on ${first.toLocaleDateString("en-US", { day: "numeric", month: "long" })}. Open and save it to keep it 14 more days, or download it (PDF, PowerPoint, Excel) to keep it.`,
+          link: { to: "/dashboard/projets", label: fr ? "Mes projets" : "My projects" } });
+      }
+      // Monthly formula: reminder 5 days before its end and for 10 days after (no automatic charge).
+      const plan = monthly.data?.[0];
+      if (plan) {
+        const end = new Date(plan.ends_at); const days = Math.ceil((end.getTime() - Date.now()) / 86_400_000);
+        if (days <= 5 && days > -10) {
+          const name = plan.slug === "mensuel-pro" ? "Mensuel Pro" : "Mensuel Plus";
+          out.push({ id: `monthly-${end.toISOString().slice(0, 10)}-${days > 0 ? "soon" : "ended"}`, tone: "credit", icon: Wallet, date: end.toLocaleDateString(fr ? "fr-FR" : "en-US"),
+            title: days > 0 ? (fr ? `Votre formule ${name} se termine dans ${days} jour${days > 1 ? "s" : ""}` : `Your ${name} plan ends in ${days} day${days > 1 ? "s" : ""}`) : (fr ? `Votre formule ${name} est terminée` : `Your ${name} plan has ended`),
+            body: fr ? "Rien n'est prélevé automatiquement : renouvelez par Mobile Money ou carte pour recevoir les crédits du mois suivant. Vos crédits restants ne disparaissent pas." : "Nothing is charged automatically: renew by Mobile Money or card to get next month's credits. Your remaining credits do not disappear.",
+            link: { to: "/dashboard/credits", label: fr ? "Renouveler" : "Renew" } });
+        }
       }
       const w = (wallet.data ?? {}) as { balance?: number; reserved?: number };
       const available = (w.balance ?? 0) - (w.reserved ?? 0);

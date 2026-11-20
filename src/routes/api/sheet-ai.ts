@@ -40,6 +40,10 @@ Reply with ONLY a JSON object: {"reply": string, "actions": Action[]}.
   {"type":"addSheet","name":string}
   {"type":"width","sheet"?:name,"col":"B","px":120}
   {"type":"clear","sheet"?:name,"range":"A1:B2"}
+  {"type":"merge","sheet"?:name,"range":"A1:D1"} (merge a title across columns)
+  {"type":"list","sheet"?:name,"range":"E2:E50","items":["Payé","En attente"]} (dropdown list)
+  {"type":"cond","sheet"?:name,"range":"D2:D50","kind":"gt"|"lt"|"between"|"eq"|"contains"|"neg"|"dup"|"top"|"bars"|"scale","a"?:value,"b"?:value,"color"?:"red"|"green"|"yellow"|"blue"} (conditional formatting)
+  {"type":"filter","sheet"?:name,"range":"A1:F50"} (column filters on a table whose first row is the header)
 Rules:
 - Formulas use French Excel names with ";" separators (SOMME, MOYENNE, SI, SOMME.SI, NB.SI, RECHERCHEX, RECHERCHEV, ARRONDI, SIERREUR, CONCAT, AUJOURDHUI, MIN, MAX, NBVAL, ET, OU) and real cell references; never hard-code a result that a formula can compute.
 - Numbers are plain (150000, 12.5), dates dd/mm/yyyy, money amounts as numbers with "fmt":"fcfa" (or eur/usd when the user uses them), percentages as 0.18 with "fmt":"percent".
@@ -98,12 +102,15 @@ export const Route = createFileRoute("/api/sheet-ai")({
             return Response.json({ ...json, credits });
           }
           const { sheetActions } = await import("@/lib/sheet/ai-actions");
+          // Advanced actions (merge, dropdown list, conditional formatting, filter) belong to the Pro plan.
+          const { getTier, allows } = await import("@/lib/plan.server");
+          const advanced = allows(await getTier(userId).catch(() => 0 as const), "sheet_advanced");
           const r = await orComplete({
             model: MODEL, maxTokens: 6000, temperature: 0.3, signal: request.signal, timeoutMs: 60_000,
             messages: [
               { role: "system", content: SYSTEM(fr) },
               ...d.history.map((h) => ({ role: h.role, content: h.content })),
-              { role: "user", content: `Workbook "${d.title}" — sheets: ${d.sheets.join(", ")} — active sheet "${d.sheet}", selection ${d.selection}.\nActive sheet content:\n${d.context || "(empty sheet)"}\n\nRequest: ${d.message}` },
+              { role: "user", content: `${advanced ? "" : "The user's plan does not include merge, list, cond and filter actions: never propose them (suggest the Pro plan if they ask).\n"}Workbook "${d.title}" — sheets: ${d.sheets.join(", ")} — active sheet "${d.sheet}", selection ${d.selection}.\nActive sheet content:\n${d.context || "(empty sheet)"}\n\nRequest: ${d.message}` },
             ],
           });
           const s = r.content.indexOf("{"), e = r.content.lastIndexOf("}");
@@ -114,7 +121,8 @@ export const Route = createFileRoute("/api/sheet-ai")({
             actions = Array.isArray(json.actions) ? json.actions : [];
           } catch { reply = r.content.trim().slice(0, 3000); }
           // Keep the valid actions only; cap the cells written in one answer.
-          const valid = actions.map((a) => sheetActions.element.safeParse(a)).filter((x) => x.success).map((x) => x.data);
+          const valid = actions.map((a) => sheetActions.element.safeParse(a)).filter((x) => x.success).map((x) => x.data)
+            .filter((a) => advanced || !["merge", "list", "cond", "filter"].includes(a.type));
           let cells = 0;
           const capped = valid.filter((a) => { if (a.type !== "set") return true; cells += Object.keys(a.cells).length; return cells <= 400; });
           if (!reply && !capped.length) throw new Error("empty");

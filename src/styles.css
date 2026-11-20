@@ -606,8 +606,8 @@ html:not(:has(.dashboard-shell))::-webkit-scrollbar-track { background: transpar
 .dashboard-shell:has(.chat-thread) { background: oklch(.985 0 0); }
 .dark .dashboard-shell:has(.chat-thread) { background: var(--background); }
 .chat-composer { box-shadow: 0 1px 2px oklch(0 0 0 / .04), 0 8px 24px -12px oklch(0 0 0 / .12) !important; }
-.voice-live { background: var(--destructive); color: oklch(1 0 0); animation: voice-pulse 1.4s ease-in-out infinite; }
-@keyframes voice-pulse { 50% { box-shadow: 0 0 0 6px color-mix(in oklab, var(--destructive) 22%, transparent); } }
+.voice-live { background: var(--foreground); color: var(--background); animation: voice-pulse 1.4s ease-in-out infinite; }
+@keyframes voice-pulse { 50% { box-shadow: 0 0 0 6px color-mix(in oklab, var(--foreground) 16%, transparent); } }
 @media (prefers-reduced-motion: reduce) { .voice-live { animation: none; } }
 
 @keyframes dashboard-page-in { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
@@ -1185,3 +1185,20 @@ body:has(.dashboard-shell) :is([data-radix-popper-content-wrapper] > [data-state
 .starter-chip.starter-chip-sheet svg { color: #fff; }
 .starter-chip.starter-chip-sheet:hover,
 :root .dashboard-shell[class*="look-"] .starter-chip.starter-chip-sheet:hover { background: linear-gradient(120deg, #1f7a5a 0%, #2b9b74 60%, #6cc49a 100%); filter: brightness(1.08); color: #fff; }
+
+/* « Sites à visiter »: a plain scrolling line, no glass panel behind it (by request). */
+.dashboard-shell .dashboard-marquee,
+:root .dashboard-shell[class*="look-"] .dashboard-marquee,
+.dark .dashboard-shell .dashboard-marquee {
+  background: transparent !important; border-color: transparent !important; box-shadow: none !important;
+  backdrop-filter: none !important; -webkit-backdrop-filter: none !important;
+}
+
+/* Créativité and Tableur on their own line under the chat box: a little larger, a soft glow to stand out. */
+.starter-chip.featured-chip { box-shadow: 0 10px 24px -12px rgb(120 80 200 / .55); transition: transform .2s, filter .2s; }
+.starter-chip.featured-chip.starter-chip-sheet { box-shadow: 0 10px 24px -12px rgb(31 122 90 / .6); }
+.starter-chip.featured-chip:hover { transform: translateY(-1px); }
+@media (prefers-reduced-motion: reduce) { .starter-chip.featured-chip:hover { transform: none; } }
+.starter-chip.featured-chip.starter-chip-design, .starter-chip.featured-chip.starter-chip-sheet,
+:root .dashboard-shell[class*="look-"] .starter-chip.featured-chip.starter-chip-design,
+:root .dashboard-shell[class*="look-"] .starter-chip.featured-chip.starter-chip-sheet { padding-inline: 20px; }

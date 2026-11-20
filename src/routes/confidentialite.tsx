@@ -12,7 +12,7 @@ export const Route = createFileRoute("/confidentialite")({
   component: PrivacyPage,
 });
 
-const UPDATED = "16 novembre 2026";
+const UPDATED = "20 novembre 2026";
 // Single contact address for privacy questions and data-protection requests.
 const CONTACT = "support@technovaihub.com";
 
@@ -97,6 +97,7 @@ function PrivacyPage() {
             <Sub title="Données de compte">Nom, adresse e-mail, mot de passe (haché par notre prestataire d'authentification, jamais lisible), langue et préférences d'affichage. Si vous vous connectez avec Google : les nom, e-mail et photo de profil transmis par Google. Les réponses facultatives au questionnaire d'accueil : type de compte, organisation, domaine d'activité et manière dont vous nous avez connus.</Sub>
             <Sub title="Vos contenus">Conversations et instructions envoyées aux modèles ; fichiers joints et documents ajoutés à vos bases de connaissances (avec le texte qui en est extrait et ses représentations numériques servant à la recherche) ; sites et projets créés avec le Studio ; images, vidéos et musiques générées ; agents personnalisés et ressources enregistrées dans le Registry.</Sub>
             <Sub title="Utilisation et facturation">Solde et mouvements de crédits Technova, journal d'utilisation (modèle utilisé, volume de texte traité, crédits débités, date), clés API (conservées sous forme hachée et affichées une seule fois lors de leur création).</Sub>
+            <Sub title="Projets, créations et parrainage">Les projets que vous créez, les conversations que vous y rangez, les présentations, documents et tableaux que vous choisissez d'enregistrer, votre kit de marque (forfait Pro : couleurs, polices, logo) et, si vous utilisez le parrainage, le lien entre votre compte et celui qui vous a invité ou que vous avez invité. Les créations ouvertes sans être enregistrées restent dans votre navigateur.</Sub>
             <Sub title="Services connectés (facultatif)">Si vous reliez GitHub, Google Drive, Notion ou votre propre projet Supabase, nous conservons les jetons d'accès de manière chiffrée et ne les utilisons que pour les actions que vous déclenchez.</Sub>
             <Sub title="Données techniques">Adresse IP, type de navigateur et de système, journaux de sécurité et compteurs anti-abus. Le pays déduit de votre adresse IP sert uniquement à afficher les prix dans votre devise ; il n'est pas conservé.</Sub>
             <Sub title="Données de paiement">Les paiements sont traités exclusivement par Nyole / Feexpay. Nous ne collectons ni ne stockons jamais votre numéro de carte bancaire ni votre code Mobile Money. Nous recevons seulement la référence de la transaction, son montant, sa devise, son statut et le moyen de paiement utilisé, sans coordonnées complètes.</Sub>
@@ -153,6 +154,7 @@ function PrivacyPage() {
             <><b>Après une demande de suppression du compte</b> (Paramètres → Supprimer mon compte) : vos données sont conservées 30 jours, pendant lesquels une simple reconnexion annule la demande ; elles sont ensuite supprimées définitivement, crédits restants compris. Les pièces de facturation restent conservées pour la durée légale.</>,
             <><b>Conversations, fichiers, bases de connaissances, projets et agents</b> : jusqu'à ce que vous les supprimiez, ou jusqu'à la suppression de votre compte.</>,
             <><b>Images, vidéos et musiques générées</b> : conservées 14 jours sur nos serveurs, puis supprimées. Pensez à les télécharger.</>,
+            <><b>Présentations, documents et tableaux enregistrés dans vos Projets</b> : conservés 14 jours après leur dernier enregistrement, puis supprimés automatiquement (prévenu 3 jours avant). Une photo envoyée pour en retirer l'arrière-plan est supprimée de nos serveurs dès le résultat renvoyé. <b>Kit de marque et lien de parrainage</b> : tant que votre compte existe.</>,
             <><b>Liens d'aperçu du Studio</b> : expirent après 30 jours.</>,
             <><b>Fichiers refusés lors de l'analyse de sécurité</b> : supprimés immédiatement.</>,
             <><b>Journaux de sécurité</b> (événements liés à la sécurité : tentatives refusées, limites atteintes, fichiers ou sites bloqués, actions sensibles) : conservés aussi longtemps que nécessaire à la protection du service — repérer des abus qui se répètent dans le temps, enquêter sur un incident, défendre nos droits — et accessibles uniquement à l'équipe habilitée. Ils restent rattachés à un identifiant technique et ne contiennent ni vos conversations ni vos fichiers. <b>Compteurs anti-abus</b> (nombre de demandes sur une courte période) : 24 heures.</>,

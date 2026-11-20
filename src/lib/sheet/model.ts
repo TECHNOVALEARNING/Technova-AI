@@ -12,9 +12,21 @@ export type CellStyle = {
 export type Cell = { v: string; s?: CellStyle };
 export type ChartKind = "bar" | "line" | "area" | "pie";
 export type SheetChart = { id: string; kind: ChartKind; range: string; title: string; x: number; y: number; w: number; h: number };
+/** Conditional formatting: a style when a rule holds, or data bars / a colour scale over the range. */
+export type CondRule = {
+  id: string; range: string;
+  kind: "gt" | "lt" | "between" | "eq" | "contains" | "neg" | "dup" | "top" | "bars" | "scale";
+  a?: string; b?: string;
+  style?: { bg?: string; color?: string; b?: boolean };
+};
+/** A dropdown list (data validation) on a range. */
+export type ListRule = { id: string; range: string; items: string[] };
+/** Column filters: the header row of `range` gets ▾ buttons; `hide[col]` lists the values hidden in that column. */
+export type SheetFilter = { range: string; hide: Record<number, string[]> };
 export type Sheet = {
   id: string; name: string; cells: Record<string, Cell>; rows: number; cols: number;
   colW: Record<number, number>; rowH: Record<number, number>; grid: boolean; freeze: boolean; charts: SheetChart[]; tab?: string;
+  merges?: string[]; cond?: CondRule[]; lists?: ListRule[]; filter?: SheetFilter | null;
 };
 export type Workbook = { title: string; sheets: Sheet[] };
 

@@ -7,6 +7,7 @@ import { cn } from "@/lib/utils";
 import { isErr, makeEvaluator } from "@/lib/sheet/formula";
 import { type Workbook, addr, display, newWorkbook } from "@/lib/sheet/model";
 import { importFile } from "@/lib/sheet/sheet-io";
+import { loadCreation } from "@/lib/creations";
 import { SHEET_GROUPS, SHEET_TEMPLATES, type SheetTemplate } from "./sheet-templates";
 import { SHEET_DRAFT_KEY, SheetEditor } from "./SheetEditor";
 import { SHEET_AI_CREDITS } from "@/lib/sheet/limits";
@@ -35,6 +36,17 @@ function MiniSheet({ wb, accent }: { wb: Workbook; accent: string }) {
 
 export function SheetGallery({ lang }: { lang: Lang }) {
   const [open, setOpen] = useState<Workbook | null>(null);
+  const [saved, setSaved] = useState<{ id: string; projectId: string | null } | null>(null);
+  // Opened from Projects: /dashboard/registry?section=sheet&creation=ID
+  useEffect(() => {
+    const id = new URLSearchParams(window.location.search).get("creation");
+    if (!id) return;
+    void loadCreation(id).then((c) => {
+      if (!c || c.kind !== "sheet") { if (!c) toast.error(lang === "fr" ? "Ce fichier n'existe plus (supprimé après 14 jours ?)." : "This file no longer exists (deleted after 14 days?)."); return; }
+      setSaved({ id: c.id, projectId: c.project_id }); setOpen(c.data as unknown as Workbook);
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
   const [group, setGroup] = useState<SheetTemplate["group"] | "all">("all");
   const [draft, setDraft] = useState<{ at: number; wb: Workbook } | null>(null);
   const file = useRef<HTMLInputElement>(null);
@@ -45,10 +57,10 @@ export function SheetGallery({ lang }: { lang: Lang }) {
   }, [open]);
   const start = async (wb: Workbook) => {
     if (draft && Date.now() - draft.at < 30 * 86_400_000 && !(await confirmDialog({ title: tx(lang, "Commencer un nouveau classeur ?", "Start a new workbook?"), description: tx(lang, `Le brouillon « ${draft.wb.title} » gardé sur cet appareil sera remplacé. Exportez-le d'abord en Excel si vous voulez le garder.`, `The draft "${draft.wb.title}" kept on this device will be replaced. Export it to Excel first to keep it.`), confirmLabel: tx(lang, "Continuer", "Continue") }))) return;
-    setOpen(structuredClone(wb));
+    setSaved(null); setOpen(structuredClone(wb));
   };
   const openFile = async (f: File) => {
-    try { setOpen(await importFile(f)); }
+    try { setSaved(null); setOpen(await importFile(f)); }
     catch (e) { const m = e instanceof Error ? e.message : ""; toast.error(m === "TOO_BIG" ? tx(lang, "Fichier trop lourd (15 Mo au plus).", "File too large (15 MB max).") : tx(lang, "Ouvrez un fichier .xlsx ou .csv (les PDF s'importent depuis le classeur : Ouvrir → Tableaux d'un PDF).", "Open an .xlsx or .csv file (PDFs import from inside the workbook: Open → Tables from a PDF).")); }
   };
   const list = built.filter(({ t }) => group === "all" || t.group === group);
@@ -64,7 +76,7 @@ export function SheetGallery({ lang }: { lang: Lang }) {
           <div className="mt-4 flex flex-wrap gap-2">
             <button type="button" onClick={() => void start(newWorkbook(tx(lang, "Classeur sans titre", "Untitled workbook")))} className="inline-flex h-10 items-center gap-2 rounded-full bg-[#1f7a5a] px-4 text-[13px] font-semibold text-white hover:brightness-110"><FilePlus2 className="size-4" />{tx(lang, "Classeur vierge", "Blank workbook")}</button>
             <button type="button" onClick={() => file.current?.click()} className="inline-flex h-10 items-center gap-2 rounded-full border border-border bg-background px-4 text-[13px] font-semibold hover:bg-secondary"><FileUp className="size-4" />{tx(lang, "Ouvrir un fichier Excel ou CSV", "Open an Excel or CSV file")}</button>
-            {draft && <button type="button" onClick={() => setOpen(draft.wb)} className="inline-flex h-10 items-center gap-2 rounded-full border border-[#1f7a5a]/40 bg-[#1f7a5a]/[0.06] px-4 text-[13px] font-semibold text-[#155e45] hover:bg-[#1f7a5a]/10 dark:text-emerald-300"><History className="size-4" />{tx(lang, `Reprendre « ${draft.wb.title.slice(0, 28)} »`, `Resume "${draft.wb.title.slice(0, 28)}"`)}</button>}
+            {draft && <button type="button" onClick={() => { setSaved(null); setOpen(draft.wb); }} className="inline-flex h-10 items-center gap-2 rounded-full border border-[#1f7a5a]/40 bg-[#1f7a5a]/[0.06] px-4 text-[13px] font-semibold text-[#155e45] hover:bg-[#1f7a5a]/10 dark:text-emerald-300"><History className="size-4" />{tx(lang, `Reprendre « ${draft.wb.title.slice(0, 28)} »`, `Resume "${draft.wb.title.slice(0, 28)}"`)}</button>}
             <input ref={file} type="file" accept=".xlsx,.xlsm,.csv,.tsv,.txt" hidden onChange={(e) => { const f = e.target.files?.[0]; e.target.value = ""; if (f) void openFile(f); }} />
           </div>
         </div>
@@ -98,7 +110,7 @@ export function SheetGallery({ lang }: { lang: Lang }) {
       <DialogContent className="flex h-[96vh] max-h-[96vh] w-[98vw] max-w-[1600px] flex-col gap-0 overflow-hidden rounded-2xl p-0 sm:rounded-2xl [&>button.absolute]:hidden" onInteractOutside={(e) => e.preventDefault()} onEscapeKeyDown={(e) => e.preventDefault()}>
         <DialogTitle className="sr-only">{open?.title ?? "TechNova Tableur"}</DialogTitle>
         <DialogDescription className="sr-only">{tx(lang, "Éditeur de tableur", "Spreadsheet editor")}</DialogDescription>
-        {open && <SheetEditor initial={open} lang={lang} onClose={() => setOpen(null)} />}
+        {open && <SheetEditor initial={open} lang={lang} saved={saved} onClose={() => { setOpen(null); setSaved(null); }} />}
       </DialogContent>
     </Dialog>
   </div>;

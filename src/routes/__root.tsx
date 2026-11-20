@@ -1,3 +1,4 @@
+import { captureReferral } from "@/lib/referral";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import {
   Outlet,
@@ -172,6 +173,8 @@ function RootComponent() {
   const router = useRouter();
 
   useEffect(() => {
+    // Referral links (?ref=CODE) are kept until the new account claims them (src/lib/referral.ts).
+    captureReferral();
     registerServiceWorker();
     installStaleBuildGuard();
     // A newer version is online: offer the reload instead of letting an action fail later.

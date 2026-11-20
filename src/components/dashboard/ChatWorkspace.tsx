@@ -415,8 +415,11 @@ function ChatComposer({
   inputRef,
   editing,
   onCancelEdit,
+  onStop,
 }: {
   choice: ReturnType<typeof useWorkspaceChoice>;
+  /** While a reply is being written: shows a stop button in place of send. */
+  onStop?: (() => void) | undefined;
   onSubmit: (text: string, files: ChatFilePart[]) => Promise<void>;
   disabled?: boolean;
   inputRef?: React.RefObject<HTMLTextAreaElement | null>;
@@ -587,7 +590,10 @@ function ChatComposer({
           <div className="flex min-w-0 items-center gap-0.5">
             <ChoiceControls choice={choice} />
             <VoiceButton inputRef={textareaRef} />
-            {(hasText || files.length > 0 || docs.length > 0) && (
+            {onStop ? (
+              <button type="button" onClick={onStop} aria-label={lang === "fr" ? "Arrêter la réponse" : "Stop the reply"} title={lang === "fr" ? "Arrêter la réponse" : "Stop the reply"}
+                className="ml-1 grid size-8 shrink-0 place-items-center rounded-full bg-foreground text-background transition hover:bg-foreground/85"><Square className="size-3 fill-current" /></button>
+            ) : (hasText || files.length > 0 || docs.length > 0) && (
               <PromptInputSubmit
                 disabled={disabled || reading || docsBusy}
                 aria-label={copy.saveIdea}
@@ -701,24 +707,39 @@ function StarterIdeas({ choice, inputRef, onSalesPage, onMusic, onVideo, onHuman
       if (idea.attach) document.querySelector<HTMLInputElement>("input[data-chat-attach]")?.click();
     }, 0);
   }
-  return <div className="space-y-2">
-    <div className="starter-row flex w-full flex-nowrap justify-center gap-0.5 overflow-x-auto">
-    {starterIdeas.map((idea) => {
+  // Three rows: four starting points and four creation buttons of the same width, then Créativité and Tableur
+  // highlighted on their own line.
+  const plain = starterIdeas.filter((idea) => idea.wizard !== "design" && idea.wizard !== "sheet");
+  const featured = starterIdeas.filter((idea) => idea.wizard === "design" || idea.wizard === "sheet");
+  const cell = "inline-flex h-9 w-full min-w-0 items-center justify-center gap-1.5 rounded-full px-3 text-[12px]";
+  return <div className="mx-auto w-full max-w-[680px] space-y-2">
+    <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+    {plain.map((idea) => {
       const [title, hint] = idea[lang === "en" ? "en" : "fr"];
       const Icon = idea.icon;
-      return <button key={title} type="button" onClick={() => pick(idea)}
-        title={hint}
-        className={cn("starter-chip group inline-flex h-7 shrink-0 items-center gap-[3px] rounded-full border px-[5px] text-[11.5px] text-foreground/80 transition-colors hover:text-foreground", idea.wizard === "design" && "starter-chip-design", idea.wizard === "sheet" && "starter-chip-sheet")}>
-        <Icon className="size-3.5 text-muted-foreground transition-colors group-hover:text-foreground" strokeWidth={idea.wizard === "design" || idea.wizard === "sheet" ? 2 : 1.6} />
+      return <button key={title} type="button" onClick={() => pick(idea)} title={hint}
+        className={cn("starter-chip group border text-foreground/80 transition-colors hover:text-foreground", cell)}>
+        <Icon className="size-3.5 shrink-0 text-muted-foreground transition-colors group-hover:text-foreground" strokeWidth={1.6} />
         <span className="truncate">{title}</span>
       </button>;
     })}
     </div>
-    <div className="flex flex-wrap justify-center gap-2">
-      <button type="button" onClick={onMusic} className="create-chip create-chip-music inline-flex h-8 items-center gap-1.5 rounded-full px-3.5 text-[12px] font-semibold text-white"><Music className="size-3.5" />{lang === "en" ? "Create a song" : "Création de musique"}</button>
-      <button type="button" onClick={onVideo} className="create-chip create-chip-video inline-flex h-8 items-center gap-1.5 rounded-full px-3.5 text-[12px] font-semibold text-white"><Film className="size-3.5" />{lang === "en" ? "Create a video" : "Création de vidéo"}</button>
-      <button type="button" onClick={onHumanize} className="create-chip create-chip-humanize inline-flex h-8 items-center gap-1.5 rounded-full px-3.5 text-[12px] font-semibold text-white"><PenLine className="size-3.5" />{lang === "en" ? "Humanize a text" : "Humaniser un texte"}</button>
-      <button type="button" onClick={onAudio} className="create-chip create-chip-audio inline-flex h-8 items-center gap-1.5 rounded-full px-3.5 text-[12px] font-semibold text-white"><AudioLines className="size-3.5" />{lang === "en" ? "Summarize an audio" : "Résumé d'un audio"}</button>
+    <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+      <button type="button" onClick={onMusic} className={cn("create-chip create-chip-music font-semibold text-white", cell)}><Music className="size-3.5 shrink-0" /><span className="truncate">{lang === "en" ? "Create a song" : "Création de musique"}</span></button>
+      <button type="button" onClick={onVideo} className={cn("create-chip create-chip-video font-semibold text-white", cell)}><Film className="size-3.5 shrink-0" /><span className="truncate">{lang === "en" ? "Create a video" : "Création de vidéo"}</span></button>
+      <button type="button" onClick={onHumanize} className={cn("create-chip create-chip-humanize font-semibold text-white", cell)}><PenLine className="size-3.5 shrink-0" /><span className="truncate">{lang === "en" ? "Humanize a text" : "Humaniser un texte"}</span></button>
+      <button type="button" onClick={onAudio} className={cn("create-chip create-chip-audio font-semibold text-white", cell)}><AudioLines className="size-3.5 shrink-0" /><span className="truncate">{lang === "en" ? "Summarize an audio" : "Résumé d'un audio"}</span></button>
+    </div>
+    <div className="flex justify-center gap-2.5 pt-1">
+    {featured.map((idea) => {
+      const [title, hint] = idea[lang === "en" ? "en" : "fr"];
+      const Icon = idea.icon;
+      return <button key={title} type="button" onClick={() => pick(idea)} title={hint}
+        className={cn("starter-chip featured-chip inline-flex h-10 min-w-[150px] items-center justify-center gap-2 rounded-full border px-5 text-[13px]", idea.wizard === "design" ? "starter-chip-design" : "starter-chip-sheet")}>
+        <Icon className="size-4 shrink-0" strokeWidth={2} />
+        <span>{title}</span>
+      </button>;
+    })}
     </div>
   </div>;
 }
@@ -839,6 +860,10 @@ export function ThreadPage({ threadId }: { threadId: string }) {
   const [title, setTitle] = useState("");
   const [busy, setBusy] = useState(false);
   const [thinking, setThinking] = useState(false);
+  // « Arrêter la réponse »: aborts the reply being written (the text already received is kept).
+  const abortRef = useRef<AbortController | null>(null);
+  const [streaming, setStreaming] = useState(false);
+  const stopReply = () => { abortRef.current?.abort(); };
   // Each finished reply, creation or Studio stage refreshes the credits shown in the top bar.
   useEffect(() => { if (!thinking && !busy) notifyCreditsChanged(); }, [thinking, busy]);
   const [researchStatus, setResearchStatus] = useState("");
@@ -1202,7 +1227,9 @@ export function ThreadPage({ threadId }: { threadId: string }) {
       let report = "";
       try {
         const { data: session } = await supabase.auth.getSession();
+        const ac = new AbortController(); abortRef.current = ac; setStreaming(true);
         const res = await fetch("/api/audio-summary", {
+          signal: ac.signal,
           method: "POST",
           headers: { "Content-Type": "application/json", Authorization: `Bearer ${session.session?.access_token ?? ""}` },
           body: JSON.stringify({ ...audioTask, lang }),
@@ -1221,10 +1248,11 @@ export function ThreadPage({ threadId }: { threadId: string }) {
         if (report) await supabase.from("chat_messages").insert({ thread_id: threadId, sdk_id: replyId, role: "assistant", parts: [{ type: "text", text: report }] as Json });
         notifyCreditsChanged();
       } catch {
-        setError(t.actionError);
+        if (!abortRef.current?.signal.aborted) setError(t.actionError);
       } finally {
         setThinking(false);
         setResearchStatus("");
+        setStreaming(false); abortRef.current = null;
       }
       return;
     }
@@ -1237,7 +1265,9 @@ export function ThreadPage({ threadId }: { threadId: string }) {
       let report = "";
       try {
         const { data: session } = await supabase.auth.getSession();
+        const ac = new AbortController(); abortRef.current = ac; setStreaming(true);
         const res = await fetch("/api/research", {
+          signal: ac.signal,
           method: "POST",
           headers: { "Content-Type": "application/json", Authorization: `Bearer ${session.session?.access_token ?? ""}` },
           body: JSON.stringify({ question: request, lang }),
@@ -1257,10 +1287,11 @@ export function ThreadPage({ threadId }: { threadId: string }) {
           await supabase.from("chat_messages").insert({ thread_id: threadId, sdk_id: researchId, role: "assistant", parts: [{ type: "text", text: report }] as Json });
         }
       } catch {
-        setError(t.actionError);
+        if (!abortRef.current?.signal.aborted) setError(t.actionError);
       } finally {
         setThinking(false);
         setResearchStatus("");
+        setStreaming(false); abortRef.current = null;
       }
       return;
     }
@@ -1371,9 +1402,11 @@ export function ThreadPage({ threadId }: { threadId: string }) {
     }
     setThinking(true);
     let answer = "";
+    const ac = new AbortController(); abortRef.current = ac; setStreaming(true);
     try {
       const { data: session } = await supabase.auth.getSession();
       const res = await fetch("/api/chat", {
+        signal: ac.signal,
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -1413,9 +1446,16 @@ export function ThreadPage({ threadId }: { threadId: string }) {
         });
       }
     } catch {
-      setError(t.actionError);
+      if (ac.signal.aborted) {
+        // Stopped by the visitor: keep what was already written, marked as interrupted.
+        const kept = `${answer.trim()}${answer.trim() ? "\n\n" : ""}_${lang === "fr" ? "Réponse interrompue." : "Reply stopped."}_`;
+        setAssistant(kept);
+        await supabase.from("chat_messages").insert({ thread_id: threadId, sdk_id: assistantId, role: "assistant", parts: [{ type: "text", text: kept }] as Json });
+      } else setError(t.actionError);
     } finally {
       setThinking(false);
+      setStreaming(false);
+      if (abortRef.current === ac) abortRef.current = null;
     }
   }
   useEffect(() => {
@@ -1645,6 +1685,7 @@ export function ThreadPage({ threadId }: { threadId: string }) {
           choice={choice}
           inputRef={inputRef}
           disabled={loading || !thread || busy}
+          onStop={streaming ? stopReply : undefined}
           onSubmit={addNote}
           editing={editSource}
           onCancelEdit={() => setEditSource(null)}

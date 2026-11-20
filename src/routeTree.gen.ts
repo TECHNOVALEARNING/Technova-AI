@@ -31,6 +31,7 @@ import { Route as ApercuTokenRouteImport } from './routes/apercu.$token'
 import { Route as ApiAudioSummaryRouteImport } from './routes/api/audio-summary'
 import { Route as ApiChatRouteImport } from './routes/api/chat'
 import { Route as ApiDesignAiRouteImport } from './routes/api/design-ai'
+import { Route as ApiDesignToolsRouteImport } from './routes/api/design-tools'
 import { Route as ApiResearchRouteImport } from './routes/api/research'
 import { Route as ApiSheetAiRouteImport } from './routes/api/sheet-ai'
 import { Route as ApiStudioRouteImport } from './routes/api/studio'
@@ -48,7 +49,9 @@ import { Route as AuthenticatedDashboardCreditsRouteImport } from './routes/_aut
 import { Route as AuthenticatedDashboardDocsRouteImport } from './routes/_authenticated/dashboard/docs'
 import { Route as AuthenticatedDashboardKnowledgeRouteImport } from './routes/_authenticated/dashboard/knowledge'
 import { Route as AuthenticatedDashboardModelsRouteImport } from './routes/_authenticated/dashboard/models'
+import { Route as AuthenticatedDashboardParrainageRouteImport } from './routes/_authenticated/dashboard/parrainage'
 import { Route as AuthenticatedDashboardPluginsRouteImport } from './routes/_authenticated/dashboard/plugins'
+import { Route as AuthenticatedDashboardProjetsRouteImport } from './routes/_authenticated/dashboard/projets'
 import { Route as AuthenticatedDashboardRegistryRouteImport } from './routes/_authenticated/dashboard/registry'
 import { Route as AuthenticatedDashboardSettingsRouteImport } from './routes/_authenticated/dashboard/settings'
 import { Route as AuthenticatedDashboardUsageRouteImport } from './routes/_authenticated/dashboard/usage'
@@ -179,6 +182,11 @@ const ApiDesignAiRoute = ApiDesignAiRouteImport.update({
   path: '/api/design-ai',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiDesignToolsRoute = ApiDesignToolsRouteImport.update({
+  id: '/api/design-tools',
+  path: '/api/design-tools',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiResearchRoute = ApiResearchRouteImport.update({
   id: '/api/research',
   path: '/api/research',
@@ -275,10 +283,22 @@ const AuthenticatedDashboardModelsRoute =
     path: '/models',
     getParentRoute: () => AuthenticatedDashboardRoute,
   } as any)
+const AuthenticatedDashboardParrainageRoute =
+  AuthenticatedDashboardParrainageRouteImport.update({
+    id: '/parrainage',
+    path: '/parrainage',
+    getParentRoute: () => AuthenticatedDashboardRoute,
+  } as any)
 const AuthenticatedDashboardPluginsRoute =
   AuthenticatedDashboardPluginsRouteImport.update({
     id: '/plugins',
     path: '/plugins',
+    getParentRoute: () => AuthenticatedDashboardRoute,
+  } as any)
+const AuthenticatedDashboardProjetsRoute =
+  AuthenticatedDashboardProjetsRouteImport.update({
+    id: '/projets',
+    path: '/projets',
     getParentRoute: () => AuthenticatedDashboardRoute,
   } as any)
 const AuthenticatedDashboardRegistryRoute =
@@ -411,6 +431,7 @@ export interface FileRoutesByFullPath {
   '/api/audio-summary': typeof ApiAudioSummaryRoute
   '/api/chat': typeof ApiChatRoute
   '/api/design-ai': typeof ApiDesignAiRoute
+  '/api/design-tools': typeof ApiDesignToolsRoute
   '/api/research': typeof ApiResearchRoute
   '/api/sheet-ai': typeof ApiSheetAiRoute
   '/api/studio': typeof ApiStudioRoute
@@ -427,7 +448,9 @@ export interface FileRoutesByFullPath {
   '/dashboard/docs': typeof AuthenticatedDashboardDocsRoute
   '/dashboard/knowledge': typeof AuthenticatedDashboardKnowledgeRoute
   '/dashboard/models': typeof AuthenticatedDashboardModelsRoute
+  '/dashboard/parrainage': typeof AuthenticatedDashboardParrainageRoute
   '/dashboard/plugins': typeof AuthenticatedDashboardPluginsRoute
+  '/dashboard/projets': typeof AuthenticatedDashboardProjetsRoute
   '/dashboard/registry': typeof AuthenticatedDashboardRegistryRoute
   '/dashboard/settings': typeof AuthenticatedDashboardSettingsRoute
   '/dashboard/usage': typeof AuthenticatedDashboardUsageRoute
@@ -471,6 +494,7 @@ export interface FileRoutesByTo {
   '/api/audio-summary': typeof ApiAudioSummaryRoute
   '/api/chat': typeof ApiChatRoute
   '/api/design-ai': typeof ApiDesignAiRoute
+  '/api/design-tools': typeof ApiDesignToolsRoute
   '/api/research': typeof ApiResearchRoute
   '/api/sheet-ai': typeof ApiSheetAiRoute
   '/api/studio': typeof ApiStudioRoute
@@ -487,7 +511,9 @@ export interface FileRoutesByTo {
   '/dashboard/docs': typeof AuthenticatedDashboardDocsRoute
   '/dashboard/knowledge': typeof AuthenticatedDashboardKnowledgeRoute
   '/dashboard/models': typeof AuthenticatedDashboardModelsRoute
+  '/dashboard/parrainage': typeof AuthenticatedDashboardParrainageRoute
   '/dashboard/plugins': typeof AuthenticatedDashboardPluginsRoute
+  '/dashboard/projets': typeof AuthenticatedDashboardProjetsRoute
   '/dashboard/registry': typeof AuthenticatedDashboardRegistryRoute
   '/dashboard/settings': typeof AuthenticatedDashboardSettingsRoute
   '/dashboard/usage': typeof AuthenticatedDashboardUsageRoute
@@ -534,6 +560,7 @@ export interface FileRoutesById {
   '/api/audio-summary': typeof ApiAudioSummaryRoute
   '/api/chat': typeof ApiChatRoute
   '/api/design-ai': typeof ApiDesignAiRoute
+  '/api/design-tools': typeof ApiDesignToolsRoute
   '/api/research': typeof ApiResearchRoute
   '/api/sheet-ai': typeof ApiSheetAiRoute
   '/api/studio': typeof ApiStudioRoute
@@ -550,7 +577,9 @@ export interface FileRoutesById {
   '/_authenticated/dashboard/docs': typeof AuthenticatedDashboardDocsRoute
   '/_authenticated/dashboard/knowledge': typeof AuthenticatedDashboardKnowledgeRoute
   '/_authenticated/dashboard/models': typeof AuthenticatedDashboardModelsRoute
+  '/_authenticated/dashboard/parrainage': typeof AuthenticatedDashboardParrainageRoute
   '/_authenticated/dashboard/plugins': typeof AuthenticatedDashboardPluginsRoute
+  '/_authenticated/dashboard/projets': typeof AuthenticatedDashboardProjetsRoute
   '/_authenticated/dashboard/registry': typeof AuthenticatedDashboardRegistryRoute
   '/_authenticated/dashboard/settings': typeof AuthenticatedDashboardSettingsRoute
   '/_authenticated/dashboard/usage': typeof AuthenticatedDashboardUsageRoute
@@ -597,6 +626,7 @@ export interface FileRouteTypes {
     | '/api/audio-summary'
     | '/api/chat'
     | '/api/design-ai'
+    | '/api/design-tools'
     | '/api/research'
     | '/api/sheet-ai'
     | '/api/studio'
@@ -613,7 +643,9 @@ export interface FileRouteTypes {
     | '/dashboard/docs'
     | '/dashboard/knowledge'
     | '/dashboard/models'
+    | '/dashboard/parrainage'
     | '/dashboard/plugins'
+    | '/dashboard/projets'
     | '/dashboard/registry'
     | '/dashboard/settings'
     | '/dashboard/usage'
@@ -657,6 +689,7 @@ export interface FileRouteTypes {
     | '/api/audio-summary'
     | '/api/chat'
     | '/api/design-ai'
+    | '/api/design-tools'
     | '/api/research'
     | '/api/sheet-ai'
     | '/api/studio'
@@ -673,7 +706,9 @@ export interface FileRouteTypes {
     | '/dashboard/docs'
     | '/dashboard/knowledge'
     | '/dashboard/models'
+    | '/dashboard/parrainage'
     | '/dashboard/plugins'
+    | '/dashboard/projets'
     | '/dashboard/registry'
     | '/dashboard/settings'
     | '/dashboard/usage'
@@ -719,6 +754,7 @@ export interface FileRouteTypes {
     | '/api/audio-summary'
     | '/api/chat'
     | '/api/design-ai'
+    | '/api/design-tools'
     | '/api/research'
     | '/api/sheet-ai'
     | '/api/studio'
@@ -735,7 +771,9 @@ export interface FileRouteTypes {
     | '/_authenticated/dashboard/docs'
     | '/_authenticated/dashboard/knowledge'
     | '/_authenticated/dashboard/models'
+    | '/_authenticated/dashboard/parrainage'
     | '/_authenticated/dashboard/plugins'
+    | '/_authenticated/dashboard/projets'
     | '/_authenticated/dashboard/registry'
     | '/_authenticated/dashboard/settings'
     | '/_authenticated/dashboard/usage'
@@ -780,6 +818,7 @@ export interface RootRouteChildren {
   ApiAudioSummaryRoute: typeof ApiAudioSummaryRoute
   ApiChatRoute: typeof ApiChatRoute
   ApiDesignAiRoute: typeof ApiDesignAiRoute
+  ApiDesignToolsRoute: typeof ApiDesignToolsRoute
   ApiResearchRoute: typeof ApiResearchRoute
   ApiSheetAiRoute: typeof ApiSheetAiRoute
   ApiStudioRoute: typeof ApiStudioRoute
@@ -959,6 +998,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiDesignAiRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/design-tools': {
+      id: '/api/design-tools'
+      path: '/api/design-tools'
+      fullPath: '/api/design-tools'
+      preLoaderRoute: typeof ApiDesignToolsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/research': {
       id: '/api/research'
       path: '/api/research'
@@ -1078,11 +1124,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedDashboardModelsRouteImport
       parentRoute: typeof AuthenticatedDashboardRoute
     }
+    '/_authenticated/dashboard/parrainage': {
+      id: '/_authenticated/dashboard/parrainage'
+      path: '/parrainage'
+      fullPath: '/dashboard/parrainage'
+      preLoaderRoute: typeof AuthenticatedDashboardParrainageRouteImport
+      parentRoute: typeof AuthenticatedDashboardRoute
+    }
     '/_authenticated/dashboard/plugins': {
       id: '/_authenticated/dashboard/plugins'
       path: '/plugins'
       fullPath: '/dashboard/plugins'
       preLoaderRoute: typeof AuthenticatedDashboardPluginsRouteImport
+      parentRoute: typeof AuthenticatedDashboardRoute
+    }
+    '/_authenticated/dashboard/projets': {
+      id: '/_authenticated/dashboard/projets'
+      path: '/projets'
+      fullPath: '/dashboard/projets'
+      preLoaderRoute: typeof AuthenticatedDashboardProjetsRouteImport
       parentRoute: typeof AuthenticatedDashboardRoute
     }
     '/_authenticated/dashboard/registry': {
@@ -1239,7 +1299,9 @@ interface AuthenticatedDashboardRouteChildren {
   AuthenticatedDashboardDocsRoute: typeof AuthenticatedDashboardDocsRoute
   AuthenticatedDashboardKnowledgeRoute: typeof AuthenticatedDashboardKnowledgeRoute
   AuthenticatedDashboardModelsRoute: typeof AuthenticatedDashboardModelsRoute
+  AuthenticatedDashboardParrainageRoute: typeof AuthenticatedDashboardParrainageRoute
   AuthenticatedDashboardPluginsRoute: typeof AuthenticatedDashboardPluginsRoute
+  AuthenticatedDashboardProjetsRoute: typeof AuthenticatedDashboardProjetsRoute
   AuthenticatedDashboardRegistryRoute: typeof AuthenticatedDashboardRegistryRoute
   AuthenticatedDashboardSettingsRoute: typeof AuthenticatedDashboardSettingsRoute
   AuthenticatedDashboardUsageRoute: typeof AuthenticatedDashboardUsageRoute
@@ -1261,7 +1323,10 @@ const AuthenticatedDashboardRouteChildren: AuthenticatedDashboardRouteChildren =
     AuthenticatedDashboardDocsRoute: AuthenticatedDashboardDocsRoute,
     AuthenticatedDashboardKnowledgeRoute: AuthenticatedDashboardKnowledgeRoute,
     AuthenticatedDashboardModelsRoute: AuthenticatedDashboardModelsRoute,
+    AuthenticatedDashboardParrainageRoute:
+      AuthenticatedDashboardParrainageRoute,
     AuthenticatedDashboardPluginsRoute: AuthenticatedDashboardPluginsRoute,
+    AuthenticatedDashboardProjetsRoute: AuthenticatedDashboardProjetsRoute,
     AuthenticatedDashboardRegistryRoute: AuthenticatedDashboardRegistryRoute,
     AuthenticatedDashboardSettingsRoute: AuthenticatedDashboardSettingsRoute,
     AuthenticatedDashboardUsageRoute: AuthenticatedDashboardUsageRoute,
@@ -1310,6 +1375,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiAudioSummaryRoute: ApiAudioSummaryRoute,
   ApiChatRoute: ApiChatRoute,
   ApiDesignAiRoute: ApiDesignAiRoute,
+  ApiDesignToolsRoute: ApiDesignToolsRoute,
   ApiResearchRoute: ApiResearchRoute,
   ApiSheetAiRoute: ApiSheetAiRoute,
   ApiStudioRoute: ApiStudioRoute,

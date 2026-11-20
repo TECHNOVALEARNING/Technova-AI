@@ -344,3 +344,37 @@ export const adminProviderCosts = createServerFn({ method: "POST" })
     }
     return { ready: !error, range: input.range, weekly, openrouterSource, kieUnmeasured, kieConfigured: Boolean(process.env["KIE_API_KEY"]), days: out };
   });
+
+// ------------------------------------------------------------------ growth (migration 0053)
+
+export type GrowthData = {
+  funnel: { signups: number; confirmed: number; onboarded: number; active: number; paying: number; referred: number };
+  cohorts: { week: string; accounts: number; week1: number; week2: number; week4: number }[];
+  margins: { mode: string; calls: number; credits: number; costUsd: number; margin: number | null }[];
+  revenue: { packsXof: number; monthlyXof: number; packsCount: number; monthlyCount: number; monthlyActive: number; referralCredits: number };
+};
+
+/** Activation funnel, weekly retention, margin per feature and revenue split (aggregates only). */
+export const adminGrowth = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: { days?: number } | undefined) => z.object({ days: z.number().int().min(1).max(365).default(30) }).parse(input ?? {}))
+  .handler(async ({ data, context }): Promise<GrowthData> => {
+    await requireAdmin(context);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const rpc = (fn: string, args: Record<string, number>) => (supabaseAdmin.rpc as unknown as (f: string, a: Record<string, number>) => Promise<{ data: unknown; error: { message: string } | null }>)(fn, args);
+    const [f, c, m, r] = await Promise.all([
+      rpc("admin_growth_funnel", { _days: data.days }), rpc("admin_growth_cohorts", { _weeks: 10 }),
+      rpc("admin_feature_margins", { _days: data.days }), rpc("admin_revenue_split", { _days: data.days }),
+    ]);
+    const err = f.error ?? c.error ?? m.error ?? r.error;
+    if (err) throw new Error(err.message.includes("does not exist") ? "MIGRATION_0053_MISSING" : "GROWTH_UNAVAILABLE");
+    const n = (v: unknown) => Number(v ?? 0) || 0;
+    const fr0 = (f.data as Record<string, unknown>[])[0] ?? {};
+    const rv = (r.data as Record<string, unknown>[])[0] ?? {};
+    return {
+      funnel: { signups: n(fr0["signups"]), confirmed: n(fr0["confirmed"]), onboarded: n(fr0["onboarded"]), active: n(fr0["active"]), paying: n(fr0["paying"]), referred: n(fr0["referred"]) },
+      cohorts: (c.data as Record<string, unknown>[]).map((x) => ({ week: String(x["week"]), accounts: n(x["accounts"]), week1: n(x["week1"]), week2: n(x["week2"]), week4: n(x["week4"]) })),
+      margins: (m.data as Record<string, unknown>[]).map((x) => { const credits = n(x["credits"]), cost = n(x["cost_usd"]); return { mode: String(x["mode"]), calls: n(x["calls"]), credits, costUsd: cost, margin: credits > 0 ? 1 - (cost * 1200) / credits : null }; }),
+      revenue: { packsXof: n(rv["packs_xof"]), monthlyXof: n(rv["monthly_xof"]), packsCount: n(rv["packs_count"]), monthlyCount: n(rv["monthly_count"]), monthlyActive: n(rv["monthly_active"]), referralCredits: n(rv["referral_credits"]) },
+    };
+  });

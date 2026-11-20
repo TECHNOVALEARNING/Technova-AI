@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { ArrowLeft, ArrowRight, Check, Coins, ExternalLink, FileCode2, ImagePlus, Loader2, Palette as PaletteIcon, PenLine, Presentation, Printer, Rocket, Share2, Sparkles, Trash2, Wand2 } from "lucide-react";
+import { ArrowLeft, ArrowRight, Check, Coins, ExternalLink, FileCode2, ImagePlus, Loader2, Palette as PaletteIcon, PenLine, Presentation, Printer, Rocket, Save, Share2, Sparkles, Trash2, Wand2 } from "lucide-react";
 import { toast } from "sonner";
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/components/ui/dialog";
 import { confirmDialog } from "@/components/ConfirmHost";
@@ -11,7 +11,9 @@ import { cn } from "@/lib/utils";
 import { PALETTES, fieldValues, templateById, type Palette } from "./designs";
 import { DesignPreview, useDesignFonts } from "./DesignPreview";
 import { DesignEditor, readImage } from "./DesignEditor";
-import { DocPage, templateToDoc, uid, type DesignDoc } from "./doc";
+import { SaveToProject } from "@/components/projects/SaveToProject";
+import { saveCreation, saveErrorText } from "@/lib/creations";
+import { DocPage, resizeDoc, templateToDoc, uid, type DesignDoc } from "./doc";
 import { downloadDocHtml, downloadDocPptx, printDoc, shareHtml } from "./design-export";
 
 // TechNova Design: the creation window opened from Registry → « Présentation et Canva ». A guided journey —
@@ -24,7 +26,10 @@ type Lang = "fr" | "en";
 const tx = (lang: Lang, fr: string, en: string) => (lang === "fr" ? fr : en);
 const field = "w-full rounded-xl border border-border bg-background px-3 py-2 text-[13.5px] outline-none transition focus:border-foreground/40 focus:ring-2 focus:ring-ring/20";
 
-export function DesignStudio({ templateId, open, onOpenChange, lang }: { templateId: string | null; open: boolean; onOpenChange: (v: boolean) => void; lang: Lang }) {
+/** What a saved design keeps (user_creations.data, kind "design"). */
+export type SavedDesign = { templateId: string; values: Record<string, string>; palette: Palette; doc: DesignDoc | null };
+
+export function DesignStudio({ templateId, open, onOpenChange, lang, saved, onDerive }: { templateId: string | null; open: boolean; onOpenChange: (v: boolean) => void; lang: Lang; saved?: { id: string; projectId: string | null; data: SavedDesign } | null; onDerive?: (preset: SavedDesign) => void }) {
   useDesignFonts();
   const template = useMemo(() => (templateId ? templateById(templateId) : undefined), [templateId]);
   const blank = Boolean(templateId?.startsWith("blank:"));
@@ -39,15 +44,22 @@ export function DesignStudio({ templateId, open, onOpenChange, lang }: { templat
   const [publishOpen, setPublishOpen] = useState(false);
   const previewBox = useRef<HTMLDivElement>(null);
   const [boxWidth, setBoxWidth] = useState(560);
+  const [saveOpen, setSaveOpen] = useState(false);
+  const [savedRef, setSavedRef] = useState<{ id: string; projectId: string | null } | null>(null);
 
   useEffect(() => {
     if (!template) return;
     setValues(fieldValues(template.layout.fields)); setPalette(template.palette); setBrief(""); builtFrom.current = "";
     const fmt = formatById(template.format);
     // A blank page goes straight to the free editor with an empty page.
-    if (blank) { setDoc({ w: fmt.w, h: fmt.h, pages: [{ id: uid(), bg: "#ffffff", elements: [] }] }); setStep(2); builtFrom.current = "blank"; }
-    else { setDoc(null); setStep(0); }
-  }, [template, blank]);
+    if (saved && saved.data.templateId === templateId) {
+      // Reopened from Projects: texts, style and the free layout as they were saved.
+      setValues(saved.data.values); setPalette(saved.data.palette); setDoc(saved.data.doc);
+      builtFrom.current = saved.data.doc ? (blank ? "blank" : JSON.stringify([saved.data.values, saved.data.palette])) : "";
+      setStep(saved.data.doc ? 2 : 0); setSavedRef(saved.id ? { id: saved.id, projectId: saved.projectId } : null);
+    } else if (blank) { setDoc({ w: fmt.w, h: fmt.h, pages: [{ id: uid(), bg: "#ffffff", elements: [] }] }); setStep(2); builtFrom.current = "blank"; setSavedRef(null); }
+    else { setDoc(null); setStep(0); setSavedRef(null); }
+  }, [template, blank, saved, templateId]);
   useEffect(() => {
     const el = previewBox.current; if (!el) return;
     const ro = new ResizeObserver(() => setBoxWidth(el.clientWidth)); ro.observe(el); setBoxWidth(el.clientWidth);
@@ -82,6 +94,14 @@ export function DesignStudio({ templateId, open, onOpenChange, lang }: { templat
     if (to >= 2 && !(await ensureDoc())) return;
     setStep(to);
   }
+
+  /** Saves texts, style and layout in the account (Projects), kept 14 days after the last save. */
+  async function saveTo(name: string, projectId: string | null) {
+    const row = await saveCreation({ id: savedRef?.id ?? null, kind: "design", title: name, subtitle: `${fmt[lang]} · ${template![lang]}`, data: { templateId: templateId!, values, palette: palette!, doc } satisfies SavedDesign, projectId });
+    setSavedRef({ id: row.id, projectId: row.project_id });
+    toast.success(tx(lang, `Enregistré dans vos projets · gardé jusqu'au ${new Date(row.expires_at).toLocaleDateString("fr-FR")}`, `Saved to your projects · kept until ${new Date(row.expires_at).toLocaleDateString("en-GB")}`));
+  }
+  const quickSave = () => { if (savedRef) void saveTo(title, savedRef.projectId).catch((e) => toast.error(saveErrorText(e instanceof Error ? e.message : "", lang === "fr"))); else setSaveOpen(true); };
 
   async function writeWithAi() {
     if (brief.trim().length < 5 || aiBusy) return;
@@ -129,7 +149,8 @@ export function DesignStudio({ templateId, open, onOpenChange, lang }: { templat
       </div>
 
       <div className="min-h-0 flex-1">
-        {step === 2 && doc ? <DesignEditor doc={doc} onChange={setDoc} lang={lang} accent={palette.accent} ink={palette.ink} font={palette.body} />
+        {step === 2 && doc ? <DesignEditor doc={doc} onChange={setDoc} lang={lang} accent={palette.accent} ink={palette.ink} font={palette.body} format={template.format}
+          onDerive={(f) => { const target = formatById(f); onDerive?.({ templateId: `blank:${f}`, values: {}, palette, doc: resizeDoc(doc, target.w, target.h) }); toast.success(tx(lang, `Copie au format ${target[lang]} ouverte. Pensez à enregistrer le design d'origine.`, `${target[lang]} copy opened. Remember to save the original design.`)); }} />
           : <div className="grid h-full min-h-0 grid-cols-1 md:grid-cols-[380px_minmax(0,1fr)]">
             <div className="min-h-0 overflow-y-auto border-b border-border p-5 md:border-b-0 md:border-r">
               {step === 0 && <div className="space-y-4">
@@ -182,7 +203,7 @@ export function DesignStudio({ templateId, open, onOpenChange, lang }: { templat
                 {exportRow(ExternalLink, "Canva", tx(lang, "Télécharge le .pptx puis ouvre Canva : Créer un design → Importer.", "Downloads the .pptx and opens Canva: Create a design → Import."), () => { void downloadDocPptx(doc, title); openTab("https://www.canva.com/"); })}
                 <p className="rounded-xl bg-secondary/50 p-3 text-[11.5px] text-muted-foreground">{tx(lang, "Connexion directe à Canva, Google Slides, PowerPoint et aux réseaux sociaux (Instagram, Facebook, TikTok, YouTube) : bientôt, dans Plugins → connecteurs à venir.", "Direct connection to Canva, Google Slides, PowerPoint and social networks: coming soon, in Plugins → upcoming connectors.")}</p>
               </div>}
-              <p className="mt-5 flex gap-2 rounded-xl border border-border p-3 text-[11.5px] text-muted-foreground"><Coins className="mt-0.5 size-3.5 shrink-0" />{tx(lang, `Modèles, mise en forme et exports gratuits (la publication en ligne suit votre forfait). Seule la rédaction par l'IA coûte ${price} crédits. Votre création reste dans cette fenêtre : téléchargez-la ou publiez-la avant de fermer.`, `Templates, layout and exports are free (publishing follows your plan). Only AI writing costs ${price} credits. Your design lives in this window: download or publish it before closing.`)}</p>
+              <p className="mt-5 flex gap-2 rounded-xl border border-border p-3 text-[11.5px] text-muted-foreground"><Coins className="mt-0.5 size-3.5 shrink-0" />{tx(lang, `Modèles, mise en forme et exports gratuits (la publication en ligne suit votre forfait). Seule la rédaction par l'IA coûte ${price} crédits. Enregistrez-la dans un projet (gardée 14 jours après le dernier enregistrement), téléchargez-la ou publiez-la.`, `Templates, layout and exports are free (publishing follows your plan). Only AI writing costs ${price} credits. Save it to a project (kept 14 days after the last save), download or publish it.`)}</p>
             </div>
             <div className="flex min-h-0 flex-col bg-secondary/40">
               <div ref={previewBox} className="flex min-h-0 flex-1 items-center justify-center overflow-auto p-5">
@@ -197,11 +218,13 @@ export function DesignStudio({ templateId, open, onOpenChange, lang }: { templat
       <div className="flex shrink-0 items-center justify-between gap-2 border-t border-border bg-background px-4 py-2.5">
         <span className="text-[11.5px] text-muted-foreground">{building ? <span className="inline-flex items-center gap-1.5"><Loader2 className="size-3.5 animate-spin" />{tx(lang, "Préparation de la mise en forme…", "Preparing the layout…")}</span> : step === 2 ? tx(lang, "Astuce : double-cliquez sur un texte pour l'écrire ; Ctrl+Z annule.", "Tip: double-click a text to type; Ctrl+Z undoes.") : ""}</span>
         <div className="flex items-center gap-2">
+          <button type="button" onClick={quickSave} className="inline-flex h-9 items-center gap-1.5 rounded-full border border-border px-3.5 text-[13px] font-medium hover:bg-secondary"><Save className="size-4" />{savedRef ? tx(lang, "Enregistrer", "Save") : tx(lang, "Enregistrer dans un projet", "Save to a project")}</button>
           {step > (blank ? 2 : 0) && <button type="button" onClick={() => setStep(step - 1)} className="inline-flex h-9 items-center gap-1.5 rounded-full px-3 text-[13px] text-muted-foreground hover:text-foreground"><ArrowLeft className="size-4" />{tx(lang, "Retour", "Back")}</button>}
           {step < 3 ? <button type="button" disabled={building} onClick={() => void go(step + 1)} className="inline-flex h-9 items-center gap-1.5 rounded-full bg-foreground px-4 text-[13px] font-semibold text-background disabled:opacity-60">{step === 1 && <Wand2 className="size-4" />}{step === 1 ? tx(lang, "Mettre en forme", "Lay out") : tx(lang, "Continuer", "Continue")}<ArrowRight className="size-4" /></button>
             : <button type="button" onClick={() => setPublishOpen(true)} className="inline-flex h-9 items-center gap-1.5 rounded-full bg-foreground px-4 text-[13px] font-semibold text-background"><Share2 className="size-4" />{tx(lang, "Publier et partager", "Publish & share")}</button>}
         </div>
       </div>
+      <SaveToProject open={saveOpen} onOpenChange={setSaveOpen} lang={lang} defaultTitle={title} projectId={savedRef?.projectId ?? null} onSave={saveTo} />
       {doc && <PublishDialog open={publishOpen} onOpenChange={setPublishOpen} title={title} lang={lang} files={[{ path: "index.html", content: publishOpen ? shareHtml(doc, template.format, title, values) : "", done: true }]}
         shareText={invite ? tx(lang, `Vous êtes invité(e) : ${title}`, `You are invited: ${title}`) : title} />}
     </DialogContent>

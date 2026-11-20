@@ -7,6 +7,8 @@ import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { DESIGN_FONTS, EMOJI_GROUPS, FONT_GROUPS } from "@/lib/design-fonts";
 import { DocPage, fontStack, textStyle, uid, type DesignDoc, type DesignEl, type ImageEl, type ShapeEl, type TextEl } from "./doc";
+import { ProPanel, type BrandKit } from "./ProPanel";
+import type { DesignFormatId } from "@/lib/design-formats";
 
 // The free editor of TechNova Design (step « Mise en forme »): select, move and resize any element on the page
 // like Word text boxes or Canva; format text (font, size, bold, italic, underline, highlight, colour, alignment,
@@ -18,11 +20,11 @@ const tx = (lang: Lang, fr: string, en: string) => (lang === "fr" ? fr : en);
 const clone = (d: DesignDoc): DesignDoc => JSON.parse(JSON.stringify(d)) as DesignDoc;
 
 /** Reads a picture and keeps it light (1600 px max, JPEG; PNG kept for transparency). */
-export async function readImage(file: File): Promise<string> {
+export async function readImage(file: File, max = 1600): Promise<string> {
   const url = URL.createObjectURL(file);
   try {
     const img = await new Promise<HTMLImageElement>((ok, ko) => { const i = new Image(); i.onload = () => ok(i); i.onerror = ko; i.src = url; });
-    const k = Math.min(1, 1600 / Math.max(img.width, img.height));
+    const k = Math.min(1, max / Math.max(img.width, img.height));
     const c = document.createElement("canvas"); c.width = Math.round(img.width * k); c.height = Math.round(img.height * k);
     c.getContext("2d")!.drawImage(img, 0, 0, c.width, c.height);
     return file.type === "image/png" ? c.toDataURL("image/png") : c.toDataURL("image/jpeg", 0.86);
@@ -32,11 +34,11 @@ export async function readImage(file: File): Promise<string> {
 const btn = "grid size-8 place-items-center rounded-lg text-foreground/80 transition hover:bg-secondary disabled:opacity-40";
 const on = "bg-foreground text-background hover:bg-foreground";
 
-export function DesignEditor({ doc, onChange, lang, accent, ink, font }: { doc: DesignDoc; onChange: (d: DesignDoc) => void; lang: Lang; accent: string; ink: string; font: string }) {
+export function DesignEditor({ doc, onChange, lang, accent, ink, font, format = null, onDerive }: { doc: DesignDoc; onChange: (d: DesignDoc) => void; lang: Lang; accent: string; ink: string; font: string; format?: DesignFormatId | null; onDerive?: (format: DesignFormatId) => void }) {
   const [page, setPage] = useState(0);
   const [sel, setSel] = useState<string | null>(null);
   const [editing, setEditing] = useState<string | null>(null);
-  const [panel, setPanel] = useState<"add" | "emoji" | "pages">("add");
+  const [panel, setPanel] = useState<"add" | "emoji" | "pages" | "pro">("add");
   const past = useRef<DesignDoc[]>([]); const future = useRef<DesignDoc[]>([]);
   const area = useRef<HTMLDivElement>(null);
   const [areaW, setAreaW] = useState(700); const [areaH, setAreaH] = useState(500);
@@ -79,6 +81,21 @@ export function DesignEditor({ doc, onChange, lang, accent, ink, font }: { doc: 
       add({ id: uid(), type: "image", x: Math.round((doc.w - w) / 2), y: Math.round((doc.h - h) / 2), w, h, src, radius: 0 });
     } catch { toast.error(tx(lang, "Image illisible.", "Unreadable image.")); }
   }
+  /** Brand kit: heading / body fonts and colours on every page, background colour, logo top left. */
+  const applyBrand = (kit: BrandKit) => mutate((d) => {
+    const [text, accentC, bg] = kit.colors;
+    for (const p of d.pages) {
+      if (bg) p.bg = bg;
+      for (const e of p.elements) {
+        if (e.type === "text") { const heading = e.size >= d.w / 30 || e.bold && e.size >= d.w / 45; e.font = heading ? kit.font_head : kit.font_body; if (text) e.color = text; }
+        else if (e.type === "shape" && accentC && e.fill.toLowerCase() === accent.toLowerCase()) e.fill = accentC;
+      }
+    }
+    if (kit.logo && d.pages[0] && !d.pages[0].elements.some((e) => e.type === "image" && e.src === kit.logo)) {
+      const s = Math.round(Math.min(d.w, d.h) * 0.12);
+      d.pages[0].elements.push({ id: uid(), type: "image", x: Math.round(d.w * 0.04), y: Math.round(d.h * 0.04), w: s, h: s, src: kit.logo, radius: 0 });
+    }
+  });
   const addEmoji = (e: string) => {
     if (el?.type === "text") { patch(el.id, { text: `${el.text} ${e}` }); return; }
     const size = Math.round(Math.min(doc.w, doc.h) / 8);
@@ -145,7 +162,7 @@ export function DesignEditor({ doc, onChange, lang, accent, ink, font }: { doc: 
   return <div className="grid h-full min-h-0 grid-cols-1 md:grid-cols-[230px_minmax(0,1fr)]">
     {/* Left panel: add elements, emojis, pages */}
     <div className="flex min-h-0 flex-col border-b border-border md:border-b-0 md:border-r">
-      <div className="flex shrink-0 gap-1 border-b border-border p-2">{([["add", tx(lang, "Ajouter", "Add")], ["emoji", "Emojis"], ["pages", tx(lang, "Pages", "Pages")]] as const).map(([k, l]) => <button key={k} type="button" onClick={() => setPanel(k)} className={cn("h-8 flex-1 rounded-lg text-[12px] font-medium", panel === k ? "bg-foreground text-background" : "hover:bg-secondary")}>{l}</button>)}</div>
+      <div className="flex shrink-0 gap-1 border-b border-border p-2">{([["add", tx(lang, "Ajouter", "Add")], ["emoji", "Emojis"], ["pages", tx(lang, "Pages", "Pages")], ["pro", "Pro"]] as const).map(([k, l]) => <button key={k} type="button" onClick={() => setPanel(k)} className={cn("h-8 flex-1 rounded-lg text-[12px] font-medium", panel === k ? (k === "pro" ? "bg-gradient-to-r from-amber-500 to-orange-500 text-white" : "bg-foreground text-background") : k === "pro" ? "text-amber-700 hover:bg-amber-500/10 dark:text-amber-300" : "hover:bg-secondary")}>{l}</button>)}</div>
       <div className="min-h-0 flex-1 space-y-2 overflow-y-auto p-3">
         {panel === "add" && <>
           <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">{tx(lang, "Texte", "Text")}</p>
@@ -169,6 +186,10 @@ export function DesignEditor({ doc, onChange, lang, accent, ink, font }: { doc: 
           {EMOJI_GROUPS.map((g) => <div key={g.fr}><p className="mb-1 mt-2 text-[11px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">{g[lang]}</p>
             <div className="grid grid-cols-6 gap-0.5">{g.list.split(" ").map((em) => <button key={em} type="button" onClick={() => addEmoji(em)} className="grid size-8 place-items-center rounded-lg text-[19px] hover:bg-secondary" style={{ fontFamily: "'Noto Color Emoji', sans-serif" }}>{em}</button>)}</div></div>)}
         </>}
+        {panel === "pro" && <ProPanel lang={lang} doc={doc} current={format} image={el?.type === "image" ? el : null}
+          onImage={(src) => { if (el?.type === "image") patch(el.id, { src }); }}
+          onAddImage={(src, w, h) => add({ id: uid(), type: "image", x: Math.round((doc.w - w) / 2), y: Math.round((doc.h - h) / 2), w, h, src, radius: 0 })}
+          onBrand={applyBrand} onDerive={(f) => onDerive?.(f)} />}
         {panel === "pages" && <>
           <div className="grid grid-cols-2 gap-2">
             <button type="button" onClick={addPage} className="flex h-9 items-center justify-center gap-1 rounded-xl border border-border text-[12px] hover:bg-secondary"><FilePlus2 className="size-3.5" />{tx(lang, "Ajouter", "Add")}</button>
