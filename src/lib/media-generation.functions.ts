@@ -39,6 +39,35 @@ async function kie(path: string, init?: RequestInit) {
   return payload.data ?? {};
 }
 
+/**
+ * Lyrics for a song described in a few words: a title, a short style line for the music engine and full lyrics
+ * (verses, chorus, bridge with Suno section tags) in the language of the description, French by default.
+ * One small OpenRouter call (data_collection "deny"), its real cost logged in chat_engine_costs (mode "music_lyrics").
+ */
+async function writeSongLyrics(ownerId: string, prompt: string, o: { style?: string | undefined; vocal?: "m" | "f" | undefined; title?: string | undefined } | undefined): Promise<{ title: string; style: string; lyrics: string } | null> {
+  const { orComplete } = await import("@/lib/openrouter.server");
+  const r = await orComplete({
+    model: "google/gemini-2.5-flash", maxTokens: 1800, temperature: 0.9, timeoutMs: 40_000,
+    messages: [
+      { role: "system", content: "You are a professional songwriter. From the user's description, write an original, singable song. Reply ONLY with JSON: {\"title\": string (max 60 chars), \"style\": string (genre, mood, instruments, tempo, voice, in English, max 200 chars), \"lyrics\": string}. Lyrics: in the language of the description (French when unclear), 2 verses, a catchy chorus repeated twice, a short bridge, then the chorus; mark sections with [Verse 1], [Chorus], [Verse 2], [Bridge], [Outro]; short lines that rhyme, concrete images from the description, no hashtags, no emoji, between 900 and 2000 characters. Never copy existing songs." },
+      { role: "user", content: `Description: ${prompt.slice(0, 2000)}${o?.style?.trim() ? `\nStyle wanted: ${o.style.trim().slice(0, 300)}` : ""}${o?.vocal ? `\nVoice: ${o.vocal === "f" ? "female" : "male"}` : ""}${o?.title?.trim() ? `\nTitle: ${o.title.trim().slice(0, 80)}` : ""}` },
+    ],
+  });
+  const start = r.content.indexOf("{"), end = r.content.lastIndexOf("}");
+  const json = JSON.parse(r.content.slice(start, end + 1)) as { title?: unknown; style?: unknown; lyrics?: unknown };
+  const lyrics = typeof json.lyrics === "string" ? json.lyrics.trim() : "";
+  if (lyrics.length < 200) return null;
+  try {
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    await supabaseAdmin.from("chat_engine_costs").insert({ owner_id: ownerId, mode: "music_lyrics", engine: "google/gemini-2.5-flash", input_tokens: r.inputTokens, output_tokens: r.outputTokens, cost_usd: r.costUsd || null, credits: 0 });
+  } catch { /* cost log only */ }
+  return {
+    title: (typeof json.title === "string" && json.title.trim() ? json.title.trim() : "TechNova").slice(0, 80),
+    style: (typeof json.style === "string" ? json.style.trim() : "").slice(0, 300) || prompt.slice(0, 300),
+    lyrics: lyrics.slice(0, 4800),
+  };
+}
+
 /** Saved details of a song (title, lyrics, tags, duration, whether the lyrics are the user's); null before migration 0054. */
 export type MusicMeta = { title?: string | null; lyrics?: string | null; tags?: string | null; duration?: number | null; ownLyrics?: boolean; instrumental?: boolean };
 async function musicMeta(id: string): Promise<MusicMeta | null> {
@@ -97,7 +126,17 @@ export const createMediaGeneration = createServerFn({ method: "POST" })
       }
     }
     const model = spec.id;
-    const built = buildMediaInput(spec, data.prompt, data.aspectRatio, data.duration === undefined ? MEDIA_VIDEO_SECONDS : clampVideoSeconds(data.duration), spec.kind === "music" ? data.music : undefined);
+    // A song described in a few words (no lyrics given, not instrumental): write real lyrics first, so the music
+    // engine sings a full song instead of a mostly wordless track (its simple mode). Included in the song's price.
+    let music = spec.kind === "music" ? data.music : undefined;
+    const ownLyrics = !!data.music?.lyrics?.trim();
+    const wantsInstrumental = data.music?.instrumental ?? /\b(instrumental|sans paroles|sans voix|no vocals|without vocals)\b/i.test(data.prompt);
+    let writtenLyrics: { title: string; style: string; lyrics: string } | null = null;
+    if (spec.kind === "music" && !ownLyrics && !wantsInstrumental) {
+      writtenLyrics = await writeSongLyrics(context.userId, data.prompt, data.music).catch(() => null);
+      if (writtenLyrics) music = { ...data.music, lyrics: writtenLyrics.lyrics, title: data.music?.title?.trim() || writtenLyrics.title, style: data.music?.style?.trim() || writtenLyrics.style };
+    }
+    const built = buildMediaInput(spec, data.prompt, data.aspectRatio, data.duration === undefined ? MEDIA_VIDEO_SECONDS : clampVideoSeconds(data.duration), music);
     if (editing) {
       // The source must be a finished image of this account, still within its 14-day retention.
       const { data: source } = await context.supabase.from("media_generations")
@@ -137,9 +176,8 @@ export const createMediaGeneration = createServerFn({ method: "POST" })
     if (error || !row) throw new Error(`La création a démarré, mais son suivi n’a pas pu être enregistré : ${error?.message ?? "unknown"}`);
     // Music: whether the lyrics come from the user (or there are none), for the album card (migration 0054).
     if (data.kind === "music") {
-      const ownLyrics = !!data.music?.lyrics?.trim();
-      const instrumental = !!data.music?.instrumental;
-      await supabaseAdmin.from("media_generations").update({ result_meta: { ownLyrics, instrumental, title: data.music?.title?.trim() || null } } as never).eq("id", row.id).then(() => undefined, () => undefined);
+      const meta = { ownLyrics, instrumental: wantsInstrumental, title: music?.title?.trim() || null, ...(writtenLyrics ? { lyrics: writtenLyrics.lyrics, tags: writtenLyrics.style } : {}) };
+      await supabaseAdmin.from("media_generations").update({ result_meta: meta } as never).eq("id", row.id).then(() => undefined, () => undefined);
     }
     const part = { type: "data-media", data: { id: row.id, kind: data.kind, model: spec.label, prompt: data.prompt, ratio: aspectRatio, status: "waiting", progress: null, urls: [], error: null } };
     const { error: messageError } = await context.supabase.from("chat_messages").insert({

@@ -697,10 +697,10 @@ export function SheetEditor({ initial, lang, onClose, saved }: { initial: Workbo
   return <div className="flex h-full min-h-0 flex-col bg-[#f8f9fb] text-[13px] text-zinc-900 dark:bg-zinc-950 dark:text-zinc-100">
     <style>{`.tb-btn{display:inline-flex;height:32px;min-width:32px;align-items:center;justify-content:center;border-radius:8px;color:inherit;transition:background .15s}.tb-btn:hover{background:rgba(0,0,0,.06)}.dark .tb-btn:hover{background:rgba(255,255,255,.08)}.tb-btn:disabled{opacity:.35}.tb-on{background:#dcebe4!important;color:#155e45}.sheet-grid ::selection{background:transparent}`}</style>
     {/* Title + main actions */}
-    <div className="flex items-center gap-2 border-b border-border bg-background px-3 py-2">
-      <span className="grid size-8 shrink-0 place-items-center rounded-lg bg-[#1f7a5a] text-white"><FileSpreadsheet className="size-4.5" /></span>
+    <div className="flex items-center gap-1.5 border-b border-border bg-background px-2 py-2 sm:gap-2 sm:px-3">
+      <span className="grid size-8 shrink-0 place-items-center rounded-lg bg-[#1f7a5a] text-white max-sm:hidden"><FileSpreadsheet className="size-4.5" /></span>
       <input aria-label={tx(lang, "Titre du classeur", "Workbook title")} value={wb.title} onChange={(e) => setWbRaw((w) => ({ ...w, title: e.target.value.slice(0, 80) }))}
-        className="min-w-0 max-w-[340px] flex-1 rounded-lg bg-transparent px-2 py-1 text-[15px] font-semibold outline-none hover:bg-secondary focus:bg-secondary" />
+        className="min-w-0 max-w-[340px] flex-1 rounded-lg max-sm:text-[13.5px] bg-transparent px-2 py-1 text-[15px] font-semibold outline-none hover:bg-secondary focus:bg-secondary" />
       <div className="ml-auto flex items-center gap-1.5">
         <Menu label={tx(lang, "Ouvrir", "Open")} icon={<FileUp className="size-4" />}>{(close) => <>
           <MenuItem icon={<FileSpreadsheet className="size-4" />} onClick={() => { close(); fileInput.current?.click(); }} hint=".xlsx · .csv">{tx(lang, "Fichier Excel ou CSV", "Excel or CSV file")}</MenuItem>
@@ -715,10 +715,10 @@ export function SheetEditor({ initial, lang, onClose, saved }: { initial: Workbo
           <MenuItem icon={<ExternalLink className="size-4" />} onClick={() => { close(); void toGoogleSheets(); }} hint={tx(lang, "Télécharge le .xlsx puis ouvre Sheets", "Downloads the .xlsx then opens Sheets")}>Google Sheets</MenuItem>
           <MenuItem icon={<Share2 className="size-4" />} onClick={() => { close(); setPublishOpen(true); }} hint={tx(lang, "Lien, WhatsApp, Netlify, Vercel, GitHub", "Link, WhatsApp, Netlify, Vercel, GitHub")}>{tx(lang, "Publier en lecture seule", "Publish read-only")}</MenuItem>
         </>}</Menu>
-        <button type="button" onClick={quickSave} title="Ctrl+S" className="inline-flex h-8 items-center gap-1.5 rounded-full border border-border px-3 text-[12.5px] font-semibold hover:bg-secondary"><Save className="size-3.5" />{savedRef ? tx(lang, "Enregistrer", "Save") : tx(lang, "Enregistrer dans un projet", "Save to a project")}</button>
+        <button type="button" onClick={quickSave} title="Ctrl+S" aria-label={tx(lang, "Enregistrer dans un projet", "Save to a project")} className="inline-flex h-8 shrink-0 items-center gap-1.5 rounded-full border border-border px-3 text-[12.5px] font-semibold hover:bg-secondary"><Save className="size-3.5" /><span className="max-md:hidden">{savedRef ? tx(lang, "Enregistrer", "Save") : tx(lang, "Enregistrer dans un projet", "Save to a project")}</span></button>
         <button type="button" onClick={() => setAssistant((a) => !a)} aria-pressed={assistant}
-          className={cn("inline-flex h-8 items-center gap-1.5 rounded-full px-3 text-[12.5px] font-semibold transition", assistant ? "bg-[#1f7a5a] text-white" : "bg-gradient-to-r from-[#1f7a5a] to-[#2b9b74] text-white hover:brightness-110")}>
-          <Sparkles className="size-3.5" />{tx(lang, "Assistant IA", "AI assistant")}
+          className={cn("inline-flex h-8 shrink-0 items-center gap-1.5 rounded-full px-3 text-[12.5px] font-semibold transition", assistant ? "bg-[#1f7a5a] text-white" : "bg-gradient-to-r from-[#1f7a5a] to-[#2b9b74] text-white hover:brightness-110")}>
+          <Sparkles className="size-3.5" /><span className="max-sm:hidden">{tx(lang, "Assistant IA", "AI assistant")}</span><span className="sm:hidden">IA</span>
         </button>
         <button type="button" onClick={onClose} aria-label={tx(lang, "Fermer", "Close")} className="grid size-8 place-items-center rounded-full hover:bg-secondary"><X className="size-4" /></button>
       </div>
@@ -806,7 +806,7 @@ export function SheetEditor({ initial, lang, onClose, saved }: { initial: Workbo
         className="h-8 min-w-0 flex-1 rounded-lg border border-border bg-background px-2.5 font-mono text-[12.5px] outline-none focus:border-[#1f7a5a]" />
     </div>
 
-    <div className="flex min-h-0 flex-1">
+    <div className="relative flex min-h-0 flex-1">
       {/* Grid */}
       <div ref={gridFocus} tabIndex={0} onKeyDown={onKey} className="sheet-grid relative min-w-0 flex-1 outline-none" onContextMenu={(e) => { e.preventDefault(); const p = posFromPoint(e.clientX, e.clientY); if (p.c < rect.c1 || p.c > rect.c2 || p.r < rect.r1 || p.r > rect.r2) setSel({ a: p, f: p }); setCtx({ x: e.clientX, y: e.clientY }); }}>
         <div ref={scroller} className="absolute inset-0 overflow-auto bg-white dark:bg-zinc-900" onPointerDown={onGridDown} onPointerMove={onGridMove} onPointerUp={onGridUp}

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { ArrowLeft, ArrowRight, Check, Coins, ExternalLink, FileCode2, ImagePlus, Loader2, Palette as PaletteIcon, PenLine, Presentation, Printer, Rocket, Save, Share2, Sparkles, Trash2, Wand2 } from "lucide-react";
 import { toast } from "sonner";
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/components/ui/dialog";
@@ -43,8 +43,16 @@ export function DesignStudio({ templateId, open, onOpenChange, lang, saved, onDe
   const builtFrom = useRef("");
   const [building, setBuilding] = useState(false);
   const [publishOpen, setPublishOpen] = useState(false);
-  const previewBox = useRef<HTMLDivElement>(null);
-  const [boxWidth, setBoxWidth] = useState(560);
+  // Preview box measured with a callback ref (the dialog mounts its content after opening): the page is fitted to
+  // both its width and its height, so it never overflows on a phone.
+  const [box, setBox] = useState({ w: 560, h: 480 });
+  const roRef = useRef<ResizeObserver | null>(null);
+  const previewBox = useCallback((el: HTMLDivElement | null) => {
+    roRef.current?.disconnect(); roRef.current = null;
+    if (!el) return;
+    const measure = () => setBox({ w: el.clientWidth, h: el.clientHeight });
+    const ro = new ResizeObserver(measure); ro.observe(el); measure(); roRef.current = ro;
+  }, []);
   const [saveOpen, setSaveOpen] = useState(false);
   const [savedRef, setSavedRef] = useState<{ id: string; projectId: string | null } | null>(null);
 
@@ -61,17 +69,11 @@ export function DesignStudio({ templateId, open, onOpenChange, lang, saved, onDe
     } else if (blank) { setDoc({ w: fmt.w, h: fmt.h, pages: [{ id: uid(), bg: "#ffffff", elements: [] }] }); setStep(2); builtFrom.current = "blank"; setSavedRef(null); }
     else { setDoc(null); setStep(0); setSavedRef(null); }
   }, [template, blank, saved, templateId]);
-  useEffect(() => {
-    const el = previewBox.current; if (!el) return;
-    const ro = new ResizeObserver(() => setBoxWidth(el.clientWidth)); ro.observe(el); setBoxWidth(el.clientWidth);
-    return () => ro.disconnect();
-  }, [open, template, step]);
   if (!template || !palette) return null;
   const fmt = formatById(template.format);
   const steps = [tx(lang, "Contenu", "Content"), tx(lang, "Style", "Style"), tx(lang, "Mise en forme", "Layout"), tx(lang, "Exporter et partager", "Export & share")];
   const title = (values["title"] || values["name"] || template[lang]).replace(/\n/g, " ");
-  const maxH = typeof window === "undefined" ? 640 : Math.max(320, window.innerHeight * 0.62);
-  const previewWidth = Math.max(160, Math.min(boxWidth - 48, (maxH * fmt.w) / fmt.h));
+  const previewWidth = Math.max(80, Math.min(box.w - 32, ((box.h - 32) * fmt.w) / fmt.h));
   const set = (k: string, v: string) => setValues((x) => ({ ...x, [k]: v }));
   const textFields = template.layout.fields.filter((x) => x.kind !== "image");
   const signature = JSON.stringify([values, palette]);
@@ -135,16 +137,16 @@ export function DesignStudio({ templateId, open, onOpenChange, lang, saved, onDe
   </button>;
 
   return <Dialog open={open} onOpenChange={onOpenChange}>
-    <DialogContent className="flex h-[96vh] max-h-[96vh] w-[98vw] max-w-[1480px] flex-col gap-0 overflow-hidden rounded-2xl p-0 sm:rounded-2xl">
-      <div className="flex shrink-0 flex-wrap items-center gap-3 border-b border-border py-3 pl-5 pr-14">
-        <div className="min-w-0 flex-1">
+    <DialogContent className="flex h-[100svh] max-h-[100svh] w-screen max-w-[1480px] flex-col gap-0 overflow-hidden rounded-none p-0 sm:h-[96vh] sm:max-h-[96vh] sm:w-[98vw] sm:rounded-2xl">
+      <div className="flex shrink-0 flex-wrap items-center gap-x-3 gap-y-2 border-b border-border py-2.5 pl-4 pr-12 sm:py-3 sm:pl-5 sm:pr-14">
+        <div className="min-w-0 flex-1 max-sm:basis-full">
           <DialogTitle className="truncate font-display text-[17px] font-semibold">{template[lang]}</DialogTitle>
-          <DialogDescription className="text-[12px] text-muted-foreground">{fmt[lang]} · {fmt.size}{doc ? ` · ${doc.pages.length} ${tx(lang, "page(s)", "page(s)")}` : ""}</DialogDescription>
+          <DialogDescription className="truncate text-[12px] text-muted-foreground">{fmt[lang]} · {fmt.size}{doc ? ` · ${doc.pages.length} ${tx(lang, "page(s)", "page(s)")}` : ""}</DialogDescription>
         </div>
         <ol className="flex flex-wrap items-center gap-1" aria-label={tx(lang, "Étapes", "Steps")}>{steps.map((s, i) => <li key={s}>
           <button type="button" disabled={(blank && i < 2) || building} onClick={() => void go(i)} aria-current={step === i ? "step" : undefined}
-            className={cn("flex h-8 items-center gap-1.5 rounded-full px-3 text-[12px] font-medium transition disabled:opacity-40", step === i ? "bg-foreground text-background" : i < step ? "text-foreground hover:bg-secondary" : "text-muted-foreground hover:bg-secondary")}>
-            <span className={cn("grid size-5 place-items-center rounded-full text-[10.5px]", step === i ? "bg-background/20" : "bg-secondary")}>{i < step ? <Check className="size-3" /> : i + 1}</span>{s}
+            className={cn("flex h-8 items-center gap-1.5 rounded-full px-2 text-[12px] font-medium transition disabled:opacity-40 sm:px-3", step === i ? "bg-foreground text-background" : i < step ? "text-foreground hover:bg-secondary" : "text-muted-foreground hover:bg-secondary")}>
+            <span className={cn("grid size-5 place-items-center rounded-full text-[10.5px]", step === i ? "bg-background/20" : "bg-secondary")}>{i < step ? <Check className="size-3" /> : i + 1}</span><span className={step === i ? "" : "max-sm:hidden"}>{s}</span>
           </button>
         </li>)}</ol>
       </div>
@@ -152,8 +154,8 @@ export function DesignStudio({ templateId, open, onOpenChange, lang, saved, onDe
       <div className="min-h-0 flex-1">
         {step === 2 && doc ? <DesignEditor doc={doc} onChange={setDoc} lang={lang} accent={palette.accent} ink={palette.ink} font={palette.body} format={template.format}
           onDerive={(f) => { const target = formatById(f); onDerive?.({ templateId: `blank:${f}`, values: {}, palette, doc: resizeDoc(doc, target.w, target.h) }); toast.success(tx(lang, `Copie au format ${target[lang]} ouverte. Pensez à enregistrer le design d'origine.`, `${target[lang]} copy opened. Remember to save the original design.`)); }} />
-          : <div className="grid h-full min-h-0 grid-cols-1 md:grid-cols-[380px_minmax(0,1fr)]">
-            <div className="min-h-0 overflow-y-auto border-b border-border p-5 md:border-b-0 md:border-r">
+          : <div className="grid h-full min-h-0 grid-cols-1 grid-rows-[32svh_minmax(0,1fr)] md:grid-cols-[380px_minmax(0,1fr)] md:grid-rows-1">
+            <div className="order-last min-h-0 overflow-y-auto border-t border-border p-4 sm:p-5 md:order-none md:border-r md:border-t-0">
               {step === 0 && <div className="space-y-4">
                 <div className="rounded-2xl border border-border bg-secondary/40 p-3.5">
                   <p className="flex items-center gap-2 text-[13px] font-semibold"><Sparkles className="size-4 text-[#6d5bd0]" />{tx(lang, "Rédiger avec l'IA", "Write with AI")}</p>
@@ -206,8 +208,8 @@ export function DesignStudio({ templateId, open, onOpenChange, lang, saved, onDe
               </div>}
               <p className="mt-5 flex gap-2 rounded-xl border border-border p-3 text-[11.5px] text-muted-foreground"><Coins className="mt-0.5 size-3.5 shrink-0" />{tx(lang, `Modèles, mise en forme et exports gratuits (la publication en ligne suit votre forfait). Seule la rédaction par l'IA consomme quelques crédits. Enregistrez-la dans un projet (supprimée 14 jours après sa création), téléchargez-la ou publiez-la.`, `Templates, layout and exports are free (publishing follows your plan). Only AI writing uses a few credits. Save it to a project (deleted 14 days after it was created), download or publish it.`)}</p>
             </div>
-            <div className="flex min-h-0 flex-col bg-secondary/40">
-              <div ref={previewBox} className="flex min-h-0 flex-1 items-center justify-center overflow-auto p-5">
+            <div className="order-first flex min-h-0 flex-col bg-secondary/40 md:order-none">
+              <div ref={previewBox} className="flex min-h-0 flex-1 items-center justify-center overflow-hidden p-3 sm:p-5">
                 {step === 3 && doc
                   ? <div className="shadow-[0_18px_50px_-18px_rgba(0,0,0,0.35)]" style={{ width: previewWidth, height: previewWidth * doc.h / doc.w, overflow: "hidden" }}><div style={{ transform: `scale(${previewWidth / doc.w})`, transformOrigin: "top left" }}><DocPage doc={doc} page={0} /></div></div>
                   : <div className="shadow-[0_18px_50px_-18px_rgba(0,0,0,0.35)]"><DesignPreview template={template} values={values} palette={palette} width={previewWidth} /></div>}
@@ -216,11 +218,11 @@ export function DesignStudio({ templateId, open, onOpenChange, lang, saved, onDe
           </div>}
       </div>
 
-      <div className="flex shrink-0 items-center justify-between gap-2 border-t border-border bg-background px-4 py-2.5">
-        <span className="text-[11.5px] text-muted-foreground">{building ? <span className="inline-flex items-center gap-1.5"><Loader2 className="size-3.5 animate-spin" />{tx(lang, "Préparation de la mise en forme…", "Preparing the layout…")}</span> : step === 2 ? tx(lang, "Astuce : double-cliquez sur un texte pour l'écrire ; Ctrl+Z annule.", "Tip: double-click a text to type; Ctrl+Z undoes.") : ""}</span>
-        <div className="flex items-center gap-2">
-          <button type="button" onClick={quickSave} className="inline-flex h-9 items-center gap-1.5 rounded-full border border-border px-3.5 text-[13px] font-medium hover:bg-secondary"><Save className="size-4" />{savedRef ? tx(lang, "Enregistrer", "Save") : tx(lang, "Enregistrer dans un projet", "Save to a project")}</button>
-          {step > (blank ? 2 : 0) && <button type="button" onClick={() => setStep(step - 1)} className="inline-flex h-9 items-center gap-1.5 rounded-full px-3 text-[13px] text-muted-foreground hover:text-foreground"><ArrowLeft className="size-4" />{tx(lang, "Retour", "Back")}</button>}
+      <div className="flex shrink-0 items-center justify-between gap-2 border-t border-border bg-background px-3 py-2 sm:px-4 sm:py-2.5">
+        <span className="text-[11.5px] text-muted-foreground max-md:hidden">{building ? <span className="inline-flex items-center gap-1.5"><Loader2 className="size-3.5 animate-spin" />{tx(lang, "Préparation de la mise en forme…", "Preparing the layout…")}</span> : step === 2 ? tx(lang, "Astuce : double-cliquez sur un texte pour l'écrire ; Ctrl+Z annule.", "Tip: double-click a text to type; Ctrl+Z undoes.") : ""}</span>
+        <div className="flex w-full items-center justify-end gap-2 md:w-auto">
+          <button type="button" onClick={quickSave} aria-label={tx(lang, "Enregistrer dans un projet", "Save to a project")} className="inline-flex h-9 items-center gap-1.5 rounded-full border border-border px-3.5 text-[13px] font-medium hover:bg-secondary"><Save className="size-4" /><span className="max-sm:hidden">{savedRef ? tx(lang, "Enregistrer", "Save") : tx(lang, "Enregistrer dans un projet", "Save to a project")}</span></button>
+          {step > (blank ? 2 : 0) && <button type="button" onClick={() => setStep(step - 1)} className="inline-flex h-9 items-center gap-1.5 rounded-full px-3 text-[13px] text-muted-foreground hover:text-foreground"><ArrowLeft className="size-4" /><span className="max-sm:hidden">{tx(lang, "Retour", "Back")}</span></button>}
           {step < 3 ? <button type="button" disabled={building} onClick={() => void go(step + 1)} className="inline-flex h-9 items-center gap-1.5 rounded-full bg-foreground px-4 text-[13px] font-semibold text-background disabled:opacity-60">{step === 1 && <Wand2 className="size-4" />}{step === 1 ? tx(lang, "Mettre en forme", "Lay out") : tx(lang, "Continuer", "Continue")}<ArrowRight className="size-4" /></button>
             : <button type="button" onClick={() => setPublishOpen(true)} className="inline-flex h-9 items-center gap-1.5 rounded-full bg-foreground px-4 text-[13px] font-semibold text-background"><Share2 className="size-4" />{tx(lang, "Publier et partager", "Publish & share")}</button>}
         </div>

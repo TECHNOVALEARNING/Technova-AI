@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
   AlignCenter, AlignJustify, AlignLeft, AlignRight, ArrowDownToLine, ArrowUpToLine, Bold, CaseUpper, Circle, Copy, Heading1, Heading2, Highlighter,
-  ImagePlus, Italic, LayoutTemplate, List, ListOrdered, Minus, Plus, Redo2, Smile, Square, Trash2, Type, Underline, Undo2, ChevronUp, ChevronDown, FilePlus2, Files,
+  ImagePlus, Italic, LayoutTemplate, List, ListOrdered, Minus, Plus, Redo2, Smile, Square, Trash2, Type, Underline, Undo2, ChevronUp, ChevronDown, FilePlus2, Files, Pencil,
 } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
@@ -49,7 +49,8 @@ export function DesignEditor({ doc, onChange, lang, accent, ink, font, format = 
     return () => ro.disconnect();
   }, []);
   useEffect(() => { if (page >= doc.pages.length) setPage(Math.max(0, doc.pages.length - 1)); }, [doc.pages.length, page]);
-  const scale = Math.min((areaW - 48) / doc.w, (areaH - 48) / doc.h, 1.2);
+  const pad = areaW < 600 ? 16 : 48;
+  const scale = Math.max(0.05, Math.min((areaW - pad) / doc.w, (areaH - pad) / doc.h, 1.2));
   const cur = doc.pages[page];
   const el = cur?.elements.find((x) => x.id === sel) ?? null;
 
@@ -159,9 +160,10 @@ export function DesignEditor({ doc, onChange, lang, accent, ink, font, format = 
     {(Object.keys(FONT_GROUPS) as (keyof typeof FONT_GROUPS)[]).map((g) => <optgroup key={g} label={FONT_GROUPS[g][lang]}>{DESIGN_FONTS.filter((f) => f.group === g).map((f) => <option key={f.name} value={f.name} style={{ fontFamily: fontStack(f.name) }}>{f.name}</option>)}</optgroup>)}
   </select>;
 
-  return <div className="grid h-full min-h-0 grid-cols-1 md:grid-cols-[230px_minmax(0,1fr)]">
+  // Phones: the page on top, the tools in a panel underneath; tablets and computers: tools on the left.
+  return <div className="grid h-full min-h-0 grid-cols-1 grid-rows-[minmax(0,1fr)_auto] md:grid-cols-[230px_minmax(0,1fr)] md:grid-rows-1">
     {/* Left panel: add elements, emojis, pages */}
-    <div className="flex min-h-0 flex-col border-b border-border md:border-b-0 md:border-r">
+    <div className="order-last flex max-h-[36svh] min-h-0 flex-col border-t border-border md:order-none md:max-h-none md:border-r md:border-t-0">
       <div className="flex shrink-0 gap-1 border-b border-border p-2">{([["add", tx(lang, "Ajouter", "Add")], ["emoji", "Emojis"], ["pages", tx(lang, "Pages", "Pages")], ["pro", "Pro"]] as const).map(([k, l]) => <button key={k} type="button" onClick={() => setPanel(k)} className={cn("h-8 flex-1 rounded-lg text-[12px] font-medium", panel === k ? (k === "pro" ? "bg-gradient-to-r from-amber-500 to-orange-500 text-white" : "bg-foreground text-background") : k === "pro" ? "text-amber-700 hover:bg-amber-500/10 dark:text-amber-300" : "hover:bg-secondary")}>{l}</button>)}</div>
       <div className="min-h-0 flex-1 space-y-2 overflow-y-auto p-3">
         {panel === "add" && <>
@@ -211,12 +213,13 @@ export function DesignEditor({ doc, onChange, lang, accent, ink, font, format = 
     </div>
 
     {/* Canvas with its contextual toolbar */}
-    <div className="flex min-h-0 flex-col">
-      <div className="flex min-h-12 shrink-0 flex-wrap items-center gap-1 border-b border-border bg-background px-2 py-1.5">
+    <div className="order-first flex min-h-0 flex-col md:order-none">
+      <div className="flex min-h-12 shrink-0 flex-nowrap items-center gap-1 overflow-x-auto border-b border-border bg-background px-2 py-1.5 [scrollbar-width:none] md:flex-wrap">
         <button type="button" className={btn} aria-label={tx(lang, "Annuler", "Undo")} title="Ctrl+Z" onClick={undo} disabled={!past.current.length}><Undo2 className="size-4" /></button>
         <button type="button" className={btn} aria-label={tx(lang, "Rétablir", "Redo")} title="Ctrl+Y" onClick={redo} disabled={!future.current.length}><Redo2 className="size-4" /></button>
         <span className="mx-1 h-5 w-px bg-border" />
         {t && <>
+          <button type="button" className={cn(btn, "w-auto gap-1 px-2 text-[12px] font-medium")} aria-label={tx(lang, "Écrire le texte", "Edit the text")} onClick={() => setEditing(t.id)}><Pencil className="size-3.5" />{tx(lang, "Écrire", "Edit")}</button>
           {fontSelect}
           <button type="button" className={btn} aria-label={tx(lang, "Réduire la taille", "Smaller")} onClick={() => patch(t.id, { size: Math.max(6, Math.round(t.size - 2)) })}><Minus className="size-3.5" /></button>
           <input aria-label={tx(lang, "Taille", "Size")} type="number" min={6} max={400} value={Math.round(t.size)} onChange={(e) => patch(t.id, { size: Math.max(6, Math.min(400, Number(e.target.value) || t.size)) })} className="h-8 w-14 rounded-lg border border-border bg-background px-1.5 text-center text-[12.5px]" />
@@ -257,7 +260,7 @@ export function DesignEditor({ doc, onChange, lang, accent, ink, font, format = 
         </>}
         {!el && <>
           <label className={cn(btn, "relative w-auto cursor-pointer gap-1.5 px-2 text-[12px]")}><LayoutTemplate className="size-4" />{tx(lang, "Fond de page", "Page background")}<span className="size-4 rounded border border-border" style={{ background: cur?.bg }} /><input type="color" value={cur?.bg.startsWith("#") ? cur.bg : "#ffffff"} onChange={(e) => mutate((d) => { const p = d.pages[page]; if (p) p.bg = e.target.value; })} className="absolute inset-0 cursor-pointer opacity-0" /></label>
-          <span className="text-[11.5px] text-muted-foreground">{tx(lang, "Cliquez sur un élément pour le modifier, double-cliquez sur un texte pour l'écrire, glissez pour le déplacer, tirez le coin pour le redimensionner.", "Click an element to change it, double-click a text to type, drag to move, pull the corner to resize.")}</span>
+          <span className="text-[11.5px] text-muted-foreground max-md:hidden">{tx(lang, "Cliquez sur un élément pour le modifier, double-cliquez sur un texte pour l'écrire, glissez pour le déplacer, tirez le coin pour le redimensionner.", "Click an element to change it, double-click a text to type, drag to move, pull the corner to resize.")}</span>
         </>}
       </div>
       <div ref={area} className="relative flex min-h-0 flex-1 items-center justify-center overflow-hidden bg-secondary/50" onPointerDown={() => { setSel(null); setEditing(null); }}>

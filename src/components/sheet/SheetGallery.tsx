@@ -106,7 +106,7 @@ export function SheetGallery({ lang }: { lang: Lang }) {
     </div>
 
     <Dialog open={!!open} onOpenChange={(o) => { if (!o) setOpen(null); }}>
-      <DialogContent className="flex h-[96vh] max-h-[96vh] w-[98vw] max-w-[1600px] flex-col gap-0 overflow-hidden rounded-2xl p-0 sm:rounded-2xl [&>button.absolute]:hidden" onInteractOutside={(e) => e.preventDefault()} onEscapeKeyDown={(e) => e.preventDefault()}>
+      <DialogContent className="flex h-[100svh] max-h-[100svh] w-screen max-w-[1600px] flex-col gap-0 overflow-hidden rounded-none p-0 sm:h-[96vh] sm:max-h-[96vh] sm:w-[98vw] sm:rounded-2xl [&>button.absolute]:hidden" onInteractOutside={(e) => e.preventDefault()} onEscapeKeyDown={(e) => e.preventDefault()}>
         <DialogTitle className="sr-only">{open?.title ?? "TechNova Tableur"}</DialogTitle>
         <DialogDescription className="sr-only">{tx(lang, "Éditeur de tableur", "Spreadsheet editor")}</DialogDescription>
         {open && <SheetEditor initial={open} lang={lang} saved={saved} onClose={() => { setOpen(null); setSaved(null); }} />}

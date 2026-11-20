@@ -133,7 +133,9 @@ export function DocPage({ doc, page, selected, editing, onPointerDown, onDoubleC
     {p.elements.map((el) => {
       const box: CSSProperties = { position: "absolute", left: el.x, top: el.y, width: el.w, ...(el.type === "text" ? { minHeight: el.h } : { height: el.h }) };
       const handlers = onPointerDown ? { onPointerDown: (e: React.PointerEvent) => onPointerDown(e, el), onDoubleClick: () => onDoubleClick?.(el) } : {};
-      const outline = selected === el.id ? { outline: "2px solid #6d5bd0", outlineOffset: 2 } : {};
+      // In the editor, a finger drags the element instead of scrolling the page.
+      const touch: CSSProperties = onPointerDown ? { touchAction: "none" } : {};
+      const outline = { ...touch, ...(selected === el.id ? { outline: "2px solid #6d5bd0", outlineOffset: 2 } : {}) };
       if (el.type === "shape") return <div key={el.id} {...handlers} style={{ ...box, ...outline, background: el.fill, borderRadius: el.radius, border: el.border ? `${el.border}px solid ${el.borderColor}` : undefined, opacity: el.opacity, boxSizing: "border-box" }} />;
       if (el.type === "image") return <div key={el.id} {...handlers} style={{ ...box, ...outline, borderRadius: el.radius, overflow: "hidden", background: el.src ? undefined : "repeating-linear-gradient(45deg,#ececf1,#ececf1 10px,#f6f6f9 10px,#f6f6f9 20px)", display: "flex", alignItems: "center", justifyContent: "center" }}>
         {el.src ? <img src={el.src} alt="" draggable={false} style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} /> : <span style={{ fontFamily: "system-ui", fontSize: Math.max(12, Math.min(28, el.w / 10)), color: "#8b8b98" }}>Image</span>}

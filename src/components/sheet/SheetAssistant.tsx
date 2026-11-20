@@ -62,7 +62,7 @@ export function SheetAssistant({ lang, wb, si, selection, ev, onApply, onClose }
     setMsgs((l) => l.map((x, k) => (k === i ? { ...x, state: "applied" } : x)));
   };
 
-  return <aside className="flex w-[360px] shrink-0 flex-col border-l border-border bg-background">
+  return <aside className="flex w-[360px] shrink-0 flex-col border-l border-border bg-background max-md:absolute max-md:inset-0 max-md:z-40 max-md:w-full max-md:border-l-0">
     <div className="flex items-center gap-2 border-b border-border px-3 py-2.5">
       <span className="grid size-7 place-items-center rounded-lg bg-gradient-to-br from-[#1f7a5a] to-[#2b9b74] text-white"><Sparkles className="size-3.5" /></span>
       <div className="min-w-0 flex-1"><strong className="block text-[13px]">{tx(lang, "Assistant IA du tableur", "Spreadsheet AI assistant")}</strong><span className="block text-[11px] text-muted-foreground">{tx(lang, "Vous validez chaque changement", "You approve every change")}</span></div>

@@ -220,7 +220,7 @@ export function RegistryPage() {
 function Detail({ item, c, uid, onUse, onDownload, onRemix, onShare, onRemove }: { item: Item; c: (typeof T)["fr"]; uid: string; onUse: () => void; onDownload: () => void; onRemix: () => void; onShare: () => void; onRemove: () => void }) {
   const page = isPage(item);
   const [view, setView] = useState<"preview" | "code">("preview");
-  const [device, setDevice] = useState<"desktop" | "mobile">("desktop");
+  const [device, setDevice] = useState<"desktop" | "mobile">(() => (typeof window !== "undefined" && window.innerWidth < 768 ? "mobile" : "desktop"));
   const seg = (on: boolean) => `inline-flex h-8 items-center gap-1.5 rounded-full px-3 text-[12px] font-medium transition-colors ${on ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"}`;
   return <div>
     <div className="flex flex-wrap items-start gap-4 border-b border-border p-5 pr-14 sm:p-6 sm:pr-14">
@@ -257,7 +257,7 @@ function Detail({ item, c, uid, onUse, onDownload, onRemix, onShare, onRemove }:
           ? <div className="rounded-xl border border-border bg-secondary/50 p-2 sm:p-3">
               {device === "desktop"
                 ? <div className="h-[68vh] overflow-hidden rounded-lg"><LivePreview html={item.content} interactive className="h-full" /></div>
-                : <div className="mx-auto h-[68vh] w-[390px] max-w-full overflow-hidden rounded-[28px] border-[6px] border-foreground/85 bg-white"><iframe title={c.preview} srcDoc={item.content} sandbox="allow-scripts" className="h-full w-full border-0" /></div>}
+                : <div className="mx-auto h-[68vh] w-[390px] max-w-full overflow-hidden rounded-[22px] border-[5px] border-foreground/85 bg-white sm:rounded-[28px] sm:border-[6px]"><iframe title={c.preview} srcDoc={item.content} sandbox="allow-scripts" className="h-full w-full border-0" /></div>}
             </div>
           : <div className="max-h-[68vh] overflow-auto rounded-xl border border-border bg-background p-6"><MessageResponse>{item.content}</MessageResponse></div>}
       <dl className="mt-4 grid grid-cols-2 gap-x-4 gap-y-2 text-[11.5px] sm:grid-cols-4 lg:grid-cols-7">

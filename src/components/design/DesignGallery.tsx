@@ -5,7 +5,7 @@ import { FilePlus2, Search, Sparkles } from "lucide-react";
 import { DESIGN_FORMATS, type DesignFormatId } from "@/lib/design-formats";
 import { cn } from "@/lib/utils";
 import { DESIGN_TEMPLATES, blankTemplate, fieldValues } from "./designs";
-import { DesignPreview, useDesignFonts } from "./DesignPreview";
+import { DesignPreview, FittedPreview, useDesignFonts } from "./DesignPreview";
 import { DesignStudio, type SavedDesign } from "./DesignStudio";
 
 // Templates → « Présentation et Canva »: a mini design studio. Format chips (presentations, documents, social
@@ -83,9 +83,7 @@ function Card({ id, lang, onOpen }: { id: string; lang: Lang; onOpen: (id: strin
   const fmt = DESIGN_FORMATS.find((f) => f.id === t.format)!;
   const values = useMemo(() => fieldValues(t.layout.fields), [t]);
   return <button type="button" onClick={() => onOpen(t.id)} className="group flex flex-col overflow-hidden rounded-2xl border border-border bg-card text-left transition hover:-translate-y-0.5 hover:shadow-lg">
-    <div className="grid aspect-[4/3] place-items-center overflow-hidden bg-secondary/40 p-3">
-      <div className="shadow-md"><DesignPreview template={t} values={values} width={fmt.w >= fmt.h ? 220 : Math.round(150 * fmt.w / fmt.h)} /></div>
-    </div>
+    <div className="aspect-[4/3] overflow-hidden bg-secondary/40"><FittedPreview template={t} values={values} /></div>
     <div className="p-3">
       <p className="truncate text-[13px] font-semibold">{t[lang]}</p>
       <p className="text-[11.5px] text-muted-foreground">{fmt[lang]} · {fmt.size}</p>
