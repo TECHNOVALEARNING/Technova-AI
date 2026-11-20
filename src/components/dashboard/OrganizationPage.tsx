@@ -79,7 +79,7 @@ function PlansView({ fr }: { fr: boolean }) {
 
 function Hero({ fr, title, sub, right }: { fr: boolean; title: string; sub: string; right?: React.ReactNode }) {
   return <div className="overflow-hidden rounded-3xl border border-border bg-card">
-    <div className="flex flex-col gap-4 bg-gradient-to-br from-[#0b1f4f] via-[#0d2f73] to-[#1d4ed8] px-6 py-7 text-white sm:flex-row sm:items-end">
+    <div className="tn-black flex flex-col gap-4 px-6 py-7 text-white sm:flex-row sm:items-end">
       <div className="min-w-0 flex-1">
         <p className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.16em] opacity-80"><Building2 className="size-3.5" />{fr ? "Entreprise" : "Company"}</p>
         <h1 className="mt-2 font-display text-2xl font-semibold sm:text-3xl">{title}</h1>
@@ -189,8 +189,8 @@ function AdminDashboard({ fr }: { fr: boolean }) {
       title={d.org.name}
       sub={`${plan.name} · ${d.period?.active ? (fr ? `actif jusqu'au ${endDate}` : `active until ${endDate}`) : (fr ? "forfait à renouveler" : "plan to renew")} · ${activeMembers}/${d.org.seats} ${fr ? "comptes" : "accounts"}`}
       right={<div className="flex flex-wrap gap-2">
-        <Button variant="secondary" className="h-9 rounded-full" onClick={() => setEditingName(true)}><Pencil className="size-4" />{fr ? "Renommer" : "Rename"}</Button>
-        <Button className="h-9 rounded-full bg-white text-[#0b1f4f] hover:bg-white/90" onClick={renew}><Crown className="size-4" />{fr ? "Renouveler" : "Renew"}</Button>
+        <Button variant="secondary" className="h-9 rounded-full border border-white/15 bg-white/10 text-white hover:bg-white/15" onClick={() => setEditingName(true)}><Pencil className="size-4" />{fr ? "Renommer" : "Rename"}</Button>
+        <Button className="h-9 rounded-full bg-white text-[#0b0b0d] hover:bg-white/90" onClick={renew}><Crown className="size-4" />{fr ? "Renouveler" : "Renew"}</Button>
       </div>} />
     {editingName && <form className={`${card} flex flex-col gap-2 sm:flex-row`} onSubmit={(e) => { e.preventDefault(); void saveName(); }}><Input value={name} onChange={(e) => setName(e.target.value)} maxLength={80} aria-label={fr ? "Nom de l'entreprise" : "Company name"} /><Button type="submit" className="rounded-full">{fr ? "Enregistrer" : "Save"}</Button><Button type="button" variant="ghost" className="rounded-full" onClick={() => setEditingName(false)}>{fr ? "Annuler" : "Cancel"}</Button></form>}
     {!d.period?.active && <p className={`${card} border-amber-500/50 text-sm`}>{fr ? "Le forfait n'est pas actif : les comptes de l'équipe utilisent leur propre solde et ne peuvent plus être ajoutés. Renouvelez pour reprendre." : "The plan is not active: team accounts use their own balance and no account can be added. Renew to resume."}</p>}

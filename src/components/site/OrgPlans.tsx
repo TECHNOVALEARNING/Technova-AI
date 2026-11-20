@@ -83,7 +83,7 @@ export function OrgPlanCards({ lang, onChoose }: { lang: SiteLang; onChoose?: (s
   }
   return <div className="grid gap-4 md:grid-cols-2">{orgPlans.map((p) => {
     const c = t.plans[p.slug]; const dark = p.slug === "entreprise";
-    return <article key={p.slug} className={`flex flex-col rounded-2xl border p-6 ${dark ? "border-transparent bg-[linear-gradient(150deg,#0b1f4f,#0d2f73)] text-white shadow-lift" : "border-border bg-card"}`}>
+    return <article key={p.slug} className={`flex flex-col rounded-2xl border p-6 ${dark ? "tn-black border-white/10 shadow-lift" : "border-border bg-card"}`}>
       <div className="flex items-center gap-2.5"><span className={`grid size-9 place-items-center rounded-xl ${dark ? "bg-white/15" : "bg-secondary"}`}>{dark ? <Building2 className="size-4.5" /> : <Users className="size-4.5" />}</span><h3 className="font-display text-xl font-semibold">{p.name}</h3></div>
       <p className={`mt-2 text-sm ${dark ? "text-white/75" : "text-muted-foreground"}`}>{c.tagline}</p>
       <p className="mt-5 font-display text-3xl font-semibold">{!isCfa(geo.currency) ? <>{geo.approx && <span className="mr-1 text-lg font-normal opacity-60">≈</span>}{formatLocalPrice(p.price, geo, loc)}</> : <>{p.price.toLocaleString(loc)} <span className="text-sm font-normal opacity-70">FCFA</span></>}<span className="ml-1 text-sm font-normal opacity-70">/ {t.perMonth}</span></p>
@@ -93,7 +93,7 @@ export function OrgPlanCards({ lang, onChoose }: { lang: SiteLang; onChoose?: (s
         {c.lead && <li className="font-semibold">{c.lead}</li>}
         {c.perks.map((perk) => <li key={perk} className="flex items-start gap-2.5"><Check className={`mt-0.5 size-4 shrink-0 ${dark ? "text-sky-300" : "text-emerald-600"}`} /><span>{perk}</span></li>)}
       </ul>
-      <button type="button" onClick={() => void choose(p.slug)} className={`mt-6 inline-flex h-11 w-full items-center justify-center gap-1.5 rounded-full text-sm font-semibold transition hover:opacity-90 ${dark ? "bg-white text-[#0b1f4f]" : "bg-foreground text-background"}`}>{t.choose} {p.name}<ArrowUpRight className="size-3.5" /></button>
+      <button type="button" onClick={() => void choose(p.slug)} className={`mt-6 inline-flex h-11 w-full items-center justify-center gap-1.5 rounded-full text-sm font-semibold transition hover:opacity-90 ${dark ? "bg-white text-[#0b0b0d]" : "bg-foreground text-background"}`}>{t.choose} {p.name}<ArrowUpRight className="size-3.5" /></button>
     </article>;
   })}</div>;
 }
@@ -105,7 +105,7 @@ export function OrgPlansDialog({ lang, open, onOpenChange }: { lang: SiteLang; o
     <DialogContent className="max-h-[92svh] w-[min(980px,96vw)] max-w-none overflow-y-auto rounded-3xl p-5 sm:p-7">
       <DialogTitle className="font-display text-2xl font-semibold">{t.title}</DialogTitle>
       <DialogDescription className="text-sm text-muted-foreground">{t.sub}</DialogDescription>
-      <div className="mt-2 grid gap-3 sm:grid-cols-3">{t.how.map((h, i) => { const Icon = howIcons[i] ?? Check; return <div key={h.t} className="rounded-2xl border border-border bg-secondary/40 p-4"><Icon className="size-5 text-[#12306f] dark:text-sky-300" /><p className="mt-2 text-sm font-semibold">{h.t}</p><p className="mt-1 text-[13px] leading-relaxed text-muted-foreground">{h.d}</p></div>; })}</div>
+      <div className="mt-2 grid gap-3 sm:grid-cols-3">{t.how.map((h, i) => { const Icon = howIcons[i] ?? Check; return <div key={h.t} className="rounded-2xl border border-border bg-secondary/40 p-4"><Icon className="size-5 text-foreground" /><p className="mt-2 text-sm font-semibold">{h.t}</p><p className="mt-1 text-[13px] leading-relaxed text-muted-foreground">{h.d}</p></div>; })}</div>
       <div className="mt-2"><OrgPlanCards lang={lang} /></div>
       <div className="mt-2"><NoCommitment lang={lang} compact /></div>
     </DialogContent>

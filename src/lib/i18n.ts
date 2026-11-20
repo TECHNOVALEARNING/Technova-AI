@@ -82,7 +82,7 @@ export const content = {
       title: "Questions fréquentes",
       items: [
         { q: "Qu'est-ce qu'un crédit TechNova ?", a: "C'est l'unité de paiement de la plateforme. Chaque requête consomme des crédits selon le modèle utilisé et la longueur de la réponse." },
-        { q: "Mes crédits expirent-ils ?", a: "Non. Les crédits achetés restent sur votre compte à vie." },
+        { q: "Mes crédits expirent-ils ?", a: "Les crédits des packs à paiement unique n'expirent jamais : ils restent sur votre compte à vie. Ceux d'une formule mensuelle s'utilisent dans le mois et repartent à zéro au bout de 30 jours." },
         { q: "Quels moyens de paiement acceptez-vous ?", a: "Mobile Money (MTN, Moov, Orange Money, Wave) et cartes Visa / Mastercard, via notre partenaire de paiement sécurisé." },
         { q: "Puis-je utiliser TechNova via une API ?", a: "Oui. Une seule clé API vous donne accès à tous les modèles disponibles sur la plateforme." },
         { q: "Y a-t-il un essai gratuit ?", a: "Oui, 50 crédits Technova sont offerts à l'inscription, sans carte bancaire." },
@@ -196,7 +196,7 @@ export const content = {
       title: "Common questions",
       items: [
         { q: "What is a TechNova credit?", a: "It's the platform's payment unit. Each request uses credits depending on the model and response length." },
-        { q: "Do my credits expire?", a: "No. Purchased credits stay on your account forever." },
+        { q: "Do my credits expire?", a: "Credits from one-time packs never expire: they stay on your account for life. Credits from a monthly plan are used within the month and go back to zero after 30 days." },
         { q: "Which payment methods do you accept?", a: "Mobile Money (MTN, Moov, Orange Money, Wave) and Visa / Mastercard cards, through our secure payment partner." },
         { q: "Can I use TechNova through an API?", a: "Yes. A single API key gives you access to every model on the platform." },
         { q: "Is there a free trial?", a: "Yes, 50 Technova credits are offered on sign-up, no credit card required." },
@@ -310,7 +310,7 @@ export const content = {
       title: "Preguntas frecuentes",
       items: [
         { q: "¿Qué es un crédito TechNova?", a: "Es la unidad de pago de la plataforma. Cada solicitud consume créditos según el modelo usado y la longitud de la respuesta." },
-        { q: "¿Mis créditos caducan?", a: "No. Los créditos comprados permanecen en tu cuenta de por vida." },
+        { q: "¿Mis créditos caducan?", a: "Los créditos de los packs de pago único no caducan: se quedan en tu cuenta de por vida. Los de una fórmula mensual se usan en el mes y vuelven a cero a los 30 días." },
         { q: "¿Qué medios de pago aceptan?", a: "Mobile Money (MTN, Moov, Orange Money, Wave) y tarjetas Visa / Mastercard, a través de nuestro socio de pago seguro." },
         { q: "¿Puedo usar TechNova mediante una API?", a: "Sí. Una sola clave API te da acceso a todos los modelos disponibles en la plataforma." },
         { q: "¿Hay una prueba gratuita?", a: "Sí, se regalan 50 créditos Technova al registrarte, sin tarjeta bancaria." },
@@ -424,7 +424,7 @@ export const content = {
       title: "Perguntas frequentes",
       items: [
         { q: "O que é um crédito TechNova?", a: "É a unidade de pagamento da plataforma. Cada solicitação consome créditos conforme o modelo usado e o tamanho da resposta." },
-        { q: "Meus créditos expiram?", a: "Não. Os créditos comprados ficam na sua conta para sempre." },
+        { q: "Meus créditos expiram?", a: "Os créditos dos pacotes de pagamento único nunca expiram: ficam na sua conta para sempre. Os de um plano mensal são usados no mês e voltam a zero após 30 dias." },
         { q: "Quais meios de pagamento vocês aceitam?", a: "Mobile Money (MTN, Moov, Orange Money, Wave) e cartões Visa / Mastercard, por meio do nosso parceiro de pagamento seguro." },
         { q: "Posso usar a TechNova por API?", a: "Sim. Uma única chave de API dá acesso a todos os modelos disponíveis na plataforma." },
         { q: "Existe um teste gratuito?", a: "Sim, 50 créditos Technova são oferecidos no cadastro, sem cartão bancário." },
