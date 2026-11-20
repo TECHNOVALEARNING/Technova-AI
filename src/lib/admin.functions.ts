@@ -113,7 +113,18 @@ export const listCreditTransfers = createServerFn({ method: "GET" })
     await requireAdmin(context);
     const { data, error } = await context.supabase.from("credit_transfers").select("id,to_user_id,amount,reason,created_at").order("created_at", { ascending: false }).limit(50);
     if (error) throw new Error(error.message);
-    return data ?? [];
+    // The history shows who received the credits (name and e-mail), read server-side for administrators only.
+    const rows = data ?? [];
+    const ids = [...new Set(rows.map((r) => r.to_user_id))];
+    if (!ids.length) return [];
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const [{ data: profiles }, users] = await Promise.all([
+      supabaseAdmin.from("profiles").select("id, display_name").in("id", ids),
+      Promise.all(ids.map((id) => supabaseAdmin.auth.admin.getUserById(id).then((r) => [id, r.data.user?.email ?? ""] as const, () => [id, ""] as const))),
+    ]);
+    const names = new Map((profiles ?? []).map((p) => [p.id, p.display_name ?? ""]));
+    const emails = new Map(users);
+    return rows.map((r) => ({ ...r, to_name: names.get(r.to_user_id) || "", to_email: emails.get(r.to_user_id) || "" }));
   });
 
 /** Published sites with reports or a suspension, newest first, for moderation. */

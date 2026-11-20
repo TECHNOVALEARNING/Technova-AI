@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { adminFindUser, adminTransferCredits, listCreditTransfers } from "@/lib/admin.functions";
 
 type Found = { id: string; email: string; display_name: string; balance: number };
-type Transfer = { id: string; to_user_id: string; amount: number; reason: string; created_at: string };
+type Transfer = { id: string; to_user_id: string; to_name: string; to_email: string; amount: number; reason: string; created_at: string };
 const MAX = 1000;
 
 /** Admin: give credits to one account (created credits, 1 000 max per transfer). */
@@ -78,7 +78,7 @@ export function CreditTransfer({ fr, initialEmail = "" }: { fr: boolean; initial
     </div>
     {history.length > 0 && <div className="mt-3 overflow-x-auto rounded-2xl border border-border bg-card/90">
       <table className="w-full text-left text-sm"><thead className="text-xs text-muted-foreground"><tr><th className="p-3">Date</th><th className="p-3">{fr ? "Destinataire" : "Recipient"}</th><th className="p-3">{fr ? "Crédits" : "Credits"}</th><th className="p-3">{fr ? "Raison" : "Reason"}</th></tr></thead>
-        <tbody>{history.map((t) => <tr key={t.id} className="border-t border-border"><td className="whitespace-nowrap p-3 text-xs">{new Date(t.created_at).toLocaleString(loc)}</td><td className="p-3 font-mono text-xs">{t.to_user_id.slice(0, 8)}…</td><td className="p-3">{t.amount.toLocaleString(loc)}</td><td className="p-3 text-xs">{t.reason}</td></tr>)}</tbody>
+        <tbody>{history.map((t) => <tr key={t.id} className="border-t border-border"><td className="whitespace-nowrap p-3 text-xs">{new Date(t.created_at).toLocaleString(loc)}</td><td className="p-3"><p className="font-medium">{t.to_name || t.to_email || `${t.to_user_id.slice(0, 8)}…`}</p>{t.to_name && t.to_email && <p className="text-xs text-muted-foreground">{t.to_email}</p>}</td><td className="p-3">{t.amount.toLocaleString(loc)}</td><td className="p-3 text-xs">{t.reason}</td></tr>)}</tbody>
       </table>
     </div>}
   </section>;

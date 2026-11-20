@@ -368,19 +368,19 @@
   background: var(--secondary); outline: none;
   transition: flex-grow 0.65s cubic-bezier(0.22, 0.8, 0.24, 1), background-color 0.4s ease, box-shadow 0.4s ease;
 }
-.how-panel.is-open { flex-grow: 3.7; cursor: default; background: linear-gradient(165deg, #0e3478 0%, #0a275f 45%, #061a45 100%); box-shadow: 0 24px 50px -24px rgb(6 26 69 / 0.55); }
+.how-panel.is-open { flex-grow: 3.7; cursor: default; background: radial-gradient(70% 120% at 100% 0%, rgb(255 255 255 / 0.09), transparent 60%), linear-gradient(160deg, #000 0%, #060607 40%, #1b1b1e 78%, #2c2c31 100%); box-shadow: 0 24px 50px -24px rgb(0 0 0 / 0.6); }
 .how-panel:focus-visible { box-shadow: 0 0 0 3px var(--background), 0 0 0 5px #2f5fd0; }
 .how-photo { position: relative; flex: 0 0 100%; min-width: 0; overflow: hidden; border-radius: 22px; transition: flex-basis 0.65s cubic-bezier(0.22, 0.8, 0.24, 1), margin 0.65s cubic-bezier(0.22, 0.8, 0.24, 1), border-radius 0.4s ease; }
 .how-photo img { width: 100%; height: 100%; object-fit: cover; object-position: center 30%; filter: grayscale(1) contrast(1.03); transition: transform 0.8s ease, filter 0.4s ease; }
 .how-panel:not(.is-open):hover .how-photo img { transform: scale(1.04); filter: grayscale(1) brightness(1.05); }
 .how-panel.is-open .how-photo { flex-basis: 37%; margin: 14px 0 14px 14px; border-radius: 16px; }
-.how-index { position: absolute; left: 14px; bottom: 14px; display: grid; place-items: center; min-width: 38px; height: 26px; padding: 0 10px; border-radius: 999px; background: rgb(255 255 255 / 0.85); color: #0a1f4d; font-size: 11.5px; font-weight: 700; letter-spacing: 0.08em; backdrop-filter: blur(8px); transition: opacity 0.3s ease; }
+.how-index { position: absolute; left: 14px; bottom: 14px; display: grid; place-items: center; min-width: 38px; height: 26px; padding: 0 10px; border-radius: 999px; background: rgb(255 255 255 / 0.85); color: #0b0b0d; font-size: 11.5px; font-weight: 700; letter-spacing: 0.08em; backdrop-filter: blur(8px); transition: opacity 0.3s ease; }
 .how-panel.is-open .how-index { opacity: 0; }
 .how-mini { display: none; }
 .how-body { display: flex; flex: 1 1 auto; min-width: 0; flex-direction: column; padding: 28px 28px 24px 30px; color: #fff; opacity: 0; transform: translateX(12px); transition: opacity 0.25s ease, transform 0.25s ease; pointer-events: none; }
 .how-body > * { min-width: 300px; max-width: 420px; }
 .how-panel.is-open .how-body { opacity: 1; transform: none; transition: opacity 0.45s ease 0.3s, transform 0.45s ease 0.3s; pointer-events: auto; }
-.how-kicker { font-size: 11.5px; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: #9fb4de; }
+.how-kicker { font-size: 11.5px; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: rgb(255 255 255 / 0.55); }
 .how-body h3 { margin-top: 14px; font-family: var(--font-display, inherit); font-size: 26px; font-weight: 600; line-height: 1.2; letter-spacing: -0.01em; }
 .how-text { margin-top: 12px; font-size: 16.5px; line-height: 1.6; color: rgb(255 255 255 / 0.88); }
 .how-chips { display: flex; flex-wrap: wrap; gap: 8px; margin-top: auto; padding-top: 20px; }
@@ -1144,7 +1144,7 @@ body:has(.dashboard-shell) :is([data-radix-popper-content-wrapper] > [data-state
   color: #fff; box-shadow: 0 30px 60px -34px rgb(0 0 0 / 0.65);
 }
 .eco-banner-mark { grid-area: mark; display: flex; flex-direction: column; align-items: flex-start; gap: 8px; }
-.eco-banner-logo { width: 64px; height: 64px; color: #fff; }
+.eco-banner-logo { width: 72px; height: 72px; object-fit: contain; }
 .eco-banner-small { font-size: 13px; color: rgb(255 255 255 / 0.5); }
 .eco-banner-body { grid-area: body; min-width: 0; }
 .eco-banner-body h3 { font-family: var(--font-display, inherit); font-size: 26px; font-weight: 600; line-height: 1.2; letter-spacing: -0.01em; }
@@ -1174,7 +1174,7 @@ body:has(.dashboard-shell) :is([data-radix-popper-content-wrapper] > [data-state
   .eco-banner-media { aspect-ratio: 16 / 10; }
   .eco-banner-mark { flex-direction: row; align-items: center; gap: 12px; padding: 4px 12px 0; }
   .eco-banner-mark .eco-banner-small:first-child { order: 3; margin-left: auto; }
-  .eco-banner-logo { width: 40px; height: 40px; }
+  .eco-banner-logo { width: 44px; height: 44px; }
   .eco-banner-body { padding: 0 12px; }
   .eco-banner-body h3 { font-size: 22px; }
   .eco-banner-desc { font-size: 15px; }

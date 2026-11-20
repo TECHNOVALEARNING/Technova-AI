@@ -15,6 +15,7 @@ import serviceCode from "@/assets/service-code-depth.png";
 import serviceApi from "@/assets/service-api-depth.png";
 import serviceAnalytics from "@/assets/service-analytics-depth.png";
 import ecoLearningBanner from "@/assets/eco-learning-banner.webp";
+import learningMark from "@/assets/technova-learning-mark.png";
 import howStep1 from "@/assets/how-step-1.webp";
 import howStep2 from "@/assets/how-step-2.webp";
 import howStep3 from "@/assets/how-step-3.webp";
@@ -339,15 +340,6 @@ function How({ t }: { t: T }) {
   );
 }
 
-/** TechNova Learning mark (network of nodes, as on its own logo), drawn in code so it stays sharp on dark grounds. */
-function LearningMark({ className }: { className?: string }) {
-  const nodes = Array.from({ length: 8 }, (_, i) => { const a = (i / 8) * Math.PI * 2 - Math.PI / 2; return [32 + Math.cos(a) * 22, 32 + Math.sin(a) * 22] as const; });
-  return <svg viewBox="0 0 64 64" className={className} fill="none" aria-hidden="true">
-    {nodes.map(([x, y], i) => { const [nx, ny] = nodes[(i + 1) % 8]!; return <g key={i}><line x1="32" y1="32" x2={x} y2={y} stroke="currentColor" strokeOpacity=".55" strokeWidth="1.6" /><line x1={x} y1={y} x2={nx} y2={ny} stroke="currentColor" strokeOpacity=".25" strokeWidth="1.2" /><circle cx={x} cy={y} r={i % 2 ? 3.2 : 4.4} fill="currentColor" /></g>; })}
-    <circle cx="32" cy="32" r="8.5" fill="currentColor" /><circle cx="32" cy="32" r="12.5" stroke="currentColor" strokeOpacity=".35" strokeWidth="1.4" />
-  </svg>;
-}
-
 /** Écosystème: one event-style banner for TechNova Learning (mark | text | action | picture) on the site's black
     gradient; tablets put the picture on top, phones stack everything with a full-width button. */
 function Ecosystem({ t }: { t: T }) {
@@ -360,7 +352,7 @@ function Ecosystem({ t }: { t: T }) {
         <article className="eco-banner">
           <div className="eco-banner-mark">
             <span className="eco-banner-small">{b.k}</span>
-            <LearningMark className="eco-banner-logo" />
+            <img src={learningMark} alt="" width={256} height={256} className="eco-banner-logo" />
             <span className="eco-banner-small">TechNova Learning</span>
           </div>
           <div className="eco-banner-body">
