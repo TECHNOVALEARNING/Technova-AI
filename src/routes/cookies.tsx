@@ -40,6 +40,7 @@ const preferences: Row[] = [
   ["technova-chat-kbs", "Bases de connaissances sélectionnées dans le chat.", "6 mois maximum"],
   ["technova-currency", "Devise d'affichage des prix.", "6 mois maximum"],
   ["technova-install-dismissed", "Ne plus afficher la carte d'installation de l'application pendant 14 jours.", "14 jours"],
+  ["technova-announcement-dismissed", "Ne plus afficher l'annonce que vous avez fermée en haut de la page d'accueil (une nouvelle annonce s'affiche à nouveau).", "6 mois maximum"],
 ];
 
 const thirdParties: [string, string][] = [

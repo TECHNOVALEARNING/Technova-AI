@@ -7,7 +7,9 @@
 export type FlagshipModel = { name: string; label: string; fr: string; en: string; cost: 1 | 2 | 3 };
 
 export const FLAGSHIP_MODELS: FlagshipModel[] = [
+  { name: "GPT-6.2 Astra", label: "GPT-6.2 Astra", fr: "Le plus récent d'OpenAI, raisonnement de pointe", en: "OpenAI's newest, top-level reasoning", cost: 3 },
   { name: "GPT-6.1 Sol", label: "GPT-6.1 Sol", fr: "Polyvalent, raisonnement avancé", en: "Versatile, advanced reasoning", cost: 2 },
+  { name: "Claude Fable 5.2", label: "Claude Fable 5.2", fr: "Le plus récent d'Anthropic, idéal pour les tâches longues", en: "Anthropic's newest, ideal for long tasks", cost: 3 },
   { name: "Claude Opus 5.5", label: "Claude Opus 5.5", fr: "Le plus puissant pour l'écriture et le code", en: "The most capable for writing and code", cost: 3 },
   { name: "Claude Sonnet 5.5", label: "Claude Sonnet 5.5", fr: "Précis et efficace au quotidien", en: "Precise and efficient every day", cost: 2 },
   { name: "Gemini 3.8 Flash", label: "Gemini 3.8 Flash", fr: "Rapide, lit images et documents", en: "Fast, reads images and documents", cost: 1 },

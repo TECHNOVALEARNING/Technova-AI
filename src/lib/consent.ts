@@ -19,7 +19,7 @@ export const EXPLICIT_CHOICE_KEYS = ["technova-site-lang", "technova-dashboard-l
 export const PREFERENCE_KEYS = [
   "technova-sidebar-collapsed",
   "technova-currency", "technova-workspace-mode", "technova-workspace-tier", "technova-workspace-model", "technova-image-model",
-  "technova-video-model", "technova-chat-kbs", "tn-artifact-width", "technova-install-dismissed",
+  "technova-video-model", "technova-chat-kbs", "tn-artifact-width", "technova-install-dismissed", "technova-announcement-dismissed",
 ] as const;
 
 export function readConsent(): ConsentChoice | null {

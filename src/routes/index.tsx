@@ -23,6 +23,7 @@ import howStep4 from "@/assets/how-step-4.webp";
 import { content, labs, type SiteLang } from "@/lib/i18n";
 import { Nav, Footer, Heading, Tag, R, ActionText, useReveal, useSiteLang } from "@/components/site/SiteChrome";
 import { InstallAppPrompt } from "@/components/site/InstallAppPrompt";
+import { AnnouncementBar } from "@/components/site/AnnouncementBar";
 import { PartnersStrip } from "@/components/site/PartnersStrip";
 import { RoutingSection } from "@/components/site/RoutingSection";
 
@@ -41,6 +42,7 @@ function Index() {
 
   return (
     <div className="min-h-screen overflow-x-clip bg-background text-foreground">
+      <AnnouncementBar lang={lang} />
       <Nav lang={lang} setLang={setLang} />
       <Hero t={t} />
       <PartnersStrip lang={lang} />
@@ -65,7 +67,7 @@ type T = (typeof content)[SiteLang];
 
 function Hero({ t }: { t: T }) {
   return (
-    <section id="top" className="relative flex min-h-[92svh] flex-col justify-between overflow-hidden bg-ink px-5 pb-8 pt-28 text-ink-foreground md:min-h-[650px] md:px-12 md:pb-10 md:pt-36">
+    <section id="top" className="hero-top relative flex min-h-[92svh] flex-col justify-between overflow-hidden bg-ink px-5 pb-8 text-ink-foreground md:min-h-[650px] md:px-12 md:pb-10">
       <img src={media.heroPoster} alt="" className="hero-media absolute object-cover" />
       <video className="hero-media absolute object-cover" autoPlay muted loop playsInline preload="metadata" poster={media.heroPoster} aria-hidden="true">
         <source src={media.heroWebm} type="video/webm" />

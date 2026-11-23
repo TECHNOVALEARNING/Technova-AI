@@ -139,7 +139,7 @@ export function Nav({ lang, setLang }: { lang: SiteLang; setLang: (l: SiteLang) 
   }, [menuOpen]);
 
   return (
-    <header className="fixed inset-x-0 top-3 z-50 flex justify-center px-3 sm:top-4 sm:px-4">
+    <header className="site-nav fixed inset-x-0 z-50 flex justify-center px-3 sm:px-4">
       <nav ref={navRef} aria-label={t.nav.menu} className="relative w-full max-w-lg text-ink-foreground lg:w-auto lg:max-w-none">
         <div className="flex min-h-14 w-full items-center gap-2 rounded-full border border-ink-foreground/10 bg-ink/90 p-1.5 pl-4 shadow-lift backdrop-blur-xl sm:pl-5 lg:w-auto">
           <Link to="/" aria-label="TechNova" onClick={() => setMenuOpen(false)} className="min-w-0 shrink-0 focus-visible:rounded-sm focus-visible:outline-2 focus-visible:outline-iris-2"><Logo className="text-[13px] sm:text-sm" /></Link>
