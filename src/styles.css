@@ -1186,9 +1186,9 @@ body:has(.dashboard-shell) :is([data-radix-popper-content-wrapper] > [data-state
 .get-app-item { background: linear-gradient(120deg, #0f766e 0%, #0e7490 55%, #1d4ed8 100%); color: #fff; box-shadow: 0 6px 14px -8px rgb(14 116 144 / .7); }
 .get-app-item:hover { filter: brightness(1.08); }
 
-/* Landing announcement bar (AnnouncementBar.tsx) on the site's black gradient; --announce-h is its measured height
+/* Landing announcement bar (AnnouncementBar.tsx), pearl white with dark text and a black button; --announce-h is its measured height
    (0 when closed or on other pages), so the fixed navigation and the hero sit below it. */
-.announce-bar { background: radial-gradient(60% 160% at 50% 0%, rgb(255 255 255 / 0.1), transparent 70%), linear-gradient(160deg, #000 0%, #060607 40%, #1b1b1e 78%, #2c2c31 100%); border-bottom: 1px solid rgb(255 255 255 / 0.08); }
+.announce-bar { background: linear-gradient(180deg, #ffffff 0%, #f4f5f7 100%); border-bottom: 1px solid rgb(0 0 0 / 0.08); box-shadow: 0 6px 18px -12px rgb(0 0 0 / 0.35); }
 .site-nav { top: calc(var(--announce-h, 0px) + 0.75rem); transition: top 0.25s ease; }
 @media (min-width: 640px) { .site-nav { top: calc(var(--announce-h, 0px) + 1rem); } }
 .hero-top { padding-top: calc(var(--announce-h, 0px) + 7rem); }
