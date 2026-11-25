@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Check, Copy, Gift, Link2, MailCheck, Share2, ShieldCheck, Ticket, Users } from "lucide-react";
+import { BadgeCheck, Check, Copy, Gift, Link2, MailCheck, Share2, ShieldCheck, Ticket, Users } from "lucide-react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faWhatsapp } from "@fortawesome/free-brands-svg-icons";
 import { toast } from "sonner";
@@ -15,7 +15,7 @@ export function ReferralPage() {
   const { lang } = useDashboard();
   const fr = lang !== "en";
   const [code, setCode] = useState<string | null>(null);
-  const [stats, setStats] = useState<{ referred: number; this_month: number; credits: number } | null>(null);
+  const [stats, setStats] = useState<{ referred: number; this_month: number; credits: number; paid?: number } | null>(null);
   const [copied, setCopied] = useState(false);
   const [codeCopied, setCodeCopied] = useState(false);
   // The account's own promo code: empty until the person chooses one (a short code friends remember easily).
@@ -68,9 +68,10 @@ export function ReferralPage() {
   };
   useEffect(() => {
     void supabase.rpc("my_referral_code").then(({ data }) => setCode(data ?? null));
-    void supabase.rpc("my_referral_stats").then(({ data }) => setStats(data?.[0] ?? { referred: 0, this_month: 0, credits: 0 }));
+    void supabase.rpc("my_referral_stats").then(({ data }) => setStats((data?.[0] as { referred: number; this_month: number; credits: number; paid?: number } | undefined) ?? { referred: 0, this_month: 0, credits: 0, paid: 0 }));
   }, []);
-  const link = code ? referralLink(code) : "";
+  // The link carries the promo code once the person has chosen one (…/?ref=AWA2026), else the link code.
+  const link = mine ? referralLink(mine) : code ? referralLink(code) : "";
   const message = fr
     ? `Je t'invite sur TechNova AI Hub : chat IA, images, vidéos, sites web, présentations et tableaux. Inscris-toi avec mon lien${mine ? ` (ou le code promo ${mine})` : ""} et on reçoit chacun ${REFERRAL_CREDITS} crédits offerts : ${link}`
     : `Join me on TechNova AI Hub: AI chat, pictures, videos, websites, presentations and spreadsheets. Sign up with my link${mine ? ` (or the promo code ${mine})` : ""} and we each get ${REFERRAL_CREDITS} free credits: ${link}`;
@@ -132,8 +133,8 @@ export function ReferralPage() {
       </div>
     </div>
 
-    <div className="grid gap-3 sm:grid-cols-3">
-      {([[Users, fr ? "Amis parrainés" : "Friends referred", stats?.referred], [Gift, fr ? "Crédits gagnés" : "Credits earned", stats?.credits], [ShieldCheck, fr ? "Ce mois-ci" : "This month", stats ? `${stats.this_month} / ${REFERRAL_MONTHLY_CAP}` : undefined]] as [typeof Users, string, string | number | undefined][]).map(([I, label, value], i) =>
+    <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+      {([[Users, fr ? "Amis parrainés" : "Friends referred", stats?.referred], [Gift, fr ? "Crédits gagnés" : "Credits earned", stats?.credits], [BadgeCheck, fr ? "Amis qui ont payé" : "Friends who paid", stats?.paid], [ShieldCheck, fr ? "Ce mois-ci" : "This month", stats ? `${stats.this_month} / ${REFERRAL_MONTHLY_CAP}` : undefined]] as [typeof Users, string, string | number | undefined][]).map(([I, label, value], i) =>
         <div key={i} className="rounded-2xl border border-border bg-card p-4"><div className="flex items-center gap-2 text-[12px] text-muted-foreground"><span className="grid size-7 place-items-center rounded-lg bg-[#1e3a8a]/10 text-[#1e3a8a] dark:text-blue-300"><I className="size-3.5" /></span>{label}</div><p className="mt-2 font-display text-[26px] font-semibold tabular-nums">{value ?? "—"}</p></div>)}
     </div>
 

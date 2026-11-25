@@ -8,10 +8,11 @@ import { OnboardingStats } from "./OnboardingStats";
 import { AdminIncidents } from "./AdminIncidents";
 import { AdminProviderChart } from "./AdminProviderChart";
 import { AdminGrowth } from "./AdminGrowth";
+import { AdminReferrals } from "./AdminReferrals";
 import { AdminFeedback, AdminOverview, AdminPacks, AdminPayments, AdminRegistryModeration, AdminUsers } from "./AdminConsole";
 
 type Ev = { id: string; user_id: string | null; kind: string; severity: string; detail: unknown; created_at: string };
-type Tab = "overview" | "growth" | "users" | "feedback" | "payments" | "packs" | "credits" | "moderation" | "incidents" | "security";
+type Tab = "overview" | "growth" | "referrals" | "users" | "feedback" | "payments" | "packs" | "credits" | "moderation" | "incidents" | "security";
 
 export function AdminPage() {
   const { lang } = useDashboard();
@@ -24,7 +25,7 @@ export function AdminPage() {
   if (!state.admin) return <div className="p-8"><h1 className="font-display text-xl font-semibold">{fr ? "Accès réservé" : "Restricted"}</h1><p className="mt-1 text-sm text-muted-foreground">{fr ? "Cette page est réservée aux administrateurs." : "This page is for administrators only."}</p></div>;
 
   const tabs: [Tab, string][] = [
-    ["overview", fr ? "Vue d'ensemble" : "Overview"], ["growth", fr ? "Croissance" : "Growth"], ["users", fr ? "Utilisateurs" : "Users"], ["feedback", "Suggestions"], ["payments", fr ? "Paiements" : "Payments"],
+    ["overview", fr ? "Vue d'ensemble" : "Overview"], ["growth", fr ? "Croissance" : "Growth"], ["referrals", fr ? "Parrainage" : "Referrals"], ["users", fr ? "Utilisateurs" : "Users"], ["feedback", "Suggestions"], ["payments", fr ? "Paiements" : "Payments"],
     ["packs", fr ? "Packs" : "Packs"], ["credits", fr ? "Crédits" : "Credits"], ["moderation", fr ? "Modération" : "Moderation"], ["incidents", "Incidents"], ["security", fr ? "Sécurité" : "Security"],
   ];
   return <div className="mx-auto w-full max-w-6xl p-4 sm:p-8">
@@ -34,6 +35,7 @@ export function AdminPage() {
     <div className="mt-5">
       {tab === "overview" && <><AdminOverview fr={fr} /><div className="mt-4"><AdminProviderChart fr={fr} /></div><OnboardingStats fr={fr} /></>}
       {tab === "growth" && <AdminGrowth fr={fr} />}
+      {tab === "referrals" && <AdminReferrals fr={fr} />}
       {tab === "users" && <AdminUsers fr={fr} onCredit={(email) => { setCreditEmail(email); setTab("credits"); }} />}
       {tab === "feedback" && <AdminFeedback fr={fr} />}
       {tab === "payments" && <AdminPayments fr={fr} />}

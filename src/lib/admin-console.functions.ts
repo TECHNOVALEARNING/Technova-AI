@@ -378,3 +378,34 @@ export const adminGrowth = createServerFn({ method: "POST" })
       revenue: { packsXof: n(rv["packs_xof"]), monthlyXof: n(rv["monthly_xof"]), packsCount: n(rv["packs_count"]), monthlyCount: n(rv["monthly_count"]), monthlyActive: n(rv["monthly_active"]), referralCredits: n(rv["referral_credits"]) },
     };
   });
+
+export type ReferralAdminData = {
+  overview: { total: number; period: number; periodPromo: number; periodLink: number; referrers: number; promoCodes: number; refereesPaid: number; revenueXof: number; periodRevenueXof: number; creditsGiven: number };
+  daily: { day: string; referrals: number; viaPromo: number }[];
+  top: { email: string; name: string; promoCode: string | null; referred: number; paid: number; revenueXof: number; lastAt: string | null }[];
+  recent: { at: string; referrer: string; referee: string; via: string; paid: boolean }[];
+};
+
+/** Admin → « Parrainage »: referral totals, link versus promo code, conversion to payment, top referrers, latest referrals (migration 0061). */
+export const adminReferrals = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: { days?: number } | undefined) => z.object({ days: z.number().int().min(1).max(365).default(30) }).parse(input ?? {}))
+  .handler(async ({ data, context }): Promise<ReferralAdminData> => {
+    await requireAdmin(context);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const rpc = (fn: string, args: Record<string, number>) => (supabaseAdmin.rpc as unknown as (f: string, a: Record<string, number>) => Promise<{ data: unknown; error: { message: string } | null }>)(fn, args);
+    const [o, d, t, r] = await Promise.all([
+      rpc("admin_referral_overview", { _days: data.days }), rpc("admin_referral_daily", { _days: data.days }),
+      rpc("admin_referral_top", { _limit: 20 }), rpc("admin_referral_recent", { _limit: 30 }),
+    ]);
+    const err = o.error ?? d.error ?? t.error ?? r.error;
+    if (err) throw new Error(err.message.includes("does not exist") ? "MIGRATION_0061_MISSING" : "REFERRALS_UNAVAILABLE");
+    const n = (v: unknown) => Number(v ?? 0) || 0;
+    const ov = (o.data as Record<string, unknown>[])[0] ?? {};
+    return {
+      overview: { total: n(ov["total"]), period: n(ov["period"]), periodPromo: n(ov["period_promo"]), periodLink: n(ov["period_link"]), referrers: n(ov["referrers"]), promoCodes: n(ov["promo_codes"]), refereesPaid: n(ov["referees_paid"]), revenueXof: n(ov["revenue_xof"]), periodRevenueXof: n(ov["period_revenue_xof"]), creditsGiven: n(ov["credits_given"]) },
+      daily: (d.data as Record<string, unknown>[]).map((x) => ({ day: String(x["day"]), referrals: n(x["referrals"]), viaPromo: n(x["via_promo"]) })),
+      top: (t.data as Record<string, unknown>[]).map((x) => ({ email: String(x["email"] ?? ""), name: String(x["display_name"] ?? ""), promoCode: (x["promo_code"] as string | null) ?? null, referred: n(x["referred"]), paid: n(x["paid"]), revenueXof: n(x["revenue_xof"]), lastAt: (x["last_at"] as string | null) ?? null })),
+      recent: (r.data as Record<string, unknown>[]).map((x) => ({ at: String(x["created_at"]), referrer: String(x["referrer_email"] ?? ""), referee: String(x["referee_email"] ?? ""), via: String(x["via"] ?? "link"), paid: Boolean(x["referee_paid"]) })),
+    };
+  });

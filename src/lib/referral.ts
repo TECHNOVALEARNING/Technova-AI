@@ -11,11 +11,12 @@ const MAX_AGE = 30 * 86_400_000;
 
 export const referralLink = (code: string) => `https://www.technovaihub.com/?ref=${code}`;
 
-/** Keeps ?ref=CODE from the address bar (any page), without overwriting a code already kept. */
+/** Keeps ?ref=CODE from the address bar (any page), without overwriting a code already kept. CODE is the
+    referrer's promo code when they chose one (AWA2026), else their link code; the server checks both. */
 export function captureReferral() {
   try {
-    const code = new URLSearchParams(window.location.search).get("ref")?.trim().toLowerCase();
-    if (!code || !/^[a-z0-9]{6,12}$/.test(code)) return;
+    const code = new URLSearchParams(window.location.search).get("ref")?.trim();
+    if (!code || !/^[A-Za-z0-9][A-Za-z0-9_-]{3,19}$/.test(code)) return;
     if (localStorage.getItem(REF_KEY)) return;
     localStorage.setItem(REF_KEY, JSON.stringify({ code, at: Date.now() }));
   } catch { /* storage blocked */ }
