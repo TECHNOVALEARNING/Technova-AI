@@ -4,7 +4,7 @@ import { savePref } from "@/lib/consent";
 import { planKeyOf, planLabels, usePlan } from "@/lib/plan-client";
 import { BookMarked, Bot, Building2, Download, ExternalLink, Sheet, SquarePen, FolderKanban, Library, MessageSquareHeart, Plug, ShieldAlert, Puzzle } from "lucide-react";
 import { getMyRole } from "@/lib/admin.functions";
-import { Activity, ArrowLeft, CalendarDays, Check, Palette, Crown, Bell, BookOpen, Boxes, ChevronDown, ChevronRight, Code2, CreditCard, Diamond, Gift, Globe2, Inbox, LayoutDashboard, LogOut, Menu, MessageCircle, Moon, PanelLeftClose, PanelLeftOpen, Search, Settings2, Sun, Wallet, X, Wrench } from "lucide-react";
+import { Activity, ArrowLeft, CalendarDays, Check, Palette, Crown, Bell, BookOpen, Boxes, ChevronDown, ChevronRight, Code2, CreditCard, Diamond, Gift, Inbox, LayoutDashboard, LogOut, Menu, MessageCircle, Moon, PanelLeftClose, PanelLeftOpen, Search, Settings2, Sun, Wallet, X, Wrench } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { dashboardText, type Lang } from "@/lib/i18n";
@@ -182,8 +182,6 @@ export function DashboardLayout({ children }: { children: ReactNode }) {
   const planKey = plan ? planKeyOf(plan.tier, plan.paid) : null;
   const planName = planKey ? planLabels[planKey][lang] : "";
 
-  // "Sites à visiter" banner: the TechNova family sites.
-  const marqueeItems = ["technovalearning.com", "beninbeyond.com", "dukaio.com"];
   const [today, setToday] = useState("");
   useEffect(() => { setToday(new Date().toLocaleDateString(lang === "en" ? "en-US" : "fr-FR", { weekday: "long", day: "numeric", month: "long", year: "numeric" })); }, [lang]);
 
@@ -284,12 +282,7 @@ export function DashboardLayout({ children }: { children: ReactNode }) {
           {!isThread ? <p className="flex h-8 min-w-0 items-center gap-1.5 text-[11.5px] font-medium text-muted-foreground"><CalendarDays className="size-3.5 shrink-0" strokeWidth={1.6} /><span className="truncate first-letter:uppercase">{today}</span></p> : <span />}
           <TopActions lang={lang} tier={plan?.tier ?? null} showCredits={pathname.startsWith("/dashboard/chat")} />
         </div>
-        <main className={`relative z-10 mx-auto w-full max-w-[1640px] px-4 pt-6 sm:px-6 lg:px-3 ${isThread ? "min-h-[calc(100svh-48px)] pb-8 lg:min-h-[calc(100svh-2rem)] lg:pb-4" : "min-h-[calc(100svh-148px)] pb-4 lg:min-h-[calc(100svh-124px)]"}`}>{error && <div role="alert" className="mb-5 flex items-center justify-between border-l-2 border-destructive bg-secondary px-4 py-3 text-sm"><span>{error}</span><Button variant="ghost" size="sm" onClick={() => void reload()}>{t.retry}</Button></div>}<PendingDeletionBanner fr={lang === "fr"} />{isAdmin && <IncidentBanner fr={lang !== "en"} />}<div key={pathname} className="dashboard-page-enter">{children}</div></main>
-        {/* "Sites à visiter": the TechNova family sites, at the bottom of the dashboard. */}
-        {!isThread && <div className="relative z-10 px-4 pb-4 sm:px-6 lg:px-3 lg:pb-0"><div className="dashboard-marquee mx-auto flex h-8 max-w-[1640px] items-center overflow-hidden rounded-full border border-border bg-card lg:h-9">
-          <span className="flex shrink-0 items-center gap-1.5 px-3.5 text-[9.5px] font-medium uppercase tracking-[0.16em] text-muted-foreground"><span className="size-1.5 rounded-full bg-foreground/60" />{lang === "fr" ? "Sites à visiter" : "Sites to visit"}</span>
-          <div className="min-w-0 flex-1 overflow-hidden [mask-image:linear-gradient(90deg,transparent,black_6%,black_94%,transparent)]"><div className="dashboard-marquee-track flex w-max items-center gap-9 whitespace-nowrap px-6 text-[11px] text-muted-foreground">{[0, 1, 2, 3].map((copy) => <span key={copy} className="contents" aria-hidden={copy > 0 ? true : undefined}>{marqueeItems.map((site) => <a key={site} href={`https://${site}/`} target="_blank" rel="noopener noreferrer" tabIndex={copy > 0 ? -1 : undefined} className="inline-flex items-center gap-1.5 transition-colors hover:text-foreground"><Globe2 className="size-3.5" strokeWidth={1.6} />{site}</a>)}</span>)}</div></div>
-        </div></div>}
+        <main className={`relative z-10 mx-auto w-full max-w-[1640px] px-4 pt-6 sm:px-6 lg:px-3 ${isThread ? "min-h-[calc(100svh-48px)] pb-8 lg:min-h-[calc(100svh-2rem)] lg:pb-4" : "min-h-[calc(100svh-100px)] pb-4 lg:min-h-[calc(100svh-88px)]"}`}>{error && <div role="alert" className="mb-5 flex items-center justify-between border-l-2 border-destructive bg-secondary px-4 py-3 text-sm"><span>{error}</span><Button variant="ghost" size="sm" onClick={() => void reload()}>{t.retry}</Button></div>}<PendingDeletionBanner fr={lang === "fr"} />{isAdmin && <IncidentBanner fr={lang !== "en"} />}<div key={pathname} className="dashboard-page-enter">{children}</div></main>
       </div>
     </div>
   </DashboardContext.Provider>;

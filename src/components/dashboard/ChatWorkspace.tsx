@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState, type PointerEvent as
 import { confirmDialog } from "@/components/ConfirmHost";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
-import { History, Share, ArrowRight, ArrowUp, Crown, Check, ChevronDown, Code2, MessageCircle, Pencil, Plus, Search, Trash2, Mic, Paperclip, X, Loader2, FileAudio, FileVideo, FileText, Square, Copy, Wand2, Zap, Film, Image as ImageIcon, Telescope, Music, Library, AlertCircle, LayoutTemplate, ShoppingBag, Palette, BadgeDollarSign, ScanEye, Sheet, Download, PenLine, AudioLines } from "lucide-react";
+import { History, Share, ArrowRight, ArrowUp, Crown, Check, ChevronDown, Code2, MessageCircle, Pencil, Plus, Search, Trash2, Mic, Paperclip, X, Loader2, FileAudio, FileVideo, FileText, Square, Copy, Wand2, Zap, Film, Image as ImageIcon, Telescope, Music, Library, AlertCircle, LayoutTemplate, ShoppingBag, Palette, BadgeDollarSign, ScanEye, ChartColumn, GraduationCap, Languages, Download, PenLine, AudioLines } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -686,7 +686,9 @@ const starterIdeas: StarterIdea[] = [
   { icon: Palette, mode: "create", wizard: "design", fr: ["Créativité", "Présentations, CV, flyers, invitations, cartes…", ""], en: ["Creativity", "Slides, résumés, flyers, invitations, cards…", ""] },
   { icon: BadgeDollarSign, mode: "create", wizard: "sales", fr: ["Page de vente pro", "Offre, style, paiement : une page qui vend", ""], en: ["Pro sales page", "Offer, style, payment: a page that sells", ""] },
   { icon: ScanEye, mode: "chat", attach: true, fr: ["Design vers code", "Une capture devient une page", "Reproduis fidèlement le design de l'image jointe en une page HTML/CSS responsive, dans un seul fichier."], en: ["Design to code", "A screenshot becomes a page", "Faithfully recreate the design in the attached image as a responsive HTML/CSS page, in a single file."] },
-  { icon: Sheet, mode: "create", wizard: "sheet", fr: ["Tableur", "Mini Excel : formules, graphiques, assistant IA", ""], en: ["Spreadsheet", "Mini Excel: formulas, charts, AI assistant", ""] },
+  { icon: ChartColumn, mode: "create", wizard: "sheet", fr: ["Analyse de données", "Vos chiffres en tableaux, formules et graphiques, avec l'assistant IA", ""], en: ["Data analysis", "Your figures in tables, formulas and charts, with the AI assistant", ""] },
+  { icon: GraduationCap, mode: "chat", fr: ["Apprendre", "Un sujet expliqué pas à pas, avec un petit quiz", "Apprends-moi [le sujet] simplement, comme un bon professeur : explique pas à pas avec des exemples concrets de la vie courante, fais un court résumé à retenir, puis pose-moi 3 questions pour vérifier que j'ai compris (sans donner les réponses tout de suite)."], en: ["Learn", "A topic explained step by step, with a short quiz", "Teach me [the topic] simply, like a good teacher: explain step by step with concrete everyday examples, give a short summary to remember, then ask me 3 questions to check I understood (without giving the answers right away)."] },
+  { icon: Languages, mode: "chat", fr: ["Traduction", "Un texte traduit fidèlement, ton et mise en forme gardés", "Traduis en [langue cible] le texte ci-dessous, fidèlement et naturellement : garde le sens, le ton et la mise en forme, n'ajoute rien, et signale entre parenthèses les mots ambigus.\n\nTexte : "], en: ["Translation", "A faithful translation, tone and layout kept", "Translate the text below into [target language], faithfully and naturally: keep the meaning, tone and formatting, add nothing, and flag ambiguous words in brackets.\n\nText: "] },
 ];
 
 function StarterIdeas({ choice, inputRef, onSalesPage, onMusic, onVideo, onHumanize, onAudio }: { choice: ReturnType<typeof useWorkspaceChoice>; inputRef: React.RefObject<HTMLTextAreaElement | null>; onSalesPage: () => void; onMusic: () => void; onVideo: () => void; onHumanize: () => void; onAudio: () => void }) {
@@ -699,7 +701,7 @@ function StarterIdeas({ choice, inputRef, onSalesPage, onMusic, onVideo, onHuman
     if (idea.wizard === "sales") { onSalesPage(); return; }
     // « Créativité » opens TechNova Design (Templates → Présentation et Canva).
     if (idea.wizard === "design") { void goTo({ to: "/dashboard/registry", search: { section: "design" } as never }); return; }
-    // « Tableur » opens TechNova Tableur (Templates → Tableur et Excel).
+    // « Analyse de données » opens TechNova Tableur (Templates → Tableur et Excel).
     if (idea.wizard === "sheet") { void goTo({ to: "/dashboard/registry", search: { section: "sheet" } as never }); return; }
     choice.chooseMode(idea.mode);
     const [, , prompt] = idea[lang === "en" ? "en" : "fr"];
@@ -712,12 +714,12 @@ function StarterIdeas({ choice, inputRef, onSalesPage, onMusic, onVideo, onHuman
       if (idea.attach) document.querySelector<HTMLInputElement>("input[data-chat-attach]")?.click();
     }, 0);
   }
-  // Three rows: Boutique en ligne · Créativité · Tableur · Page de vente pro (the two highlighted ones in the middle),
-  // then the four creation buttons of the same width, then Landing page and Design vers code centred.
+  // Three rows: Boutique en ligne · Créativité · Analyse de données · Page de vente pro (the two highlighted ones in
+  // the middle), then the four creation buttons, then Landing page · Design vers code · Apprendre · Traduction.
   const byWizard = (w: string) => starterIdeas.find((idea) => idea.wizard === w)!;
   const byTitle = (t: string) => starterIdeas.find((idea) => idea.fr[0] === t)!;
   const top = [byTitle("Boutique en ligne"), byWizard("design"), byWizard("sheet"), byWizard("sales")];
-  const bottom = [byTitle("Landing page"), byTitle("Design vers code")];
+  const bottom = [byTitle("Landing page"), byTitle("Design vers code"), byTitle("Apprendre"), byTitle("Traduction")];
   const cell = "inline-flex h-9 w-full min-w-0 items-center justify-center gap-1.5 rounded-full px-3 text-[12px]";
   const chip = (idea: StarterIdea) => {
     if (ideaOff(idea)) return null;
@@ -738,7 +740,7 @@ function StarterIdeas({ choice, inputRef, onSalesPage, onMusic, onVideo, onHuman
       {!off.has("humanize") && <button type="button" onClick={onHumanize} className={cn("create-chip create-chip-humanize font-semibold text-white", cell)}><PenLine className="size-3.5 shrink-0" /><span className="truncate">{lang === "en" ? "Humanize a text" : "Humaniser un texte"}</span></button>}
       {!off.has("audio") && <button type="button" onClick={onAudio} className={cn("create-chip create-chip-audio font-semibold text-white", cell)}><AudioLines className="size-3.5 shrink-0" /><span className="truncate">{lang === "en" ? "Summarize an audio" : "Résumé d'un audio"}</span></button>}
     </div>
-    <div className="mx-auto grid max-w-[336px] grid-cols-2 gap-2">{bottom.map(chip)}</div>
+    <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">{bottom.map(chip)}</div>
   </div>;
 }
 

@@ -520,9 +520,7 @@ html:not(:has(.dashboard-shell))::-webkit-scrollbar-track { background: transpar
 .dashboard-feature { background: var(--ink); }
 .dashboard-feature::before { content: ""; position: absolute; inset: 0; opacity: .35; background: radial-gradient(circle at 82% 31%, var(--iris-2), transparent 42%), radial-gradient(circle at 95% 100%, var(--iris-1), transparent 35%); }
 .dashboard-feature-mark { position: absolute; right: 4%; bottom: -46%; font-family: var(--font-display); font-size: 330px; line-height: 1; opacity: .18; color: var(--iris-2); transform: rotate(-22deg); pointer-events: none; }
-.dashboard-marquee-track { animation: dashboard-marquee 36s linear infinite; }
-@keyframes dashboard-marquee { to { transform: translateX(-50%); } }
-@media (prefers-reduced-motion: reduce) { .dashboard-shell .dashboard-sidebar { transition: none; } .dashboard-marquee-track { animation: none; } }
+@media (prefers-reduced-motion: reduce) { .dashboard-shell .dashboard-sidebar { transition: none; } }
 .chat-composer, .chat-composer:focus-within, .chat-composer [data-slot="input-group"], .chat-composer [data-slot="input-group"]:focus-within { box-shadow: var(--shadow-soft, none); outline: none; --tw-ring-shadow: 0 0 #0000; --tw-ring-color: transparent; }
 .chat-composer:focus-within { border-color: color-mix(in oklab, var(--chat-glow) 45%, var(--border)); }
 .chat-composer textarea, .chat-composer textarea:focus, .chat-composer textarea:focus-visible { outline: none; box-shadow: none; --tw-ring-shadow: 0 0 #0000; }
@@ -620,8 +618,7 @@ html:not(:has(.dashboard-shell))::-webkit-scrollbar-track { background: transpar
 /* Dashboard glass (macOS-like): panels over the wallpaper become frosted, translucent surfaces with a light
    edge highlight. Chat threads (no wallpaper), the composer and portaled dialogs/popovers keep solid surfaces;
    only the outermost panel blurs, so nested cards stay cheap to render. */
-.dashboard-shell:not(:has(.chat-thread)) main :is(.bg-card, .bg-card\/95, .bg-card\/90, .bg-card\/85, .bg-card\/80, .bg-card\/70).border:not(.chat-composer, .chat-composer *),
-.dashboard-shell .dashboard-marquee {
+.dashboard-shell:not(:has(.chat-thread)) main :is(.bg-card, .bg-card\/95, .bg-card\/90, .bg-card\/85, .bg-card\/80, .bg-card\/70).border:not(.chat-composer, .chat-composer *) {
   --glass-fill: var(--look-glass, color-mix(in oklab, oklch(1 0 0) 58%, transparent));
   --glass-edge: var(--look-glass-edge, oklch(1 0 0 / .62));
   --glass-shine: var(--look-glass-shine, oklch(1 0 0 / .75));
@@ -629,13 +626,11 @@ html:not(:has(.dashboard-shell))::-webkit-scrollbar-track { background: transpar
   border-color: var(--glass-edge);
   box-shadow: inset 0 1px 0 var(--glass-shine), var(--look-glass-shadow, 0 20px 50px -20px oklch(.45 .1 255 / .35));
 }
-.dashboard-shell:not(:has(.chat-thread)) main :is(.bg-card, .bg-card\/95, .bg-card\/90, .bg-card\/85, .bg-card\/80, .bg-card\/70).border:not(.chat-composer, .chat-composer *, .border .border),
-.dashboard-shell .dashboard-marquee { backdrop-filter: blur(24px) saturate(1.6); -webkit-backdrop-filter: blur(24px) saturate(1.6); }
+.dashboard-shell:not(:has(.chat-thread)) main :is(.bg-card, .bg-card\/95, .bg-card\/90, .bg-card\/85, .bg-card\/80, .bg-card\/70).border:not(.chat-composer, .chat-composer *, .border .border) { backdrop-filter: blur(24px) saturate(1.6); -webkit-backdrop-filter: blur(24px) saturate(1.6); }
 .dashboard-shell:not(:has(.chat-thread)) main :is(.bg-card, .bg-card\/95, .bg-card\/90, .bg-card\/85, .bg-card\/80, .bg-card\/70).border:not(.chat-composer, .chat-composer *, .border .border) { border-radius: max(var(--glass-radius, 22px), 8px); }
 /* Inside a glass panel, tinted fills become translucent too so the frost reads through. */
 .dashboard-shell:not(:has(.chat-thread)) main .border :is(.bg-secondary, .bg-background):not(input, textarea, select) { background-color: color-mix(in oklab, oklch(1 0 0) 38%, transparent); }
-.dark .dashboard-shell:not(:has(.chat-thread)) main :is(.bg-card, .bg-card\/95, .bg-card\/90, .bg-card\/85, .bg-card\/80, .bg-card\/70).border:not(.chat-composer, .chat-composer *),
-.dark .dashboard-shell .dashboard-marquee {
+.dark .dashboard-shell:not(:has(.chat-thread)) main :is(.bg-card, .bg-card\/95, .bg-card\/90, .bg-card\/85, .bg-card\/80, .bg-card\/70).border:not(.chat-composer, .chat-composer *) {
   --glass-fill: var(--look-glass, color-mix(in oklab, oklch(.22 .008 262) 58%, transparent));
   --glass-edge: var(--look-glass-edge, oklch(1 0 0 / .09));
   --glass-shine: var(--look-glass-shine, oklch(1 0 0 / .07));
@@ -815,8 +810,7 @@ html:not(:has(.dashboard-shell))::-webkit-scrollbar-track { background: transpar
 
 /* Readability on every look: the glass frosts more (stronger blur, fuller fill, calmer saturation) so text never
    fights the wallpaper; picture looks also soften their image slightly behind the content. */
-.dashboard-shell:is(.look-brume, .look-soie, .look-crepuscule, .look-abysse, .look-amethyste, .look-pastel, .look-azur, .look-givre, .look-perle):not(:has(.chat-thread)) main :is(.bg-card, .bg-card\/95, .bg-card\/90, .bg-card\/85, .bg-card\/80, .bg-card\/70).border:not(.chat-composer, .chat-composer *, .border .border),
-.dashboard-shell:is(.look-brume, .look-soie, .look-crepuscule, .look-abysse, .look-amethyste, .look-pastel, .look-azur, .look-givre, .look-perle) .dashboard-marquee {
+.dashboard-shell:is(.look-brume, .look-soie, .look-crepuscule, .look-abysse, .look-amethyste, .look-pastel, .look-azur, .look-givre, .look-perle):not(:has(.chat-thread)) main :is(.bg-card, .bg-card\/95, .bg-card\/90, .bg-card\/85, .bg-card\/80, .bg-card\/70).border:not(.chat-composer, .chat-composer *, .border .border) {
   backdrop-filter: blur(40px) saturate(1.25); -webkit-backdrop-filter: blur(40px) saturate(1.25); }
 .dark .dashboard-shell.look-brume .dashboard-content { --look-glass: oklch(.17 0 0 / .6); }
 .dark .dashboard-shell.look-soie .dashboard-content { --look-glass: oklch(.15 .012 250 / .6); }
@@ -972,8 +966,7 @@ body:has(.dashboard-shell) :is([data-radix-popper-content-wrapper] > [data-state
 .dark .dashboard-shell.look-soie { --mock-glass: oklch(.2 .015 250 / .55); --mock-chip: oklch(.26 .015 250 / .7); }
 .dark .dashboard-shell.look-abysse { --mock-glass: oklch(.22 .012 255 / .55); --mock-chip: oklch(.28 .012 255 / .7); }
 .dark .dashboard-shell.look-amethyste { --mock-glass: oklch(.19 .03 320 / .55); --mock-chip: oklch(.25 .03 320 / .7); }
-:root .dashboard-shell[class*="look-"]:not(:has(.chat-thread)) main :is(.bg-card, .bg-card\/95, .bg-card\/90, .bg-card\/85, .bg-card\/80, .bg-card\/70).border:not(.chat-composer, .chat-composer *, .border .border),
-:root .dashboard-shell[class*="look-"] .dashboard-marquee {
+:root .dashboard-shell[class*="look-"]:not(:has(.chat-thread)) main :is(.bg-card, .bg-card\/95, .bg-card\/90, .bg-card\/85, .bg-card\/80, .bg-card\/70).border:not(.chat-composer, .chat-composer *, .border .border) {
   background: var(--mock-glass); border-color: transparent; box-shadow: var(--mock-shadow); border-radius: 22px;
   backdrop-filter: blur(40px) saturate(1.5); -webkit-backdrop-filter: blur(40px) saturate(1.5); }
 :root .dashboard-shell[class*="look-"]:not(:has(.chat-thread)) main .border :is(.bg-card, .bg-card\/95, .bg-card\/90, .bg-card\/85, .bg-card\/80, .bg-card\/70).border:not(.chat-composer, .chat-composer *) { background: var(--mock-chip); border-color: transparent; box-shadow: var(--mock-chip-shadow); }
@@ -1115,14 +1108,6 @@ body:has(.dashboard-shell) :is([data-radix-popper-content-wrapper] > [data-state
 .starter-chip.starter-chip-sheet svg { color: #fff; }
 .starter-chip.starter-chip-sheet:hover,
 :root .dashboard-shell[class*="look-"] .starter-chip.starter-chip-sheet:hover { background: linear-gradient(120deg, #1f7a5a 0%, #2b9b74 60%, #6cc49a 100%); filter: brightness(1.08); color: #fff; }
-
-/* « Sites à visiter »: a plain scrolling line, no glass panel behind it (by request). */
-.dashboard-shell .dashboard-marquee,
-:root .dashboard-shell[class*="look-"] .dashboard-marquee,
-.dark .dashboard-shell .dashboard-marquee {
-  background: transparent !important; border-color: transparent !important; box-shadow: none !important;
-  backdrop-filter: none !important; -webkit-backdrop-filter: none !important;
-}
 
 /* Créativité and Tableur on their own line under the chat box: a little larger, a soft glow to stand out. */
 .starter-chip.featured-chip { box-shadow: 0 10px 24px -12px rgb(192 38 211 / .6); transition: transform .2s, filter .2s; }
