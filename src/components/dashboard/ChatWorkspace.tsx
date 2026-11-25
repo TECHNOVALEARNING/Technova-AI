@@ -1612,8 +1612,8 @@ export function ThreadPage({ threadId }: { threadId: string }) {
           <div className="rounded-2xl border border-border bg-card/95 p-4 text-sm shadow-sm backdrop-blur">
             <p className="font-medium">
               {generic ? upgradeSentence(upgrade.feature, fr) : site
-                ? (fr ? "🌐 La création de sites web est réservée aux forfaits Essential (2499 frs), Creator (4999 frs) et Pro (7699 frs)." : "🌐 Website creation is reserved for the Essential (2,499 F), Creator (4,999 F) and Pro (7,699 F) plans.")
-                : (fr ? "🎬 La génération vidéo est réservée aux forfaits Creator (4999 frs) et Pro (7699 frs)." : "🎬 Video generation is reserved for the Creator (4,999 F) and Pro (7,699 F) plans.")}
+                ? (fr ? "🌐 La création de sites web est réservée aux forfaits Essential (2499 frs), Creator (4999 frs) et Pro (9000 frs)." : "🌐 Website creation is reserved for the Essential (2,499 F), Creator (4,999 F) and Pro (7,699 F) plans.")
+                : (fr ? "🎬 La génération vidéo est réservée aux forfaits Creator (4999 frs) et Pro (9000 frs)." : "🎬 Video generation is reserved for the Creator (4,999 F) and Pro (7,699 F) plans.")}
             </p>
             <p className="mt-1 text-muted-foreground">
               {fr

@@ -2,11 +2,11 @@ export type Lang = "fr" | "en";
 
 export const content = {
   fr: {
-    nav: { features: "Avantages", services: "Services", pricing: "Tarifs", faq: "FAQ", models: "Modèles", ranking: "Classement", blog: "Blog", docs: "Documentation", developers: "Développeurs", about: "À propos", cta: "Commencer", login: "Connexion", account: "Mon compte", menu: "Ouvrir le menu", close: "Fermer le menu", language: "Langue" },
+    nav: { news: "Nouveautés", features: "Avantages", services: "Services", pricing: "Tarifs", faq: "FAQ", models: "Modèles", ranking: "Classement", blog: "Blog", docs: "Documentation", developers: "Développeurs", about: "À propos", cta: "Commencer", login: "Connexion", account: "Mon compte", menu: "Ouvrir le menu", close: "Fermer le menu", language: "Langue" },
     hero: {
       badge: "200+ modèles d'IA · Un seul hub",
-      title1: "L'intelligence artificielle",
-      title2: "sans limites",
+      title1: "Toutes les meilleures IA,",
+      title2: "un seul hub",
       sub: "Accédez à GPT, Claude, Gemini, DeepSeek et plus de 200 modèles depuis une seule plateforme. Payez par Mobile Money et par carte bancaire.",
       primary: "Commencer gratuitement",
       secondary: "Explorer les modèles",
@@ -15,11 +15,11 @@ export const content = {
     intro: {
       tag: "À propos",
       text: "TechNova aide les créateurs, développeurs et entreprises d'Afrique et du monde à utiliser les meilleurs modèles d'IA, ",
-      muted: "simplement, sans abonnement et au juste prix.",
+      muted: "simplement, sans abonnement obligatoire et au juste prix.",
       play: "Lire la vidéo TechNova",
       close: "Fermer la vidéo",
     },
-    stats: ["200+ MODÈLES", "0 ABONNEMENT", "FCFA · USD · EUR", "1 SEULE API", "CRÉDITS À VIE"],
+    stats: ["200+ MODÈLES", "SANS ABONNEMENT OBLIGATOIRE", "FCFA · USD · EUR", "1 SEULE API", "CRÉDITS À VIE"],
     why: {
       tag: "Pourquoi TechNova",
       title: "Pourquoi nous choisir ?",
@@ -66,7 +66,7 @@ export const content = {
     pricing: {
       tag: "Tarifs",
       title: "Simple. Transparent. Flexible.",
-      sub: "Sans abonnement : vous ne payez que les crédits que vous utilisez.",
+      sub: "Sans abonnement obligatoire : vous ne payez que les crédits que vous utilisez.",
       popular: "Le plus populaire",
       once: "Paiement unique",
       choose: "Choisir",
@@ -116,11 +116,11 @@ export const content = {
     },
   },
   en: {
-    nav: { features: "Benefits", services: "Services", pricing: "Pricing", faq: "FAQ", models: "Models", ranking: "Leaderboard", blog: "Blog", docs: "Docs", developers: "Developers", about: "About", cta: "Get started", login: "Sign in", account: "My account", menu: "Open menu", close: "Close menu", language: "Language" },
+    nav: { news: "What's new", features: "Benefits", services: "Services", pricing: "Pricing", faq: "FAQ", models: "Models", ranking: "Leaderboard", blog: "Blog", docs: "Docs", developers: "Developers", about: "About", cta: "Get started", login: "Sign in", account: "My account", menu: "Open menu", close: "Close menu", language: "Language" },
     hero: {
       badge: "200+ AI models · One hub",
-      title1: "Artificial intelligence",
-      title2: "without limits",
+      title1: "All the best AI,",
+      title2: "one single hub",
       sub: "Access GPT, Claude, Gemini, DeepSeek and 200+ models from one platform. Pay by Mobile Money and bank card.",
       primary: "Start for free",
       secondary: "Explore models",
@@ -129,11 +129,11 @@ export const content = {
     intro: {
       tag: "About",
       text: "TechNova helps creators, developers and businesses across Africa and the world use the best AI models, ",
-      muted: "simply, with no subscription and at a fair price.",
+      muted: "simply, with no subscription required and at a fair price.",
       play: "Play TechNova video",
       close: "Close video",
     },
-    stats: ["200+ MODELS", "0 SUBSCRIPTION", "FCFA · USD · EUR", "ONE API", "LIFETIME CREDITS"],
+    stats: ["200+ MODELS", "NO SUBSCRIPTION REQUIRED", "FCFA · USD · EUR", "ONE API", "LIFETIME CREDITS"],
     why: {
       tag: "Why TechNova",
       title: "Why choose us?",
@@ -180,7 +180,7 @@ export const content = {
     pricing: {
       tag: "Pricing",
       title: "Simple. Transparent. Flexible.",
-      sub: "No subscription: you only pay for the credits you use.",
+      sub: "No subscription required: you only pay for the credits you use.",
       popular: "Most popular",
       once: "One-time payment",
       choose: "Choose",
@@ -230,11 +230,11 @@ export const content = {
     },
   },
   es: {
-    nav: { features: "Ventajas", services: "Servicios", pricing: "Precios", faq: "FAQ", models: "Modelos", ranking: "Clasificación", blog: "Blog", docs: "Documentación", developers: "Desarrolladores", about: "Acerca de", cta: "Empezar", login: "Iniciar sesión", account: "Mi cuenta", menu: "Abrir el menú", close: "Cerrar el menú", language: "Idioma" },
+    nav: { news: "Novedades", features: "Ventajas", services: "Servicios", pricing: "Precios", faq: "FAQ", models: "Modelos", ranking: "Clasificación", blog: "Blog", docs: "Documentación", developers: "Desarrolladores", about: "Acerca de", cta: "Empezar", login: "Iniciar sesión", account: "Mi cuenta", menu: "Abrir el menú", close: "Cerrar el menú", language: "Idioma" },
     hero: {
       badge: "200+ modelos de IA · Un solo hub",
-      title1: "La inteligencia artificial",
-      title2: "sin límites",
+      title1: "Todas las mejores IA,",
+      title2: "un solo hub",
       sub: "Accede a GPT, Claude, Gemini, DeepSeek y más de 200 modelos desde una sola plataforma. Paga con Mobile Money y tarjeta bancaria.",
       primary: "Empezar gratis",
       secondary: "Explorar los modelos",
@@ -243,11 +243,11 @@ export const content = {
     intro: {
       tag: "Acerca de",
       text: "TechNova ayuda a creadores, desarrolladores y empresas de África y del mundo a usar los mejores modelos de IA, ",
-      muted: "de forma sencilla, sin suscripción y al precio justo.",
+      muted: "de forma sencilla, sin suscripción obligatoria y al precio justo.",
       play: "Reproducir el vídeo de TechNova",
       close: "Cerrar el vídeo",
     },
-    stats: ["200+ MODELOS", "0 SUSCRIPCIONES", "FCFA · USD · EUR", "1 SOLA API", "CRÉDITOS DE POR VIDA"],
+    stats: ["200+ MODELOS", "SIN SUSCRIPCIÓN OBLIGATORIA", "FCFA · USD · EUR", "1 SOLA API", "CRÉDITOS DE POR VIDA"],
     why: {
       tag: "Por qué TechNova",
       title: "¿Por qué elegirnos?",
@@ -294,7 +294,7 @@ export const content = {
     pricing: {
       tag: "Precios",
       title: "Simple. Transparente. Flexible.",
-      sub: "Sin suscripción: solo pagas los créditos que usas.",
+      sub: "Sin suscripción obligatoria: solo pagas los créditos que usas.",
       popular: "El más popular",
       once: "Pago único",
       choose: "Elegir",
@@ -344,11 +344,11 @@ export const content = {
     },
   },
   pt: {
-    nav: { features: "Vantagens", services: "Serviços", pricing: "Preços", faq: "FAQ", models: "Modelos", ranking: "Ranking", blog: "Blog", docs: "Documentação", developers: "Desenvolvedores", about: "Sobre", cta: "Começar", login: "Entrar", account: "Minha conta", menu: "Abrir o menu", close: "Fechar o menu", language: "Idioma" },
+    nav: { news: "Novidades", features: "Vantagens", services: "Serviços", pricing: "Preços", faq: "FAQ", models: "Modelos", ranking: "Ranking", blog: "Blog", docs: "Documentação", developers: "Desenvolvedores", about: "Sobre", cta: "Começar", login: "Entrar", account: "Minha conta", menu: "Abrir o menu", close: "Fechar o menu", language: "Idioma" },
     hero: {
       badge: "200+ modelos de IA · Um só hub",
-      title1: "A inteligência artificial",
-      title2: "sem limites",
+      title1: "Todas as melhores IAs,",
+      title2: "um único hub",
       sub: "Acesse GPT, Claude, Gemini, DeepSeek e mais de 200 modelos numa única plataforma. Pague com Mobile Money e cartão bancário.",
       primary: "Começar grátis",
       secondary: "Explorar os modelos",
@@ -357,11 +357,11 @@ export const content = {
     intro: {
       tag: "Sobre",
       text: "A TechNova ajuda criadores, desenvolvedores e empresas da África e do mundo a usar os melhores modelos de IA, ",
-      muted: "de forma simples, sem assinatura e pelo preço justo.",
+      muted: "de forma simples, sem assinatura obrigatória e pelo preço justo.",
       play: "Reproduzir o vídeo da TechNova",
       close: "Fechar o vídeo",
     },
-    stats: ["200+ MODELOS", "0 ASSINATURAS", "FCFA · USD · EUR", "1 ÚNICA API", "CRÉDITOS VITALÍCIOS"],
+    stats: ["200+ MODELOS", "SEM ASSINATURA OBRIGATÓRIA", "FCFA · USD · EUR", "1 ÚNICA API", "CRÉDITOS VITALÍCIOS"],
     why: {
       tag: "Por que a TechNova",
       title: "Por que nos escolher?",
@@ -408,7 +408,7 @@ export const content = {
     pricing: {
       tag: "Preços",
       title: "Simples. Transparente. Flexível.",
-      sub: "Sem assinatura: você paga apenas os créditos que usa.",
+      sub: "Sem assinatura obrigatória: você paga apenas os créditos que usa.",
       popular: "O mais popular",
       once: "Pagamento único",
       choose: "Escolher",

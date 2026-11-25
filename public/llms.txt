@@ -1,6 +1,6 @@
 # TechNova AI Hub
 
-> TechNova AI Hub réunit les meilleurs modèles d'intelligence artificielle (GPT, Claude, Gemini, Qwen…) dans un seul espace pour discuter, coder, analyser des documents et créer des images, des vidéos et de la musique. Paiement en crédits prépayés sans abonnement, en FCFA par Mobile Money ou carte ; les crédits n'expirent pas. Interface en français, anglais, espagnol et portugais.
+> TechNova AI Hub réunit les meilleurs modèles d'intelligence artificielle (GPT, Claude, Gemini, Qwen…) dans un seul espace pour discuter, coder, analyser des documents et créer des images, des vidéos et de la musique. Paiement en crédits prépayés sans abonnement obligatoire, en FCFA par Mobile Money ou carte ; les crédits n'expirent pas. Interface en français, anglais, espagnol et portugais.
 
 ## Produit
 
@@ -8,7 +8,7 @@
 - [Modèles IA](https://www.technovaihub.com/modeles): modèles disponibles et prix en crédits ; le chat propose trois modes (Éclair, Équilibré, Expert) et TechNova Smart, qui choisit le mode pour chaque demande
 - Créativité (TechNova Design) : 210 modèles originaux de présentations, documents, CV, factures, flyers, invitations, cartes, logos et publications, avec un éditeur libre (polices libres, mise en forme, images, emojis, pages) et des exports PDF, PowerPoint, HTML ou lien à partager sur WhatsApp
 - Tableur (TechNova Tableur) : un mini Excel dans le navigateur (formules en français ou en anglais, formats FCFA, graphiques, plusieurs feuilles, imports Excel/CSV/PDF/Google Drive, exports Excel/PDF/Google Sheets) avec un assistant IA à 4 crédits la demande
-- [Tarifs](https://www.technovaihub.com/tarifs): packs Starter (999 FCFA, 1 000 crédits), Essential (2 499 FCFA, 2 600 crédits), Creator (4 999 FCFA, 5 500 crédits) et Pro (7 699 FCFA, 8 500 crédits)
+- [Tarifs](https://www.technovaihub.com/tarifs): packs Starter (999 FCFA, 1 000 crédits), Essential (2 499 FCFA, 2 600 crédits), Creator (4 999 FCFA, 5 500 crédits) et Pro (9 000 FCFA, 10 000 crédits)
 
 ## Développeurs
 
@@ -21,3 +21,7 @@
 - [Conditions d'utilisation](https://www.technovaihub.com/conditions-utilisation)
 - [Politique de confidentialité](https://www.technovaihub.com/confidentialite)
 - Contact : support@technovaihub.com
+
+## English
+
+TechNova AI Hub brings the best AI models (GPT, Claude, Gemini, DeepSeek and 200+ others) into one place to chat, code, analyse documents and create images, videos, music, websites, slides and spreadsheets. Prepaid credits paid in FCFA by Mobile Money or card, no subscription required; optional monthly and team plans. English pages: https://www.technovaihub.com/?lang=en, https://www.technovaihub.com/tarifs?lang=en, https://www.technovaihub.com/modeles?lang=en, https://www.technovaihub.com/documentation?lang=en.

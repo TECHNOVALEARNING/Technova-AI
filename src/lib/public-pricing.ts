@@ -7,7 +7,7 @@ export const fallbackPacks = [
   { slug: "starter", name: "Starter", price_xof: 999, credits: 1000, featured: false },
   { slug: "essential", name: "Essential", price_xof: 2499, credits: 2600, featured: false },
   { slug: "creator", name: "Creator", price_xof: 4999, credits: 5500, featured: false },
-  { slug: "pro", name: "Pro", price_xof: 7699, credits: 8500, featured: true },
+  { slug: "pro", name: "Pro", price_xof: 9000, credits: 10000, featured: true },
 ];
 export type PublicPack = (typeof fallbackPacks)[number];
 export const PENDING_PACK_KEY = "tn-pending-pack";

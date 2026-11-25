@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { pageHead, breadcrumbLd } from "@/lib/seo";
+import { seoFor } from "@/lib/seo-i18n";
 import { useState, type CSSProperties } from "react";
 import { ArrowUpRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -7,7 +8,7 @@ import { Nav, Footer, PageHero, R, ActionText, useReveal, useSiteLang } from "@/
 import { posts, blogCats, type Post } from "@/lib/site-pages";
 
 export const Route = createFileRoute("/blog")({
-  head: () => pageHead({ path: "/blog", title: "Blog IA — TechNova AI Hub", description: "Comparatifs de modèles, guides pratiques, cadre réglementaire et retours d'expérience sur l'IA, en français.", ogDescription: "Comprendre l'IA, puis l'utiliser : comparatifs, guides et réglementation.", jsonLd: [breadcrumbLd("Blog", "/blog")] }),
+  head: ({ match }) => pageHead({ ...seoFor("/blog", match.search), jsonLd: [breadcrumbLd("Blog", "/blog")] }),
   component: BlogPage,
 });
 

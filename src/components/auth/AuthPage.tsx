@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { content, type Lang } from "@/lib/i18n";
 import { supabase } from "@/integrations/supabase/client";
+import { isPromoCode, keptPromoCode, savePromoCode } from "@/lib/referral";
 import artifact from "@/assets/auth-artifact.jpg";
 
 type Mode = "login" | "signup" | "forgot" | "reset";
@@ -60,6 +61,12 @@ export function AuthPage({ mode }: { mode: Mode }) {
   const [pw, setPw] = useState("");
   const [failed, setFailed] = useState(0);
   const [lockedUntil, setLockedUntil] = useState(0);
+  // Optional promo code (a friend's referral code): kept on the device and claimed once the e-mail is confirmed,
+  // for e-mail and Google sign-ups alike.
+  const [promo, setPromo] = useState("");
+  const [promoOpen, setPromoOpen] = useState(false);
+  useEffect(() => { const kept = keptPromoCode(); if (kept) { setPromo(kept); setPromoOpen(true); } }, []);
+  const promoValid = !promo.trim() || isPromoCode(promo);
   const [now, setNow] = useState(() => Date.now());
   const navigate = useNavigate();
   const t = content[lang].auth;
@@ -207,6 +214,9 @@ export function AuthPage({ mode }: { mode: Mode }) {
             <h1 className="font-display text-[26px] font-semibold leading-tight">{title}</h1>
             <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{sub}</p>
           </div>
+          {isSignup && <div className="mb-4">{promoOpen
+            ? <div className="space-y-1.5"><Label htmlFor="auth-promo">{lang === "fr" ? "Code promo (facultatif)" : "Promo code (optional)"}</Label><Input id="auth-promo" value={promo} maxLength={16} placeholder={lang === "fr" ? "Ex. : 3F9A12BC" : "e.g. 3F9A12BC"} autoComplete="off" aria-invalid={!promoValid} onChange={(e) => { const v = e.target.value.toUpperCase(); setPromo(v); savePromoCode(v); }} className="auth-input font-mono tracking-[0.15em]" />{promoValid ? <p className="text-xs text-muted-foreground">{lang === "fr" ? "Reçu d'un ami : vous gagnez chacun des crédits dès la confirmation de votre e-mail." : "From a friend: you each get credits once your e-mail is confirmed."}</p> : <p className="text-xs text-destructive">{lang === "fr" ? "Ce code ne semble pas valide (6 à 12 lettres et chiffres)." : "This code does not look valid (6 to 12 letters and digits)."}</p>}</div>
+            : <button type="button" onClick={() => setPromoOpen(true)} className="text-xs font-semibold text-muted-foreground underline-offset-4 hover:text-foreground hover:underline">{lang === "fr" ? "J'ai un code promo" : "I have a promo code"}</button>}</div>}
           {(isSignup || isLogin) && <><Button type="button" variant="outline" disabled={busy || !ready} onClick={handleGoogle} className="auth-google h-11 w-full gap-3 font-semibold"><GoogleMark />{t.google}</Button><div className="my-5 flex items-center gap-4 text-[11px] font-semibold text-muted-foreground"><span className="h-px flex-1 bg-border" />{t.orEmail}<span className="h-px flex-1 bg-border" /></div></>}
           <form noValidate method="post" onSubmit={handleSubmit} className="space-y-4">
             {isSignup && <div className="space-y-1.5"><Label htmlFor="auth-name">{t.name}</Label><Input id="auth-name" name="name" autoComplete="name" placeholder={t.namePlaceholder} maxLength={100} aria-invalid={!!errors.name} onChange={() => clear("name")} className="auth-input" />{errors.name && <p className="text-xs text-destructive">{errors.name}</p>}</div>}

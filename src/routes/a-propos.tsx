@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { pageHead, breadcrumbLd } from "@/lib/seo";
+import { seoFor } from "@/lib/seo-i18n";
 import { ArrowRight, Code2, Compass, Globe2, HeartHandshake, Linkedin, Target } from "lucide-react";
 import { TechNovaMark } from "@/components/site/TechNovaMark";
 import { Button } from "@/components/ui/button";
@@ -9,7 +10,7 @@ import { allPublicModels } from "@/lib/public-models";
 import registryManifest from "../../drizzle/registry/manifest.json";
 
 export const Route = createFileRoute("/a-propos")({
-  head: () => pageHead({ path: "/a-propos", title: "À propos — TechNova AI Hub", description: "La vision, la mission et l'équipe de TechNova AI Hub : les meilleurs modèles d'IA réunis dans un seul espace pour apprendre, créer et développer.", ogDescription: "Ouvert au monde : la vision, la mission et l'équipe de TechNova AI Hub.", jsonLd: [breadcrumbLd("À propos", "/a-propos")] }),
+  head: ({ match }) => pageHead({ ...seoFor("/a-propos", match.search), jsonLd: [breadcrumbLd("À propos", "/a-propos")] }),
   component: AboutPage,
 });
 
@@ -28,7 +29,7 @@ const text = {
   fr: {
     tag: "À propos", title: "Ouvert au monde.", sub: "TechNova AI Hub est né d'un constat simple : les meilleurs outils d'intelligence artificielle existent, mais restent hors de portée de millions de créateurs, d'étudiants et d'entreprises, faute de moyen de paiement adapté.",
     visionTag: "Vision", visionTitle: "Une IA de premier plan entre toutes les mains.", vision: "Nous voulons que chaque créateur, développeur ou entrepreneur, où qu'il soit, puisse utiliser les modèles les plus avancés du monde pour apprendre, créer et bâtir, sans barrière de langue, de devise ou de carte bancaire.",
-    missionTag: "Mission", missionTitle: "Réunir les meilleurs modèles, au juste prix.", mission: "Nous rassemblons GPT, Claude, Gemini, DeepSeek et des dizaines d'autres modèles dans un seul espace : chat, création de sites, images, vidéos, musique et API. Pas d'abonnement : des crédits sans expiration, que vous utilisez à votre rythme.",
+    missionTag: "Mission", missionTitle: "Réunir les meilleurs modèles, au juste prix.", mission: "Nous rassemblons GPT, Claude, Gemini, DeepSeek et des dizaines d'autres modèles dans un seul espace : chat, création de sites, images, vidéos, musique et API. Pas d'abonnement obligatoire : des crédits sans expiration, que vous utilisez à votre rythme.",
     whyTag: "Pourquoi TechNova AI Hub ?", whyTitle: "Les géants de l'IA imposent la carte bancaire en dollars. Une barrière invisible qui freine l'innovation en Afrique.",
     whyIntro: "L'accès aux modèles d'intelligence artificielle sur le continent africain ne se heurte pas à un manque de compétences techniques, mais à une asymétrie profonde des infrastructures de facturation internationale.",
     whyCols: ["Réalité du marché africain", "Impasse actuelle"],
@@ -36,7 +37,7 @@ const text = {
     whyFinding: "Le constat", whyFindingText: "L'écosystème tech africain regorge de talents, mais reste bridé par des infrastructures de paiement inadaptées aux réalités locales. TechNova AI Hub ouvre les meilleurs modèles au paiement en FCFA par Mobile Money.",
     whySources: "Sources : GitHub Octoverse · Andela · McKinsey & African Business, 2025–2026",
     statsTag: "TechNova en chiffres", statsTitle: "Une plateforme complète, dès aujourd'hui.",
-    statLabels: { models: "modèles d'IA disponibles", languages: "langues : français, anglais, espagnol, portugais", payments: "moyens de paiement, dont 4 Mobile Money", registry: "modèles et ressources prêts à l'emploi", subscription: "abonnement : vous ne payez que ce que vous utilisez" },
+    statLabels: { models: "modèles d'IA disponibles", languages: "langues : français, anglais, espagnol, portugais", payments: "moyens de paiement, dont 4 Mobile Money", registry: "modèles et ressources prêts à l'emploi", subscription: "abonnement obligatoire : vous ne payez que ce que vous utilisez" },
     valuesTag: "Nos valeurs", valuesTitle: "Ce qui guide chacune de nos décisions.",
     values: [["Accessibilité", "Des prix justes, un paiement simple et une interface pensée pour être comprise dès la première minute."], ["Exigence", "Les meilleurs modèles, une qualité de finition irréprochable et des réponses fiables."], ["Confiance", "Vos données vous appartiennent : elles sont protégées, jamais vendues, et vos contenus n'entraînent aucun modèle."]],
     teamTag: "L'équipe", teamTitle: "Les fondateurs de TechNova AI Hub.", role: "Cofondateur", devRole: "Cofondateur & Développeur full stack", devBadge: "Développeur full stack", devText: "Développeur full stack de TechNova AI Hub : il conçoit et fait évoluer la plateforme, du site à l'IA en passant par les paiements. Disponible pour vos projets web et IA.", devCta: "Me confier un projet", linkedinSoon: "Profil LinkedIn bientôt disponible", linkedinOpen: "Voir le profil LinkedIn de",
@@ -45,7 +46,7 @@ const text = {
   en: {
     tag: "About", title: "Open to the world.", sub: "TechNova AI Hub started from a simple observation: the best artificial intelligence tools exist, yet they remain out of reach for millions of creators, students and businesses who lack a suitable way to pay.",
     visionTag: "Vision", visionTitle: "World-class AI in everyone's hands.", vision: "We want every creator, developer or entrepreneur, wherever they are, to use the world's most advanced models to learn, create and build, with no language, currency or bank-card barrier.",
-    missionTag: "Mission", missionTitle: "The best models, at a fair price.", mission: "We bring GPT, Claude, Gemini, DeepSeek and dozens of other models together in one place: chat, website building, images, video, music and an API. No subscription: credits that never expire, used at your own pace.",
+    missionTag: "Mission", missionTitle: "The best models, at a fair price.", mission: "We bring GPT, Claude, Gemini, DeepSeek and dozens of other models together in one place: chat, website building, images, video, music and an API. No subscription required: credits that never expire, used at your own pace.",
     whyTag: "Why TechNova AI Hub?", whyTitle: "AI giants require a dollar bank card. An invisible barrier holding back innovation in Africa.",
     whyIntro: "Access to AI models across the African continent is not limited by a lack of technical skills, but by a deep imbalance in international billing infrastructure.",
     whyCols: ["African market reality", "Current dead end"],
@@ -53,7 +54,7 @@ const text = {
     whyFinding: "The finding", whyFindingText: "Africa's tech ecosystem is full of talent, yet held back by payment infrastructure that does not fit local realities. TechNova AI Hub opens the best models to FCFA payment by Mobile Money.",
     whySources: "Sources: GitHub Octoverse · Andela · McKinsey & African Business, 2025–2026",
     statsTag: "TechNova in numbers", statsTitle: "A complete platform, today.",
-    statLabels: { models: "AI models available", languages: "languages: French, English, Spanish, Portuguese", payments: "payment methods, including 4 Mobile Money", registry: "ready-to-use templates and resources", subscription: "subscription: you only pay for what you use" },
+    statLabels: { models: "AI models available", languages: "languages: French, English, Spanish, Portuguese", payments: "payment methods, including 4 Mobile Money", registry: "ready-to-use templates and resources", subscription: "required subscription: you only pay for what you use" },
     valuesTag: "Our values", valuesTitle: "What guides every decision we make.",
     values: [["Accessibility", "Fair prices, simple payment and an interface that makes sense from the first minute."], ["Excellence", "The best models, polished craftsmanship and reliable answers."], ["Trust", "Your data is yours: protected, never sold, and your content never trains any model."]],
     teamTag: "The team", teamTitle: "The founders of TechNova AI Hub.", role: "Co-founder", devRole: "Co-founder & Full-stack developer", devBadge: "Full-stack developer", devText: "Full-stack developer of TechNova AI Hub: he designs and grows the platform, from the website to AI and payments. Available for your web and AI projects.", devCta: "Hire me for a project", linkedinSoon: "LinkedIn profile coming soon", linkedinOpen: "View the LinkedIn profile of",
@@ -62,7 +63,7 @@ const text = {
   es: {
     tag: "Acerca de", title: "Abierto al mundo.", sub: "TechNova AI Hub nació de una constatación sencilla: las mejores herramientas de inteligencia artificial existen, pero siguen fuera del alcance de millones de creadores, estudiantes y empresas que no tienen un medio de pago adecuado.",
     visionTag: "Visión", visionTitle: "Una IA de primer nivel en todas las manos.", vision: "Queremos que cada creador, desarrollador o emprendedor, esté donde esté, pueda usar los modelos más avanzados del mundo para aprender, crear y construir, sin barreras de idioma, de moneda ni de tarjeta bancaria.",
-    missionTag: "Misión", missionTitle: "Reunir los mejores modelos, al precio justo.", mission: "Reunimos GPT, Claude, Gemini, DeepSeek y decenas de modelos más en un solo espacio: chat, creación de sitios, imágenes, vídeos, música y API. Sin suscripción: créditos que no caducan, que usas a tu ritmo.",
+    missionTag: "Misión", missionTitle: "Reunir los mejores modelos, al precio justo.", mission: "Reunimos GPT, Claude, Gemini, DeepSeek y decenas de modelos más en un solo espacio: chat, creación de sitios, imágenes, vídeos, música y API. Sin suscripción obligatoria: créditos que no caducan, que usas a tu ritmo.",
     whyTag: "¿Por qué TechNova AI Hub?", whyTitle: "Los gigantes de la IA exigen una tarjeta bancaria en dólares. Una barrera invisible que frena la innovación en África.",
     whyIntro: "El acceso a los modelos de inteligencia artificial en el continente africano no choca con una falta de competencias técnicas, sino con una profunda asimetría de las infraestructuras de facturación internacional.",
     whyCols: ["Realidad del mercado africano", "Bloqueo actual"],
@@ -70,7 +71,7 @@ const text = {
     whyFinding: "La constatación", whyFindingText: "El ecosistema tecnológico africano rebosa de talento, pero sigue limitado por infraestructuras de pago inadaptadas a las realidades locales. TechNova AI Hub abre los mejores modelos al pago en FCFA con Mobile Money.",
     whySources: "Fuentes: GitHub Octoverse · Andela · McKinsey & African Business, 2025–2026",
     statsTag: "TechNova en cifras", statsTitle: "Una plataforma completa, desde hoy.",
-    statLabels: { models: "modelos de IA disponibles", languages: "idiomas: francés, inglés, español, portugués", payments: "medios de pago, incluidos 4 Mobile Money", registry: "plantillas y recursos listos para usar", subscription: "suscripciones: solo pagas lo que usas" },
+    statLabels: { models: "modelos de IA disponibles", languages: "idiomas: francés, inglés, español, portugués", payments: "medios de pago, incluidos 4 Mobile Money", registry: "plantillas y recursos listos para usar", subscription: "suscripciones obligatorias: solo pagas lo que usas" },
     valuesTag: "Nuestros valores", valuesTitle: "Lo que guía cada una de nuestras decisiones.",
     values: [["Accesibilidad", "Precios justos, pago sencillo y una interfaz que se entiende desde el primer minuto."], ["Exigencia", "Los mejores modelos, un acabado impecable y respuestas fiables."], ["Confianza", "Tus datos son tuyos: protegidos, nunca vendidos, y tus contenidos no entrenan ningún modelo."]],
     teamTag: "El equipo", teamTitle: "Los fundadores de TechNova AI Hub.", role: "Cofundador", devRole: "Cofundador y desarrollador full stack", devBadge: "Desarrollador full stack", devText: "Desarrollador full stack de TechNova AI Hub: diseña y hace evolucionar la plataforma, del sitio a la IA y los pagos. Disponible para sus proyectos web e IA.", devCta: "Confíeme un proyecto", linkedinSoon: "Perfil de LinkedIn disponible pronto", linkedinOpen: "Ver el perfil de LinkedIn de",
@@ -79,7 +80,7 @@ const text = {
   pt: {
     tag: "Sobre", title: "Aberto ao mundo.", sub: "A TechNova AI Hub nasceu de uma constatação simples: as melhores ferramentas de inteligência artificial existem, mas continuam fora do alcance de milhões de criadores, estudantes e empresas sem um meio de pagamento adequado.",
     visionTag: "Visão", visionTitle: "Uma IA de ponta em todas as mãos.", vision: "Queremos que cada criador, desenvolvedor ou empreendedor, onde quer que esteja, possa usar os modelos mais avançados do mundo para aprender, criar e construir, sem barreira de idioma, de moeda ou de cartão bancário.",
-    missionTag: "Missão", missionTitle: "Reunir os melhores modelos, pelo preço justo.", mission: "Reunimos GPT, Claude, Gemini, DeepSeek e dezenas de outros modelos num só espaço: chat, criação de sites, imagens, vídeos, música e API. Sem assinatura: créditos que não expiram, usados no seu ritmo.",
+    missionTag: "Missão", missionTitle: "Reunir os melhores modelos, pelo preço justo.", mission: "Reunimos GPT, Claude, Gemini, DeepSeek e dezenas de outros modelos num só espaço: chat, criação de sites, imagens, vídeos, música e API. Sem assinatura obrigatória: créditos que não expiram, usados no seu ritmo.",
     whyTag: "Por que a TechNova AI Hub?", whyTitle: "Os gigantes da IA exigem cartão bancário em dólares. Uma barreira invisível que trava a inovação na África.",
     whyIntro: "O acesso aos modelos de inteligência artificial no continente africano não esbarra na falta de competências técnicas, mas numa profunda assimetria das infraestruturas de faturação internacional.",
     whyCols: ["Realidade do mercado africano", "Impasse atual"],
@@ -87,7 +88,7 @@ const text = {
     whyFinding: "A constatação", whyFindingText: "O ecossistema tech africano está repleto de talentos, mas continua limitado por infraestruturas de pagamento inadequadas às realidades locais. A TechNova AI Hub abre os melhores modelos ao pagamento em FCFA por Mobile Money.",
     whySources: "Fontes: GitHub Octoverse · Andela · McKinsey & African Business, 2025–2026",
     statsTag: "A TechNova em números", statsTitle: "Uma plataforma completa, desde já.",
-    statLabels: { models: "modelos de IA disponíveis", languages: "idiomas: francês, inglês, espanhol, português", payments: "meios de pagamento, incluindo 4 Mobile Money", registry: "modelos e recursos prontos para usar", subscription: "assinaturas: você só paga o que usa" },
+    statLabels: { models: "modelos de IA disponíveis", languages: "idiomas: francês, inglês, espanhol, português", payments: "meios de pagamento, incluindo 4 Mobile Money", registry: "modelos e recursos prontos para usar", subscription: "assinaturas obrigatórias: você só paga o que usa" },
     valuesTag: "Nossos valores", valuesTitle: "O que orienta cada uma das nossas decisões.",
     values: [["Acessibilidade", "Preços justos, pagamento simples e uma interface compreensível desde o primeiro minuto."], ["Excelência", "Os melhores modelos, acabamento impecável e respostas confiáveis."], ["Confiança", "Seus dados são seus: protegidos, nunca vendidos, e seus conteúdos não treinam nenhum modelo."]],
     teamTag: "A equipe", teamTitle: "Os fundadores da TechNova AI Hub.", role: "Cofundador", devRole: "Cofundador e desenvolvedor full stack", devBadge: "Desenvolvedor full stack", devText: "Desenvolvedor full stack da TechNova AI Hub: concebe e faz evoluir a plataforma, do site à IA e aos pagamentos. Disponível para seus projetos web e de IA.", devCta: "Confie-me um projeto", linkedinSoon: "Perfil do LinkedIn em breve", linkedinOpen: "Ver o perfil do LinkedIn de",

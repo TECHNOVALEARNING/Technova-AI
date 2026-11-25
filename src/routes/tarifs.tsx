@@ -1,12 +1,13 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { pageHead, appLd, breadcrumbLd } from "@/lib/seo";
+import { seoFor } from "@/lib/seo-i18n";
 import { Footer, Nav, PageHero, useSiteLang } from "@/components/site/SiteChrome";
 import { PricingContent } from "@/components/site/PricingContent";
 import { PlanComparison } from "@/components/site/PlanComparison";
 import { tr } from "@/lib/i18n";
 
 export const Route = createFileRoute("/tarifs")({
-  head: () => pageHead({ path: "/tarifs", title: "Tarifs et crédits Technova — TechNova AI Hub", description: "Quatre packs de crédits TechNova, de 999 à 7 699 FCFA : Starter, Essential, Creator et Pro. Sans abonnement, crédits sans expiration, paiement Mobile Money ou carte.", ogDescription: "Quatre packs de crédits TechNova prépayés, sans abonnement.", jsonLd: [appLd, breadcrumbLd("Tarifs", "/tarifs")] }),
+  head: ({ match }) => pageHead({ ...seoFor("/tarifs", match.search), jsonLd: [appLd, breadcrumbLd("Tarifs", "/tarifs")] }),
   component: PricingPage,
 });
 

@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { pageHead, breadcrumbLd } from "@/lib/seo";
+import { seoFor } from "@/lib/seo-i18n";
 import { useEffect, useMemo, useState, type CSSProperties } from "react";
 import { ArrowRight, AudioLines, Brain, ChevronLeft, ChevronRight, Clapperboard, Code2, Eye, Image as ImageIcon, MessageSquareText, ScrollText, Search, Zap } from "lucide-react";
 import { Nav, Footer, PageHero, useSiteLang } from "@/components/site/SiteChrome";
@@ -8,7 +9,7 @@ import type { SiteLang } from "@/lib/i18n";
 import { allPublicModels, mediaCatalog, textModels, type PublicModel, type TextCap } from "@/lib/public-models";
 
 export const Route = createFileRoute("/modeles")({
-  head: () => pageHead({ path: "/modeles", title: "Modèles IA disponibles et prix en crédits — TechNova AI Hub", description: "GPT, Claude, Gemini, Qwen et plus : les modèles d'IA de TechNova pour écrire, coder et analyser, avec images, vidéos et musique à prix fixe, en crédits Technova.", ogTitle: "Modèles IA disponibles — TechNova AI Hub", ogDescription: "Texte, code, images, vidéos et musique : les modèles disponibles sur TechNova et leur prix en crédits.", jsonLd: [breadcrumbLd("Modèles IA", "/modeles")] }),
+  head: ({ match }) => pageHead({ ...seoFor("/modeles", match.search), jsonLd: [breadcrumbLd("Modèles IA", "/modeles")] }),
   component: ModelsPage,
 });
 

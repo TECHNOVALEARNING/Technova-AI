@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, type ReactNode } from "react";
-import { Link } from "@tanstack/react-router";
+import { Link, useRouterState } from "@tanstack/react-router";
 import { ArrowUpRight, Globe, LogIn, Mail, Menu, X, Facebook, Instagram, Linkedin, Youtube } from "lucide-react";
 import { Flag } from "@/components/site/Flag";
 import { HelpWidget } from "@/components/site/HelpWidget";
@@ -8,19 +8,29 @@ import { content, isSiteLang, siteLangs, tr, type SiteLang } from "@/lib/i18n";
 import { supabase } from "@/integrations/supabase/client";
 import { footerGroups } from "@/lib/footer-content";
 import { openCookieSettings, savePref } from "@/lib/consent";
+import { langFromSearch } from "@/lib/seo-i18n";
 import { StoreBadges, TrustBadges } from "@/components/site/Badges";
 
 const LANG_KEY = "technova-site-lang" as const;
 
 export function useSiteLang(): [SiteLang, (l: SiteLang) => void] {
-  const [lang, setLangState] = useState<SiteLang>("fr");
+  // ?lang=en|es|pt in the address is rendered on the server (indexable English, Spanish and Portuguese pages);
+  // without it, the visitor's saved choice applies after loading.
+  const urlLang = useRouterState({ select: (s) => langFromSearch(s.location.search) });
+  const fromUrl = useRouterState({ select: (s) => typeof (s.location.search as Record<string, unknown>)["lang"] === "string" });
+  const [lang, setLangState] = useState<SiteLang>(urlLang);
   useEffect(() => {
+    if (fromUrl) return;
     let saved: string | null = null;
     try { saved = window.localStorage.getItem(LANG_KEY); } catch { /* storage blocked */ }
     if (isSiteLang(saved)) setLangState(saved);
-  }, []);
+  }, [fromUrl]);
   useEffect(() => { document.documentElement.lang = lang; }, [lang]);
-  const setLang = (l: SiteLang) => { setLangState(l); savePref(LANG_KEY, l); };
+  const setLang = (l: SiteLang) => {
+    setLangState(l); savePref(LANG_KEY, l);
+    // Keep a shareable address in the chosen language (French = plain URL).
+    try { const u = new URL(window.location.href); if (l === "fr") u.searchParams.delete("lang"); else u.searchParams.set("lang", l); window.history.replaceState(window.history.state, "", u.toString()); } catch { /* ignore */ }
+  };
   return [lang, setLang];
 }
 
@@ -102,7 +112,7 @@ export function ActionText({ children }: { children: string }) {
   return <span className="action-pill-label"><span>{children}</span><span aria-hidden="true">{children}</span></span>;
 }
 
-type NavPath = "/modeles" | "/blog" | "/tarifs" | "/documentation" | "/a-propos";
+type NavPath = "/" | "/modeles" | "/blog" | "/tarifs" | "/documentation" | "/a-propos";
 
 export function Nav({ lang, setLang }: { lang: SiteLang; setLang: (l: SiteLang) => void }) {
   const t = content[lang];
@@ -110,7 +120,8 @@ export function Nav({ lang, setLang }: { lang: SiteLang; setLang: (l: SiteLang) 
   const [signedIn, setSignedIn] = useState(false);
   const navRef = useRef<HTMLElement>(null);
   const triggerRef = useRef<HTMLButtonElement>(null);
-  const links: [NavPath, string][] = [["/modeles", t.nav.models], ["/blog", t.nav.blog], ["/tarifs", t.nav.pricing], ["/documentation", t.nav.docs], ["/a-propos", t.nav.about]];
+  // « Nouveautés » (the landing's #nouveautes section) takes the Blog's place; the Blog stays in the footer.
+  const links: [NavPath, string, string?][] = [["/modeles", t.nav.models], ["/", t.nav.news, "nouveautes"], ["/tarifs", t.nav.pricing], ["/documentation", t.nav.docs], ["/a-propos", t.nav.about]];
 
   useEffect(() => {
     let alive = true;
@@ -144,8 +155,8 @@ export function Nav({ lang, setLang }: { lang: SiteLang; setLang: (l: SiteLang) 
         <div className="flex min-h-14 w-full items-center gap-2 rounded-full border border-ink-foreground/10 bg-ink/90 p-1.5 pl-4 shadow-lift backdrop-blur-xl sm:pl-5 lg:w-auto">
           <Link to="/" aria-label="TechNova" onClick={() => setMenuOpen(false)} className="min-w-0 shrink-0 focus-visible:rounded-sm focus-visible:outline-2 focus-visible:outline-iris-2"><Logo className="text-[13px] sm:text-sm" /></Link>
           <div className="ml-2 hidden items-center gap-0.5 text-[13px] lg:flex xl:ml-4 xl:gap-1 xl:text-sm">
-            {links.map(([h, l]) => (
-              <Link key={h} to={h} className="whitespace-nowrap rounded-full px-2.5 py-1.5 text-ink-foreground/70 xl:px-3 transition hover:bg-ink-foreground/10 hover:text-ink-foreground" activeProps={{ className: "bg-ink-foreground/10 text-ink-foreground" }}>{l}</Link>
+            {links.map(([h, l, hash]) => (
+              <Link key={l} to={h} {...(hash ? { hash, activeOptions: { exact: true, includeHash: true } } : {})} className="whitespace-nowrap rounded-full px-2.5 py-1.5 text-ink-foreground/70 xl:px-3 transition hover:bg-ink-foreground/10 hover:text-ink-foreground" activeProps={{ className: "bg-ink-foreground/10 text-ink-foreground" }}>{l}</Link>
             ))}
           </div>
           <div className="flex-1 lg:hidden" />
@@ -158,8 +169,8 @@ export function Nav({ lang, setLang }: { lang: SiteLang; setLang: (l: SiteLang) 
         </div>
         {menuOpen && <div id="mobile-navigation" className="absolute inset-x-0 top-[calc(100%+8px)] max-h-[calc(100svh-96px)] overflow-y-auto rounded-[20px] border border-ink-foreground/15 bg-ink/95 p-3 shadow-lift backdrop-blur-xl lg:hidden">
           <div className="grid gap-1">
-            {links.map(([h, l]) => (
-              <Link key={h} to={h} onClick={() => setMenuOpen(false)} className="flex min-h-11 items-center justify-between rounded-[12px] px-4 text-sm font-medium text-ink-foreground transition-colors hover:bg-ink-foreground/10 focus-visible:bg-ink-foreground/10 focus-visible:outline-none">{l}<ArrowUpRight className="size-4 text-ink-foreground/50" /></Link>
+            {links.map(([h, l, hash]) => (
+              <Link key={l} to={h} {...(hash ? { hash } : {})} onClick={() => setMenuOpen(false)} className="flex min-h-11 items-center justify-between rounded-[12px] px-4 text-sm font-medium text-ink-foreground transition-colors hover:bg-ink-foreground/10 focus-visible:bg-ink-foreground/10 focus-visible:outline-none">{l}<ArrowUpRight className="size-4 text-ink-foreground/50" /></Link>
             ))}
           </div>
           <div className="mt-2 border-t border-ink-foreground/15 pt-3">
@@ -196,7 +207,7 @@ export function Footer({ lang }: { lang: SiteLang }) {
     <footer className="border-t border-border bg-background px-5 pb-8 pt-14 text-foreground sm:pt-20">
       <HelpWidget lang={lang} />
       <div className="mx-auto grid max-w-6xl gap-12 lg:grid-cols-[1fr_2.4fr]">
-        <div><Logo className="text-xl" /><p className="mt-1 text-xs text-chat-glow">AI HUB</p><p className="mt-3 text-[10px] uppercase text-muted-foreground">By Tenulysse</p>
+        <div><Logo className="text-xl" /><p className="mt-1 text-xs text-chat-glow">AI HUB</p>
           <p className="mt-6 max-w-xs text-sm leading-7 text-muted-foreground">{tr(lang, { fr: "L’infrastructure IA unifiée pour les créateurs, développeurs et entreprises.", en: "Unified AI infrastructure for creators, developers and businesses.", es: "La infraestructura de IA unificada para creadores, desarrolladores y empresas.", pt: "A infraestrutura de IA unificada para criadores, desenvolvedores e empresas." })}</p>
           <a href="mailto:support@technovaihub.com" className="mt-5 inline-flex items-center gap-2 rounded-full border border-border px-3.5 py-2 text-sm text-muted-foreground transition-colors hover:border-foreground/30 hover:text-foreground">
             <Mail className="size-4" aria-hidden="true" /><span className="sr-only">{tr(lang, { fr: "Contact :", en: "Contact:", es: "Contacto:", pt: "Contato:" })} </span>support@technovaihub.com
@@ -208,7 +219,7 @@ export function Footer({ lang }: { lang: SiteLang }) {
       </div>
       <div className="mx-auto mt-14 max-w-6xl"><TrustBadges lang={lang} /></div>
       <div className="mx-auto mt-6 flex max-w-6xl flex-wrap items-center justify-between gap-4 border-t border-border pt-6 text-xs text-muted-foreground">
-        <span>© {new Date().getFullYear()} TechNova AI Hub by Tenulysse. {t.footer.rights}</span>
+        <span>© {new Date().getFullYear()} TechNova AI Hub. {t.footer.rights}</span>
         <Button variant="ghost" size="sm" onClick={openCookieSettings} className="text-xs text-muted-foreground">{tr(lang, { fr: "Préférences cookies", en: "Cookie preferences", es: "Preferencias de cookies", pt: "Preferências de cookies" })}</Button>
       </div>
     </footer>

@@ -10,13 +10,14 @@ import type { SiteLang } from "@/lib/i18n";
 import { formatLocalPrice, isCfa } from "@/lib/geo-pricing";
 import { useGeoPrice } from "@/lib/geo-price-client";
 import { NoCommitment } from "./NoCommitment";
+import { PackCalculator } from "./PackCalculator";
 import { OrgPlansDialog } from "./OrgPlans";
 
 const text = {
-  fr: { title: "Des forfaits simples et flexibles", sub: "Quatre packs de crédits Technova prépayés, sans abonnement, pour discuter, créer et développer.", once: "Paiement unique", terms: "Paiement unique • crédits prépayés • aucun renouvellement automatique", choose: "Choisir", popular: "LE PLUS POPULAIRE", credits: "crédits Technova", tabPacks: "Packs · paiement unique", tabMonthly: "Formule mensuelle", perMonth: "par mois", monthlyTerms: "Payée une fois par mois • crédits ajoutés aussitôt, à utiliser dans le mois (remis à zéro au bout de 30 jours) • aucun prélèvement automatique", monthlySub: "Pour un usage régulier : le meilleur prix au crédit et toutes les fonctions du forfait, renouvelé quand vous le décidez.", save: "Le crédit le moins cher" },
-  en: { title: "Simple, flexible plans", sub: "Four prepaid Technova credit packs, no subscription, to chat, create and build.", once: "One-time payment", terms: "One-time payment • prepaid credits • no automatic renewal", choose: "Choose", popular: "MOST POPULAR", credits: "Technova credits", tabPacks: "Packs · one-time payment", tabMonthly: "Monthly plan", perMonth: "per month", monthlyTerms: "Paid once a month • credits added at once, to use within the month (reset after 30 days) • no automatic charge", monthlySub: "For regular use: the best price per credit and every feature of the plan, renewed when you decide.", save: "Cheapest credits" },
-  es: { title: "Planes sencillos y flexibles", sub: "Cuatro packs de créditos Technova prepagados, sin suscripción, para conversar, crear y desarrollar.", once: "Pago único", terms: "Pago único • créditos prepagados • sin renovación automática", choose: "Elegir", popular: "EL MÁS POPULAR", credits: "créditos Technova", tabPacks: "Packs · pago único", tabMonthly: "Fórmula mensual", perMonth: "al mes", monthlyTerms: "Se paga una vez al mes • créditos añadidos al instante, para usar en el mes (vuelven a cero a los 30 días) • sin cobro automático", monthlySub: "Para un uso regular: el mejor precio por crédito y todas las funciones del plan, renovado cuando usted decida.", save: "El crédito más barato" },
-  pt: { title: "Planos simples e flexíveis", sub: "Quatro pacotes de créditos Technova pré-pagos, sem assinatura, para conversar, criar e desenvolver.", once: "Pagamento único", terms: "Pagamento único • créditos pré-pagos • sem renovação automática", choose: "Escolher", popular: "O MAIS POPULAR", credits: "créditos Technova", tabPacks: "Pacotes · pagamento único", tabMonthly: "Plano mensal", perMonth: "por mês", monthlyTerms: "Pago uma vez por mês • créditos adicionados na hora, para usar no mês (voltam a zero após 30 dias) • sem cobrança automática", monthlySub: "Para uso regular: o melhor preço por crédito e todas as funções do plano, renovado quando você decidir.", save: "O crédito mais barato" },
+  fr: { title: "Des forfaits simples et flexibles", sub: "Quatre packs de crédits Technova prépayés, sans abonnement obligatoire, pour discuter, créer et développer.", once: "Paiement unique", terms: "Paiement unique • crédits prépayés • aucun renouvellement automatique", choose: "Choisir", popular: "LE PLUS POPULAIRE", credits: "crédits Technova", tabPacks: "Packs · paiement unique", tabMonthly: "Formule mensuelle", perMonth: "par mois", monthlyTerms: "Payée une fois par mois • crédits ajoutés aussitôt, à utiliser dans le mois (remis à zéro au bout de 30 jours) • aucun prélèvement automatique", monthlySub: "Pour un usage régulier : le meilleur prix au crédit et toutes les fonctions du forfait, renouvelé quand vous le décidez.", save: "Le crédit le moins cher est dans la" },
+  en: { title: "Simple, flexible plans", sub: "Four prepaid Technova credit packs, no subscription required, to chat, create and build.", once: "One-time payment", terms: "One-time payment • prepaid credits • no automatic renewal", choose: "Choose", popular: "MOST POPULAR", credits: "Technova credits", tabPacks: "Packs · one-time payment", tabMonthly: "Monthly plan", perMonth: "per month", monthlyTerms: "Paid once a month • credits added at once, to use within the month (reset after 30 days) • no automatic charge", monthlySub: "For regular use: the best price per credit and every feature of the plan, renewed when you decide.", save: "The cheapest credits are in the" },
+  es: { title: "Planes sencillos y flexibles", sub: "Cuatro packs de créditos Technova prepagados, sin suscripción obligatoria, para conversar, crear y desarrollar.", once: "Pago único", terms: "Pago único • créditos prepagados • sin renovación automática", choose: "Elegir", popular: "EL MÁS POPULAR", credits: "créditos Technova", tabPacks: "Packs · pago único", tabMonthly: "Fórmula mensual", perMonth: "al mes", monthlyTerms: "Se paga una vez al mes • créditos añadidos al instante, para usar en el mes (vuelven a cero a los 30 días) • sin cobro automático", monthlySub: "Para un uso regular: el mejor precio por crédito y todas las funciones del plan, renovado cuando usted decida.", save: "El crédito más barato está en la" },
+  pt: { title: "Planos simples e flexíveis", sub: "Quatro pacotes de créditos Technova pré-pagos, sem assinatura obrigatória, para conversar, criar e desenvolver.", once: "Pagamento único", terms: "Pagamento único • créditos pré-pagos • sem renovação automática", choose: "Escolher", popular: "O MAIS POPULAR", credits: "créditos Technova", tabPacks: "Pacotes · pagamento único", tabMonthly: "Plano mensal", perMonth: "por mês", monthlyTerms: "Pago uma vez por mês • créditos adicionados na hora, para usar no mês (voltam a zero após 30 dias) • sem cobrança automática", monthlySub: "Para uso regular: o melhor preço por crédito e todas as funções do plano, renovado quando você decidir.", save: "O crédito mais barato está no" },
 };
 
 const geoText = {
@@ -66,10 +67,12 @@ export function PricingContent({ lang, glass = false }: { lang: SiteLang; glass?
       <div className="mt-5 inline-flex rounded-full border border-border bg-card p-1 shadow-sm" role="tablist" aria-label={t.tabMonthly}>
         {(["once", "monthly"] as const).map((m) => <button key={m} type="button" role="tab" aria-selected={mode === m} onClick={() => setMode(m)}
           className={`rounded-full px-4 py-2 text-sm font-semibold transition ${mode === m ? "bg-foreground text-background" : "text-muted-foreground hover:text-foreground"}`}>
-          {m === "once" ? t.tabPacks : <>{t.tabMonthly} <span className={`ml-1 rounded-full px-1.5 py-0.5 text-[10px] ${mode === m ? "bg-background/20" : "bg-emerald-500/15 text-emerald-700 dark:text-emerald-300"}`}>{t.save}</span></>}
+          {m === "once" ? t.tabPacks : t.tabMonthly}
         </button>)}
       </div>
       <p className="mt-3 text-sm font-medium">{mode === "once" ? t.terms : t.monthlyTerms}</p>
+      {/* The monthly formula's advantage as a plain line (a pill inside the switch looked like a third tab). */}
+      {mode === "once" && <p className="mt-1 text-[13px] text-muted-foreground">{t.save} <button type="button" onClick={() => setMode("monthly")} className="font-semibold text-foreground underline underline-offset-2">{t.tabMonthly}</button></p>}
 
       <div className={`${glass ? "glass-stage " : ""}relative mt-8 grid gap-5 sm:grid-cols-2 ${mode === "once" ? "lg:grid-cols-4" : "mx-auto max-w-4xl"}`}>{shown.map((p) => {
         const copy = (mode === "once" ? packCopy : monthlyCopy)[p.slug]?.[lang];
@@ -97,6 +100,7 @@ export function PricingContent({ lang, glass = false }: { lang: SiteLang; glass?
         </article>;
       })}</div>
 
+      <PackCalculator lang={lang} packs={shown} glass={glass} />
       {mode === "monthly" && <div className="mt-6"><NoCommitment lang={lang} /></div>}
       <PricingBar lang={lang} glass={glass} />
     </div>

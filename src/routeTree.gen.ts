@@ -57,6 +57,7 @@ import { Route as AuthenticatedDashboardRegistryRouteImport } from './routes/_au
 import { Route as AuthenticatedDashboardSettingsRouteImport } from './routes/_authenticated/dashboard/settings'
 import { Route as AuthenticatedDashboardUsageRouteImport } from './routes/_authenticated/dashboard/usage'
 import { Route as ApiAiChatRouteImport } from './routes/api/ai/chat'
+import { Route as ApiPublicEmailUnsubscribeRouteImport } from './routes/api/public/email-unsubscribe'
 import { Route as ApiPublicFeexpayWebhookRouteImport } from './routes/api/public/feexpay-webhook'
 import { Route as ApiPublicGeoPriceRouteImport } from './routes/api/public/geo-price'
 import { Route as ApiPublicHelpChatRouteImport } from './routes/api/public/help-chat'
@@ -331,6 +332,12 @@ const ApiAiChatRoute = ApiAiChatRouteImport.update({
   path: '/api/ai/chat',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicEmailUnsubscribeRoute =
+  ApiPublicEmailUnsubscribeRouteImport.update({
+    id: '/api/public/email-unsubscribe',
+    path: '/api/public/email-unsubscribe',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiPublicFeexpayWebhookRoute = ApiPublicFeexpayWebhookRouteImport.update({
   id: '/api/public/feexpay-webhook',
   path: '/api/public/feexpay-webhook',
@@ -463,6 +470,7 @@ export interface FileRoutesByFullPath {
   '/dashboard/settings': typeof AuthenticatedDashboardSettingsRoute
   '/dashboard/usage': typeof AuthenticatedDashboardUsageRoute
   '/api/ai/chat': typeof ApiAiChatRoute
+  '/api/public/email-unsubscribe': typeof ApiPublicEmailUnsubscribeRoute
   '/api/public/feexpay-webhook': typeof ApiPublicFeexpayWebhookRoute
   '/api/public/geo-price': typeof ApiPublicGeoPriceRoute
   '/api/public/help-chat': typeof ApiPublicHelpChatRoute
@@ -527,6 +535,7 @@ export interface FileRoutesByTo {
   '/dashboard/settings': typeof AuthenticatedDashboardSettingsRoute
   '/dashboard/usage': typeof AuthenticatedDashboardUsageRoute
   '/api/ai/chat': typeof ApiAiChatRoute
+  '/api/public/email-unsubscribe': typeof ApiPublicEmailUnsubscribeRoute
   '/api/public/feexpay-webhook': typeof ApiPublicFeexpayWebhookRoute
   '/api/public/geo-price': typeof ApiPublicGeoPriceRoute
   '/api/public/help-chat': typeof ApiPublicHelpChatRoute
@@ -594,6 +603,7 @@ export interface FileRoutesById {
   '/_authenticated/dashboard/settings': typeof AuthenticatedDashboardSettingsRoute
   '/_authenticated/dashboard/usage': typeof AuthenticatedDashboardUsageRoute
   '/api/ai/chat': typeof ApiAiChatRoute
+  '/api/public/email-unsubscribe': typeof ApiPublicEmailUnsubscribeRoute
   '/api/public/feexpay-webhook': typeof ApiPublicFeexpayWebhookRoute
   '/api/public/geo-price': typeof ApiPublicGeoPriceRoute
   '/api/public/help-chat': typeof ApiPublicHelpChatRoute
@@ -661,6 +671,7 @@ export interface FileRouteTypes {
     | '/dashboard/settings'
     | '/dashboard/usage'
     | '/api/ai/chat'
+    | '/api/public/email-unsubscribe'
     | '/api/public/feexpay-webhook'
     | '/api/public/geo-price'
     | '/api/public/help-chat'
@@ -725,6 +736,7 @@ export interface FileRouteTypes {
     | '/dashboard/settings'
     | '/dashboard/usage'
     | '/api/ai/chat'
+    | '/api/public/email-unsubscribe'
     | '/api/public/feexpay-webhook'
     | '/api/public/geo-price'
     | '/api/public/help-chat'
@@ -791,6 +803,7 @@ export interface FileRouteTypes {
     | '/_authenticated/dashboard/settings'
     | '/_authenticated/dashboard/usage'
     | '/api/ai/chat'
+    | '/api/public/email-unsubscribe'
     | '/api/public/feexpay-webhook'
     | '/api/public/geo-price'
     | '/api/public/help-chat'
@@ -839,6 +852,7 @@ export interface RootRouteChildren {
   PartageTokenRoute: typeof PartageTokenRoute
   SSlugRoute: typeof SSlugRoute
   ApiAiChatRoute: typeof ApiAiChatRoute
+  ApiPublicEmailUnsubscribeRoute: typeof ApiPublicEmailUnsubscribeRoute
   ApiPublicFeexpayWebhookRoute: typeof ApiPublicFeexpayWebhookRoute
   ApiPublicGeoPriceRoute: typeof ApiPublicGeoPriceRoute
   ApiPublicHelpChatRoute: typeof ApiPublicHelpChatRoute
@@ -1193,6 +1207,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiAiChatRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/email-unsubscribe': {
+      id: '/api/public/email-unsubscribe'
+      path: '/api/public/email-unsubscribe'
+      fullPath: '/api/public/email-unsubscribe'
+      preLoaderRoute: typeof ApiPublicEmailUnsubscribeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/feexpay-webhook': {
       id: '/api/public/feexpay-webhook'
       path: '/api/public/feexpay-webhook'
@@ -1406,6 +1427,7 @@ const rootRouteChildren: RootRouteChildren = {
   PartageTokenRoute: PartageTokenRoute,
   SSlugRoute: SSlugRoute,
   ApiAiChatRoute: ApiAiChatRoute,
+  ApiPublicEmailUnsubscribeRoute: ApiPublicEmailUnsubscribeRoute,
   ApiPublicFeexpayWebhookRoute: ApiPublicFeexpayWebhookRoute,
   ApiPublicGeoPriceRoute: ApiPublicGeoPriceRoute,
   ApiPublicHelpChatRoute: ApiPublicHelpChatRoute,

@@ -1,4 +1,5 @@
 import { captureReferral } from "@/lib/referral";
+import { langFromSearch } from "@/lib/seo-i18n";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import {
   Outlet,
@@ -7,6 +8,7 @@ import {
   useRouter,
   HeadContent,
   Scripts,
+  useRouterState,
 } from "@tanstack/react-router";
 import { useEffect, useState, type ReactNode } from "react";
 
@@ -151,8 +153,9 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
 });
 
 function RootShell({ children }: { children: ReactNode }) {
+  const htmlLang = useRouterState({ select: (s) => langFromSearch(s.location.search) });
   return (
-    <html lang="fr">
+    <html lang={htmlLang}>
       <head>
         {/* A Studio preview (sandboxed, opaque origin) that escaped its bridge and loaded TechNova itself: hand the
             address back to the preview viewer and stop here, instead of crashing on storage access. */}

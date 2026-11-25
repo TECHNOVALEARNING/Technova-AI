@@ -1,7 +1,7 @@
 // Search and social metadata for public pages: one canonical URL per page (www.technovaihub.com),
 // matching Open Graph / X tags, optional noindex, and JSON-LD structured data built from the site's
 // real content (packs, FAQ). Root defaults (og:image, site name, icons) live in __root.tsx.
-import { content } from "@/lib/i18n";
+import { content, type SiteLang } from "@/lib/i18n";
 import { fallbackPacks } from "@/lib/public-pricing";
 
 export const SITE_URL = "https://www.technovaihub.com";
@@ -17,10 +17,19 @@ type PageSeo = {
   jsonLd?: object[];
   /** First-screen image to fetch early (Largest Contentful Paint). */
   preloadImage?: string;
+  /** Page language (?lang=en|es|pt; French at the plain URL) and whether the four language versions exist. */
+  lang?: SiteLang;
+  alternates?: boolean;
 };
 
-export function pageHead({ path, title, description, ogTitle, ogDescription, noindex, jsonLd, preloadImage }: PageSeo) {
-  const url = SITE_URL + path;
+const locales: Record<SiteLang, string> = { fr: "fr_FR", en: "en_US", es: "es_ES", pt: "pt_BR" };
+const hreflang: Record<SiteLang, string> = { fr: "fr", en: "en", es: "es", pt: "pt" };
+/** URL of a page in a language: French at the plain address, the others with ?lang=. */
+export const langUrl = (path: string, lang: SiteLang) => SITE_URL + path + (lang === "fr" ? "" : `?lang=${lang}`);
+
+export function pageHead({ path, title, description, ogTitle, ogDescription, noindex, jsonLd, preloadImage, lang = "fr", alternates = false }: PageSeo) {
+  const url = alternates ? langUrl(path, lang) : SITE_URL + path;
+  const others = (Object.keys(locales) as SiteLang[]).filter((l) => l !== lang);
   return {
     meta: [
       { title },
@@ -29,7 +38,8 @@ export function pageHead({ path, title, description, ogTitle, ogDescription, noi
       { property: "og:description", content: ogDescription ?? description },
       { property: "og:url", content: url },
       { property: "og:type", content: "website" },
-      { property: "og:locale", content: "fr_FR" },
+      { property: "og:locale", content: locales[lang] },
+      ...(alternates ? others.map((l) => ({ property: "og:locale:alternate", content: locales[l] })) : []),
       { name: "twitter:card", content: "summary_large_image" },
       { name: "twitter:title", content: ogTitle ?? title },
       { name: "twitter:description", content: ogDescription ?? description },
@@ -37,6 +47,8 @@ export function pageHead({ path, title, description, ogTitle, ogDescription, noi
     ],
     links: [
       ...(noindex ? [] : [{ rel: "canonical", href: url }]),
+      // Language versions for search engines (French at the plain URL, x-default to French).
+      ...(alternates && !noindex ? [...(Object.keys(locales) as SiteLang[]).map((l) => ({ rel: "alternate", hrefLang: hreflang[l], href: langUrl(path, l) })), { rel: "alternate", hrefLang: "x-default", href: langUrl(path, "fr") }] : []),
       ...(preloadImage ? [{ rel: "preload", as: "image", href: preloadImage, fetchPriority: "high" as const }] : []),
     ],
     scripts: (jsonLd ?? []).map((data) => ({ type: "application/ld+json", children: JSON.stringify(data) })),

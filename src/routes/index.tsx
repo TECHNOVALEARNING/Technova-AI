@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { pageHead, appLd, faqLd, organizationLd, websiteLd } from "@/lib/seo";
+import { seoFor } from "@/lib/seo-i18n";
 import { useEffect, useRef, useState, type CSSProperties, type ReactNode } from "react";
 import {
   ArrowRight, ArrowUpRight, Check, Plus, Minus, Globe, LogIn, Menu, Zap, Boxes, WalletCards, ShieldCheck, Lock, ServerOff, UserRoundPlus, Play, X, GraduationCap, BookOpen, Wrench,
@@ -24,13 +25,14 @@ import { content, labs, type SiteLang } from "@/lib/i18n";
 import { Nav, Footer, Heading, Tag, R, ActionText, useReveal, useSiteLang } from "@/components/site/SiteChrome";
 import { InstallAppPrompt } from "@/components/site/InstallAppPrompt";
 import { AnnouncementBar } from "@/components/site/AnnouncementBar";
+import { WhatsNew } from "@/components/site/WhatsNew";
 import { PartnersStrip } from "@/components/site/PartnersStrip";
 import { RoutingSection } from "@/components/site/RoutingSection";
 
 import { PricingContent } from "@/components/site/PricingContent";
 
 export const Route = createFileRoute("/")({
-  head: () => pageHead({ path: "/", title: "TechNova AI Hub — GPT, Claude, Gemini et plus en un seul hub IA", description: "Discutez, codez, créez images, vidéos et musique avec GPT, Claude, Gemini et les meilleurs modèles d'IA. Sans abonnement, crédits sans expiration, paiement Mobile Money.", ogTitle: "TechNova AI Hub | Tous les modèles d'IA en un seul hub", ogDescription: "Les meilleurs modèles d'IA, une seule API, crédits sans expiration, paiement en FCFA par Mobile Money ou carte.", jsonLd: [organizationLd, websiteLd, appLd, faqLd], preloadImage: media.heroPoster }),
+  head: ({ match }) => pageHead({ ...seoFor("/", match.search), jsonLd: [organizationLd, websiteLd, appLd, faqLd], preloadImage: media.heroPoster }),
   component: Index,
 });
 
@@ -49,6 +51,7 @@ function Index() {
       <Intro t={t} />
       <Why t={t} />
       <Services t={t} />
+      <WhatsNew lang={lang} />
       <How t={t} />
       <RoutingSection lang={lang} />
       <Ecosystem t={t} />

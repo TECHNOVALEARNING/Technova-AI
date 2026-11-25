@@ -1193,3 +1193,77 @@ body:has(.dashboard-shell) :is([data-radix-popper-content-wrapper] > [data-state
 @media (min-width: 640px) { .site-nav { top: calc(var(--announce-h, 0px) + 1rem); } }
 .hero-top { padding-top: calc(var(--announce-h, 0px) + 7rem); }
 @media (min-width: 768px) { .hero-top { padding-top: calc(var(--announce-h, 0px) + 9rem); } }
+
+/* « Nouveautés » (WhatsNew.tsx): one card per coloured chat tool, each with a short looping scene in the tool's colour. */
+.whats-new { scroll-margin-top: calc(var(--announce-h, 0px) + 6rem); }
+.wn-card { display: flex; flex-direction: column; overflow: hidden; border-radius: 22px; border: 1px solid var(--border); background: var(--card); box-shadow: 0 18px 40px -30px rgb(0 0 0 / 0.35); transition: transform .3s ease, box-shadow .3s ease; }
+.wn-card:hover { transform: translateY(-3px); box-shadow: 0 26px 50px -30px rgb(0 0 0 / 0.45); }
+.wn-stage { position: relative; height: 168px; overflow: hidden; }
+.wn-design-card .wn-stage { background: linear-gradient(120deg, #0a1a3f 0%, #12306f 58%, #2a52a8 100%); }
+.wn-sheet-card .wn-stage { background: linear-gradient(120deg, #1f7a5a 0%, #2b9b74 60%, #6cc49a 100%); }
+.wn-music-card .wn-stage { background: linear-gradient(135deg, #a77bcb, #8f78c2); }
+.wn-video-card .wn-stage { background: linear-gradient(135deg, #6aa262, #5f9c57); }
+.wn-humanize-card .wn-stage { background: linear-gradient(135deg, #7d93dc, #6f86d6); }
+.wn-audio-card .wn-stage { background: linear-gradient(135deg, #cf8a64, #c27a55); }
+.wn-icon { display: grid; place-items: center; flex: none; width: 34px; height: 34px; border-radius: 11px; color: #fff; }
+.wn-icon-design { background: #12306f; } .wn-icon-sheet { background: #1f7a5a; } .wn-icon-music { background: #8f78c2; }
+.wn-icon-video { background: #5f9c57; } .wn-icon-humanize { background: #6f86d6; } .wn-icon-audio { background: #c27a55; }
+.wn-scene { position: absolute; inset: 0; display: grid; place-items: center; }
+
+/* Créativité: a slide assembles itself (bar, picture, lines, button), then starts again. */
+.wn-slide { position: relative; width: 62%; aspect-ratio: 16 / 9; border-radius: 10px; background: #fff; box-shadow: 0 14px 30px -12px rgb(0 0 0 / .45); }
+.wn-slide span { position: absolute; border-radius: 4px; opacity: 0; animation: wn-pop 5s ease infinite; }
+.wn-d-bar { left: 8%; top: 10%; width: 46%; height: 11%; background: #12306f; animation-delay: .2s !important; }
+.wn-d-img { right: 8%; top: 10%; width: 32%; height: 58%; background: linear-gradient(135deg, #f0955a, #e86a9e); animation-delay: .7s !important; }
+.wn-d-l1 { left: 8%; top: 34%; width: 44%; height: 7%; background: #c7cfdc; animation-delay: 1.2s !important; }
+.wn-d-l2 { left: 8%; top: 47%; width: 34%; height: 7%; background: #dde2ea; animation-delay: 1.5s !important; }
+.wn-d-btn { left: 8%; bottom: 12%; width: 24%; height: 13%; border-radius: 99px !important; background: #2a52a8; animation-delay: 1.9s !important; }
+@keyframes wn-pop { 0% { opacity: 0; transform: translateY(6px) scale(.96); } 10%, 80% { opacity: 1; transform: none; } 92%, 100% { opacity: 0; } }
+
+/* Tableur: cells fill one after the other while a chart grows. */
+.wn-sheet .wn-grid { position: absolute; left: 10%; top: 22%; display: grid; grid-template-columns: repeat(3, 34px); gap: 4px; }
+.wn-sheet .wn-grid span { height: 18px; border-radius: 3px; background: rgb(255 255 255 / .25); animation: wn-cell 4.5s ease infinite; }
+@keyframes wn-cell { 0%, 8% { background: rgb(255 255 255 / .2); } 18%, 85% { background: rgb(255 255 255 / .95); } 100% { background: rgb(255 255 255 / .2); } }
+.wn-sheet .wn-bars { position: absolute; right: 10%; bottom: 20%; display: flex; align-items: flex-end; gap: 6px; height: 58%; width: 38%; border-bottom: 2px solid rgb(255 255 255 / .7); }
+.wn-sheet .wn-bars span { flex: 1; border-radius: 4px 4px 0 0; background: #fff; transform-origin: bottom; animation: wn-grow 4.5s ease infinite; }
+@keyframes wn-grow { 0%, 10% { transform: scaleY(.05); } 30%, 85% { transform: scaleY(1); } 100% { transform: scaleY(.05); } }
+
+/* Musique: a spinning record and an equaliser. */
+.wn-music { grid-template-columns: auto auto; gap: 22px; }
+.wn-disc { width: 92px; height: 92px; border-radius: 50%; background: radial-gradient(circle, #fff 0 9%, #2b2140 10% 30%, #3a2d55 31% 32%, #2b2140 33% 55%, #3a2d55 56% 57%, #2b2140 58%); box-shadow: 0 10px 24px -10px rgb(0 0 0 / .5); animation: wn-spin 3s linear infinite; }
+@keyframes wn-spin { to { transform: rotate(360deg); } }
+.wn-eq { display: flex; align-items: flex-end; gap: 5px; height: 70px; }
+.wn-eq span { width: 7px; height: 100%; border-radius: 4px; background: #fff; transform-origin: bottom; animation: wn-eq 1s ease-in-out infinite alternate; }
+@keyframes wn-eq { from { transform: scaleY(.2); } to { transform: scaleY(1); } }
+
+/* Vidéo: a little scene where the sun rises, with the playback bar running. */
+.wn-frame { position: relative; width: 64%; aspect-ratio: 16 / 9; overflow: hidden; border-radius: 10px; background: linear-gradient(#bfe3ff, #fbe7c6); box-shadow: 0 14px 30px -12px rgb(0 0 0 / .45); }
+.wn-sun { position: absolute; left: 20%; width: 22%; aspect-ratio: 1; border-radius: 50%; background: #ffb547; animation: wn-sun 4s ease-in-out infinite; }
+@keyframes wn-sun { 0% { top: 80%; } 60%, 100% { top: 14%; } }
+.wn-hill { position: absolute; left: -10%; right: -10%; bottom: -40%; height: 75%; border-radius: 50%; background: #3f7a3a; }
+.wn-play { position: absolute; left: 50%; top: 50%; width: 0; height: 0; transform: translate(-30%, -50%); border-left: 16px solid rgb(255 255 255 / .9); border-top: 10px solid transparent; border-bottom: 10px solid transparent; }
+.wn-progress { position: absolute; left: 18%; right: 18%; bottom: 16px; height: 4px; border-radius: 4px; background: rgb(255 255 255 / .35); overflow: hidden; }
+.wn-progress span { display: block; height: 100%; background: #fff; animation: wn-progress 4s linear infinite; }
+@keyframes wn-progress { from { width: 0; } to { width: 100%; } }
+
+/* Humaniser: stiff, equal lines become natural lines of different lengths as the caret writes. */
+.wn-humanize { place-content: center; justify-items: start; gap: 9px; padding: 0 18%; }
+.wn-line { display: block; height: 9px; width: 100%; border-radius: 5px; background: rgb(255 255 255 / .9); animation: wn-human 4s ease-in-out infinite; }
+.wn-line:nth-child(2) { --w: 78%; } .wn-line:nth-child(3) { --w: 92%; } .wn-line:nth-child(4) { --w: 56%; }
+@keyframes wn-human { 0%, 15% { width: 100%; background: rgb(255 255 255 / .45); } 45%, 85% { width: var(--w, 88%); background: #fff; } 100% { width: 100%; background: rgb(255 255 255 / .45); } }
+.wn-caret { width: 2px; height: 18px; background: #fff; animation: wn-blink 1s steps(1) infinite; }
+@keyframes wn-blink { 50% { opacity: 0; } }
+
+/* Résumé audio: a waveform, then the summary's bullet lines appear. */
+.wn-audio { grid-template-rows: auto auto; gap: 14px; }
+.wn-wave { display: flex; align-items: center; gap: 3px; height: 46px; }
+.wn-wave span { width: 4px; height: 100%; border-radius: 3px; background: #fff; animation: wn-eq .8s ease-in-out infinite alternate; }
+.wn-notes { display: grid; gap: 6px; width: 170px; }
+.wn-notes span { height: 8px; border-radius: 4px; background: #fff; opacity: 0; animation: wn-pop 4s ease infinite; }
+.wn-notes span:nth-child(2) { width: 80%; } .wn-notes span:nth-child(3) { width: 60%; }
+
+@media (prefers-reduced-motion: reduce) {
+  .wn-card, .wn-card:hover { transition: none; transform: none; }
+  .wn-scene *, .wn-scene { animation: none !important; opacity: 1 !important; }
+  .wn-progress span { width: 60%; }
+}

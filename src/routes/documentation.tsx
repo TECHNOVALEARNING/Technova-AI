@@ -2,6 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState, type ReactNode } from "react";
 import { ArrowRight, Boxes, Route as RouteIcon, BarChart3, ShieldCheck, Check, ShoppingBag, FileText, Code2, Languages, Download } from "lucide-react";
 import { pageHead, breadcrumbLd } from "@/lib/seo";
+import { seoFor } from "@/lib/seo-i18n";
 import { Button } from "@/components/ui/button";
 import { Nav, Footer, PageHero, Heading, R, ActionText, useReveal, useSiteLang } from "@/components/site/SiteChrome";
 import { CodeBlock } from "@/components/site/CodeBlock";
@@ -19,7 +20,7 @@ import { codeSamples, useApiBase, withApiBase } from "@/lib/site-pages";
 // Documentation and developer guide on one page: API reference, code examples, use cases and the
 // production checklist (the former /developpeurs page redirects here).
 export const Route = createFileRoute("/documentation")({
-  head: () => pageHead({ path: "/documentation", title: "Documentation & API — TechNova AI Hub", description: "Démarrage rapide, exemples JavaScript, Python, PHP et cURL, authentification, chat completions, modèles, crédits, codes d'erreur et limites de l'API TechNova.", ogDescription: "Une seule clé API pour les meilleurs modèles d'IA : tout pour l'intégrer à votre produit, de la première requête à la production.", jsonLd: [breadcrumbLd("Documentation", "/documentation")] }),
+  head: ({ match }) => pageHead({ ...seoFor("/documentation", match.search), jsonLd: [breadcrumbLd("Documentation", "/documentation")] }),
   // ?pdf=1&lang=fr renders the printable version (cover, contents, every section) used to build the PDFs.
   validateSearch: (s: Record<string, unknown>): { pdf?: 1; lang?: SiteLang } => ({ ...(s["pdf"] === 1 || s["pdf"] === "1" ? { pdf: 1 as const } : {}), ...(isSiteLang(s["lang"]) ? { lang: s["lang"] } : {}) }),
   component: DocsPage,

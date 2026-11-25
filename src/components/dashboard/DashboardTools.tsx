@@ -53,7 +53,7 @@ const copy = {
     supaConnect: "Connecter Supabase", supaWait: "En attente de votre autorisation…", supaConnected: "Compte connecté", supaProject: "Projet sélectionné", supaNoProject: "Aucun projet sélectionné", supaLoad: "Choisir un projet", supaDisconnect: "Déconnecter",
     supaConfirm: "Déconnecter Supabase ? Le Studio ne pourra plus exécuter de SQL chez vous.", supaNotReady: "La connexion Supabase n'est pas encore activée sur ce serveur.", supaPopup: "Autorisez les fenêtres pop-up pour connecter Supabase.", supaFailed: "La connexion a échoué. Réessayez.", supaDone: "Supabase est connecté.",
     supaNote: "La connexion est sécurisée. Le SQL du Studio n'est pas encore envoyé automatiquement : vous pouvez l'examiner et le copier après génération.",
-    confirmPack: "Confirmez votre achat", oneTime: "Paiement unique, sans abonnement.", confirmPay: "Payer maintenant", cancel: "Annuler",
+    confirmPack: "Confirmez votre achat", oneTime: "Paiement unique, sans abonnement obligatoire.", confirmPay: "Payer maintenant", cancel: "Annuler",
   },
   en: {
     modelsTitle: "Modes", modelsSub: "Three answer modes and fixed-price creations, in TechNova credits.", input: "Input", output: "Output", chat: "Chat", soon: "Coming soon", free: "Free",
@@ -69,7 +69,7 @@ const copy = {
     supaConnect: "Connect Supabase", supaWait: "Waiting for your authorisation…", supaConnected: "Account connected", supaProject: "Selected project", supaNoProject: "No project selected", supaLoad: "Choose a project", supaDisconnect: "Disconnect",
     supaConfirm: "Disconnect Supabase? The Studio will no longer be able to run SQL there.", supaNotReady: "Supabase sign-in is not enabled on this server yet.", supaPopup: "Allow pop-ups to connect Supabase.", supaFailed: "Connection failed. Please try again.", supaDone: "Supabase is connected.",
     supaNote: "Your connection is secure. Studio SQL is not sent automatically yet: you can review and copy it after generation.",
-    confirmPack: "Confirm your purchase", oneTime: "One-time payment, no subscription.", confirmPay: "Pay now", cancel: "Cancel",
+    confirmPack: "Confirm your purchase", oneTime: "One-time payment, no subscription required.", confirmPay: "Pay now", cancel: "Cancel",
   },
 };
 
@@ -432,6 +432,37 @@ export function SettingsToolsPage() {
         <div><p className={eyebrow}>{c.theme.toUpperCase()}</p><div className="mt-3 flex gap-2"><button type="button" className={pill(theme === "light")} onClick={() => setTheme("light")}>{c.light}</button><button type="button" className={pill(theme === "dark")} onClick={() => setTheme("dark")}>{c.dark}</button></div></div>
       </div>
     </div>
+    <EmailRemindersCard />
     <SupabaseCard />
     <DeleteAccountCard /></div>;
+}
+
+/** Reminder e-mails (migration 0059): on by default, switched off here or by the link in any reminder. */
+function EmailRemindersCard() {
+  const { lang } = useDashboard(); const fr = lang !== "en";
+  const [on, setOn] = useState<boolean | null>(null);
+  useEffect(() => {
+    void supabase.auth.getUser().then(async ({ data }) => {
+      if (!data.user) return;
+      const { data: row } = await supabase.from("profiles").select("email_reminders" as never).eq("id", data.user.id).maybeSingle();
+      const v = (row as { email_reminders?: boolean } | null)?.email_reminders;
+      setOn(v !== false);
+    });
+  }, []);
+  async function toggle() {
+    const { data } = await supabase.auth.getUser(); if (!data.user || on === null) return;
+    const next = !on; setOn(next);
+    const { error } = await supabase.from("profiles").update({ email_reminders: next } as never).eq("id", data.user.id);
+    if (error) { setOn(!next); toast.error(fr ? "Enregistrement impossible." : "Could not save."); }
+  }
+  return <div className={`${card} flex flex-col gap-3 sm:flex-row sm:items-center`}>
+    <div className="min-w-0 flex-1">
+      <p className={eyebrow}>{fr ? "RAPPELS PAR E-MAIL" : "E-MAIL REMINDERS"}</p>
+      <p className="mt-2 text-[13px] text-muted-foreground">{fr ? "Fin de votre formule mensuelle, solde bas, crédits inutilisés : au plus quelques e-mails par mois, jamais de publicité." : "End of your monthly plan, low balance, unused credits: a few e-mails a month at most, never ads."}</p>
+    </div>
+    <button type="button" role="switch" aria-checked={!!on} disabled={on === null} onClick={() => void toggle()} className={`relative h-7 w-12 shrink-0 rounded-full transition ${on ? "bg-foreground" : "bg-secondary"} disabled:opacity-50`}>
+      <span className={`absolute top-1 size-5 rounded-full bg-background shadow transition-all ${on ? "left-6" : "left-1"}`} />
+      <span className="sr-only">{fr ? "Recevoir les rappels par e-mail" : "Receive e-mail reminders"}</span>
+    </button>
+  </div>;
 }

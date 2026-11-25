@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 
-/** Called daily by the scheduler: deletes archived media older than 14 days, saved creations 14 days after their creation, accounts past their 30-day deletion delay, re-checks unpaid checkouts and closes ended monthly periods. */
+/** Called daily by the scheduler: deletes archived media older than 14 days, saved creations 14 days after their creation, accounts past their 30-day deletion delay, re-checks unpaid checkouts, closes ended monthly periods and sends the day's e-mail reminders. */
 async function run(request: Request) {
   const { authenticateCronRequest } = await import("@/integrations/supabase/cron-auth");
   const denied = await authenticateCronRequest(request);
@@ -20,7 +20,10 @@ async function run(request: Request) {
   // Monthly formulas and company plans: unused credits of ended months go back to zero (migration 0056).
   const months = await supabaseAdmin.rpc("close_monthly_periods" as never, { _owner: null } as never)
     .then((r) => (r.error ? null : r.data), () => null);
-  return Response.json({ purged, creations, payments, accounts, months });
+  // E-mail reminders (migration 0059): plan ending, low balance, unused credits — once each, with unsubscribe.
+  const { sendReminders } = await import("@/lib/reminders.server");
+  const reminders = await sendReminders().catch((e) => ({ sent: 0, error: (e as Error).message }));
+  return Response.json({ purged, creations, payments, accounts, months, reminders });
 }
 
 export const Route = createFileRoute("/api/public/media-purge")({
