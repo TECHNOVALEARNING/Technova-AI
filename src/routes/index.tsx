@@ -26,7 +26,8 @@ import { Nav, Footer, Heading, Tag, R, ActionText, useReveal, useSiteLang } from
 import { InstallAppPrompt } from "@/components/site/InstallAppPrompt";
 import { AnnouncementBar } from "@/components/site/AnnouncementBar";
 import { WhatsNew } from "@/components/site/WhatsNew";
-import { PartnersStrip } from "@/components/site/PartnersStrip";
+import { BlogHighlights } from "@/components/site/BlogHighlights";
+import { PaymentStrip } from "@/components/site/PaymentStrip";
 import { RoutingSection } from "@/components/site/RoutingSection";
 
 import { PricingContent } from "@/components/site/PricingContent";
@@ -47,7 +48,7 @@ function Index() {
       <AnnouncementBar lang={lang} />
       <Nav lang={lang} setLang={setLang} />
       <Hero t={t} />
-      <PartnersStrip lang={lang} />
+      <PaymentStrip lang={lang} />
       <Intro t={t} />
       <Why t={t} />
       <Services t={t} />
@@ -57,6 +58,7 @@ function Index() {
       <Ecosystem t={t} />
       <Tech t={t} />
       <PricingContent lang={lang} glass />
+      <BlogHighlights lang={lang} />
       <Faq t={t} />
       <Contact t={t} />
       <Footer lang={lang} />

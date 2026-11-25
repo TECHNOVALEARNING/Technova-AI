@@ -185,6 +185,8 @@ function Packs({ cur }: { cur: ReturnType<typeof useCurrency> }) {
   const [pending, setPending] = useState<string | null>(null);
   useEffect(() => { const s = localStorage.getItem(PENDING_PACK_KEY); if (s) { localStorage.removeItem(PENDING_PACK_KEY); setPending(s); } }, []);
   const pendingPack = packs.find(p => p.slug === pending);
+  const unavailable = lang === "en" ? "This plan cannot be bought online yet. Please try again later or write to support@technovaihub.com." : "Ce forfait n'est pas encore disponible au paiement en ligne. Réessayez plus tard ou écrivez à support@technovaihub.com.";
+  useEffect(() => { if (pending && packs.length && !pendingPack) { toast.error(unavailable); setPending(null); } }, [pending, packs, pendingPack, unavailable]);
   // Buying opens the checkout (card or Mobile Money); the server routes it to FeexPay or Nyole.
   const [checkout, setCheckout] = useState<Tables<"credit_packs"> | null>(null);
   const [mode, setMode] = useState<"once" | "monthly">("once");
@@ -214,7 +216,7 @@ function Packs({ cur }: { cur: ReturnType<typeof useCurrency> }) {
       ? <li key={perk.text} className="font-semibold">{perk.text}</li>
       : <li key={perk.text} className="flex items-start gap-2"><FontAwesomeIcon icon={perk.icon} fixedWidth aria-hidden className={`mt-0.5 size-3.5 shrink-0 ${p.featured ? "text-primary" : "text-muted-foreground"}`} /><span>{perk.text}</span></li>)}</ul>}
     <Button variant={p.featured ? "default" : "outline"} className="mt-4 h-9 w-full rounded-full text-[12.5px]" onClick={() => buy(p.slug)}>{c.buy}</Button>
-  </div>; })}</div><PricingBar lang={lang === "en" ? "en" : "fr"} /></div>;
+  </div>; })}</div><PricingBar lang={lang === "en" ? "en" : "fr"} onChooseOrg={(slug) => { const p = packs.find((x) => x.slug === slug); if (p) setCheckout(p); else toast.error(unavailable); }} /></div>;
 }
 
 export function CreditsPage() {

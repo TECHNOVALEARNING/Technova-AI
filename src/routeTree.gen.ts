@@ -36,6 +36,7 @@ import { Route as ApiResearchRouteImport } from './routes/api/research'
 import { Route as ApiSheetAiRouteImport } from './routes/api/sheet-ai'
 import { Route as ApiStudioRouteImport } from './routes/api/studio'
 import { Route as ApiStudioJobRouteImport } from './routes/api/studio-job'
+import { Route as BlogSlugRouteImport } from './routes/blog_.$slug'
 import { Route as PartageTokenRouteImport } from './routes/partage.$token'
 import { Route as SSlugRouteImport } from './routes/s.$slug'
 import { Route as AuthenticatedDashboardIndexRouteImport } from './routes/_authenticated/dashboard/index'
@@ -207,6 +208,11 @@ const ApiStudioRoute = ApiStudioRouteImport.update({
 const ApiStudioJobRoute = ApiStudioJobRouteImport.update({
   id: '/api/studio-job',
   path: '/api/studio-job',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const BlogSlugRoute = BlogSlugRouteImport.update({
+  id: '/blog_/$slug',
+  path: '/blog/$slug',
   getParentRoute: () => rootRouteImport,
 } as any)
 const PartageTokenRoute = PartageTokenRouteImport.update({
@@ -450,6 +456,7 @@ export interface FileRoutesByFullPath {
   '/api/sheet-ai': typeof ApiSheetAiRoute
   '/api/studio': typeof ApiStudioRoute
   '/api/studio-job': typeof ApiStudioJobRoute
+  '/blog/$slug': typeof BlogSlugRoute
   '/partage/$token': typeof PartageTokenRoute
   '/s/$slug': typeof SSlugRoute
   '/dashboard/admin': typeof AuthenticatedDashboardAdminRoute
@@ -515,6 +522,7 @@ export interface FileRoutesByTo {
   '/api/sheet-ai': typeof ApiSheetAiRoute
   '/api/studio': typeof ApiStudioRoute
   '/api/studio-job': typeof ApiStudioJobRoute
+  '/blog/$slug': typeof BlogSlugRoute
   '/partage/$token': typeof PartageTokenRoute
   '/s/$slug': typeof SSlugRoute
   '/dashboard/admin': typeof AuthenticatedDashboardAdminRoute
@@ -583,6 +591,7 @@ export interface FileRoutesById {
   '/api/sheet-ai': typeof ApiSheetAiRoute
   '/api/studio': typeof ApiStudioRoute
   '/api/studio-job': typeof ApiStudioJobRoute
+  '/blog_/$slug': typeof BlogSlugRoute
   '/partage/$token': typeof PartageTokenRoute
   '/s/$slug': typeof SSlugRoute
   '/_authenticated/dashboard/admin': typeof AuthenticatedDashboardAdminRoute
@@ -651,6 +660,7 @@ export interface FileRouteTypes {
     | '/api/sheet-ai'
     | '/api/studio'
     | '/api/studio-job'
+    | '/blog/$slug'
     | '/partage/$token'
     | '/s/$slug'
     | '/dashboard/admin'
@@ -716,6 +726,7 @@ export interface FileRouteTypes {
     | '/api/sheet-ai'
     | '/api/studio'
     | '/api/studio-job'
+    | '/blog/$slug'
     | '/partage/$token'
     | '/s/$slug'
     | '/dashboard/admin'
@@ -783,6 +794,7 @@ export interface FileRouteTypes {
     | '/api/sheet-ai'
     | '/api/studio'
     | '/api/studio-job'
+    | '/blog_/$slug'
     | '/partage/$token'
     | '/s/$slug'
     | '/_authenticated/dashboard/admin'
@@ -849,6 +861,7 @@ export interface RootRouteChildren {
   ApiSheetAiRoute: typeof ApiSheetAiRoute
   ApiStudioRoute: typeof ApiStudioRoute
   ApiStudioJobRoute: typeof ApiStudioJobRoute
+  BlogSlugRoute: typeof BlogSlugRoute
   PartageTokenRoute: typeof PartageTokenRoute
   SSlugRoute: typeof SSlugRoute
   ApiAiChatRoute: typeof ApiAiChatRoute
@@ -1058,6 +1071,13 @@ declare module '@tanstack/react-router' {
       path: '/api/studio-job'
       fullPath: '/api/studio-job'
       preLoaderRoute: typeof ApiStudioJobRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/blog_/$slug': {
+      id: '/blog_/$slug'
+      path: '/blog/$slug'
+      fullPath: '/blog/$slug'
+      preLoaderRoute: typeof BlogSlugRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/partage/$token': {
@@ -1424,6 +1444,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiSheetAiRoute: ApiSheetAiRoute,
   ApiStudioRoute: ApiStudioRoute,
   ApiStudioJobRoute: ApiStudioJobRoute,
+  BlogSlugRoute: BlogSlugRoute,
   PartageTokenRoute: PartageTokenRoute,
   SSlugRoute: SSlugRoute,
   ApiAiChatRoute: ApiAiChatRoute,

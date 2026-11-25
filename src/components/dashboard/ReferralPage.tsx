@@ -4,7 +4,7 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faWhatsapp } from "@fortawesome/free-brands-svg-icons";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
-import { REFERRAL_CREDITS, REFERRAL_MONTHLY_CAP, promoCodeLabel, redeemPromoCode, referralLink, type PromoResult } from "@/lib/referral";
+import { REFERRAL_CREDITS, REFERRAL_MONTHLY_CAP, isPromoCode, myPromoCode, normalizePromoCode, redeemPromoCode, referralLink, setMyPromoCode, type PromoResult, type SetPromoResult } from "@/lib/referral";
 import { notifyCreditsChanged } from "./TopActions";
 import { useDashboard } from "./DashboardLayout";
 
@@ -18,6 +18,30 @@ export function ReferralPage() {
   const [stats, setStats] = useState<{ referred: number; this_month: number; credits: number } | null>(null);
   const [copied, setCopied] = useState(false);
   const [codeCopied, setCodeCopied] = useState(false);
+  // The account's own promo code: empty until the person chooses one (a short code friends remember easily).
+  const [mine, setMine] = useState<string | null | undefined>(undefined);
+  const [draft, setDraft] = useState("");
+  const [editing, setEditing] = useState(false);
+  const [mineBusy, setMineBusy] = useState(false);
+  const [mineMsg, setMineMsg] = useState<{ ok: boolean; text: string } | null>(null);
+  useEffect(() => { void myPromoCode().then((c) => setMine(c)); }, []);
+  const setText: Record<SetPromoResult, [string, string]> = {
+    ok: ["Code enregistré : partagez-le, chaque ami qui l'utilise vous rapporte des crédits.", "Code saved: share it, every friend who uses it earns you credits."],
+    invalid: ["4 à 20 caractères : lettres, chiffres, tiret ou tiret bas (ex. AWA2026).", "4 to 20 characters: letters, digits, - or _ (e.g. AWA2026)."],
+    taken: ["Ce code est déjà pris : essayez une variante (ajoutez un chiffre, par exemple).", "This code is already taken: try a variant (add a digit, for instance)."],
+    reserved: ["Ce code est réservé. Choisissez-en un autre.", "This code is reserved. Choose another one."],
+    too_soon: ["Vous pourrez changer de code demain (une modification par jour).", "You can change your code tomorrow (one change a day)."],
+  };
+  async function saveMine(e: React.FormEvent) {
+    e.preventDefault();
+    const value = normalizePromoCode(draft);
+    if (!isPromoCode(value)) { setMineMsg({ ok: false, text: setText.invalid[fr ? 0 : 1] }); return; }
+    setMineBusy(true);
+    const r = await setMyPromoCode(value).catch((): SetPromoResult => "invalid");
+    setMineBusy(false);
+    setMineMsg({ ok: r === "ok", text: setText[r][fr ? 0 : 1] });
+    if (r === "ok") { setMine(value); setEditing(false); }
+  }
   const [promo, setPromo] = useState("");
   const [promoBusy, setPromoBusy] = useState(false);
   const [promoMsg, setPromoMsg] = useState<{ ok: boolean; text: string } | null>(null);
@@ -39,8 +63,8 @@ export function ReferralPage() {
     if (r === "ok") { setPromo(""); notifyCreditsChanged(); }
   }
   const copyCode = async () => {
-    if (!code) return;
-    try { await navigator.clipboard.writeText(promoCodeLabel(code)); setCodeCopied(true); setTimeout(() => setCodeCopied(false), 1800); } catch { toast.error(fr ? "Copie impossible : sélectionnez le code." : "Copy failed: select the code."); }
+    if (!mine) return;
+    try { await navigator.clipboard.writeText(mine); setCodeCopied(true); setTimeout(() => setCodeCopied(false), 1800); } catch { toast.error(fr ? "Copie impossible : sélectionnez le code." : "Copy failed: select the code."); }
   };
   useEffect(() => {
     void supabase.rpc("my_referral_code").then(({ data }) => setCode(data ?? null));
@@ -48,8 +72,8 @@ export function ReferralPage() {
   }, []);
   const link = code ? referralLink(code) : "";
   const message = fr
-    ? `Je t'invite sur TechNova AI Hub : chat IA, images, vidéos, sites web, présentations et tableaux. Inscris-toi avec mon lien (ou le code promo ${code ? promoCodeLabel(code) : ""}) et on reçoit chacun ${REFERRAL_CREDITS} crédits offerts : ${link}`
-    : `Join me on TechNova AI Hub: AI chat, pictures, videos, websites, presentations and spreadsheets. Sign up with my link (or the promo code ${code ? promoCodeLabel(code) : ""}) and we each get ${REFERRAL_CREDITS} free credits: ${link}`;
+    ? `Je t'invite sur TechNova AI Hub : chat IA, images, vidéos, sites web, présentations et tableaux. Inscris-toi avec mon lien${mine ? ` (ou le code promo ${mine})` : ""} et on reçoit chacun ${REFERRAL_CREDITS} crédits offerts : ${link}`
+    : `Join me on TechNova AI Hub: AI chat, pictures, videos, websites, presentations and spreadsheets. Sign up with my link${mine ? ` (or the promo code ${mine})` : ""} and we each get ${REFERRAL_CREDITS} free credits: ${link}`;
   const copy = async () => {
     try { await navigator.clipboard.writeText(link); setCopied(true); setTimeout(() => setCopied(false), 1800); } catch { toast.error(fr ? "Copie impossible : sélectionnez le lien." : "Copy failed: select the link."); }
   };
@@ -79,16 +103,26 @@ export function ReferralPage() {
         <div className="mt-5 grid gap-4 sm:grid-cols-2">
           <div>
             <p className="text-[12px] font-semibold uppercase tracking-wide text-muted-foreground">{fr ? "Votre code promo" : "Your promo code"}</p>
-            <div className="mt-2 flex items-center gap-2">
-              <span className="flex h-11 min-w-0 flex-1 items-center gap-2 rounded-full border border-dashed border-[#1e3a8a]/50 bg-[#1e3a8a]/[0.05] px-4"><Ticket className="size-4 shrink-0 text-[#1e3a8a] dark:text-blue-300" /><span className="truncate font-mono text-[15px] font-bold tracking-[0.2em]">{code ? promoCodeLabel(code) : "…"}</span></span>
-              <button type="button" disabled={!code} onClick={() => void copyCode()} className="inline-flex h-11 shrink-0 items-center justify-center gap-2 rounded-full border border-border bg-background px-4 text-[13px] font-semibold hover:bg-secondary disabled:opacity-50">{codeCopied ? <Check className="size-4 text-emerald-600" /> : <Copy className="size-4" />}{codeCopied ? (fr ? "Copié" : "Copied") : (fr ? "Copier" : "Copy")}</button>
-            </div>
-            <p className="mt-1.5 text-[12px] text-muted-foreground">{fr ? "Votre ami le saisit à l'inscription : même récompense qu'avec le lien." : "Your friend types it at sign-up: same reward as with the link."}</p>
+            {mine && !editing ? <>
+              <div className="mt-2 flex items-center gap-2">
+                <span className="flex h-11 min-w-0 flex-1 items-center gap-2 rounded-full border border-dashed border-[#1e3a8a]/50 bg-[#1e3a8a]/[0.05] px-4"><Ticket className="size-4 shrink-0 text-[#1e3a8a] dark:text-blue-300" /><span className="truncate font-mono text-[15px] font-bold tracking-[0.15em]">{mine}</span></span>
+                <button type="button" onClick={() => void copyCode()} className="inline-flex h-11 shrink-0 items-center justify-center gap-2 rounded-full border border-border bg-background px-4 text-[13px] font-semibold hover:bg-secondary">{codeCopied ? <Check className="size-4 text-emerald-600" /> : <Copy className="size-4" />}{codeCopied ? (fr ? "Copié" : "Copied") : (fr ? "Copier" : "Copy")}</button>
+              </div>
+              <p className="mt-1.5 text-[12px] text-muted-foreground">{fr ? "Votre ami le saisit à l'inscription : même récompense qu'avec le lien." : "Your friend types it at sign-up: same reward as with the link."} <button type="button" onClick={() => { setDraft(mine); setEditing(true); setMineMsg(null); }} className="font-semibold underline underline-offset-2">{fr ? "Modifier" : "Change"}</button></p>
+              {mineMsg?.ok && <p className="mt-1 text-[12px] text-emerald-700 dark:text-emerald-400">{mineMsg.text}</p>}
+            </> : <form onSubmit={(e) => void saveMine(e)}>
+              <div className="mt-2 flex items-center gap-2">
+                <input value={draft} onChange={(e) => { setDraft(e.target.value.toUpperCase()); setMineMsg(null); }} maxLength={20} placeholder={fr ? "Choisissez votre code, ex. : AWA2026" : "Choose your code, e.g. AWA2026"} aria-label={fr ? "Votre code promo" : "Your promo code"} disabled={mine === undefined} className="h-11 min-w-0 flex-1 rounded-full border border-border bg-background px-4 font-mono text-[14px] tracking-[0.12em] outline-none focus:border-foreground/40" />
+                <button type="submit" disabled={mineBusy || !draft.trim()} className="inline-flex h-11 shrink-0 items-center justify-center rounded-full bg-foreground px-5 text-[13px] font-semibold text-background disabled:opacity-50">{fr ? "Enregistrer" : "Save"}</button>
+              </div>
+              {mineMsg ? <p className={`mt-1.5 text-[12px] ${mineMsg.ok ? "text-emerald-700 dark:text-emerald-400" : "text-destructive"}`}>{mineMsg.text}</p>
+                : <p className="mt-1.5 text-[12px] text-muted-foreground">{fr ? "Choisissez un code simple, facile à retenir et à dicter : vos amis le saisissent à l'inscription." : "Choose a simple code that is easy to remember and say: your friends type it at sign-up."}{editing && <> <button type="button" onClick={() => { setEditing(false); setMineMsg(null); }} className="font-semibold underline underline-offset-2">{fr ? "Annuler" : "Cancel"}</button></>}</p>}
+            </form>}
           </div>
           <form onSubmit={(e) => void applyPromo(e)}>
             <p className="text-[12px] font-semibold uppercase tracking-wide text-muted-foreground">{fr ? "Vous avez reçu un code ?" : "Got a code?"}</p>
             <div className="mt-2 flex items-center gap-2">
-              <input value={promo} onChange={(e) => { setPromo(e.target.value.toUpperCase()); setPromoMsg(null); }} maxLength={16} placeholder={fr ? "Ex. : 3F9A12BC" : "e.g. 3F9A12BC"} aria-label={fr ? "Code promo reçu" : "Promo code received"} className="h-11 min-w-0 flex-1 rounded-full border border-border bg-background px-4 font-mono text-[14px] tracking-[0.15em] outline-none focus:border-foreground/40" />
+              <input value={promo} onChange={(e) => { setPromo(e.target.value.toUpperCase()); setPromoMsg(null); }} maxLength={16} placeholder={fr ? "Ex. : AWA2026" : "e.g. AWA2026"} aria-label={fr ? "Code promo reçu" : "Promo code received"} className="h-11 min-w-0 flex-1 rounded-full border border-border bg-background px-4 font-mono text-[14px] tracking-[0.15em] outline-none focus:border-foreground/40" />
               <button type="submit" disabled={promoBusy || !promo.trim()} className="inline-flex h-11 shrink-0 items-center justify-center rounded-full bg-foreground px-5 text-[13px] font-semibold text-background disabled:opacity-50">{fr ? "Utiliser" : "Apply"}</button>
             </div>
             {promoMsg ? <p className={`mt-1.5 text-[12px] ${promoMsg.ok ? "text-emerald-700 dark:text-emerald-400" : "text-destructive"}`}>{promoMsg.text}</p>

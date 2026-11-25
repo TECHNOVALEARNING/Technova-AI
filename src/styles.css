@@ -1267,3 +1267,13 @@ body:has(.dashboard-shell) :is([data-radix-popper-content-wrapper] > [data-state
   .wn-scene *, .wn-scene { animation: none !important; opacity: 1 !important; }
   .wn-progress span { width: 60%; }
 }
+
+/* Payment methods band after the hero (PaymentStrip.tsx): grey logos and names at rest, the hovered method in its
+   brand colours with a dark name; keeps scrolling under the pointer, faded edges, static with reduced motion. */
+.pay-mask { -webkit-mask-image: linear-gradient(90deg, transparent, #000 9%, #000 91%, transparent); mask-image: linear-gradient(90deg, transparent, #000 9%, #000 91%, transparent); }
+.pay-track { animation: marquee 60s linear infinite; }
+.pay-item { color: color-mix(in oklab, var(--foreground) 45%, transparent); transition: color .25s ease; cursor: default; }
+.pay-item > span:first-child { filter: grayscale(1); opacity: .55; transition: filter .25s ease, opacity .25s ease; }
+.pay-item:hover { color: var(--foreground); }
+.pay-item:hover > span:first-child { filter: none; opacity: 1; }
+@media (prefers-reduced-motion: reduce) { .pay-track { animation: none; } }

@@ -6,6 +6,13 @@ import { ArrowUpRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Nav, Footer, PageHero, R, ActionText, useReveal, useSiteLang } from "@/components/site/SiteChrome";
 import { posts, blogCats, type Post } from "@/lib/site-pages";
+import { articles } from "@/lib/blog-articles";
+
+// TechNova's own articles (internal pages, French) come first, then the blog-ia.com articles (new tab).
+type Item = Post & { internal?: boolean };
+const fr = (v: string) => ({ fr: v, en: v, es: v, pt: v });
+const allPosts: Item[] = [...articles.map((a): Item => ({ cat: a.cat, url: `/blog/${a.slug}`, title: fr(a.title), excerpt: fr(a.excerpt), internal: true })), ...posts];
+const linkProps = (p: Item) => (p.internal ? {} : { target: "_blank", rel: "noreferrer" });
 
 export const Route = createFileRoute("/blog")({
   head: ({ match }) => pageHead({ ...seoFor("/blog", match.search), jsonLd: [breadcrumbLd("Blog", "/blog")] }),
@@ -28,8 +35,8 @@ function BlogPage() {
   const t = txt[lang];
   const [cat, setCat] = useState<Post["cat"] | "all">("all");
   useReveal();
-  const featured = posts[0]!;
-  const list = posts.filter((p) => cat === "all" || p.cat === cat);
+  const featured = allPosts[0]!;
+  const list = allPosts.slice(1).filter((p) => cat === "all" || p.cat === cat);
 
   return (
     <div className="min-h-screen overflow-x-clip bg-background text-foreground">
@@ -38,7 +45,7 @@ function BlogPage() {
 
       <section className="px-4 pt-8 sm:pt-10">
         <R className="mx-auto max-w-6xl">
-          <a href={featured.url} target="_blank" rel="noreferrer" className="blog-featured group relative block overflow-hidden rounded-[32px] border border-border bg-card shadow-soft transition hover:shadow-lift" style={{ "--hue": catHue[featured.cat] } as CSSProperties}>
+          <a href={featured.url} {...linkProps(featured)} className="blog-featured group relative block overflow-hidden rounded-[32px] border border-border bg-card shadow-soft transition hover:shadow-lift" style={{ "--hue": catHue[featured.cat] } as CSSProperties}>
             <div className="relative flex flex-col justify-center p-7 md:p-10">
               <span className="text-xs font-medium uppercase tracking-[0.18em] text-muted-foreground">{t.featured} · {blogCats[featured.cat][lang]}</span>
               <h2 className="mt-3 font-display text-3xl font-semibold tracking-tight md:text-4xl">{featured.title[lang]}</h2>
@@ -62,9 +69,9 @@ function BlogPage() {
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {list.map((p, i) => (
               <R key={p.url} delay={(i % 3) * 60}>
-                <a href={p.url} target="_blank" rel="noreferrer" className={`blog-card group relative flex h-full flex-col overflow-hidden rounded-[26px] border border-border bg-card shadow-soft transition duration-300 hover:-translate-y-1 hover:shadow-lift`} style={{ "--hue": catHue[p.cat] } as CSSProperties}>
+                <a href={p.url} {...linkProps(p)} className={`blog-card group relative flex h-full flex-col overflow-hidden rounded-[26px] border border-border bg-card shadow-soft transition duration-300 hover:-translate-y-1 hover:shadow-lift`} style={{ "--hue": catHue[p.cat] } as CSSProperties}>
                   <div className="relative flex flex-1 flex-col p-5">
-                    <span className="text-[11px] font-medium uppercase tracking-[0.16em] text-muted-foreground">{blogCats[p.cat][lang]}</span>
+                    <span className="flex items-center gap-2 text-[11px] font-medium uppercase tracking-[0.16em] text-muted-foreground">{blogCats[p.cat][lang]}{p.internal && <span className="rounded-full bg-emerald-600 px-2 py-0.5 text-[10px] font-bold tracking-wide text-white">{lang === "en" ? "New" : lang === "es" ? "Nuevo" : lang === "pt" ? "Novo" : "Nouveau"}</span>}</span>
                     <h3 className="mt-2 font-display text-lg font-semibold leading-snug">{p.title[lang]}</h3>
                     <p className="mt-2 text-sm text-muted-foreground">{p.excerpt[lang]}</p>
                     <span className="mt-auto inline-flex items-center gap-1 pt-4 text-sm font-semibold">{t.read}<ArrowUpRight className="size-4" /></span>

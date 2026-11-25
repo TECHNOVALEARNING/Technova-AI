@@ -12,6 +12,7 @@ import { useGeoPrice } from "@/lib/geo-price-client";
 import { NoCommitment } from "./NoCommitment";
 import { PackCalculator } from "./PackCalculator";
 import { OrgPlansDialog } from "./OrgPlans";
+import type { OrgPlanSlug } from "@/lib/org-features";
 
 const text = {
   fr: { title: "Des forfaits simples et flexibles", sub: "Quatre packs de crédits Technova prépayés, sans abonnement obligatoire, pour discuter, créer et développer.", once: "Paiement unique", terms: "Paiement unique • crédits prépayés • aucun renouvellement automatique", choose: "Choisir", popular: "LE PLUS POPULAIRE", credits: "crédits Technova", tabPacks: "Packs · paiement unique", tabMonthly: "Formule mensuelle", perMonth: "par mois", monthlyTerms: "Payée une fois par mois • crédits ajoutés aussitôt, à utiliser dans le mois (remis à zéro au bout de 30 jours) • aucun prélèvement automatique", monthlySub: "Pour un usage régulier : le meilleur prix au crédit et toutes les fonctions du forfait, renouvelé quand vous le décidez.", save: "Le crédit le moins cher est dans la" },
@@ -108,7 +109,7 @@ export function PricingContent({ lang, glass = false }: { lang: SiteLang; glass?
 }
 
 /** Bar under the packs: the API for developers and the company plans (« Détails » opens them) — landing, Tarifs, dashboard. */
-export function PricingBar({ lang, glass = false }: { lang: SiteLang; glass?: boolean }) {
+export function PricingBar({ lang, glass = false, onChooseOrg }: { lang: SiteLang; glass?: boolean; onChooseOrg?: ((slug: OrgPlanSlug) => void) | undefined }) {
   const b = barText[lang];
   const [orgOpen, setOrgOpen] = useState(false);
   return <div className={`mt-6 grid overflow-hidden rounded-2xl border md:grid-cols-2 ${glass ? "glass-card" : "border-border bg-card"}`}>
@@ -122,6 +123,6 @@ export function PricingBar({ lang, glass = false }: { lang: SiteLang; glass?: bo
       <div className="min-w-0 flex-1"><p className="font-display font-semibold">{b.pro}</p><p className="text-sm text-muted-foreground">{b.proSub}</p></div>
       <button type="button" onClick={() => setOrgOpen(true)} className="inline-flex h-10 shrink-0 items-center justify-center gap-1.5 rounded-full border border-border px-5 text-sm font-semibold transition hover:border-foreground/40">{b.proCta}<ArrowUpRight className="size-3.5" /></button>
     </div>
-    <OrgPlansDialog lang={lang} open={orgOpen} onOpenChange={setOrgOpen} />
+    <OrgPlansDialog lang={lang} open={orgOpen} onOpenChange={setOrgOpen} onChoose={onChooseOrg} />
   </div>;
 }

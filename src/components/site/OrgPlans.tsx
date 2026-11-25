@@ -73,7 +73,7 @@ const locales: Record<SiteLang, string> = { fr: "fr-FR", en: "en-US", es: "es-ES
 const howIcons = [ShieldCheck, Check, LayoutDashboard];
 
 /** Plan cards of the company plans (dialog on the pricing pages, company page of the dashboard). */
-export function OrgPlanCards({ lang, onChoose }: { lang: SiteLang; onChoose?: (slug: OrgPlanSlug) => void }) {
+export function OrgPlanCards({ lang, onChoose }: { lang: SiteLang; onChoose?: ((slug: OrgPlanSlug) => void) | undefined }) {
   const t = copy[lang] ?? copy.fr; const loc = locales[lang]; const geo = useGeoPrice(); const navigate = useNavigate();
   async function choose(slug: OrgPlanSlug) {
     if (onChoose) { onChoose(slug); return; }
@@ -99,14 +99,14 @@ export function OrgPlanCards({ lang, onChoose }: { lang: SiteLang; onChoose?: (s
 }
 
 /** « Détails » dialog: how the company plans work, the two plans and the no-commitment terms. */
-export function OrgPlansDialog({ lang, open, onOpenChange }: { lang: SiteLang; open: boolean; onOpenChange: (open: boolean) => void }) {
+export function OrgPlansDialog({ lang, open, onOpenChange, onChoose }: { lang: SiteLang; open: boolean; onOpenChange: (open: boolean) => void; onChoose?: ((slug: OrgPlanSlug) => void) | undefined }) {
   const t = copy[lang] ?? copy.fr;
   return <Dialog open={open} onOpenChange={onOpenChange}>
     <DialogContent className="max-h-[92svh] w-[min(980px,96vw)] max-w-none overflow-y-auto rounded-3xl p-5 sm:p-7">
       <DialogTitle className="font-display text-2xl font-semibold">{t.title}</DialogTitle>
       <DialogDescription className="text-sm text-muted-foreground">{t.sub}</DialogDescription>
       <div className="mt-2 grid gap-3 sm:grid-cols-3">{t.how.map((h, i) => { const Icon = howIcons[i] ?? Check; return <div key={h.t} className="rounded-2xl border border-border bg-secondary/40 p-4"><Icon className="size-5 text-foreground" /><p className="mt-2 text-sm font-semibold">{h.t}</p><p className="mt-1 text-[13px] leading-relaxed text-muted-foreground">{h.d}</p></div>; })}</div>
-      <div className="mt-2"><OrgPlanCards lang={lang} /></div>
+      <div className="mt-2"><OrgPlanCards lang={lang} {...(onChoose ? { onChoose: (slug: OrgPlanSlug) => { onOpenChange(false); onChoose(slug); } } : {})} /></div>
       <div className="mt-2"><NoCommitment lang={lang} compact /></div>
     </DialogContent>
   </Dialog>;

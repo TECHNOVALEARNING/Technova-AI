@@ -25,3 +25,16 @@
 ## English
 
 TechNova AI Hub brings the best AI models (GPT, Claude, Gemini, DeepSeek and 200+ others) into one place to chat, code, analyse documents and create images, videos, music, websites, slides and spreadsheets. Prepaid credits paid in FCFA by Mobile Money or card, no subscription required; optional monthly and team plans. English pages: https://www.technovaihub.com/?lang=en, https://www.technovaihub.com/tarifs?lang=en, https://www.technovaihub.com/modeles?lang=en, https://www.technovaihub.com/documentation?lang=en.
+
+## Articles
+
+- [Comment utiliser ChatGPT, Claude et Gemini sans carte bancaire en Afrique ?](https://www.technovaihub.com/blog/utiliser-chatgpt-claude-gemini-sans-carte-bancaire-afrique)
+- [Abonnement à 20 $/mois ou crédits prépayés en FCFA : comment payer son IA moins cher ?](https://www.technovaihub.com/blog/abonnement-ia-20-dollars-vs-credits-prepayes-fcfa)
+- [Générer des images et des vidéos IA en payant par Mobile Money](https://www.technovaihub.com/blog/generer-images-videos-ia-mobile-money)
+- [Développeurs en Afrique : accéder aux API d'OpenAI, Claude et DeepSeek sans carte internationale](https://www.technovaihub.com/blog/developpeurs-afrique-api-ia-sans-carte-internationale)
+- [Créer et publier un site web complet avec l'IA en quelques minutes](https://www.technovaihub.com/blog/creer-site-web-avec-ia-5-minutes)
+- [GPT, Claude, Gemini ou DeepSeek : quel modèle d'IA choisir selon votre tâche ?](https://www.technovaihub.com/blog/gpt-claude-gemini-deepseek-quel-modele-ia-choisir)
+- [Étudiants en Afrique : 5 façons d'utiliser l'IA pour réussir ses études](https://www.technovaihub.com/blog/etudiants-afrique-5-facons-utiliser-ia-etudes)
+- [Confidentialité et IA : comment protéger les données de votre entreprise ?](https://www.technovaihub.com/blog/confidentialite-ia-proteger-donnees-entreprise)
+- [TechNova Smart : comment le routage intelligent réduit vos coûts d'IA](https://www.technovaihub.com/blog/technova-smart-routage-intelligent-reduire-couts-ia)
+- [Freelances et agences digitales : livrer vos projets plus vite avec une suite IA tout-en-un](https://www.technovaihub.com/blog/freelances-agences-digitales-livrer-projets-plus-vite-ia)
