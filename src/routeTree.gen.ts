@@ -43,6 +43,7 @@ import { Route as AuthenticatedDashboardIndexRouteImport } from './routes/_authe
 import { Route as AuthenticatedDashboardAdminRouteImport } from './routes/_authenticated/dashboard/admin'
 import { Route as AuthenticatedDashboardAgentsRouteImport } from './routes/_authenticated/dashboard/agents'
 import { Route as AuthenticatedDashboardApiRouteImport } from './routes/_authenticated/dashboard/api'
+import { Route as AuthenticatedDashboardApprendreRouteImport } from './routes/_authenticated/dashboard/apprendre'
 import { Route as AuthenticatedDashboardArenaRouteImport } from './routes/_authenticated/dashboard/arena'
 import { Route as AuthenticatedDashboardBillingRouteImport } from './routes/_authenticated/dashboard/billing'
 import { Route as AuthenticatedDashboardConnexionsRouteImport } from './routes/_authenticated/dashboard/connexions'
@@ -247,6 +248,12 @@ const AuthenticatedDashboardApiRoute =
   AuthenticatedDashboardApiRouteImport.update({
     id: '/api',
     path: '/api',
+    getParentRoute: () => AuthenticatedDashboardRoute,
+  } as any)
+const AuthenticatedDashboardApprendreRoute =
+  AuthenticatedDashboardApprendreRouteImport.update({
+    id: '/apprendre',
+    path: '/apprendre',
     getParentRoute: () => AuthenticatedDashboardRoute,
   } as any)
 const AuthenticatedDashboardArenaRoute =
@@ -462,6 +469,7 @@ export interface FileRoutesByFullPath {
   '/dashboard/admin': typeof AuthenticatedDashboardAdminRoute
   '/dashboard/agents': typeof AuthenticatedDashboardAgentsRoute
   '/dashboard/api': typeof AuthenticatedDashboardApiRoute
+  '/dashboard/apprendre': typeof AuthenticatedDashboardApprendreRoute
   '/dashboard/arena': typeof AuthenticatedDashboardArenaRoute
   '/dashboard/billing': typeof AuthenticatedDashboardBillingRoute
   '/dashboard/connexions': typeof AuthenticatedDashboardConnexionsRoute
@@ -528,6 +536,7 @@ export interface FileRoutesByTo {
   '/dashboard/admin': typeof AuthenticatedDashboardAdminRoute
   '/dashboard/agents': typeof AuthenticatedDashboardAgentsRoute
   '/dashboard/api': typeof AuthenticatedDashboardApiRoute
+  '/dashboard/apprendre': typeof AuthenticatedDashboardApprendreRoute
   '/dashboard/arena': typeof AuthenticatedDashboardArenaRoute
   '/dashboard/billing': typeof AuthenticatedDashboardBillingRoute
   '/dashboard/connexions': typeof AuthenticatedDashboardConnexionsRoute
@@ -597,6 +606,7 @@ export interface FileRoutesById {
   '/_authenticated/dashboard/admin': typeof AuthenticatedDashboardAdminRoute
   '/_authenticated/dashboard/agents': typeof AuthenticatedDashboardAgentsRoute
   '/_authenticated/dashboard/api': typeof AuthenticatedDashboardApiRoute
+  '/_authenticated/dashboard/apprendre': typeof AuthenticatedDashboardApprendreRoute
   '/_authenticated/dashboard/arena': typeof AuthenticatedDashboardArenaRoute
   '/_authenticated/dashboard/billing': typeof AuthenticatedDashboardBillingRoute
   '/_authenticated/dashboard/connexions': typeof AuthenticatedDashboardConnexionsRoute
@@ -666,6 +676,7 @@ export interface FileRouteTypes {
     | '/dashboard/admin'
     | '/dashboard/agents'
     | '/dashboard/api'
+    | '/dashboard/apprendre'
     | '/dashboard/arena'
     | '/dashboard/billing'
     | '/dashboard/connexions'
@@ -732,6 +743,7 @@ export interface FileRouteTypes {
     | '/dashboard/admin'
     | '/dashboard/agents'
     | '/dashboard/api'
+    | '/dashboard/apprendre'
     | '/dashboard/arena'
     | '/dashboard/billing'
     | '/dashboard/connexions'
@@ -800,6 +812,7 @@ export interface FileRouteTypes {
     | '/_authenticated/dashboard/admin'
     | '/_authenticated/dashboard/agents'
     | '/_authenticated/dashboard/api'
+    | '/_authenticated/dashboard/apprendre'
     | '/_authenticated/dashboard/arena'
     | '/_authenticated/dashboard/billing'
     | '/_authenticated/dashboard/connexions'
@@ -1122,6 +1135,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedDashboardApiRouteImport
       parentRoute: typeof AuthenticatedDashboardRoute
     }
+    '/_authenticated/dashboard/apprendre': {
+      id: '/_authenticated/dashboard/apprendre'
+      path: '/apprendre'
+      fullPath: '/dashboard/apprendre'
+      preLoaderRoute: typeof AuthenticatedDashboardApprendreRouteImport
+      parentRoute: typeof AuthenticatedDashboardRoute
+    }
     '/_authenticated/dashboard/arena': {
       id: '/_authenticated/dashboard/arena'
       path: '/arena'
@@ -1353,6 +1373,7 @@ interface AuthenticatedDashboardRouteChildren {
   AuthenticatedDashboardAdminRoute: typeof AuthenticatedDashboardAdminRoute
   AuthenticatedDashboardAgentsRoute: typeof AuthenticatedDashboardAgentsRoute
   AuthenticatedDashboardApiRoute: typeof AuthenticatedDashboardApiRoute
+  AuthenticatedDashboardApprendreRoute: typeof AuthenticatedDashboardApprendreRoute
   AuthenticatedDashboardArenaRoute: typeof AuthenticatedDashboardArenaRoute
   AuthenticatedDashboardBillingRoute: typeof AuthenticatedDashboardBillingRoute
   AuthenticatedDashboardConnexionsRoute: typeof AuthenticatedDashboardConnexionsRoute
@@ -1377,6 +1398,7 @@ const AuthenticatedDashboardRouteChildren: AuthenticatedDashboardRouteChildren =
     AuthenticatedDashboardAdminRoute: AuthenticatedDashboardAdminRoute,
     AuthenticatedDashboardAgentsRoute: AuthenticatedDashboardAgentsRoute,
     AuthenticatedDashboardApiRoute: AuthenticatedDashboardApiRoute,
+    AuthenticatedDashboardApprendreRoute: AuthenticatedDashboardApprendreRoute,
     AuthenticatedDashboardArenaRoute: AuthenticatedDashboardArenaRoute,
     AuthenticatedDashboardBillingRoute: AuthenticatedDashboardBillingRoute,
     AuthenticatedDashboardConnexionsRoute:

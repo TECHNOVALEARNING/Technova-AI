@@ -15,6 +15,8 @@ import {
   ConversationScrollButton,
 } from "@/components/ai-elements/conversation";
 import { Message, MessageContent, MessageResponse } from "@/components/ai-elements/message";
+import { hasLearnBlocks, LearnReply } from "@/components/learn/LearnBlocks";
+import type { LearnRequest } from "@/lib/learn";
 import type { ExportFormat } from "@/lib/export-reply";
 import { toast } from "sonner";
 import {
@@ -677,17 +679,23 @@ function ChatOrb() {
   return <div className="chat-orb" aria-hidden="true"><span className="chat-orb-ball"><i /><i /><i /><b /></span></div>;
 }
 
-type StarterIdea = { icon: typeof LayoutTemplate; mode: Mode; attach?: boolean; wizard?: "sales" | "design" | "sheet"; fr: [string, string, string]; en: [string, string, string] };
+/** « Apprendre » conversations: the request saved on the first user message (src/lib/learn.ts). */
+function learnOf(history: UIMessage[]): LearnRequest | undefined {
+  const first = history.find((m) => m.role === "user");
+  return (first?.parts as unknown as Array<{ type: string; data?: unknown }> | undefined)?.find((p) => p.type === "data-learn-request")?.data as LearnRequest | undefined;
+}
+
+type StarterIdea = { icon: typeof LayoutTemplate; mode: Mode; attach?: boolean; wizard?: "sales" | "design" | "sheet" | "learn"; fr: [string, string, string]; en: [string, string, string] };
 
 // One-click starting points: [title, hint, prefilled prompt]. Brackets mark what the user completes.
 const starterIdeas: StarterIdea[] = [
   { icon: LayoutTemplate, mode: "create", fr: ["Landing page", "Une page moderne et épurée", "Crée une landing page moderne et épurée pour [mon activité] : héros percutant, trois avantages, témoignages, tarifs et appel à l'action."], en: ["Landing page", "A modern, clean page", "Build a modern, clean landing page for [my business]: strong hero, three benefits, testimonials, pricing and a call to action."] },
   { icon: ShoppingBag, mode: "create", fr: ["Boutique en ligne", "Catalogue, fiche produit, panier", "Crée une boutique en ligne élégante pour vendre [mes produits] : catalogue avec filtres, fiche produit détaillée et panier."], en: ["Online store", "Catalog, product page, cart", "Build an elegant online store to sell [my products]: filterable catalog, detailed product page and cart."] },
   { icon: Palette, mode: "create", wizard: "design", fr: ["Créativité", "Présentations, CV, flyers, invitations, cartes…", ""], en: ["Creativity", "Slides, résumés, flyers, invitations, cards…", ""] },
-  { icon: BadgeDollarSign, mode: "create", wizard: "sales", fr: ["Page de vente pro", "Offre, style, paiement : une page qui vend", ""], en: ["Pro sales page", "Offer, style, payment: a page that sells", ""] },
+  { icon: BadgeDollarSign, mode: "create", wizard: "sales", fr: ["Page de vente", "Page de vente pro : offre, style, paiement, une page qui vend", ""], en: ["Sales page", "Offer, style, payment: a page that sells", ""] },
   { icon: ScanEye, mode: "chat", attach: true, fr: ["Design vers code", "Une capture devient une page", "Reproduis fidèlement le design de l'image jointe en une page HTML/CSS responsive, dans un seul fichier."], en: ["Design to code", "A screenshot becomes a page", "Faithfully recreate the design in the attached image as a responsive HTML/CSS page, in a single file."] },
   { icon: ChartColumn, mode: "create", wizard: "sheet", fr: ["Analyse de données", "Vos chiffres en tableaux, formules et graphiques, avec l'assistant IA", ""], en: ["Data analysis", "Your figures in tables, formulas and charts, with the AI assistant", ""] },
-  { icon: GraduationCap, mode: "chat", fr: ["Apprendre", "Un sujet expliqué pas à pas, avec un petit quiz", "Apprends-moi [le sujet] simplement, comme un bon professeur : explique pas à pas avec des exemples concrets de la vie courante, fais un court résumé à retenir, puis pose-moi 3 questions pour vérifier que j'ai compris (sans donner les réponses tout de suite)."], en: ["Learn", "A topic explained step by step, with a short quiz", "Teach me [the topic] simply, like a good teacher: explain step by step with concrete everyday examples, give a short summary to remember, then ask me 3 questions to check I understood (without giving the answers right away)."] },
+  { icon: GraduationCap, mode: "chat", wizard: "learn", fr: ["Apprendre", "Tuteur, quiz, flashcards, révisions, outils enseignants", ""], en: ["Learn", "Tutor, quizzes, flashcards, revision, teacher tools", ""] },
   { icon: Languages, mode: "chat", fr: ["Traduction", "Un texte traduit fidèlement, ton et mise en forme gardés", "Traduis en [langue cible] le texte ci-dessous, fidèlement et naturellement : garde le sens, le ton et la mise en forme, n'ajoute rien, et signale entre parenthèses les mots ambigus.\n\nTexte : "], en: ["Translation", "A faithful translation, tone and layout kept", "Translate the text below into [target language], faithfully and naturally: keep the meaning, tone and formatting, add nothing, and flag ambiguous words in brackets.\n\nText: "] },
 ];
 
@@ -703,6 +711,8 @@ function StarterIdeas({ choice, inputRef, onSalesPage, onMusic, onVideo, onHuman
     if (idea.wizard === "design") { void goTo({ to: "/dashboard/registry", search: { section: "design" } as never }); return; }
     // « Analyse de données » opens TechNova Tableur (Templates → Tableur et Excel).
     if (idea.wizard === "sheet") { void goTo({ to: "/dashboard/registry", search: { section: "sheet" } as never }); return; }
+    // « Apprendre » opens the learning space (tutor, quizzes, flashcards, teacher tools).
+    if (idea.wizard === "learn") { void goTo({ to: "/dashboard/apprendre" }); return; }
     choice.chooseMode(idea.mode);
     const [, , prompt] = idea[lang === "en" ? "en" : "fr"];
     // Let the composer re-render in the chosen mode, then prefill and select the part to complete.
@@ -714,33 +724,36 @@ function StarterIdeas({ choice, inputRef, onSalesPage, onMusic, onVideo, onHuman
       if (idea.attach) document.querySelector<HTMLInputElement>("input[data-chat-attach]")?.click();
     }, 0);
   }
-  // Three rows: Boutique en ligne · Créativité · Analyse de données · Page de vente pro (the two highlighted ones in
-  // the middle), then the four creation buttons, then Landing page · Design vers code · Apprendre · Traduction.
+  // Two centred rows of small pills sized to their label: the coloured tools (Créativité, Analyse de données,
+  // music, video, humanize, audio), then the prompt starters and journeys (Apprendre opens its own space).
   const byWizard = (w: string) => starterIdeas.find((idea) => idea.wizard === w)!;
   const byTitle = (t: string) => starterIdeas.find((idea) => idea.fr[0] === t)!;
-  const top = [byTitle("Boutique en ligne"), byWizard("design"), byWizard("sheet"), byWizard("sales")];
-  const bottom = [byTitle("Landing page"), byTitle("Design vers code"), byTitle("Apprendre"), byTitle("Traduction")];
-  const cell = "inline-flex h-9 w-full min-w-0 items-center justify-center gap-1.5 rounded-full px-3 text-[12px]";
+  const plain = [byTitle("Boutique en ligne"), byWizard("sales"), byTitle("Landing page"), byTitle("Design vers code"), byWizard("learn"), byTitle("Traduction")];
+  const pill = "inline-flex h-8 shrink-0 items-center gap-1.5 rounded-full px-2.5 text-[11.5px] whitespace-nowrap";
   const chip = (idea: StarterIdea) => {
     if (ideaOff(idea)) return null;
     const [title, hint] = idea[lang === "en" ? "en" : "fr"];
     const Icon = idea.icon;
     const featured = idea.wizard === "design" || idea.wizard === "sheet";
     return <button key={title} type="button" onClick={() => pick(idea)} title={hint}
-      className={cn("starter-chip group border transition-colors", cell, featured ? cn("featured-chip font-semibold", idea.wizard === "design" ? "starter-chip-design" : "starter-chip-sheet") : "text-foreground/80 hover:text-foreground")}>
+      className={cn("starter-chip group border transition-colors", pill, featured ? cn("featured-chip font-semibold", idea.wizard === "design" ? "starter-chip-design" : "starter-chip-sheet") : "text-foreground/80 hover:text-foreground")}>
       <Icon className={cn("size-3.5 shrink-0", featured ? "" : "text-muted-foreground transition-colors group-hover:text-foreground")} strokeWidth={featured ? 2 : 1.6} />
-      <span className="truncate">{title}</span>
+      <span>{title}</span>
     </button>;
   };
-  return <div className="mx-auto w-full max-w-[680px] space-y-2">
-    <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">{top.map(chip)}</div>
-    <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
-      {!off.has("music") && <button type="button" onClick={onMusic} className={cn("create-chip create-chip-music font-semibold text-white", cell)}><Music className="size-3.5 shrink-0" /><span className="truncate">{lang === "en" ? "Create a song" : "Création de musique"}</span></button>}
-      {!off.has("video") && <button type="button" onClick={onVideo} className={cn("create-chip create-chip-video font-semibold text-white", cell)}><Film className="size-3.5 shrink-0" /><span className="truncate">{lang === "en" ? "Create a video" : "Création de vidéo"}</span></button>}
-      {!off.has("humanize") && <button type="button" onClick={onHumanize} className={cn("create-chip create-chip-humanize font-semibold text-white", cell)}><PenLine className="size-3.5 shrink-0" /><span className="truncate">{lang === "en" ? "Humanize a text" : "Humaniser un texte"}</span></button>}
-      {!off.has("audio") && <button type="button" onClick={onAudio} className={cn("create-chip create-chip-audio font-semibold text-white", cell)}><AudioLines className="size-3.5 shrink-0" /><span className="truncate">{lang === "en" ? "Summarize an audio" : "Résumé d'un audio"}</span></button>}
+  const en = lang === "en";
+  // Phones keep the two rows: each scrolls sideways instead of wrapping into many lines.
+  const row = "-mx-4 flex gap-1.5 overflow-x-auto px-4 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden sm:mx-0 sm:flex-wrap sm:justify-center sm:overflow-visible sm:px-0";
+  return <div className="mx-auto w-full max-w-[740px] space-y-2">
+    <div className={row}>
+      {chip(byWizard("design"))}
+      {chip(byWizard("sheet"))}
+      {!off.has("music") && <button type="button" onClick={onMusic} title={en ? "Create a song" : "Création de musique"} className={cn("create-chip create-chip-music font-semibold text-white", pill)}><Music className="size-3.5 shrink-0" /><span>{en ? "Music" : "Musique"}</span></button>}
+      {!off.has("video") && <button type="button" onClick={onVideo} title={en ? "Create a video" : "Création de vidéo"} className={cn("create-chip create-chip-video font-semibold text-white", pill)}><Film className="size-3.5 shrink-0" /><span>{en ? "Video" : "Vidéo"}</span></button>}
+      {!off.has("humanize") && <button type="button" onClick={onHumanize} title={en ? "Humanize a text" : "Humaniser un texte"} className={cn("create-chip create-chip-humanize font-semibold text-white", pill)}><PenLine className="size-3.5 shrink-0" /><span>{en ? "Humanize" : "Humaniser"}</span></button>}
+      {!off.has("audio") && <button type="button" onClick={onAudio} title={en ? "Summarize an audio" : "Résumé d'un audio"} className={cn("create-chip create-chip-audio font-semibold text-white", pill)}><AudioLines className="size-3.5 shrink-0" /><span>{en ? "Audio summary" : "Résumé audio"}</span></button>}
     </div>
-    <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">{bottom.map(chip)}</div>
+    <div className={row}>{plain.map(chip)}</div>
   </div>;
 }
 
@@ -1217,6 +1230,8 @@ export function ThreadPage({ threadId }: { threadId: string }) {
     const dataParts = last?.role === "user" ? (last.parts as unknown as Array<{ type: string; data?: unknown }>) : [];
     const humanizeTask = dataParts.find((p) => p.type === "data-tool-request")?.data as HumanizeTask | undefined;
     const audioTask = dataParts.find((p) => p.type === "data-audio-request")?.data as AudioTask | undefined;
+    // A learning conversation is always a chat reply with its tool's rules: never research, media or Studio.
+    if (!audioTask && last?.role === "user" && learnOf(history)) { await chatReply(history); return; }
     if (audioTask) {
       // Résumé d'audio: the server listens to the uploaded pieces, streams "§" status lines, then the summary.
       const replyId = crypto.randomUUID();
@@ -1379,6 +1394,7 @@ export function ThreadPage({ threadId }: { threadId: string }) {
     const assistantId = crypto.randomUUID();
     const lastTurn = history[history.length - 1];
     const humanizeTask = lastTurn?.role === "user" ? (lastTurn.parts as unknown as Array<{ type: string; data?: unknown }>).find((p) => p.type === "data-tool-request")?.data as HumanizeTask | undefined : undefined;
+    const learnTask = !humanizeTask ? learnOf(history) : undefined;
     const textOf = (m: UIMessage) =>
       m.parts.map((p) => (p.type === "text" ? p.text : "")).join("");
     const setAssistant = (text: string) =>
@@ -1415,9 +1431,10 @@ export function ThreadPage({ threadId }: { threadId: string }) {
         body: JSON.stringify({
           tier: choice.tier,
           ...(choice.flagship && choice.mode === "chat" && !agent && !humanizeTask ? { model: choice.flagship } : {}),
-          mode: humanizeTask ? "chat" : choice.mode,
+          mode: humanizeTask || learnTask ? "chat" : choice.mode,
           lang,
           ...(humanizeTask && !agent ? { task: humanizeTask } : {}),
+          ...(learnTask && !agent ? { learn: learnTask } : {}),
           ...(agent ? { agentId: agent.id } : {}),
           ...(fileIds.length ? { fileIds } : {}),
           ...(choice.kbIds.length && choice.mode === "chat" ? { knowledgeBaseIds: choice.kbIds } : {}),
@@ -1651,7 +1668,7 @@ export function ThreadPage({ threadId }: { threadId: string }) {
                 <MessageContent className="chat-msg text-[14px] leading-relaxed text-foreground group-[.is-user]:rounded-3xl group-[.is-user]:border group-[.is-user]:border-border group-[.is-user]:bg-card group-[.is-user]:px-4 group-[.is-user]:py-2.5 group-[.is-assistant]:bg-transparent group-[.is-assistant]:px-0">
                   {message.parts.map((part, index) =>
                     part.type === "text" ? (
-                      part.text ? <MessageResponse key={index}>{part.text}</MessageResponse> : null
+                      part.text ? (message.role === "assistant" && hasLearnBlocks(part.text) ? <LearnReply key={index} text={part.text} lang={lang === "en" ? "en" : "fr"} /> : <MessageResponse key={index}>{part.text}</MessageResponse>) : null
                     ) : (part.type as string) === "data-studio" ? (
                       <div key={index} className="w-full">{renderStudio(message.id, (part as unknown as { data: StudioData }).data)}</div>
                     ) : (part.type as string) === "data-media" ? (

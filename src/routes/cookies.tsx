@@ -13,7 +13,7 @@ export const Route = createFileRoute("/cookies")({
   component: CookiePolicyPage,
 });
 
-const UPDATED = "20 novembre 2026";
+const UPDATED = "25 novembre 2026";
 const CONTACT = "support@technovaihub.com";
 
 type Row = [name: string, purpose: string, duration: string];
@@ -26,6 +26,7 @@ const necessary: Row[] = [
   ["technova-last-active", "Heure de votre dernière activité dans le tableau de bord : après 7 jours sans activité, la session se ferme pour protéger votre compte.", "Jusqu'à la déconnexion"],
   ["technova-inbox-read", "Retenir les messages de votre boîte de réception que vous avez déjà lus.", "Jusqu'à la déconnexion"],
   ["technova-sheet-draft", "Garder sur votre appareil le classeur que vous modifiez dans TechNova Tableur (brouillon), pour ne pas perdre votre travail si la fenêtre se ferme. Il n'est jamais envoyé à TechNova.", "Jusqu'à la déconnexion ou au prochain classeur"],
+  ["technova-learn", "Vos révisions dans « Apprendre » : les flashcards ajoutées à « Mes révisions » et leur prochaine date de révision, vos scores aux quiz et les jours où vous avez révisé (série). Gardé uniquement sur votre appareil, jamais envoyé à TechNova.", "Jusqu'à la déconnexion"],
   ["tn-ref", "Retenir le code du lien de parrainage que vous avez ouvert, pour créditer votre compte et celui de votre parrain après votre inscription.", "30 jours ou jusqu'à la validation"],
   ["tn-pending-pack", "Retenir le pack choisi avant la connexion, pour reprendre l'achat ensuite.", "Jusqu'au paiement"],
   ["technova-supabase-oauth-state", "Protéger la connexion à votre propre projet Supabase contre la falsification de requête.", "Quelques minutes"],
@@ -38,6 +39,7 @@ const preferences: Row[] = [
   ["technova-sidebar-collapsed, tn-artifact-width", "Menu réduit et largeur du panneau des fichiers générés.", "6 mois maximum"],
   ["technova-workspace-mode, technova-workspace-tier", "Mode du chat (Chat ou Créer) et mode de réponse choisi (Éclair, Équilibré ou Expert).", "6 mois maximum"],
   ["technova-chat-kbs", "Bases de connaissances sélectionnées dans le chat.", "6 mois maximum"],
+  ["technova-learn-audience", "Onglet choisi dans « Apprendre » (élève ou enseignant).", "6 mois maximum"],
   ["technova-currency", "Devise d'affichage des prix.", "6 mois maximum"],
   ["technova-install-dismissed", "Ne plus afficher la carte d'installation de l'application pendant 14 jours.", "14 jours"],
   ["technova-announcement-dismissed", "Ne plus afficher l'annonce que vous avez fermée en haut de la page d'accueil (une nouvelle annonce s'affiche à nouveau).", "6 mois maximum"],

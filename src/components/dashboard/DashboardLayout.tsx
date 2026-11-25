@@ -4,7 +4,7 @@ import { savePref } from "@/lib/consent";
 import { planKeyOf, planLabels, usePlan } from "@/lib/plan-client";
 import { BookMarked, Bot, Building2, Download, ExternalLink, Sheet, SquarePen, FolderKanban, Library, MessageSquareHeart, Plug, ShieldAlert, Puzzle } from "lucide-react";
 import { getMyRole } from "@/lib/admin.functions";
-import { Activity, ArrowLeft, CalendarDays, Check, Palette, Crown, Bell, BookOpen, Boxes, ChevronDown, ChevronRight, Code2, CreditCard, Diamond, Gift, Inbox, LayoutDashboard, LogOut, Menu, MessageCircle, Moon, PanelLeftClose, PanelLeftOpen, Search, Settings2, Sun, Wallet, X, Wrench } from "lucide-react";
+import { Activity, ArrowLeft, CalendarDays, Check, Palette, Crown, Bell, BookOpen, Boxes, ChevronDown, ChevronRight, Code2, CreditCard, Diamond, Gift, GraduationCap, Inbox, LayoutDashboard, LogOut, Menu, MessageCircle, Moon, PanelLeftClose, PanelLeftOpen, Search, Settings2, Sun, Wallet, X, Wrench } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { dashboardText, type Lang } from "@/lib/i18n";
@@ -49,13 +49,14 @@ const links = [
   { key: "settings", to: "/dashboard/settings", icon: Settings2 },
 ] as const;
 /** Sidebar: three labelled groups (work tools); account pages live in the profile menu, not here. */
-type SideItem = { key: string; to: "/dashboard/chat" | "/dashboard/projets" | "/dashboard/registry" | "/dashboard/agents" | "/dashboard/plugins" | "/dashboard/knowledge" | "/dashboard/credits" | "/dashboard/entreprise"; section?: "design" | "sheet"; icon: typeof Plug; fr: string; en: string; features?: OrgFeature[] };
+type SideItem = { key: string; to: "/dashboard/chat" | "/dashboard/apprendre" | "/dashboard/projets" | "/dashboard/registry" | "/dashboard/agents" | "/dashboard/plugins" | "/dashboard/knowledge" | "/dashboard/credits" | "/dashboard/entreprise"; section?: "design" | "sheet"; icon: typeof Plug; fr: string; en: string; features?: OrgFeature[] };
 const sideGroups: { id: "create" | "automate" | "account"; fr: string; en: string; items: SideItem[] }[] = [
   { id: "create", fr: "Créer", en: "Create", items: [
     { key: "chat", to: "/dashboard/chat", icon: MessageCircle, fr: "Chat IA", en: "AI Chat" },
     { key: "projects", to: "/dashboard/projets", icon: FolderKanban, fr: "Projets", en: "Projects" },
     { key: "design", to: "/dashboard/registry", section: "design", icon: Palette, fr: "Créativité", en: "Creativity", features: ["design"] },
     { key: "sheet", to: "/dashboard/registry", section: "sheet", icon: Sheet, fr: "Tableur", en: "Spreadsheet", features: ["sheet"] },
+    { key: "learn", to: "/dashboard/apprendre", icon: GraduationCap, fr: "Apprendre", en: "Learn" },
     { key: "registry", to: "/dashboard/registry", icon: Library, fr: "Templates", en: "Templates", features: ["templates"] },
   ] },
   { id: "automate", fr: "Automatiser", en: "Automate", items: [
@@ -147,7 +148,7 @@ export function DashboardLayout({ children }: { children: ReactNode }) {
   useSessionGuard(useCallback(() => { void navigate({ to: "/connexion", replace: true }); }, [navigate]));
   async function signOut() {
     clearSessionGuard();
-    try { localStorage.removeItem("technova-inbox-read"); localStorage.removeItem("technova-sheet-draft"); } catch { /* ignore */ }
+    try { localStorage.removeItem("technova-inbox-read"); localStorage.removeItem("technova-sheet-draft"); localStorage.removeItem("technova-learn"); } catch { /* ignore */ }
     await supabase.auth.signOut();
     void navigate({ to: "/connexion", replace: true });
   }

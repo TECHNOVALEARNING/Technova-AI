@@ -7,6 +7,7 @@ import { FLAGSHIP_MIN_TIER, isFlagshipModel } from "@/lib/flagship-models";
 import { extraModels } from "@/lib/openrouter-catalog";
 import { dateRule, needsFreshInfo, WEB_RESULTS, WEB_SEARCH_FEE } from "@/lib/fresh-info";
 import { humanizeCredits, humanizePrompt, wordCount } from "@/lib/text-tools";
+import { learnRules, learnToolIds } from "@/lib/learn";
 
 const bodySchema = z.object({
   // The chat composer sends one of the three modes (or Smart); custom agents keep their own model.
@@ -22,6 +23,8 @@ const bodySchema = z.object({
     length: z.string().max(30),
     audience: z.string().max(200).optional(),
   }).optional(),
+  // « Apprendre » conversation (src/lib/learn.ts): its rules join the chat prompt for every message.
+  learn: z.object({ tool: z.enum(learnToolIds), level: z.string().max(30).optional() }).optional(),
   lang: z.enum(["fr", "en"]).optional(),
   agentId: z.string().uuid().optional(),
   // Indexed files attached in this conversation and knowledge bases chosen in the composer.
@@ -182,7 +185,10 @@ export const Route = createFileRoute("/api/chat")({
         const hasFile = allFiles.length > 0 || (parsed.data.fileIds?.length ?? 0) > 0;
         const requestedTier = parsed.data.tier ?? "eclair";
         const smartPicked: ChatTier | null = requestedTier === "smart" ? smartTier(lastUser, hasFile, tier) : null;
-        const chatTier: ChatTier = smartPicked === "expert" && !(await orgFeatureAllowed(userId, "expert")) ? "equilibre" : (smartPicked ?? (requestedTier as ChatTier));
+        const pickedTier: ChatTier = smartPicked === "expert" && !(await orgFeatureAllowed(userId, "expert")) ? "equilibre" : (smartPicked ?? (requestedTier as ChatTier));
+        // Learning replies put accuracy first: never below Équilibré.
+        const learn = !agent && !parsed.data.task && parsed.data.mode === "chat" ? parsed.data.learn ?? null : null;
+        const chatTier: ChatTier = learn && pickedTier === "eclair" ? "equilibre" : pickedTier;
         // Flagship model chosen in the composer: Creator and Pro only, billed at its real cost (no fixed mode price).
         const humanize = !agent && parsed.data.mode === "chat" && parsed.data.task ? parsed.data.task : null;
         const flagship = !agent && !humanize && isFlagshipModel(parsed.data.model) ? parsed.data.model : null;
@@ -290,10 +296,10 @@ export const Route = createFileRoute("/api/chat")({
           ? `You are "${agent.name}", a custom TechNova agent. Follow the owner's instructions below.${toolsRule}${today}\n\nINSTRUCTIONS:\n${agent.instructions}${agent.memory ? `\n\nMEMORY (facts to remember):\n${agent.memory}` : ""}` + toolContext + langRule
           // The humanizer keeps the text's own language, so no reply-language rule.
           : humanize ? humanizePrompt({ kind: "humanize", tone: humanize.tone, format: humanize.format, length: humanize.length, ...(humanize.audience ? { audience: humanize.audience } : {}) })
-          : systemPrompts[parsed.data.mode] + today + toolContext + langRule;
+          : systemPrompts[parsed.data.mode] + today + (learn ? learnRules({ tool: learn.tool, ...(learn.level ? { level: learn.level } : {}) }) : "") + toolContext + langRule;
         // Reasoning models think before answering: cap the thinking so it cannot eat the whole reply.
         const reasoning = reasoningModels.has(model);
-        const maxTokens = agent ? Math.min(4096, Math.max(128, agent.max_tokens)) : engine ? engine.maxTokens : flagship ? 4096 : reasoning ? 2048 : 1024;
+        const maxTokens = agent ? Math.min(4096, Math.max(128, agent.max_tokens)) : engine ? (learn ? Math.max(engine.maxTokens, 4096) : engine.maxTokens) : flagship ? 4096 : reasoning ? 2048 : 1024;
         // Web results join the prompt (about 1 500 tokens for three pages).
         const inputTokens = estimateTokens(systemPrompt + parsed.data.messages.map(m => m.content).join(" ")) + allFiles.reduce((sum, f) => sum + (f.mediaType.startsWith("image/") ? 1000 : f.mediaType === "application/pdf" ? 3000 : 8000), 0) + (webSearch ? 1500 : 0);
         // Hold the worst-case cost before calling the provider; the real cost is charged at the end. A web search adds

@@ -13,6 +13,7 @@ import { featureGuideBlocks4 } from "@/components/site/FeatureGuides4";
 import { featureGuideBlocks5 } from "@/components/site/FeatureGuides5";
 import { featureGuideBlocks6 } from "@/components/site/FeatureGuides6";
 import { featureGuideBlocks7 } from "@/components/site/FeatureGuides7";
+import { featureGuideBlocks8 } from "@/components/site/FeatureGuides8";
 import { isSiteLang, type SiteLang } from "@/lib/i18n";
 import { DOC_DATE, DOC_VERSION, docPdfPath } from "@/lib/docs-version";
 import { codeSamples, useApiBase, withApiBase } from "@/lib/site-pages";
@@ -215,6 +216,8 @@ function DocsPage() {
   blocks.push(...featureGuideBlocks6(lang));
   // Documentation 1.8: company plans (TechNova Team / Entreprise).
   blocks.push(...featureGuideBlocks7(lang));
+  // Documentation 1.9: « Apprendre » (students and teachers).
+  blocks.push(...featureGuideBlocks8(lang));
   blocks.push({ id: "cas-usage", title: t.reTag, body: <><p className="mt-3 leading-relaxed text-muted-foreground">{t.reTitle}</p>{recipes}</> });
   blocks.push({ id: "production", title: t.bpToc, body: <><p className="mt-3 leading-relaxed text-muted-foreground">{t.bpTitle}</p>{checklist}</> });
 
