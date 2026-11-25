@@ -2,7 +2,7 @@ import { createContext, useCallback, useContext, useEffect, useState, type React
 import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import { savePref } from "@/lib/consent";
 import { planKeyOf, planLabels, usePlan } from "@/lib/plan-client";
-import { BookMarked, Bot, Building2, ChevronUp, Download, ExternalLink, FolderKanban, Library, MessageSquareHeart, Plug, ShieldAlert, Puzzle } from "lucide-react";
+import { BookMarked, Bot, Building2, Download, ExternalLink, Sheet, SquarePen, FolderKanban, Library, MessageSquareHeart, Plug, ShieldAlert, Puzzle } from "lucide-react";
 import { getMyRole } from "@/lib/admin.functions";
 import { Activity, ArrowLeft, CalendarDays, Check, Palette, Crown, Bell, BookOpen, Boxes, ChevronDown, ChevronRight, Code2, CreditCard, Diamond, Gift, Globe2, Inbox, LayoutDashboard, LogOut, Menu, MessageCircle, Moon, PanelLeftClose, PanelLeftOpen, Search, Settings2, Sun, Wallet, X, Wrench } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -48,15 +48,29 @@ const links = [
   { key: "company", to: "/dashboard/entreprise", icon: Building2 },
   { key: "settings", to: "/dashboard/settings", icon: Settings2 },
 ] as const;
-/** Sidebar pages hidden from a company sub-account when its administrator unticked every feature they serve. */
-const linkFeatures: Partial<Record<(typeof links)[number]["key"], OrgFeature[]>> = {
-  agents: ["agents"], plugins: ["agents"], knowledge: ["files"], registry: ["templates", "design", "sheet"], api: ["api"], connections: ["connections"],
-};
-/** Always visible; the rest unfolds under "Plus" so the history gets the room. */
-const primaryKeys: readonly string[] = ["overview", "chat", "projects", "agents", "credits"];
+/** Sidebar: three labelled groups (work tools); account pages live in the profile menu, not here. */
+type SideItem = { key: string; to: "/dashboard/chat" | "/dashboard/projets" | "/dashboard/registry" | "/dashboard/agents" | "/dashboard/plugins" | "/dashboard/knowledge" | "/dashboard/credits" | "/dashboard/entreprise"; section?: "design" | "sheet"; icon: typeof Plug; fr: string; en: string; features?: OrgFeature[] };
+const sideGroups: { id: "create" | "automate" | "account"; fr: string; en: string; items: SideItem[] }[] = [
+  { id: "create", fr: "Créer", en: "Create", items: [
+    { key: "chat", to: "/dashboard/chat", icon: MessageCircle, fr: "Chat IA", en: "AI Chat" },
+    { key: "projects", to: "/dashboard/projets", icon: FolderKanban, fr: "Projets", en: "Projects" },
+    { key: "design", to: "/dashboard/registry", section: "design", icon: Palette, fr: "Créativité", en: "Creativity", features: ["design"] },
+    { key: "sheet", to: "/dashboard/registry", section: "sheet", icon: Sheet, fr: "Tableur", en: "Spreadsheet", features: ["sheet"] },
+    { key: "registry", to: "/dashboard/registry", icon: Library, fr: "Templates", en: "Templates", features: ["templates"] },
+  ] },
+  { id: "automate", fr: "Automatiser", en: "Automate", items: [
+    { key: "agents", to: "/dashboard/agents", icon: Bot, fr: "Agents IA", en: "AI Agents", features: ["agents"] },
+    { key: "plugins", to: "/dashboard/plugins", icon: Puzzle, fr: "Plugins", en: "Plugins", features: ["agents"] },
+    { key: "knowledge", to: "/dashboard/knowledge", icon: BookMarked, fr: "Connaissances", en: "Knowledge", features: ["files"] },
+  ] },
+  { id: "account", fr: "Compte", en: "Account", items: [
+    { key: "credits", to: "/dashboard/credits", icon: Wallet, fr: "Tarifs et crédits", en: "Pricing & credits" },
+    { key: "company", to: "/dashboard/entreprise", icon: Building2, fr: "Entreprise", en: "Company" },
+  ] },
+];
 
 /** One line of the account menu. */
-function AccountItem({ to, icon: Icon, label, chevron = false }: { to: "/dashboard/credits" | "/dashboard/settings" | "/dashboard/connexions" | "/dashboard/usage" | "/dashboard/api" | "/dashboard/docs"; icon: typeof Plug; label: string; chevron?: boolean }) {
+function AccountItem({ to, icon: Icon, label, chevron = false }: { to: "/dashboard/credits" | "/dashboard/settings" | "/dashboard/connexions" | "/dashboard/usage" | "/dashboard/api" | "/dashboard/docs" | "/dashboard/models" | "/dashboard/billing"; icon: typeof Plug; label: string; chevron?: boolean }) {
   return <Link to={to} className="flex items-center gap-3 rounded-xl px-2.5 py-2 text-[13.5px] transition hover:bg-secondary"><Icon className="size-[18px] text-muted-foreground" strokeWidth={1.7} /><span className="flex-1">{label}</span>{chevron && <ChevronRight className="size-4 text-muted-foreground" />}</Link>;
 }
 
@@ -74,7 +88,6 @@ export function DashboardLayout({ children }: { children: ReactNode }) {
   const [noticeOpen, setNoticeOpen] = useState(false);
   const [accountOpen, setAccountOpen] = useState(false);
   const [collapsed, setCollapsed] = useState(false);
-  const [moreOpen, setMoreOpen] = useState(false);
   const [artifactWorkspaceOpen, setArtifactWorkspaceOpen] = useState(false);
   const [workspaceCollapsed, setWorkspaceCollapsed] = useState<boolean | null>(null);
   const navigate = useNavigate();
@@ -160,10 +173,10 @@ export function DashboardLayout({ children }: { children: ReactNode }) {
   const myOrg = useMyOrganization();
   const orgDisabled = useOrgDisabled();
   const inCompany = !!myOrg?.membership || (myOrg?.invitations.length ?? 0) > 0;
-  const primary = inCompany ? [...primaryKeys, "company"] : primaryKeys;
-  const visibleLinks = links.filter((item) => !(linkFeatures[item.key]?.every((f) => orgDisabled.has(f)) ?? false));
-  const onSecondary = !primary.includes(current) || pathname === "/dashboard/admin";
-  const showAll = mini || moreOpen || onSecondary;
+  const registrySection = useRouterState({ select: (s): string => String((s.location.search as Record<string, unknown>)["section"] ?? "") });
+  const sideCurrent = pathname === "/dashboard/registry" ? (registrySection === "design" ? "design" : registrySection === "sheet" ? "sheet" : "registry") : current;
+  const groupsShown = sideGroups.map((g) => ({ ...g, items: g.items.filter((item) => (item.key !== "company" || inCompany) && !(item.features?.every((f) => orgDisabled.has(f)) ?? false)) }));
+  const sideLink = (active: boolean) => `side-link flex h-8 items-center gap-2.5 rounded-lg px-2.5 text-[12.5px] font-medium transition-colors ${mini ? "lg:justify-center lg:px-0" : ""} ${active ? "is-active text-foreground" : "text-muted-foreground hover:text-foreground"}`;
   // Plan badge and avatar ring colours follow the highest pack bought (display only).
   const plan = usePlan();
   const planKey = plan ? planKeyOf(plan.tier, plan.paid) : null;
@@ -184,16 +197,19 @@ export function DashboardLayout({ children }: { children: ReactNode }) {
           <Button variant="ghost" size="icon-sm" className="lg:hidden" onClick={() => setMobileOpen(false)} aria-label={t.close}><X /></Button>
         </div>
         <div className="flex min-h-0 flex-1 flex-col px-3">
+          {/* New conversation first, then « Vue d'ensemble » and the three groups (labels hidden in the icon-only menu). */}
+          <Button type="button" onClick={() => void createThread()} title={t.newChat} className={`mb-2 h-9 w-full shrink-0 justify-start gap-2 rounded-xl bg-foreground px-3 text-[12.5px] font-semibold text-background hover:bg-foreground/90 ${mini ? "lg:justify-center lg:px-0" : ""}`}><SquarePen className="size-4 shrink-0" /><span className={mini ? "lg:hidden" : ""}>{t.newChat}</span></Button>
           <nav aria-label={t.navigation} className="shrink-0 space-y-px">
-            {visibleLinks.filter(item => showAll || primary.includes(item.key)).map(item => <Link key={item.key} to={item.to} title={navLabel(item.key)} aria-current={current === item.key ? "page" : undefined} className={`side-link flex h-8 items-center gap-2.5 rounded-lg px-2.5 text-[12.5px] font-medium transition-colors ${mini ? "lg:justify-center lg:px-0" : ""} ${current === item.key ? "is-active text-foreground" : "text-muted-foreground hover:text-foreground"}`}><item.icon className="size-[15px] shrink-0" strokeWidth={1.7} /><span className={mini ? "lg:hidden" : ""}>{navLabel(item.key)}</span></Link>)}
-            {isAdmin && showAll && <Link to="/dashboard/admin" title="Administration" aria-current={pathname === "/dashboard/admin" ? "page" : undefined} className={`side-link flex h-8 items-center gap-2.5 rounded-lg px-2.5 text-[12.5px] font-medium transition-colors ${mini ? "lg:justify-center lg:px-0" : ""} ${pathname === "/dashboard/admin" ? "is-active text-foreground" : "text-muted-foreground hover:text-foreground"}`}><ShieldAlert className="size-[15px] shrink-0" strokeWidth={1.7} /><span className={mini ? "lg:hidden" : ""}>Administration</span></Link>}
-            {!mini && !onSecondary && <button type="button" onClick={() => setMoreOpen(v => !v)} aria-expanded={moreOpen}
-              className="side-link flex h-8 w-full items-center gap-2.5 rounded-lg px-2.5 text-[12.5px] font-medium text-muted-foreground transition-colors hover:text-foreground">
-              {moreOpen ? <ChevronUp className="size-[15px] shrink-0" strokeWidth={1.7} /> : <ChevronDown className="size-[15px] shrink-0" strokeWidth={1.7} />}
-              <span>{moreOpen ? (lang === "fr" ? "Moins" : "Less") : (lang === "fr" ? "Plus" : "More")}</span>
-            </button>}
+            <Link to="/dashboard" title={t.overview} aria-current={current === "overview" ? "page" : undefined} className={sideLink(current === "overview")}><LayoutDashboard className="size-[15px] shrink-0" strokeWidth={1.7} /><span className={mini ? "lg:hidden" : ""}>{t.overview}</span></Link>
+            {groupsShown.map((g) => g.items.length > 0 && <div key={g.id} role="group" aria-label={lang === "fr" ? g.fr : g.en} className="pt-2">
+              <p className={`px-2.5 pb-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-muted-foreground/80 ${mini ? "lg:hidden" : ""}`}>{lang === "fr" ? g.fr : g.en}</p>
+              {mini && <div className="mx-auto mb-1 hidden h-px w-6 bg-border lg:block" />}
+              {g.items.map((item) => { const label = lang === "fr" ? item.fr : item.en; const active = sideCurrent === item.key;
+                return <Link key={item.key} to={item.to} {...(item.section ? { search: { section: item.section } as never } : {})} title={label} aria-current={active ? "page" : undefined} className={sideLink(active)}><item.icon className="size-[15px] shrink-0" strokeWidth={1.7} /><span className={mini ? "lg:hidden" : ""}>{label}</span></Link>; })}
+              {g.id === "account" && isAdmin && <Link to="/dashboard/admin" title="Administration" aria-current={pathname === "/dashboard/admin" ? "page" : undefined} className={sideLink(pathname === "/dashboard/admin")}><ShieldAlert className="size-[15px] shrink-0" strokeWidth={1.7} /><span className={mini ? "lg:hidden" : ""}>Administration</span></Link>}
+            </div>)}
           </nav>
-          <div className={`mt-5 flex min-h-0 flex-1 flex-col ${mini ? "lg:hidden" : ""}`}>
+          <div className={`mt-4 flex min-h-0 flex-1 flex-col ${mini ? "lg:hidden" : ""}`}>
             <p className="shrink-0 px-2.5 pb-1.5 text-[11px] font-medium text-muted-foreground">{t.history}</p>
             <div className="relative shrink-0"><Search className="absolute left-2.5 top-[9px] size-3.5 text-muted-foreground" /><Input aria-label={t.search} placeholder={t.search} value={search} onChange={e => setSearch(e.target.value)} className="h-8 rounded-lg border-transparent bg-secondary/70 pl-8 text-[12px] shadow-none focus-visible:ring-0" /></div>
             <div className="mt-1.5 min-h-0 flex-1 space-y-px overflow-y-auto pb-2">{filtered.slice(0, 30).map(thread => <ThreadItem key={thread.id} thread={thread} active={pathname.endsWith(thread.id)} lang={lang} reload={reload} />)}{filtered.length === 0 && <p className="px-2.5 py-2 text-[11px] text-muted-foreground">{search ? t.noResults : t.noChats}</p>}</div>
@@ -242,6 +258,8 @@ export function DashboardLayout({ children }: { children: ReactNode }) {
               <AccountItem to="/dashboard/settings" icon={Settings2} label={lang === "fr" ? "Paramètres" : "Settings"} />
               <AccountItem to="/dashboard/connexions" icon={Plug} label={lang === "fr" ? "Connexions" : "Connections"} />
               <AccountItem to="/dashboard/usage" icon={Activity} label={lang === "fr" ? "Utilisation" : "Usage"} />
+              <AccountItem to="/dashboard/billing" icon={CreditCard} label={lang === "fr" ? "Facturation" : "Billing"} />
+              <AccountItem to="/dashboard/models" icon={Boxes} label={lang === "fr" ? "Modes et prix" : "Modes and prices"} />
               <AccountItem to="/dashboard/api" icon={Code2} label="API" />
               <div className="my-1 h-px bg-border" />
               <button type="button" onClick={() => setAccountView("themes")} className="flex w-full items-center gap-3 rounded-xl px-2.5 py-2 text-left text-[13.5px] transition hover:bg-secondary"><Palette className="size-[18px] text-muted-foreground" strokeWidth={1.7} /><span className="flex-1">{lang === "fr" ? "Thèmes" : "Themes"}</span><span className="size-3 rounded-full border border-border" style={{ background: dashboardLooks.find((l) => l.id === look)?.swatch }} /><ChevronRight className="size-4 text-muted-foreground" /></button>
