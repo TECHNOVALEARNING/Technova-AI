@@ -51,7 +51,7 @@ export const featureText: Record<PlanFeature, { fr: string; en: string }> = {
   usage_details: { fr: "Le suivi détaillé de la consommation", en: "Detailed usage tracking" },
   flagship_models: { fr: "Le choix des modèles phares dans le chat", en: "Choosing flagship models in the chat" },
   design_pro: { fr: "Créativité Pro (arrière-plan, déclinaisons, kit de marque, QR code)", en: "Creativity Pro (background removal, resize, brand kit, QR code)" },
-  sheet_advanced: { fr: "Le Tableur avancé (filtres, mise en forme conditionnelle, listes déroulantes, fusion, tableau récapitulatif)", en: "The advanced Spreadsheet (filters, conditional formatting, dropdowns, merge, summary table)" },
+  sheet_advanced: { fr: "Le Tableur avancé (filtres, mise en forme conditionnelle, listes déroulantes, fusion, tableaux croisés dynamiques)", en: "The advanced Spreadsheet (filters, conditional formatting, dropdowns, merge, pivot tables)" },
 };
 
 /** "…est réservé(e) aux forfaits X et Y." for the upgrade card. */

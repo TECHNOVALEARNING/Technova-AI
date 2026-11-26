@@ -1,8 +1,8 @@
 import { type Evaluator, isErr, type Value } from "./formula";
-import { type Cell, type CondRule, type Rect, type Sheet, addr, colName, display, parseLiteral, parseRange, uid } from "./model";
+import { type Cell, type CondRule, type PivotAgg, type PivotConfig, type Rect, type Sheet, type Workbook, addr, colName, display, parseLiteral, parseRange, uid } from "./model";
 
 // TechNova Tableur, advanced features: column filters, conditional formatting (rules, data bars, colour scale),
-// dropdown lists, merged cells and the summary table (pivot) written with live SOMME.SI / NB.SI formulas.
+// dropdown lists, merged cells and pivot tables (tableaux croisés dynamiques) written with live SOMME.SI.ENS / NB.SI.ENS formulas.
 
 const inRect = (r: Rect, c: number, row: number) => c >= r.c1 && c <= r.c2 && row >= r.r1 && row <= r.r2;
 const text = (v: Value) => (v === null ? "" : isErr(v) ? v.err : typeof v === "boolean" ? (v ? "VRAI" : "FAUX") : String(v));
@@ -114,52 +114,186 @@ export function mergeMap(sh: Sheet): MergeMap {
 }
 export const listAt = (sh: Sheet, c: number, r: number) => (sh.lists ?? []).find((l) => { const rect = parseRange(l.range); return !!rect && inRect(rect, c, r); });
 
-// ------------------------------------------------------------------ summary table (pivot)
+// ------------------------------------------------------------------ pivot tables (tableaux croisés dynamiques)
 
-export type PivotAgg = "sum" | "avg" | "count" | "min" | "max";
-export const PIVOT_AGGS: { id: PivotAgg; fr: string; en: string; fn: string }[] = [
-  { id: "sum", fr: "Somme", en: "Sum", fn: "SOMME.SI" },
-  { id: "avg", fr: "Moyenne", en: "Average", fn: "MOYENNE.SI" },
-  { id: "count", fr: "Nombre", en: "Count", fn: "NB.SI" },
-  { id: "min", fr: "Minimum", en: "Minimum", fn: "MIN.SI.ENS" },
-  { id: "max", fr: "Maximum", en: "Maximum", fn: "MAX.SI.ENS" },
+export type { PivotAgg, PivotConfig } from "./model";
+export const PIVOT_AGGS: { id: PivotAgg; fr: string; en: string }[] = [
+  { id: "sum", fr: "Somme", en: "Sum" },
+  { id: "count", fr: "Nombre", en: "Count" },
+  { id: "avg", fr: "Moyenne", en: "Average" },
+  { id: "min", fr: "Minimum", en: "Minimum" },
+  { id: "max", fr: "Maximum", en: "Maximum" },
 ];
+export const PIVOT_MAX_COL_ITEMS = 30;
+export const PIVOT_MAX_ROW_ITEMS = 500;
 
-/** A new sheet summarising `source` (header row first): one row per value of `groupCol`, live formulas. */
-export function buildPivot(sh: Sheet, ev: Evaluator, si: number, source: Rect, groupCol: number, valueCol: number, agg: PivotAgg, title: string): Sheet {
-  const q = (n: string) => (/^[A-Za-z0-9_]+$/.test(n) ? n : `'${n.replace(/'/g, "''")}'`);
-  const ref = (c: number) => `${q(sh.name)}!$${colName(c)}$${source.r1 + 2}:$${colName(c)}$${source.r2 + 1}`;
-  const groups: string[] = [];
-  for (let r = source.r1 + 1; r <= source.r2; r++) {
-    const v = ev.value(si, groupCol, r); const t = text(v).trim();
-    if (t && !groups.includes(t)) groups.push(t);
+/** The filled block around (c, r): grows while a neighbouring row or column holds a value. */
+export function blockAround(sh: Sheet, c: number, r: number): Rect {
+  const filled = (cc: number, rr: number) => (sh.cells[addr(cc, rr)]?.v ?? "") !== "";
+  let c1 = c, c2 = c, r1 = r, r2 = r, grew = true;
+  const span = (a: number, b: number) => Array.from({ length: b - a + 1 }, (_, i) => a + i);
+  while (grew) {
+    grew = false;
+    if (r1 > 0 && span(c1, c2).some((x) => filled(x, r1 - 1))) { r1--; grew = true; }
+    if (r2 < sh.rows - 1 && span(c1, c2).some((x) => filled(x, r2 + 1))) { r2++; grew = true; }
+    if (c1 > 0 && span(r1, r2).some((y) => filled(c1 - 1, y))) { c1--; grew = true; }
+    if (c2 < sh.cols - 1 && span(r1, r2).some((y) => filled(c2 + 1, y))) { c2++; grew = true; }
   }
-  groups.sort((a, b) => a.localeCompare(b, "fr", { numeric: true }));
-  const header = text(ev.value(si, groupCol, source.r1)) || colName(groupCol);
-  const valueHead = text(ev.value(si, valueCol, source.r1)) || colName(valueCol);
-  const a = PIVOT_AGGS.find((x) => x.id === agg)!;
+  return { c1, c2, r1, r2 };
+}
+
+const keyOf = (v: Value) => text(v).trim();
+// Month and weekday names sort in calendar order (Janvier, Février… / Lun, Mar…), like Excel's custom lists.
+const CALENDAR: string[][] = [
+  ["janvier", "janv", "jan", "january"], ["fevrier", "fevr", "fev", "february", "feb"], ["mars", "mar", "march"], ["avril", "avr", "april", "apr"],
+  ["mai", "may"], ["juin", "jun", "june"], ["juillet", "juil", "jul", "july"], ["aout", "aug", "august"], ["septembre", "sept", "sep", "september"],
+  ["octobre", "oct", "october"], ["novembre", "nov", "november"], ["decembre", "dec", "december"],
+];
+const WEEK: string[][] = [["lundi", "lun", "monday", "mon"], ["mardi", "tuesday", "tue"], ["mercredi", "mer", "wednesday", "wed"], ["jeudi", "jeu", "thursday", "thu"], ["vendredi", "ven", "friday", "fri"], ["samedi", "sam", "saturday", "sat"], ["dimanche", "dim", "sunday", "sun"]];
+const fold = (s: string) => s.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().replace(/\.$/, "").trim();
+const rankIn = (list: string[][], v: Value) => { const k = fold(keyOf(v)); return list.findIndex((names) => names.includes(k)); };
+function sortList(items: Value[]): Value[] {
+  for (const list of [CALENDAR, WEEK]) if (items.length && items.every((v) => typeof v === "string" && rankIn(list, v) >= 0)) return [...items].sort((a, b) => rankIn(list, a) - rankIn(list, b));
+  return [...items].sort(sortItems);
+}
+const sortItems = (a: Value, b: Value) => (typeof a === "number" && typeof b === "number" ? a - b : typeof a === "number" ? -1 : typeof b === "number" ? 1 : keyOf(a).localeCompare(keyOf(b), "fr", { numeric: true }));
+
+/** Distinct values of a source column (header row excluded), for the filter picker. */
+export function distinctValues(ev: Evaluator, si: number, src: Rect, col: number): string[] {
+  const seen = new Map<string, Value>();
+  for (let r = src.r1 + 1; r <= src.r2; r++) { const v = ev.value(si, col, r); const k = keyOf(v); if (k && !seen.has(k)) seen.set(k, v); }
+  return sortList([...seen.values()]).map(keyOf);
+}
+
+function pivotItems(ev: Evaluator, si: number, src: Rect, cfg: PivotConfig) {
+  const rowsSeen = new Map<string, Value>(), colsSeen = new Map<string, Value>(), kept: number[] = [];
+  for (let r = src.r1 + 1; r <= src.r2; r++) {
+    if (cfg.filter && keyOf(ev.value(si, cfg.filter.col, r)) !== cfg.filter.value) continue;
+    const rv = ev.value(si, cfg.rows, r); const rk = keyOf(rv);
+    if (!rk) continue;
+    kept.push(r);
+    if (!rowsSeen.has(rk)) rowsSeen.set(rk, rv);
+    if (cfg.cols !== null) { const cv = ev.value(si, cfg.cols, r); const ck = keyOf(cv); if (ck && !colsSeen.has(ck)) colsSeen.set(ck, cv); }
+  }
+  return { rowItems: sortList([...rowsSeen.values()]), colItems: sortList([...colsSeen.values()]), kept };
+}
+
+const aggName = (agg: PivotAgg, lang: "fr" | "en") => PIVOT_AGGS.find((a) => a.id === agg)![lang];
+const valueTitle = (agg: PivotAgg, label: string, lang: "fr" | "en") => (lang === "fr" ? `${aggName(agg, lang)} de ${label}` : `${aggName(agg, lang)} of ${label}`);
+
+/** Computes the table in the browser (dialog preview): header row then up to `limit` rows of text. */
+export function pivotPreview(ev: Evaluator, si: number, src: Rect, cfg: PivotConfig, lang: "fr" | "en", limit = 6): string[][] {
+  const head = (c: number) => keyOf(ev.value(si, c, src.r1)) || colName(c);
+  const { rowItems, colItems, kept } = pivotItems(ev, si, src, cfg);
+  const cols: { item: Value | null; v: PivotConfig["values"][number] }[] = [];
+  if (cfg.cols === null) cfg.values.forEach((v) => cols.push({ item: null, v }));
+  else { colItems.slice(0, 8).forEach((item) => cfg.values.forEach((v) => cols.push({ item, v }))); }
+  const calc = (rows: number[], v: PivotConfig["values"][number]) => {
+    const nums = rows.map((r) => ev.value(si, v.col, r)).filter((x): x is number => typeof x === "number");
+    const nonEmpty = rows.filter((r) => keyOf(ev.value(si, v.col, r)) !== "").length;
+    const x = v.agg === "sum" ? nums.reduce((a, b) => a + b, 0) : v.agg === "count" ? nonEmpty : !nums.length ? null : v.agg === "avg" ? nums.reduce((a, b) => a + b, 0) / nums.length : v.agg === "min" ? Math.min(...nums) : Math.max(...nums);
+    return x === null ? "" : (Math.round(x * 100) / 100).toLocaleString(lang === "fr" ? "fr-FR" : "en-US");
+  };
+  const header = [head(cfg.rows), ...cols.map((c) => (c.item === null ? valueTitle(c.v.agg, head(c.v.col), lang) : cfg.values.length > 1 ? `${keyOf(c.item)} · ${aggName(c.v.agg, lang)}` : keyOf(c.item)))];
+  const out = [header];
+  for (const item of rowItems.slice(0, limit)) {
+    const rows = kept.filter((r) => keyOf(ev.value(si, cfg.rows, r)) === keyOf(item));
+    out.push([keyOf(item), ...cols.map((c) => calc(c.item === null ? rows : rows.filter((r) => keyOf(ev.value(si, cfg.cols!, r)) === keyOf(c.item)), c.v))]);
+  }
+  return out;
+}
+
+/** Builds (or rebuilds, keeping `keep` id/name) the pivot sheet with live formulas: SOMME.SI.ENS, NB.SI.ENS,
+    MIN.SI.ENS / MAX.SI.ENS and a SIERREUR average, so it follows the data and exports to Excel as is. */
+export function buildPivotTable(wb: Workbook, ev: Evaluator, cfg: PivotConfig, lang: "fr" | "en", keep: { id: string; name: string }): Sheet | { error: string } {
+  const si = wb.sheets.findIndex((x) => x.id === cfg.source);
+  const sh = wb.sheets[si];
+  const src = parseRange(cfg.range);
+  if (!sh || !src) return { error: lang === "fr" ? "La feuille source n'existe plus." : "The source sheet no longer exists." };
+  if (src.r2 <= src.r1) return { error: lang === "fr" ? "La source doit avoir une ligne d'en-têtes et au moins une ligne de données." : "The source needs a header row and at least one data row." };
+  const { rowItems, colItems } = pivotItems(ev, si, src, cfg);
+  if (!rowItems.length) return { error: lang === "fr" ? "Aucune donnée à regrouper (vérifiez le champ Lignes et le filtre)." : "No data to group (check the Rows field and the filter)." };
+  if (colItems.length > PIVOT_MAX_COL_ITEMS) return { error: lang === "fr" ? `Trop de valeurs différentes dans le champ Colonnes (${colItems.length}, ${PIVOT_MAX_COL_ITEMS} au plus).` : `Too many distinct values in the Columns field (${colItems.length}, ${PIVOT_MAX_COL_ITEMS} max).` };
+  if (rowItems.length > PIVOT_MAX_ROW_ITEMS) return { error: lang === "fr" ? `Trop de valeurs différentes dans le champ Lignes (${PIVOT_MAX_ROW_ITEMS} au plus).` : `Too many distinct values in the Rows field (${PIVOT_MAX_ROW_ITEMS} max).` };
+
+  const q = /^[A-Za-z0-9_]+$/.test(sh.name) ? sh.name : `'${sh.name.replace(/'/g, "''")}'`;
+  const rng = (c: number) => `${q}!$${colName(c)}$${src.r1 + 2}:$${colName(c)}$${src.r2 + 1}`;
+  const lit = (v: Value) => (typeof v === "number" ? `"=${String(v)}"` : `"=${keyOf(v).replace(/"/g, '""')}"`);
+  const head = (c: number) => keyOf(ev.value(si, c, src.r1)) || colName(c);
+  const filterPair = cfg.filter ? [`${rng(cfg.filter.col)};"=${cfg.filter.value.replace(/"/g, '""')}"`] : [];
+  const formula = (v: PivotConfig["values"][number], pairs: string[]) => {
+    const all = [...pairs, ...filterPair]; const P = all.join(";"); const val = rng(v.col);
+    if (v.agg === "sum") return all.length ? `=SOMME.SI.ENS(${val};${P})` : `=SOMME(${val})`;
+    if (v.agg === "count") return `=NB.SI.ENS(${val};"<>"${all.length ? ";" + P : ""})`;
+    if (v.agg === "avg") return all.length ? `=SIERREUR(SOMME.SI.ENS(${val};${P})/NB.SI.ENS(${val};"<>";${P});"")` : `=SIERREUR(MOYENNE(${val});"")`;
+    const fn = v.agg === "min" ? "MIN" : "MAX";
+    return all.length ? `=${fn}.SI.ENS(${val};${P})` : `=${fn}(${val})`;
+  };
+  const fmtOf = (v: PivotConfig["values"][number]): Cell["s"] => {
+    const f = sh.cells[addr(v.col, src.r1 + 1)]?.s?.fmt;
+    return v.agg === "count" ? {} : v.agg === "avg" ? { ...(f ? { fmt: f } : {}), dec: 2 } : f ? { fmt: f } : {};
+  };
+
   const cells: Record<string, Cell> = {};
-  const head = { b: true, bg: "#1f7a5a", color: "#ffffff", align: "center" as const, border: true };
-  cells["A1"] = { v: title, s: { b: true, size: 16, color: "#1f7a5a" } };
-  cells["A3"] = { v: header, s: head };
-  cells["B3"] = { v: `${a.fr} de ${valueHead}`, s: head };
-  const fmt = sh.cells[addr(valueCol, source.r1 + 1)]?.s?.fmt;
-  groups.forEach((g, i) => {
-    const r = 4 + i;
-    cells[`A${r}`] = { v: g, s: { border: true } };
-    const crit = `A${r}`;
-    const f = agg === "count" ? `=NB.SI(${ref(groupCol)};${crit})`
-      : agg === "min" || agg === "max" ? `=${a.fn}(${ref(valueCol)};${ref(groupCol)};${crit})`
-      : `=${a.fn}(${ref(groupCol)};${crit};${ref(valueCol)})`;
-    cells[`B${r}`] = { v: f, s: { border: true, ...(agg !== "count" && fmt ? { fmt } : {}), ...(agg === "avg" ? { dec: 2 } : {}) } };
+  const set = (c: number, r: number, v: string, s?: Cell["s"]) => { cells[addr(c, r)] = { v, ...(s ? { s } : {}) }; };
+  const headS = { b: true, bg: "#1f7a5a", color: "#ffffff", border: true, wrap: true } as Cell["s"];
+  const totS = { b: true, bg: "#e8f1ed", border: true } as Cell["s"];
+  const HR = 3;                         // header row (0-based): row 4
+  set(0, 0, keep.name, { b: true, size: 16, color: "#1f7a5a" });
+  const info = [`${lang === "fr" ? "Source" : "Source"} : ${sh.name}!${cfg.range}`, cfg.filter ? `${lang === "fr" ? "Filtre" : "Filter"} : ${head(cfg.filter.col)} = ${cfg.filter.value}` : ""].filter(Boolean).join(" · ");
+  set(0, 1, info, { i: true, color: "#6b7280" });
+
+  // Column layout: one column per value (no column field), else per column item × value, then the row totals.
+  type Col = { item: Value | null; v: PivotConfig["values"][number]; total: boolean };
+  const layout: Col[] = [];
+  if (cfg.cols === null) cfg.values.forEach((v) => layout.push({ item: null, v, total: false }));
+  else {
+    colItems.forEach((item) => cfg.values.forEach((v) => layout.push({ item, v, total: false })));
+    if (cfg.totals) cfg.values.forEach((v) => layout.push({ item: null, v, total: true }));
+    set(1, HR - 1, `${head(cfg.cols)} ▸`, { b: true, color: "#1f7a5a" });
+    if (cfg.values.length === 1) set(0, HR - 1, valueTitle(cfg.values[0]!.agg, head(cfg.values[0]!.col), lang), { b: true, color: "#374151" });
+  }
+  set(0, HR, head(cfg.rows), headS);
+  const totalWord = lang === "fr" ? "Total général" : "Grand total";
+  layout.forEach((col, k) => {
+    const label = col.item === null && !col.total ? valueTitle(col.v.agg, head(col.v.col), lang)
+      : col.total ? (cfg.values.length > 1 ? `${totalWord} · ${aggName(col.v.agg, lang)}` : totalWord)
+      : cfg.values.length > 1 ? `${keyOf(col.item)} · ${aggName(col.v.agg, lang)}` : keyOf(col.item);
+    set(k + 1, HR, label, { ...headS, align: "center" });
   });
-  const last = 3 + groups.length;
-  if (agg === "sum" || agg === "count") {
-    cells[`A${last + 1}`] = { v: "Total", s: { b: true, border: true, bg: "#eef0f4" } };
-    cells[`B${last + 1}`] = { v: `=SOMME(B4:B${last})`, s: { b: true, border: true, bg: "#eef0f4", ...(agg === "sum" && fmt ? { fmt } : {}) } };
+  rowItems.forEach((item, i) => {
+    const r = HR + 1 + i;
+    set(0, r, typeof item === "number" ? String(item) : keyOf(item), { border: true, align: "left" });
+    layout.forEach((col, k) => {
+      const pairs = [`${rng(cfg.rows)};${lit(item)}`];
+      if (col.item !== null && cfg.cols !== null) pairs.push(`${rng(cfg.cols)};${lit(col.item)}`);
+      set(k + 1, r, formula(col.v, pairs), { border: true, ...fmtOf(col.v), ...(col.total ? { b: true, bg: "#f3f7f5" } : {}) });
+    });
+  });
+  const last = HR + rowItems.length;
+  if (cfg.totals) {
+    const r = last + 1;
+    set(0, r, totalWord, totS);
+    layout.forEach((col, k) => {
+      const pairs = col.item !== null && cfg.cols !== null ? [`${rng(cfg.cols)};${lit(col.item)}`] : [];
+      set(k + 1, r, formula(col.v, pairs), { ...totS, ...fmtOf(col.v) });
+    });
+  }
+
+  const colW: Record<number, number> = { 0: 200 };
+  layout.forEach((_, k) => { colW[k + 1] = cfg.cols === null ? 170 : 130; });
+  const charts: Sheet["charts"] = [];
+  const nItems = rowItems.length;
+  if (cfg.chart && nItems >= 2 && nItems <= 30) {
+    const series = layout.map((c, k) => ({ c, k })).filter((x) => !x.c.total).slice(0, 8);
+    const areas = [`A${HR + 1}:A${last + 1}`, ...series.map((x) => `${colName(x.k + 1)}${HR + 1}:${colName(x.k + 1)}${last + 1}`)];
+    const v0 = cfg.values[0]!;
+    const pie = cfg.cols === null && cfg.values.length === 1 && nItems <= 6 && (v0.agg === "sum" || v0.agg === "count");
+    const x = Object.values(colW).reduce((a, b) => a + b, 0) + 60;
+    charts.push({ id: uid(), kind: pie ? "pie" : "bar", range: areas.join(","), title: `${valueTitle(v0.agg, head(v0.col), lang)}${lang === "fr" ? " par " : " by "}${head(cfg.rows)}`, x, y: 70, w: 520, h: 320 });
   }
   return {
-    id: uid(), name: title.slice(0, 31), cells, rows: Math.max(60, last + 20), cols: 12, colW: { 0: 220, 1: 170 }, rowH: {}, grid: true, freeze: false,
-    charts: groups.length > 1 && groups.length <= 24 ? [{ id: uid(), kind: groups.length <= 6 && agg !== "avg" ? "pie" : "bar", range: `A4:A${last},B4:B${last}`, title: `${a.fr} de ${valueHead} par ${header}`, x: 420, y: 60, w: 480, h: 300 }] : [],
+    id: keep.id, name: keep.name, cells, rows: Math.max(60, last + 20), cols: Math.max(12, layout.length + 6), colW, rowH: {}, grid: true, freeze: false,
+    charts, pivot: cfg,
   };
 }

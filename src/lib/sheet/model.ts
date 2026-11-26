@@ -23,10 +23,18 @@ export type CondRule = {
 export type ListRule = { id: string; range: string; items: string[] };
 /** Column filters: the header row of `range` gets ▾ buttons; `hide[col]` lists the values hidden in that column. */
 export type SheetFilter = { range: string; hide: Record<number, string[]> };
+export type PivotAgg = "sum" | "avg" | "count" | "min" | "max";
+/** A pivot table (« tableau croisé dynamique ») sheet keeps how it was built, so « Actualiser » can rebuild it:
+    source sheet id + range (header row first), the row field, an optional column field, up to 3 values and an
+    optional one-value filter. Columns are indexes in the source sheet. */
+export type PivotConfig = {
+  source: string; range: string; rows: number; cols: number | null;
+  values: { col: number; agg: PivotAgg }[]; filter: { col: number; value: string } | null; totals: boolean; chart: boolean;
+};
 export type Sheet = {
   id: string; name: string; cells: Record<string, Cell>; rows: number; cols: number;
   colW: Record<number, number>; rowH: Record<number, number>; grid: boolean; freeze: boolean; charts: SheetChart[]; tab?: string;
-  merges?: string[]; cond?: CondRule[]; lists?: ListRule[]; filter?: SheetFilter | null;
+  merges?: string[]; cond?: CondRule[]; lists?: ListRule[]; filter?: SheetFilter | null; pivot?: PivotConfig;
 };
 export type Workbook = { title: string; sheets: Sheet[] };
 

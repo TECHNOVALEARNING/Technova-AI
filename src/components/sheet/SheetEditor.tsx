@@ -2,7 +2,7 @@ import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } fr
 import {
   AlignCenter, AlignLeft, AlignRight, AreaChart as AreaIcon, ArrowDownAZ, ArrowUpAZ, BarChart3, Bold, Columns3, Copy, Download, Eraser, FileSpreadsheet,
   FileUp, Grid3x3, Italic, LineChart as LineIcon, Minus, PaintBucket, PieChart as PieIcon, Plus, Printer, Redo2, Rows3, Sigma, Snowflake, Sparkles,
-  Save, Strikethrough, Table2, Trash2, Filter, Paintbrush, ListChecks, Merge, Lock, Underline, Undo2, WrapText, X, ChevronDown, FunctionSquare, Scissors, ClipboardPaste, Square, Share2, ExternalLink,
+  Save, Strikethrough, Table2, RefreshCw, SlidersHorizontal, Trash2, Filter, Paintbrush, ListChecks, Merge, Lock, Underline, Undo2, WrapText, X, ChevronDown, FunctionSquare, Scissors, ClipboardPaste, Square, Share2, ExternalLink,
 } from "lucide-react";
 import { toast } from "sonner";
 import { confirmDialog, promptDialog } from "@/components/ConfirmHost";
@@ -19,8 +19,9 @@ import { confirmAiCredits } from "@/lib/ai-credit-notice";
 import { notifyCreditsChanged } from "@/components/dashboard/TopActions";
 import { SheetChartView } from "./SheetChart";
 import { usePlanTier } from "@/lib/plan-client";
-import { CondDialog, ListDialog, PivotDialog } from "./SheetDataDialogs";
-import { buildPivot, columnValues, condLooks, hiddenRows, listAt, mergeMap, type PivotAgg } from "@/lib/sheet/advanced";
+import { CondDialog, ListDialog, PivotDialog, type PivotDraft } from "./SheetDataDialogs";
+import { FormulaSuggest, under, useFormulaAssist } from "./FormulaAssist";
+import { blockAround, buildPivotTable, columnValues, condLooks, distinctValues, hiddenRows, listAt, mergeMap, pivotPreview } from "@/lib/sheet/advanced";
 import { SaveToProject } from "@/components/projects/SaveToProject";
 import { saveCreation, saveErrorText } from "@/lib/creations";
 import { SheetAssistant } from "./SheetAssistant";
@@ -117,6 +118,8 @@ export function SheetEditor({ initial, lang, onClose, saved }: { initial: Workbo
   const tier = usePlanTier();
   const [filterMenu, setFilterMenu] = useState<{ c: number; x: number; y: number } | null>(null);
   const [dlg, setDlg] = useState<null | "cond" | "list" | "pivot">(null);
+  // Pivot dialog: a new table from the current data, or editing the active pivot sheet.
+  const [pivotEdit, setPivotEdit] = useState(false);
   const [listOpen, setListOpen] = useState(false);
   const [savedRef, setSavedRef] = useState<{ id: string; projectId: string | null; at: string } | null>(saved ? { ...saved, at: "" } : null);
   const saveTo = async (title: string, projectId: string | null) => {
@@ -135,6 +138,12 @@ export function SheetEditor({ initial, lang, onClose, saved }: { initial: Workbo
   const bar = useRef<HTMLInputElement>(null);
   const fileInput = useRef<HTMLInputElement>(null);
   const pdfInput = useRef<HTMLInputElement>(null);
+  // Formula suggestions after « = » (functions, then the arguments of the function being typed).
+  const [assistAt, setAssistAt] = useState<"cell" | "bar">("cell");
+  const assist = useFormulaAssist(lang, editing, (text, caret) => {
+    setEditing((e) => (e ? { ...e, text, refAt: undefined } : e));
+    window.setTimeout(() => { const el = assistAt === "bar" ? bar.current : editor.current; if (el) { el.focus(); el.setSelectionRange(caret, caret); } }, 0);
+  });
   const dragging = useRef<"cells" | "fill" | null>(null);
   const fillTo = useRef<Pos | null>(null);
   const [fillPreview, setFillPreview] = useState<Rect | null>(null);
@@ -209,7 +218,8 @@ export function SheetEditor({ initial, lang, onClose, saved }: { initial: Workbo
     const c = sheet.cells[addr(active.c, active.r)];
     setSel({ a: active, f: active });
     setEditing({ c: active.c, r: active.r, text: text ?? c?.v ?? "" });
-    window.setTimeout(() => { const el = editor.current; if (el) { el.focus(); const n = el.value.length; el.setSelectionRange(n, n); } }, 0);
+    setAssistAt("cell");
+    window.setTimeout(() => { const el = editor.current; if (el) { el.focus(); const n = el.value.length; el.setSelectionRange(n, n); assist.track(el, true); } }, 0);
   };
   const writeCell = (sh: Sheet, c: number, r: number, raw: string) => {
     const key = addr(c, r);
@@ -448,13 +458,43 @@ export function SheetEditor({ initial, lang, onClose, saved }: { initial: Workbo
     if (others.length) void confirmDialog({ title: tx(lang, "Fusionner les cellules ?", "Merge cells?"), description: tx(lang, "Seule la valeur en haut à gauche est gardée.", "Only the top-left value is kept."), confirmLabel: tx(lang, "Fusionner", "Merge") }).then((ok) => { if (ok) doIt(); });
     else doIt();
   };
-  const pivotHeaders = () => { const b = dataBlock(); return Array.from({ length: b.c2 - b.c1 + 1 }, (_, i) => b.c1 + i).map((c) => ({ c, label: display(ev.value(si, c, b.r1), sheet.cells[addr(c, b.r1)]?.s) || colName(c) })); };
-  const makePivot = (group: number, value: number, agg: PivotAgg) => {
-    const b = dataBlock();
-    let title = tx(lang, "Récapitulatif", "Summary"); let n = 1; while (wb.sheets.some((x) => x.name === title)) title = `${tx(lang, "Récapitulatif", "Summary")} ${++n}`;
-    const piv = buildPivot(sheet, ev, si, b, group, value, agg, title);
-    commit((w) => ({ ...w, sheets: [...w.sheets, piv] })); setSi(wb.sheets.length);
-    toast.success(tx(lang, "Récapitulatif créé : il se met à jour quand vos données changent.", "Summary created: it updates when your data changes."));
+  // ---- pivot tables (tableaux croisés dynamiques)
+  /** Where the pivot reads from: the active pivot's source when editing it, else the data around the selection. */
+  const pivotSource = (): { si: number; rect: Rect } | null => {
+    const cfg = pivotEdit ? sheet.pivot : undefined;
+    if (cfg) {
+      const i = wb.sheets.findIndex((x) => x.id === cfg.source); const r = parseRange(cfg.range);
+      if (i < 0 || !r) return null;
+      return { si: i, rect: blockAround(wb.sheets[i]!, r.c1, r.r1) };
+    }
+    return { si, rect: dataBlock() };
+  };
+  const pivotFields = () => {
+    const src = pivotSource(); if (!src) return [];
+    const sh = wb.sheets[src.si]!; const b = src.rect;
+    return Array.from({ length: b.c2 - b.c1 + 1 }, (_, i) => b.c1 + i).map((c) => ({ c, label: display(ev.value(src.si, c, b.r1), sh.cells[addr(c, b.r1)]?.s) || colName(c), num: typeof ev.value(src.si, c, b.r1 + 1) === "number" }));
+  };
+  const placePivot = (draft: PivotDraft, target: { id: string; name: string } | null, srcOverride?: { si: number; rect: Rect }) => {
+    const src = srcOverride ?? pivotSource();
+    if (!src) return void toast.error(tx(lang, "La feuille source n'existe plus.", "The source sheet no longer exists."));
+    let name = target?.name ?? tx(lang, "Tableau croisé", "Pivot table");
+    if (!target) { const base = name; let n = 1; while (wb.sheets.some((x) => x.name === name)) name = `${base} ${++n}`; }
+    const cfg = { ...draft, source: wb.sheets[src.si]!.id, range: rangeText(src.rect) };
+    const built = buildPivotTable(wb, ev, cfg, lang, { id: target?.id ?? uid(), name });
+    if ("error" in built) return void toast.error(built.error);
+    if (target) { commit((w) => ({ ...w, sheets: w.sheets.map((x) => (x.id === target.id ? built : x)) })); toast.success(tx(lang, "Tableau croisé mis à jour.", "Pivot table updated.")); }
+    else { commit((w) => ({ ...w, sheets: [...w.sheets, built] })); setSi(wb.sheets.length); toast.success(tx(lang, "Tableau croisé créé dans une nouvelle feuille : il suit vos données.", "Pivot table created in a new sheet: it follows your data.")); }
+  };
+  const refreshPivot = () => {
+    const cfg = sheet.pivot; if (!cfg) return;
+    const i = wb.sheets.findIndex((x) => x.id === cfg.source); const r = parseRange(cfg.range);
+    if (i < 0 || !r) return void toast.error(tx(lang, "La feuille source n'existe plus.", "The source sheet no longer exists."));
+    const { source: _s, range: _r, ...draft } = cfg;
+    placePivot(draft, { id: sheet.id, name: sheet.name }, { si: i, rect: blockAround(wb.sheets[i]!, r.c1, r.r1) });
+  };
+  const openPivot = (edit: boolean) => {
+    if (tier !== null && tier < 3) return void toast(tx(lang, "Le tableau croisé dynamique fait partie du Tableur avancé (forfait Pro ou Mensuel Pro).", "Pivot tables are part of the advanced spreadsheet (Pro pack or Mensuel Pro)."), { action: { label: tx(lang, "Voir les offres", "See plans"), onClick: () => { window.location.href = "/dashboard/credits"; } } });
+    setPivotEdit(edit); setDlg("pivot");
   };
   const activeList = !editing ? listAt(sheet, sel.a.c, sel.a.r) : undefined;
   useEffect(() => { setListOpen(false); }, [sel.a.c, sel.a.r]);
@@ -775,16 +815,17 @@ export function SheetEditor({ initial, lang, onClose, saved }: { initial: Workbo
       </>}</Menu>
       <Menu label={tx(lang, "Données", "Data")} icon={<Filter className="size-4" />}>{(close) => tier !== null && tier < 3 ? <div className="space-y-2 p-2 text-[12.5px]">
         <p className="flex items-center gap-1.5 font-semibold"><Lock className="size-3.5" />{tx(lang, "Tableur avancé · forfait Pro", "Advanced spreadsheet · Pro plan")}</p>
-        <p className="text-muted-foreground">{tx(lang, "Filtres, mise en forme conditionnelle, listes déroulantes, fusion de cellules et tableau récapitulatif sont inclus avec le forfait Pro et la formule Mensuel Pro.", "Filters, conditional formatting, dropdowns, merged cells and the summary table come with the Pro pack and the Mensuel Pro plan.")}</p>
+        <p className="text-muted-foreground">{tx(lang, "Filtres, mise en forme conditionnelle, listes déroulantes, fusion de cellules et tableaux croisés dynamiques sont inclus avec le forfait Pro et la formule Mensuel Pro.", "Filters, conditional formatting, dropdowns, merged cells and pivot tables come with the Pro pack and the Mensuel Pro plan.")}</p>
         <a href="/dashboard/credits" onClick={close} className="inline-flex h-8 items-center rounded-full bg-foreground px-3.5 text-[12px] font-semibold text-background">{tx(lang, "Voir les offres", "See plans")}</a>
       </div> : <>
         <MenuItem icon={<Filter className="size-4" />} onClick={() => { close(); toggleFilter(); }} hint={tx(lang, "▾ dans les en-têtes", "▾ in the headers")}>{sheet.filter ? tx(lang, "Retirer le filtre", "Remove the filter") : tx(lang, "Filtrer le tableau", "Filter the table")}</MenuItem>
         <MenuItem icon={<Paintbrush className="size-4" />} onClick={() => { close(); setDlg("cond"); }} hint={tx(lang, "Couleurs selon la valeur", "Colours by value")}>{tx(lang, "Mise en forme conditionnelle…", "Conditional formatting…")}</MenuItem>
         <MenuItem icon={<ListChecks className="size-4" />} onClick={() => { close(); setDlg("list"); }} hint={tx(lang, "Choix dans une liste", "Pick from a list")}>{tx(lang, "Liste déroulante…", "Dropdown list…")}</MenuItem>
         <MenuItem icon={<Merge className="size-4" />} onClick={() => { close(); toggleMerge(); }}>{tx(lang, "Fusionner / défusionner", "Merge / unmerge")}</MenuItem>
-        <MenuItem icon={<Table2 className="size-4" />} onClick={() => { close(); setDlg("pivot"); }} hint={tx(lang, "Totaux par catégorie", "Totals by category")}>{tx(lang, "Tableau récapitulatif…", "Summary table…")}</MenuItem>
+        <MenuItem icon={<Table2 className="size-4" />} onClick={() => { close(); openPivot(false); }} hint={tx(lang, "Lignes, colonnes, valeurs", "Rows, columns, values")}>{tx(lang, "Tableau croisé dynamique…", "Pivot table…")}</MenuItem>
         {((sheet.cond?.length ?? 0) > 0 || (sheet.lists?.length ?? 0) > 0) && <MenuItem icon={<Eraser className="size-4" />} onClick={() => { close(); editSheet((sh) => { sh.cond = []; sh.lists = []; }); }}>{tx(lang, "Effacer les règles et listes de la feuille", "Clear the sheet's rules and lists")}</MenuItem>}
       </>}</Menu>
+      <button type="button" className={cn(btn, "w-auto gap-1.5 px-2 text-[12px] font-medium")} title={tx(lang, "Tableau croisé dynamique", "Pivot table")} onClick={() => openPivot(false)}><Table2 className="size-4" /><span className="hidden xl:inline">{tx(lang, "Tableau croisé", "Pivot table")}</span>{tier !== null && tier < 3 && <Lock className="size-3" />}</button>
       <button type="button" className={cn(btn, sheet.grid && on)} aria-label={tx(lang, "Quadrillage", "Gridlines")} title={tx(lang, "Afficher le quadrillage", "Show gridlines")} onClick={() => editSheet((sh) => { sh.grid = !sh.grid; })}><Grid3x3 className="size-4" /></button>
       <button type="button" className={cn(btn, sheet.freeze && on)} aria-label={tx(lang, "Figer la première ligne", "Freeze top row")} title={tx(lang, "Figer la première ligne", "Freeze top row")} onClick={() => editSheet((sh) => { sh.freeze = !sh.freeze; })}><Snowflake className="size-4" /></button>
       <button type="button" className={btn} aria-label={tx(lang, "Effacer la mise en forme", "Clear formatting")} title={tx(lang, "Effacer la mise en forme", "Clear formatting")} onClick={clearFormats}><Eraser className="size-4" /></button>
@@ -792,20 +833,31 @@ export function SheetEditor({ initial, lang, onClose, saved }: { initial: Workbo
     </div>
 
     {/* Formula bar */}
-    <div className="flex items-center gap-2 border-b border-border bg-background px-2 py-1.5">
+    <div className="relative flex items-center gap-2 border-b border-border bg-background px-2 py-1.5">
       <input aria-label={tx(lang, "Zone nom", "Name box")} defaultValue={rangeText(rect)} key={rangeText(rect)}
         onKeyDown={(e) => { if (e.key === "Enter") { const r = parseRange(e.currentTarget.value); if (r) { setSel({ a: { c: r.c1, r: r.r1 }, f: { c: r.c2, r: r.r2 } }); scrollInto({ c: r.c1, r: r.r1 }); gridFocus.current?.focus(); } } }}
         className="h-8 w-[92px] rounded-lg border border-border bg-background px-2 text-center font-mono text-[12px] outline-none focus:border-[#1f7a5a]" />
       <span className="font-serif text-[15px] italic text-muted-foreground">fx</span>
       <input ref={bar} aria-label={tx(lang, "Barre de formule", "Formula bar")} spellCheck={false}
         value={editing ? editing.text : activeCell?.v ?? ""}
-        onFocus={() => { if (!editing) setEditing({ c: sel.a.c, r: sel.a.r, text: activeCell?.v ?? "" }); }}
-        onChange={(e) => setEditing((ed) => ({ c: ed?.c ?? sel.a.c, r: ed?.r ?? sel.a.r, text: e.target.value, refAt: undefined }))}
-        onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); finishEdit({ c: 0, r: 1 }); } else if (e.key === "Escape") { setEditing(null); gridFocus.current?.focus(); } }}
+        onFocus={() => { setAssistAt("bar"); if (!editing) setEditing({ c: sel.a.c, r: sel.a.r, text: activeCell?.v ?? "" }); }}
+        onChange={(e) => { assist.track(e.target, true); setEditing((ed) => ({ c: ed?.c ?? sel.a.c, r: ed?.r ?? sel.a.r, text: e.target.value, refAt: undefined })); }}
+        onSelect={(e) => assist.track(e.currentTarget, false)}
+        onKeyDown={(e) => { if (assist.onKey(e)) return; if (e.key === "Enter") { e.preventDefault(); finishEdit({ c: 0, r: 1 }); } else if (e.key === "Escape") { setEditing(null); gridFocus.current?.focus(); } }}
         placeholder={tx(lang, "Valeur ou formule : =SOMME(B2:B10), =SI(C2>=10;\"Admis\";\"Ajourné\")…", "Value or formula: =SUM(B2:B10), =IF(C2>=10,\"Pass\",\"Fail\")…")}
         className="h-8 min-w-0 flex-1 rounded-lg border border-border bg-background px-2.5 font-mono text-[12.5px] outline-none focus:border-[#1f7a5a]" />
+      {editing && assistAt === "bar" && <FormulaSuggest assist={assist} lang={lang} style={under(bar, { left: 140, top: 44 })} />}
     </div>
 
+    {sheet.pivot && <div className="flex flex-wrap items-center gap-2 border-b border-[#cfe3d9] bg-[#eef6f2] px-3 py-1.5 text-[12px] text-[#14532d]">
+      <Table2 className="size-4" /><b className="font-semibold">{tx(lang, "Tableau croisé dynamique", "Pivot table")}</b>
+      <span className="text-[#3f6b55]">· {tx(lang, "source", "source")} {wb.sheets.find((x) => x.id === sheet.pivot!.source)?.name ?? "?"}!{sheet.pivot.range}</span>
+      <span className="hidden text-[#3f6b55] md:inline">· {tx(lang, "les valeurs suivent vos données ; « Actualiser » ajoute les nouvelles lignes et catégories", "values follow your data; « Refresh » adds new rows and categories")}</span>
+      <span className="ml-auto flex gap-1.5">
+        <button type="button" onClick={refreshPivot} className="inline-flex h-7 items-center gap-1.5 rounded-full bg-[#1f7a5a] px-3 font-semibold text-white"><RefreshCw className="size-3.5" />{tx(lang, "Actualiser", "Refresh")}</button>
+        <button type="button" onClick={() => openPivot(true)} className="inline-flex h-7 items-center gap-1.5 rounded-full border border-[#1f7a5a]/40 bg-white px-3 font-semibold"><SlidersHorizontal className="size-3.5" />{tx(lang, "Modifier", "Edit")}</button>
+      </span>
+    </div>}
     <div className="relative flex min-h-0 flex-1">
       {/* Grid */}
       <div ref={gridFocus} tabIndex={0} onKeyDown={onKey} className="sheet-grid relative min-w-0 flex-1 outline-none" onContextMenu={(e) => { e.preventDefault(); const p = posFromPoint(e.clientX, e.clientY); if (p.c < rect.c1 || p.c > rect.c2 || p.r < rect.r1 || p.r > rect.r2) setSel({ a: p, f: p }); setCtx({ x: e.clientX, y: e.clientY }); }}>
@@ -837,8 +889,11 @@ export function SheetEditor({ initial, lang, onClose, saved }: { initial: Workbo
             </div>}
             {/* In-cell editor */}
             {editing && <input ref={editor} data-no-grid spellCheck={false} value={editing.text}
-              onChange={(e) => setEditing((ed) => (ed ? { ...ed, text: e.target.value, refAt: undefined } : ed))}
+              onChange={(e) => { assist.track(e.target, true); setEditing((ed) => (ed ? { ...ed, text: e.target.value, refAt: undefined } : ed)); }}
+              onSelect={(e) => assist.track(e.currentTarget, false)}
+              onFocus={() => setAssistAt("cell")}
               onKeyDown={(e) => {
+                if (assist.onKey(e)) return;
                 if (e.key === "Enter") { e.preventDefault(); finishEdit({ c: 0, r: e.shiftKey ? -1 : 1 }); }
                 else if (e.key === "Tab") { e.preventDefault(); finishEdit({ c: e.shiftKey ? -1 : 1, r: 0 }); }
                 else if (e.key === "Escape") { e.preventDefault(); setEditing(null); gridFocus.current?.focus(); }
@@ -846,6 +901,7 @@ export function SheetEditor({ initial, lang, onClose, saved }: { initial: Workbo
               onBlur={(e) => { if (e.relatedTarget === bar.current) return; if (!dragging.current) window.setTimeout(() => { if (document.activeElement !== editor.current && document.activeElement !== bar.current) finishEdit(); }, 120); }}
               className="absolute z-[11] border-2 border-[#1f7a5a] bg-white px-1.5 font-[inherit] text-[13px] text-zinc-900 shadow-lg outline-none"
               style={{ ...cellBox(editing.c, editing.r), minWidth: colW(editing.c), width: Math.max(colW(editing.c), editing.text.length * 7.6 + 16), fontWeight: sheet.cells[addr(editing.c, editing.r)]?.s?.b ? 700 : undefined }} />}
+            {editing && assistAt === "cell" && (() => { const b = cellBox(editing.c, editing.r); return <FormulaSuggest assist={assist} lang={lang} style={{ left: b.left, top: b.top + b.height + 3 }} />; })()}
             {/* Charts */}
             {sheet.charts.map((ch) => <SheetChartView key={ch.id} chart={ch} data={chartData(wb, ev, si, ch.range)} left={ROW_HEAD_W + ch.x} top={HEAD_H + ch.y} selected={chartSel === ch.id}
               onSelect={() => { setChartSel(ch.id); if (!chartStart.current) chartStart.current = wb; }}
@@ -905,7 +961,12 @@ export function SheetEditor({ initial, lang, onClose, saved }: { initial: Workbo
       onApply={(h) => { setFilterHide(filterMenu.c, h); setFilterMenu(null); }} onSort={(asc) => { sortColumn(filterMenu.c, asc); setFilterMenu(null); }} onClose={() => setFilterMenu(null)} />}
     <CondDialog open={dlg === "cond"} onOpenChange={(o) => setDlg(o ? "cond" : null)} lang={lang} range={rangeText(rect.r1 === rect.r2 && rect.c1 === rect.c2 ? dataBlock() : rect)} onAdd={(rule) => editSheet((sh) => { sh.cond = [...(sh.cond ?? []), rule]; })} />
     <ListDialog open={dlg === "list"} onOpenChange={(o) => setDlg(o ? "list" : null)} lang={lang} range={rangeText(rect)} onAdd={(range, items) => editSheet((sh) => { sh.lists = [...(sh.lists ?? []).filter((l) => l.range !== range), { id: uid(), range, items }]; })} />
-    {dlg === "pivot" && <PivotDialog open onOpenChange={(o) => setDlg(o ? "pivot" : null)} lang={lang} headers={pivotHeaders()} onBuild={makePivot} />}
+    {dlg === "pivot" && (() => { const src = pivotSource(); const cfg = pivotEdit ? sheet.pivot : undefined; return <PivotDialog open onOpenChange={(o) => setDlg(o ? "pivot" : null)} lang={lang} fields={pivotFields()}
+      source={src ? `${wb.sheets[src.si]!.name}!${rangeText(src.rect)}` : "?"}
+      initial={cfg ? { rows: cfg.rows, cols: cfg.cols, values: cfg.values, filter: cfg.filter, totals: cfg.totals, chart: cfg.chart } : null}
+      distinct={(c) => (src ? distinctValues(ev, src.si, src.rect, c) : [])}
+      preview={(d) => (src ? pivotPreview(ev, src.si, src.rect, { ...d, source: "", range: "" }, lang) : [])}
+      onBuild={(d) => placePivot(d, cfg ? { id: sheet.id, name: sheet.name } : null)} />; })()}
     <SaveToProject open={saveOpen} onOpenChange={setSaveOpen} lang={lang} defaultTitle={wb.title} projectId={savedRef?.projectId ?? null} onSave={saveTo} />
     {publishOpen && <PublishDialog open={publishOpen} onOpenChange={setPublishOpen} title={wb.title} files={[{ path: "index.html", content: shareHtmlPage(), done: true }]} lang={lang}
       shareText={tx(lang, `Voici le tableau « ${wb.title} »`, `Here is the spreadsheet "${wb.title}"`)} />}
