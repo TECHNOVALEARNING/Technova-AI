@@ -9,7 +9,8 @@ export type CellStyle = {
   align?: "left" | "center" | "right"; wrap?: boolean;
   fmt?: NumFmt; dec?: number; border?: boolean;
 };
-export type Cell = { v: string; s?: CellStyle };
+/** A cell: what was typed (v), its style (s) and an optional note (n, « Révision → Note »). */
+export type Cell = { v: string; s?: CellStyle; n?: string };
 export type ChartKind = "bar" | "line" | "area" | "pie";
 export type SheetChart = { id: string; kind: ChartKind; range: string; title: string; x: number; y: number; w: number; h: number };
 /** Conditional formatting: a style when a rule holds, or data bars / a colour scale over the range. */

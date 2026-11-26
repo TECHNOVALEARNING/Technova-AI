@@ -140,6 +140,9 @@ export async function importXlsx(file: File | ArrayBuffer, title: string): Promi
         const key = addr(cn - 1, rn - 1);
         const c: Cell = { v: raw };
         if (Object.keys(style).length) c.s = style;
+        const note = cell.note as unknown as string | { texts?: { text: string }[] } | undefined;
+        const noteText = typeof note === "string" ? note : note?.texts?.map((t) => t.text).join("") ?? "";
+        if (noteText.trim()) c.n = noteText.trim().slice(0, 1000);
         sh.cells[key] = c;
       });
     });
@@ -203,6 +206,7 @@ export async function exportXlsx(wb: Workbook) {
         x.value = { formula: toExcelFormula(cell.v), ...(result !== undefined && result !== null ? { result: (cell.s?.fmt === "date" && typeof result === "number" ? serialToDate(result) : result) as never } : {}) } as never;
       } else if (typeof value === "number" && cell.s?.fmt === "date") x.value = serialToDate(value);
       else x.value = isErr(value) ? value.err : (value as never);
+      if (cell.n) x.note = cell.n;
       const s = cell.s; if (!s) continue;
       x.font = { name: "Calibri", size: s.size ? Math.round(s.size * 0.75) : 11, ...(s.b ? { bold: true } : {}), ...(s.i ? { italic: true } : {}), ...(s.u ? { underline: true } : {}), ...(s.strike ? { strike: true } : {}), ...(argb(s.color) ? { color: { argb: argb(s.color)! } } : {}) };
       if (argb(s.bg)) x.fill = { type: "pattern", pattern: "solid", fgColor: { argb: argb(s.bg)! } };
@@ -271,7 +275,7 @@ function sheetHtml(wb: Workbook, ev: Evaluator, si: number) {
 }
 
 /** Print dialog (Imprimer / Enregistrer en PDF) of one sheet or the whole workbook, landscape when wide. */
-export function printWorkbook(wb: Workbook, only?: number) {
+export function printWorkbook(wb: Workbook, only?: number, orientation: "auto" | "portrait" | "landscape" = "auto") {
   const win = window.open("", "_blank");
   if (!win) return false;
   const ev = makeEvaluator(wb);
@@ -279,7 +283,7 @@ export function printWorkbook(wb: Workbook, only?: number) {
   const wide = list.some((i) => { const sh = wb.sheets[i]!; const { cols } = usedSize(sh); let w = 0; for (let c = 0; c < cols; c++) w += sh.colW[c] ?? DEFAULT_COL_W; return w > 720; });
   win.document.open();
   win.document.write(`<!DOCTYPE html><html lang="fr"><head><meta charset="utf-8"><title>${escHtml(wb.title)}</title><style>
-@page { size: A4 ${wide ? "landscape" : "portrait"}; margin: 12mm; }
+@page { size: A4 ${orientation === "auto" ? (wide ? "landscape" : "portrait") : orientation}; margin: 12mm; }
 * { -webkit-print-color-adjust: exact; print-color-adjust: exact; box-sizing: border-box; }
 body { font: 12px Inter, "Segoe UI", system-ui, sans-serif; color: #111; margin: 0; }
 h1 { font-size: 18px; margin: 0 0 4px; } h2 { font-size: 13px; color: #555; margin: 18px 0 6px; }

@@ -2,7 +2,7 @@ import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } fr
 import {
   AlignCenter, AlignLeft, AlignRight, AreaChart as AreaIcon, ArrowDownAZ, ArrowUpAZ, BarChart3, Bold, Columns3, Copy, Download, Eraser, FileSpreadsheet,
   FileUp, Grid3x3, Italic, LineChart as LineIcon, Minus, PaintBucket, PieChart as PieIcon, Plus, Printer, Redo2, Rows3, Sigma, Snowflake, Sparkles,
-  Save, Strikethrough, Table2, RefreshCw, SlidersHorizontal, Trash2, Filter, Paintbrush, ListChecks, Merge, Lock, Underline, Undo2, WrapText, X, ChevronDown, FunctionSquare, Scissors, ClipboardPaste, Square, Share2, ExternalLink,
+  Save, Strikethrough, Table2, RefreshCw, SlidersHorizontal, Search, StickyNote, CalendarDays, Maximize2, Eye, AlertTriangle, PanelTop, Info, FileX2, Trash2, Filter, Paintbrush, ListChecks, Merge, Lock, Underline, Undo2, WrapText, X, ChevronDown, FunctionSquare, Scissors, ClipboardPaste, Square, Share2, ExternalLink,
 } from "lucide-react";
 import { toast } from "sonner";
 import { confirmDialog, promptDialog } from "@/components/ConfirmHost";
@@ -21,6 +21,9 @@ import { SheetChartView } from "./SheetChart";
 import { usePlanTier } from "@/lib/plan-client";
 import { CondDialog, ListDialog, PivotDialog, type PivotDraft } from "./SheetDataDialogs";
 import { FormulaSuggest, under, useFormulaAssist } from "./FormulaAssist";
+import { SheetFind } from "./SheetFind";
+import { FUNCTIONS, fnName, type FnInfo } from "@/lib/sheet/functions";
+import { applyDedupe, duplicateRows, errorCells, findMatches, replaceIn, stepMatch, workbookStats, type FindOpts } from "@/lib/sheet/tools";
 import { blockAround, buildPivotTable, columnValues, condLooks, distinctValues, hiddenRows, listAt, mergeMap, pivotPreview } from "@/lib/sheet/advanced";
 import { SaveToProject } from "@/components/projects/SaveToProject";
 import { saveCreation, saveErrorText } from "@/lib/creations";
@@ -45,39 +48,54 @@ const rectOf = (s: Sel): Rect => ({ c1: Math.min(s.a.c, s.f.c), r1: Math.min(s.a
 const FORMATS: [NumFmt, string, string][] = [["general", "Standard", "General"], ["number", "Nombre", "Number"], ["fcfa", "FCFA", "FCFA"], ["eur", "Euro (€)", "Euro (€)"], ["usd", "Dollar ($)", "Dollar ($)"], ["percent", "Pourcentage", "Percent"], ["date", "Date", "Date"], ["text", "Texte", "Text"]];
 const SWATCHES = ["#111827", "#6b7280", "#ffffff", "#dc2626", "#ea580c", "#ca8a04", "#16a34a", "#0f766e", "#0891b2", "#2563eb", "#4f46e5", "#9333ea", "#be185d", "#1f7a5a", "#fef3c7", "#dcfce7", "#dbeafe", "#fce7f3", "#ede9fe", "#f3f4f6"];
 
+/** Where a dropdown opens: under its button, in fixed position so the sideways-scrolling ribbon never clips it. */
+const dropAt = (el: HTMLElement | null, w: number) => { const b = el?.getBoundingClientRect(); return b ? { left: Math.max(8, Math.min(b.left, window.innerWidth - w - 8)), top: b.bottom + 4 } : { left: 8, top: 120 }; };
+
 function ColorMenu({ label, icon, value, onPick, allowNone }: { label: string; icon: React.ReactNode; value?: string | undefined; onPick: (c: string | undefined) => void; allowNone?: boolean }) {
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] = useState<{ left: number; top: number } | null>(null);
+  const ref = useRef<HTMLButtonElement>(null);
   return <div className="relative">
-    <button type="button" title={label} aria-label={label} onClick={() => setOpen((o) => !o)} className="tb-btn flex-col gap-0">
+    <button ref={ref} type="button" title={label} aria-label={label} onClick={() => setOpen((o) => (o ? null : dropAt(ref.current, 188)))} className="tb-btn flex-col gap-0">
       {icon}<span className="mt-[1px] block h-[3px] w-4 rounded-full" style={{ background: value ?? "transparent", outline: value ? "none" : "1px solid #d4d4d8" }} />
     </button>
     {open && <>
-      <div className="fixed inset-0 z-40" onClick={() => setOpen(false)} />
-      <div className="absolute left-0 top-9 z-50 w-[188px] rounded-xl border border-border bg-popover p-2 shadow-xl">
-        <div className="grid grid-cols-5 gap-1.5">{SWATCHES.map((c) => <button key={c} type="button" aria-label={c} onClick={() => { onPick(c); setOpen(false); }} className="size-7 rounded-md border border-black/10" style={{ background: c }} />)}</div>
+      <div className="fixed inset-0 z-40" onClick={() => setOpen(null)} />
+      <div className="fixed z-50 w-[188px] rounded-xl border border-border bg-popover p-2 shadow-xl" style={open}>
+        <div className="grid grid-cols-5 gap-1.5">{SWATCHES.map((c) => <button key={c} type="button" aria-label={c} onClick={() => { onPick(c); setOpen(null); }} className="size-7 rounded-md border border-black/10" style={{ background: c }} />)}</div>
         <label className="mt-2 flex cursor-pointer items-center gap-2 rounded-lg px-1.5 py-1 text-[12px] hover:bg-secondary">
           <input type="color" className="size-5 cursor-pointer" value={value ?? "#000000"} onChange={(e) => onPick(e.target.value)} />Personnalisée
         </label>
-        {allowNone && <button type="button" onClick={() => { onPick(undefined); setOpen(false); }} className="mt-1 w-full rounded-lg px-1.5 py-1 text-left text-[12px] hover:bg-secondary">Aucune</button>}
+        {allowNone && <button type="button" onClick={() => { onPick(undefined); setOpen(null); }} className="mt-1 w-full rounded-lg px-1.5 py-1 text-left text-[12px] hover:bg-secondary">Aucune</button>}
       </div>
     </>}
   </div>;
 }
 
-function Menu({ label, icon, children, wide }: { label: string; icon: React.ReactNode; children: (close: () => void) => React.ReactNode; wide?: boolean }) {
-  const [open, setOpen] = useState(false);
+function Menu({ label, icon, children, wide, big, lock }: { label: string; icon: React.ReactNode; children: (close: () => void) => React.ReactNode; wide?: boolean; big?: boolean; lock?: boolean }) {
+  const [open, setOpen] = useState<{ left: number; top: number } | null>(null);
+  const ref = useRef<HTMLButtonElement>(null);
+  const w = wide ? 320 : 240;
   return <div className="relative">
-    <button type="button" onClick={() => setOpen((o) => !o)} className="tb-btn w-auto gap-1 px-2 text-[12.5px]" aria-expanded={open}>{icon}<span className="hidden xl:inline">{label}</span><ChevronDown className="size-3 opacity-60" /></button>
+    <button ref={ref} type="button" onClick={() => setOpen((o) => (o ? null : dropAt(ref.current, w)))} className={big ? "tb-big" : "tb-btn w-auto gap-1 px-2 text-[12.5px]"} aria-expanded={!!open}>
+      {icon}{big ? <span className="inline-flex items-center gap-0.5">{label}{lock && <Lock className="size-2.5" />}<ChevronDown className="size-3 opacity-60" /></span> : <><span className="hidden xl:inline">{label}</span><ChevronDown className="size-3 opacity-60" /></>}
+    </button>
     {open && <>
-      <div className="fixed inset-0 z-40" onClick={() => setOpen(false)} />
-      <div className={cn("absolute left-0 top-9 z-50 max-h-[70vh] overflow-y-auto rounded-xl border border-border bg-popover p-1.5 shadow-xl", wide ? "w-[300px]" : "w-[230px]")}>{children(() => setOpen(false))}</div>
+      <div className="fixed inset-0 z-40" onClick={() => setOpen(null)} />
+      <div className="fixed z-50 max-h-[70vh] overflow-y-auto rounded-xl border border-border bg-popover p-1.5 shadow-xl" style={{ ...open, width: w }}>{children(() => setOpen(null))}</div>
     </>}
   </div>;
 }
-const MenuItem = ({ onClick, icon, children, hint }: { onClick: () => void; icon?: React.ReactNode; children: React.ReactNode; hint?: string }) =>
+/** A big ribbon button: icon above its label, like Excel. */
+const Big = ({ icon, label, onClick, active, lock, title }: { icon: React.ReactNode; label: string; onClick: () => void; active?: boolean | undefined; lock?: boolean; title?: string }) =>
+  <button type="button" onClick={onClick} title={title ?? label} aria-pressed={active} className={cn("tb-big", active && "tb-on")}>{icon}<span className="inline-flex items-center gap-0.5">{label}{lock && <Lock className="size-2.5" />}</span></button>;
+/** A ribbon group with its name underneath. */
+const Group = ({ label, children }: { label: string; children: React.ReactNode }) =>
+  <div className="flex shrink-0 flex-col border-r border-border px-1.5 last:border-r-0"><div className="flex h-[62px] items-center gap-0.5">{children}</div><span className="pb-1 text-center text-[10.5px] text-muted-foreground">{label}</span></div>;
+type RibbonTab = "file" | "home" | "insert" | "layout" | "formulas" | "data" | "review" | "view";
+const MenuItem = ({ onClick, icon, children, hint }: { onClick: () => void; icon?: React.ReactNode; children: React.ReactNode; hint?: string | undefined }) =>
   <button type="button" onClick={onClick} className="flex w-full items-center gap-2.5 rounded-lg px-2.5 py-2 text-left text-[12.5px] hover:bg-secondary">
     {icon && <span className="grid size-4 shrink-0 place-items-center text-muted-foreground">{icon}</span>}
-    <span className="min-w-0 flex-1"><span className="block">{children}</span>{hint && <span className="block truncate font-mono text-[10.5px] text-muted-foreground">{hint}</span>}</span>
+    <span className="min-w-0 flex-1"><span className="block">{children}</span>{hint && <span className={cn("block text-muted-foreground", /^[=.]/.test(hint) ? "truncate font-mono text-[10.5px]" : "text-[11px] leading-snug")}>{hint}</span>}</span>
   </button>;
 
 /** ▾ menu of a filtered column: sort, search and tick the values to show. */
@@ -120,6 +138,13 @@ export function SheetEditor({ initial, lang, onClose, saved }: { initial: Workbo
   const [dlg, setDlg] = useState<null | "cond" | "list" | "pivot">(null);
   // Pivot dialog: a new table from the current data, or editing the active pivot sheet.
   const [pivotEdit, setPivotEdit] = useState(false);
+  // Excel-like ribbon: the open tab, view options and the find panel.
+  const [tab, setTab] = useState<RibbonTab>("home");
+  const [showFormulas, setShowFormulas] = useState(false);
+  const [showBar, setShowBar] = useState(true);
+  const [orient, setOrient] = useState<"auto" | "portrait" | "landscape">("auto");
+  const [find, setFind] = useState<null | "find" | "replace">(null);
+  const rootRef = useRef<HTMLDivElement>(null);
   const [listOpen, setListOpen] = useState(false);
   const [savedRef, setSavedRef] = useState<{ id: string; projectId: string | null; at: string } | null>(saved ? { ...saved, at: "" } : null);
   const saveTo = async (title: string, projectId: string | null) => {
@@ -224,11 +249,11 @@ export function SheetEditor({ initial, lang, onClose, saved }: { initial: Workbo
   const writeCell = (sh: Sheet, c: number, r: number, raw: string) => {
     const key = addr(c, r);
     const prev = sh.cells[key];
-    if (raw === "" && !prev?.s) { delete sh.cells[key]; return; }
+    if (raw === "" && !prev?.s && !prev?.n) { delete sh.cells[key]; return; }
     const lit = raw.startsWith("=") ? null : parseLiteral(raw);
     const s: CellStyle | undefined = lit?.fmt && (!prev?.s?.fmt || prev.s.fmt === "general") ? { ...prev?.s, fmt: lit.fmt } : prev?.s;
     const v = lit?.fmt === "percent" ? String(lit.value) : lit?.fmt === "date" ? raw.trim() : raw;
-    sh.cells[key] = { v, ...(s ? { s } : {}) };
+    sh.cells[key] = { v, ...(s ? { s } : {}), ...(prev?.n ? { n: prev.n } : {}) };
     if (r >= sh.rows - 5) sh.rows = Math.min(MAX_ROWS, sh.rows + 50);
   };
   const finishEdit = (move?: Pos) => {
@@ -275,8 +300,9 @@ export function SheetEditor({ initial, lang, onClose, saved }: { initial: Workbo
     sh.cells[k] = { ...prev, s };
   });
   const toggle = (key: "b" | "i" | "u" | "strike" | "wrap" | "border") => setStyle({ [key]: !activeCell?.s?.[key] });
-  const clearContents = () => forEachSel((sh, c, r) => { const k = addr(c, r); const p = sh.cells[k]; if (!p) return; if (p.s) sh.cells[k] = { v: "", s: p.s }; else delete sh.cells[k]; });
-  const clearFormats = () => forEachSel((sh, c, r) => { const k = addr(c, r); const p = sh.cells[k]; if (p) { if (p.v === "") delete sh.cells[k]; else sh.cells[k] = { v: p.v }; } });
+  const clearContents = () => forEachSel((sh, c, r) => { const k = addr(c, r); const p = sh.cells[k]; if (!p) return; if (p.s || p.n) sh.cells[k] = { v: "", ...(p.s ? { s: p.s } : {}), ...(p.n ? { n: p.n } : {}) }; else delete sh.cells[k]; });
+  const clearFormats = () => forEachSel((sh, c, r) => { const k = addr(c, r); const p = sh.cells[k]; if (p) { if (p.v === "" && !p.n) delete sh.cells[k]; else sh.cells[k] = { v: p.v, ...(p.n ? { n: p.n } : {}) }; } });
+  const clearNotes = () => forEachSel((sh, c, r) => { const k = addr(c, r); const p = sh.cells[k]; if (p?.n) { if (p.v === "" && !p.s) delete sh.cells[k]; else sh.cells[k] = { v: p.v, ...(p.s ? { s: p.s } : {}) }; } });
 
   // ---------------------------------------------------------------- copy / paste / fill
   const copySel = (cut: boolean) => {
@@ -391,15 +417,15 @@ export function SheetEditor({ initial, lang, onClose, saved }: { initial: Workbo
   };
 
   // ---------------------------------------------------------------- functions and charts
-  const autoSum = () => {
+  const autoSum = (fn = "SOMME") => {
     if (rect.r1 !== rect.r2 || rect.c1 !== rect.c2) {
-      editSheet((sh) => { for (let c = rect.c1; c <= rect.c2; c++) writeCell(sh, c, rect.r2 + 1, `=SOMME(${addr(c, rect.r1)}:${addr(c, rect.r2)})`); });
+      editSheet((sh) => { for (let c = rect.c1; c <= rect.c2; c++) writeCell(sh, c, rect.r2 + 1, `=${fn}(${addr(c, rect.r1)}:${addr(c, rect.r2)})`); });
       return;
     }
     let r = active.r - 1;
     while (r >= 0 && typeof ev.value(si, active.c, r) === "number") r--;
     const from = r + 1;
-    startEdit(from < active.r ? `=SOMME(${addr(active.c, from)}:${addr(active.c, active.r - 1)})` : "=SOMME()");
+    startEdit(from < active.r ? `=${fn}(${addr(active.c, from)}:${addr(active.c, active.r - 1)})` : `=${fn}(`);
   };
   const insertFunction = (name: string) => { startEdit(`=${name}(`); };
   const addChart = (kind: ChartKind) => {
@@ -580,6 +606,7 @@ export function SheetEditor({ initial, lang, onClose, saved }: { initial: Workbo
     if (mod && k.toLowerCase() === "z") { e.preventDefault(); if (e.shiftKey) redo(); else undo(); return; }
     if (mod && k.toLowerCase() === "y") { e.preventDefault(); redo(); return; }
     if (mod && k.toLowerCase() === "s") { e.preventDefault(); quickSave(); return; }
+    if (mod && (k.toLowerCase() === "f" || k.toLowerCase() === "h")) { e.preventDefault(); setFind(k.toLowerCase() === "h" ? "replace" : "find"); return; }
     if (mod && k.toLowerCase() === "b") { e.preventDefault(); toggle("b"); return; }
     if (mod && k.toLowerCase() === "i") { e.preventDefault(); toggle("i"); return; }
     if (mod && k.toLowerCase() === "u") { e.preventDefault(); toggle("u"); return; }
@@ -701,7 +728,7 @@ export function SheetEditor({ initial, lang, onClose, saved }: { initial: Workbo
     const cell = sheet.cells[key]; const s = cell?.s;
     const look = looks(c, r);
     const v = cell ? ev.value(si, c, r) : null;
-    const text = cell ? display(v, s) : "";
+    const text = cell ? (showFormulas && cell.v.startsWith("=") ? cell.v : display(v, s)) : "";
     const err = isErr(v);
     const align = s?.align ?? (typeof v === "number" ? "right" : typeof v === "boolean" || err ? "center" : "left");
     // Like Excel, left-aligned text runs over the empty cells to its right.
@@ -716,9 +743,10 @@ export function SheetEditor({ initial, lang, onClose, saved }: { initial: Workbo
     const bg = look?.bg ?? s?.bg ?? (merged ? "#ffffff" : undefined);
     return <div key={key} className={cn("sheet-cell absolute overflow-hidden px-1.5", merged ? "flex items-center" : "leading-[26px]", sheet.grid ? "border-b border-r border-[#e5e7eb]" : "border-transparent", s?.wrap ? "whitespace-normal break-words leading-[1.2] py-0.5" : "whitespace-nowrap")}
       style={{ left: colLeft[c]! + ROW_HEAD_W, top: 0, width, height, zIndex: spill || merged ? 1 : undefined, borderRightColor: spill ? "transparent" : undefined, textAlign: align, justifyContent: merged ? (align === "center" ? "center" : align === "right" ? "flex-end" : "flex-start") : undefined, fontWeight: s?.b || look?.b ? 700 : undefined, fontStyle: s?.i ? "italic" : undefined,
-        textDecoration: [s?.u ? "underline" : "", s?.strike ? "line-through" : ""].filter(Boolean).join(" ") || undefined, color: err ? "#dc2626" : look?.color ?? s?.color, background: look?.bar ? `linear-gradient(90deg, ${look.bar.color}66 ${Math.round(look.bar.pct * 100)}%, ${bg ?? "transparent"} ${Math.round(look.bar.pct * 100)}%)` : bg, fontSize: s?.size, fontFamily: s?.font,
+        textDecoration: [s?.u ? "underline" : "", s?.strike ? "line-through" : ""].filter(Boolean).join(" ") || undefined, color: err && !(showFormulas && cell?.v.startsWith("=")) ? "#dc2626" : look?.color ?? s?.color, background: look?.bar ? `linear-gradient(90deg, ${look.bar.color}66 ${Math.round(look.bar.pct * 100)}%, ${bg ?? "transparent"} ${Math.round(look.bar.pct * 100)}%)` : bg, fontSize: s?.size, fontFamily: s?.font,
         boxShadow: s?.border ? "inset -1px -1px 0 #9ca3af, inset 1px 1px 0 #9ca3af" : undefined, paddingRight: isFilterHead ? 22 : undefined }}
-      title={text.length > 18 ? text : undefined}>{text}
+      title={cell?.n ? (text ? `${text}\n\n${tx(lang, "Note", "Note")} : ${cell.n}` : cell.n) : text.length > 18 ? text : undefined}>{text}
+      {cell?.n && <span aria-hidden className="pointer-events-none absolute right-0 top-0 size-0 border-l-[7px] border-t-[7px] border-l-transparent border-t-[#dc2626]" />}
       {isFilterHead && <button type="button" data-no-grid aria-label={tx(lang, "Filtrer cette colonne", "Filter this column")} onPointerDown={(e) => e.stopPropagation()} onClick={(e) => { const b = (e.currentTarget as HTMLElement).getBoundingClientRect(); setFilterMenu({ c, x: b.left, y: b.bottom + 4 }); }}
         className={cn("absolute right-1 top-1/2 grid size-[18px] -translate-y-1/2 place-items-center rounded border text-[10px]", filtered ? "border-[#1f7a5a] bg-[#1f7a5a] text-white" : "border-zinc-300 bg-white text-zinc-600")}>{filtered ? <Filter className="size-2.5" /> : "▾"}</button>}
     </div>;
@@ -734,27 +762,87 @@ export function SheetEditor({ initial, lang, onClose, saved }: { initial: Workbo
   const btn = "tb-btn";
   const on = "tb-on";
 
-  return <div className="flex h-full min-h-0 flex-col bg-[#f8f9fb] text-[13px] text-zinc-900 dark:bg-zinc-950 dark:text-zinc-100">
-    <style>{`.tb-btn{display:inline-flex;height:32px;min-width:32px;align-items:center;justify-content:center;border-radius:8px;color:inherit;transition:background .15s}.tb-btn:hover{background:rgba(0,0,0,.06)}.dark .tb-btn:hover{background:rgba(255,255,255,.08)}.tb-btn:disabled{opacity:.35}.tb-on{background:#dcebe4!important;color:#155e45}.sheet-grid ::selection{background:transparent}`}</style>
+  // ---------------------------------------------------------------- ribbon tools
+  const locked = tier !== null && tier < 3;
+  /** Runs a Pro-only tool, or explains the plan (the server and the menus still check it). */
+  const pro = (fn: () => void) => () => {
+    if (locked) return void toast(tx(lang, "Cet outil fait partie du Tableur avancé (forfait Pro ou Mensuel Pro).", "This tool is part of the advanced spreadsheet (Pro pack or Mensuel Pro)."), { action: { label: tx(lang, "Voir les offres", "See plans"), onClick: () => { window.location.href = "/dashboard/credits"; } } });
+    fn();
+  };
+  const goTo = (m: { s: number; c: number; r: number }) => { if (m.s !== si) setSi(m.s); const p = { c: m.c, r: m.r }; setSel({ a: p, f: p }); window.setTimeout(() => scrollInto(p), m.s !== si ? 80 : 0); };
+  const findNext = (o: FindOpts, back: boolean) => {
+    const list = findMatches(wb, ev, si, o);
+    if (!list.length) return tx(lang, "Aucun résultat.", "No results.");
+    const i = stepMatch(list, { s: si, c: active.c, r: active.r }, back);
+    goTo(list[i]!);
+    return tx(lang, `Résultat ${i + 1} sur ${list.length}`, `Result ${i + 1} of ${list.length}`);
+  };
+  const replaceOne = (o: FindOpts) => {
+    const cell = sheet.cells[addr(active.c, active.r)];
+    const next = cell ? replaceIn(cell.v, o) : null;
+    if (next !== null) editSheet((sh) => writeCell(sh, active.c, active.r, next));
+    return findNext(o, false);
+  };
+  const replaceAll = (o: FindOpts) => {
+    const list = findMatches(wb, ev, si, { ...o, formulas: true });
+    let n = 0;
+    commit((w) => ({ ...w, sheets: w.sheets.map((sh, i) => {
+      const mine = list.filter((m) => m.s === i); if (!mine.length) return sh;
+      const copy = structuredClone(sh);
+      for (const m of mine) { const k = addr(m.c, m.r); const cell = copy.cells[k]; const v = cell ? replaceIn(cell.v, o) : null; if (cell && v !== null) { copy.cells[k] = { ...cell, v }; n++; } }
+      return copy;
+    }) }));
+    return tx(lang, `${n} remplacement${n > 1 ? "s" : ""}.`, `${n} replacement${n === 1 ? "" : "s"}.`);
+  };
+  const removeDuplicates = () => {
+    const b = dataBlock();
+    if (b.r2 <= b.r1) return void toast.error(tx(lang, "Sélectionnez un tableau avec une ligne d'en-têtes.", "Select a table with a header row."));
+    const { keep, removed } = duplicateRows(ev, si, b);
+    if (!removed) return void toast.success(tx(lang, `Aucun doublon dans ${rangeText(b)}.`, `No duplicates in ${rangeText(b)}.`));
+    void confirmDialog({ title: tx(lang, "Supprimer les doublons ?", "Remove duplicates?"), description: tx(lang, `${removed} ligne${removed > 1 ? "s" : ""} identique${removed > 1 ? "s" : ""} à une ligne précédente dans ${rangeText(b)} (la première ligne est l'en-tête). ${keep.length} ligne${keep.length > 1 ? "s" : ""} unique${keep.length > 1 ? "s" : ""} restent. Ctrl+Z pour annuler.`, `${removed} row(s) identical to an earlier row in ${rangeText(b)} (first row = headers). ${keep.length} unique row(s) remain. Ctrl+Z to undo.`), confirmLabel: tx(lang, "Supprimer", "Remove"), tone: "danger" })
+      .then((ok) => { if (ok) { editSheet((sh) => applyDedupe(sh, b, keep)); toast.success(tx(lang, `${removed} doublon${removed > 1 ? "s" : ""} supprimé${removed > 1 ? "s" : ""}.`, `${removed} duplicate(s) removed.`)); } });
+  };
+  const editNote = async () => {
+    const k = addr(active.c, active.r); const cur = sheet.cells[k]?.n ?? "";
+    const t = await promptDialog({ title: tx(lang, `Note de la cellule ${k}`, `Note on cell ${k}`), description: tx(lang, "Une note s'affiche au survol de la cellule (triangle rouge) et part dans l'export Excel.", "A note shows when hovering the cell (red triangle) and goes into the Excel export."), input: { label: tx(lang, "Note", "Note"), defaultValue: cur }, confirmLabel: tx(lang, "Enregistrer", "Save") });
+    if (t === null) return;
+    editSheet((sh) => { const prev = sh.cells[k] ?? { v: "" }; const n = t.trim().slice(0, 1000); const { n: _old, ...rest } = prev; if (n) sh.cells[k] = { ...rest, n }; else if (rest.v === "" && !rest.s) delete sh.cells[k]; else sh.cells[k] = rest; });
+  };
+  const insertToday = () => { const d = new Date(); editSheet((sh) => writeCell(sh, active.c, active.r, `${String(d.getDate()).padStart(2, "0")}/${String(d.getMonth() + 1).padStart(2, "0")}/${d.getFullYear()}`)); };
+  const errors = useMemo(() => errorCells(sheet, ev, si), [sheet, ev, si]);
+  const nextError = () => {
+    if (!errors.length) return void toast.success(tx(lang, "Aucune erreur de formule dans cette feuille.", "No formula errors in this sheet."));
+    const i = stepMatch(errors.map((e) => ({ s: si, ...e })), { s: si, c: active.c, r: active.r }, false);
+    goTo({ s: si, ...errors[i]! });
+    const v = ev.value(si, errors[i]!.c, errors[i]!.r);
+    toast(tx(lang, `Erreur ${i + 1} sur ${errors.length} : ${addr(errors[i]!.c, errors[i]!.r)} affiche ${isErr(v) ? v.err : ""}`, `Error ${i + 1} of ${errors.length}: ${addr(errors[i]!.c, errors[i]!.r)} shows ${isErr(v) ? v.err : ""}`));
+  };
+  const showStats = () => {
+    const st = workbookStats(wb);
+    void confirmDialog({ title: tx(lang, "Statistiques du classeur", "Workbook statistics"), description: tx(lang, `${st.sheets} feuille(s) · ${st.cells} cellule(s) remplie(s) · ${st.formulas} formule(s) · ${st.notes} note(s) · ${st.charts} graphique(s) · ${st.pivots} tableau(x) croisé(s) dynamique(s)`, `${st.sheets} sheet(s) · ${st.cells} filled cell(s) · ${st.formulas} formula(s) · ${st.notes} note(s) · ${st.charts} chart(s) · ${st.pivots} pivot table(s)`), confirmLabel: "OK" });
+  };
+  const toggleFullscreen = () => { const el = rootRef.current; if (!el) return; if (document.fullscreenElement) void document.exitFullscreen(); else void el.requestFullscreen?.().catch(() => {}); };
+  const pasteFromClipboard = async () => { try { pasteText(await navigator.clipboard.readText()); } catch { toast(tx(lang, "Utilisez Ctrl+V pour coller.", "Use Ctrl+V to paste.")); } };
+  const fitAll = () => { const u = usedSize(sheet); for (let c = 0; c < Math.max(1, u.cols); c++) autoFit(c); };
+  const categories: { id: FnInfo["cat"]; fr: string; en: string }[] = [
+    { id: "math", fr: "Maths", en: "Math" }, { id: "stat", fr: "Statistiques", en: "Statistics" }, { id: "logic", fr: "Logique", en: "Logical" },
+    { id: "lookup", fr: "Recherche", en: "Lookup" }, { id: "text", fr: "Texte", en: "Text" }, { id: "date", fr: "Date et heure", en: "Date & time" }, { id: "info", fr: "Informations", en: "Information" },
+  ];
+  const fnList = (cat: FnInfo["cat"], close: () => void) => FUNCTIONS.filter((f) => f.cat === cat).map((f) => <MenuItem key={f.en} onClick={() => { close(); insertFunction(fnName(f, lang)); }} hint={lang === "fr" ? f.fr_ : f.en_}><span className="font-mono font-semibold">{fnName(f, lang)}</span></MenuItem>);
+  const sumMenu = (close: () => void) => ([["SOMME", "SUM", tx(lang, "Somme", "Sum")], ["MOYENNE", "AVERAGE", tx(lang, "Moyenne", "Average")], ["NB", "COUNT", tx(lang, "Nombre", "Count")], ["MAX", "MAX", "Max"], ["MIN", "MIN", "Min"]] as const)
+    .map(([fr, en, l]) => <MenuItem key={fr} icon={<Sigma className="size-4" />} onClick={() => { close(); autoSum(lang === "fr" ? fr : en); }} hint={`=${lang === "fr" ? fr : en}(…)`}>{l}</MenuItem>);
+  const TABS: [RibbonTab, string, string][] = [["file", "Fichier", "File"], ["home", "Accueil", "Home"], ["insert", "Insertion", "Insert"], ["layout", "Mise en page", "Page layout"], ["formulas", "Formules", "Formulas"], ["data", "Données", "Data"], ["review", "Révision", "Review"], ["view", "Affichage", "View"]];
+  const driveIcon = <svg viewBox="0 0 87.3 78" className="size-5"><path d="m6.6 66.85 3.85 6.65c.8 1.4 1.95 2.5 3.3 3.3l13.75-23.8H0c0 1.55.4 3.1 1.2 4.5z" fill="#0066da" /><path d="M43.65 25 29.9 1.2c-1.35.8-2.5 1.9-3.3 3.3L1.2 48.5A9 9 0 0 0 0 53h27.5z" fill="#00ac47" /><path d="M73.55 76.8c1.35-.8 2.5-1.9 3.3-3.3l1.6-2.75 7.65-13.25c.8-1.4 1.2-2.95 1.2-4.5H59.8l5.85 11.5z" fill="#ea4335" /><path d="M43.65 25 57.4 1.2C56.05.4 54.5 0 52.9 0H34.4c-1.6 0-3.15.45-4.5 1.2z" fill="#00832d" /><path d="M59.8 53H27.5L13.75 76.8c1.35.8 2.9 1.2 4.5 1.2h50.8c1.6 0 3.15-.45 4.5-1.2z" fill="#2684fc" /><path d="M73.4 26.5 60.7 4.5c-.8-1.4-1.95-2.5-3.3-3.3L43.65 25 59.8 53h27.45c0-1.55-.4-3.1-1.2-4.5z" fill="#ffba00" /></svg>;
+  const I = "size-5";
+
+  return <div ref={rootRef} className="flex h-full min-h-0 flex-col bg-[#f8f9fb] text-[13px] text-zinc-900 dark:bg-zinc-950 dark:text-zinc-100">
+    <style>{`.tb-btn{display:inline-flex;height:32px;min-width:32px;align-items:center;justify-content:center;border-radius:8px;color:inherit;transition:background .15s}.tb-btn:hover{background:rgba(0,0,0,.06)}.dark .tb-btn:hover{background:rgba(255,255,255,.08)}.tb-btn:disabled{opacity:.35}.tb-on{background:#dcebe4!important;color:#155e45}.tb-big{display:inline-flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;height:58px;min-width:58px;max-width:92px;padding:4px 7px;border-radius:10px;font-size:11px;line-height:1.15;text-align:center;color:inherit;transition:background .15s}.tb-big:hover{background:rgba(0,0,0,.06)}.dark .tb-big:hover{background:rgba(255,255,255,.08)}.ribbon-scroll{scrollbar-width:thin}.sheet-grid ::selection{background:transparent}`}</style>
     {/* Title + main actions */}
     <div className="flex items-center gap-1.5 border-b border-border bg-background px-2 py-2 sm:gap-2 sm:px-3">
       <span className="grid size-8 shrink-0 place-items-center rounded-lg bg-[#1f7a5a] text-white max-sm:hidden"><FileSpreadsheet className="size-4.5" /></span>
       <input aria-label={tx(lang, "Titre du classeur", "Workbook title")} value={wb.title} onChange={(e) => setWbRaw((w) => ({ ...w, title: e.target.value.slice(0, 80) }))}
         className="min-w-0 max-w-[340px] flex-1 rounded-lg max-sm:text-[13.5px] bg-transparent px-2 py-1 text-[15px] font-semibold outline-none hover:bg-secondary focus:bg-secondary" />
       <div className="ml-auto flex items-center gap-1.5">
-        <Menu label={tx(lang, "Ouvrir", "Open")} icon={<FileUp className="size-4" />}>{(close) => <>
-          <MenuItem icon={<FileSpreadsheet className="size-4" />} onClick={() => { close(); fileInput.current?.click(); }} hint=".xlsx · .csv">{tx(lang, "Fichier Excel ou CSV", "Excel or CSV file")}</MenuItem>
-          <MenuItem icon={<FileUp className="size-4" />} onClick={() => { close(); pdfInput.current?.click(); }} hint={tx(lang, "Tableaux lus par l'IA", "Tables read by AI")}>{tx(lang, "Tableaux d'un PDF", "Tables from a PDF")}</MenuItem>
-          <MenuItem icon={<svg viewBox="0 0 87.3 78" className="size-4"><path d="m6.6 66.85 3.85 6.65c.8 1.4 1.95 2.5 3.3 3.3l13.75-23.8H0c0 1.55.4 3.1 1.2 4.5z" fill="#0066da" /><path d="M43.65 25 29.9 1.2c-1.35.8-2.5 1.9-3.3 3.3L1.2 48.5A9 9 0 0 0 0 53h27.5z" fill="#00ac47" /><path d="M73.55 76.8c1.35-.8 2.5-1.9 3.3-3.3l1.6-2.75 7.65-13.25c.8-1.4 1.2-2.95 1.2-4.5H59.8l5.85 11.5z" fill="#ea4335" /><path d="M43.65 25 57.4 1.2C56.05.4 54.5 0 52.9 0H34.4c-1.6 0-3.15.45-4.5 1.2z" fill="#00832d" /><path d="M59.8 53H27.5L13.75 76.8c1.35.8 2.9 1.2 4.5 1.2h50.8c1.6 0 3.15-.45 4.5-1.2z" fill="#2684fc" /><path d="M73.4 26.5 60.7 4.5c-.8-1.4-1.95-2.5-3.3-3.3L43.65 25 59.8 53h27.45c0-1.55-.4-3.1-1.2-4.5z" fill="#ffba00" /></svg>} onClick={() => { close(); setDriveOpen(true); }} hint="Google Sheets · .xlsx">{tx(lang, "Depuis Google Drive", "From Google Drive")}</MenuItem>
-        </>}</Menu>
-        <Menu label={tx(lang, "Exporter", "Export")} icon={<Download className="size-4" />}>{(close) => <>
-          <MenuItem icon={<FileSpreadsheet className="size-4 text-[#1f7a5a]" />} onClick={() => { close(); void doExportXlsx(); }} hint={tx(lang, "Formules, formats, graphiques", "Formulas, formats, charts")}>Excel (.xlsx)</MenuItem>
-          <MenuItem icon={<Printer className="size-4" />} onClick={() => { close(); printWorkbook(wb, si); }} hint={tx(lang, "Feuille active", "Active sheet")}>{tx(lang, "PDF ou impression", "PDF or print")}</MenuItem>
-          <MenuItem icon={<Printer className="size-4" />} onClick={() => { close(); printWorkbook(wb); }} hint={tx(lang, "Toutes les feuilles", "All sheets")}>{tx(lang, "PDF du classeur entier", "PDF of the whole workbook")}</MenuItem>
-          <MenuItem icon={<Table2 className="size-4" />} onClick={() => { close(); exportCsv(wb, si); }} hint={tx(lang, "Feuille active, séparateur ;", "Active sheet, ; separator")}>CSV</MenuItem>
-          <MenuItem icon={<ExternalLink className="size-4" />} onClick={() => { close(); void toGoogleSheets(); }} hint={tx(lang, "Télécharge le .xlsx puis ouvre Sheets", "Downloads the .xlsx then opens Sheets")}>Google Sheets</MenuItem>
-          <MenuItem icon={<Share2 className="size-4" />} onClick={() => { close(); setPublishOpen(true); }} hint={tx(lang, "Lien, WhatsApp, Netlify, Vercel, GitHub", "Link, WhatsApp, Netlify, Vercel, GitHub")}>{tx(lang, "Publier en lecture seule", "Publish read-only")}</MenuItem>
-        </>}</Menu>
         <button type="button" onClick={quickSave} title="Ctrl+S" aria-label={tx(lang, "Enregistrer dans un projet", "Save to a project")} className="inline-flex h-8 shrink-0 items-center gap-1.5 rounded-full border border-border px-3 text-[12.5px] font-semibold hover:bg-secondary"><Save className="size-3.5" /><span className="max-md:hidden">{savedRef ? tx(lang, "Enregistrer", "Save") : tx(lang, "Enregistrer dans un projet", "Save to a project")}</span></button>
         <button type="button" onClick={() => setAssistant((a) => !a)} aria-pressed={assistant}
           className={cn("inline-flex h-8 shrink-0 items-center gap-1.5 rounded-full px-3 text-[12.5px] font-semibold transition", assistant ? "bg-[#1f7a5a] text-white" : "bg-gradient-to-r from-[#1f7a5a] to-[#2b9b74] text-white hover:brightness-110")}>
@@ -766,74 +854,204 @@ export function SheetEditor({ initial, lang, onClose, saved }: { initial: Workbo
       <input ref={pdfInput} type="file" accept="application/pdf,.pdf" hidden onChange={(e) => { const f = e.target.files?.[0]; e.target.value = ""; if (f) void importPdf(f); }} />
     </div>
 
-    {/* Ribbon */}
-    <div className="flex flex-wrap items-center gap-0.5 border-b border-border bg-background px-2 py-1">
-      <button type="button" className={btn} title="Ctrl+Z" aria-label={tx(lang, "Annuler", "Undo")} onClick={undo} disabled={!past.current.length}><Undo2 className="size-4" /></button>
-      <button type="button" className={btn} title="Ctrl+Y" aria-label={tx(lang, "Rétablir", "Redo")} onClick={redo} disabled={!future.current.length}><Redo2 className="size-4" /></button>
-      <span className="mx-1 h-5 w-px bg-border" />
-      <select aria-label={tx(lang, "Taille", "Size")} value={String(activeCell?.s?.size ?? 13)} onChange={(e) => setStyle({ size: Number(e.target.value) === 13 ? undefined : Number(e.target.value) })} className="h-8 rounded-lg border border-border bg-background px-1.5 text-[12px]">
-        {[10, 11, 12, 13, 14, 16, 18, 20, 24, 28, 32].map((n) => <option key={n} value={n}>{n}</option>)}
-      </select>
-      <button type="button" className={cn(btn, activeCell?.s?.b && on)} title="Ctrl+B" aria-label={tx(lang, "Gras", "Bold")} onClick={() => toggle("b")}><Bold className="size-4" /></button>
-      <button type="button" className={cn(btn, activeCell?.s?.i && on)} title="Ctrl+I" aria-label={tx(lang, "Italique", "Italic")} onClick={() => toggle("i")}><Italic className="size-4" /></button>
-      <button type="button" className={cn(btn, activeCell?.s?.u && on)} title="Ctrl+U" aria-label={tx(lang, "Souligné", "Underline")} onClick={() => toggle("u")}><Underline className="size-4" /></button>
-      <button type="button" className={cn(btn, activeCell?.s?.strike && on)} aria-label={tx(lang, "Barré", "Strikethrough")} title={tx(lang, "Barré", "Strikethrough")} onClick={() => toggle("strike")}><Strikethrough className="size-4" /></button>
-      <ColorMenu label={tx(lang, "Couleur du texte", "Text colour")} icon={<span className="text-[14px] font-bold leading-none">A</span>} value={activeCell?.s?.color} onPick={(c) => setStyle({ color: c })} allowNone />
-      <ColorMenu label={tx(lang, "Couleur de remplissage", "Fill colour")} icon={<PaintBucket className="size-4" />} value={activeCell?.s?.bg} onPick={(c) => setStyle({ bg: c })} allowNone />
-      <button type="button" className={cn(btn, activeCell?.s?.border && on)} aria-label={tx(lang, "Bordures", "Borders")} title={tx(lang, "Bordures", "Borders")} onClick={() => toggle("border")}><Square className="size-4" /></button>
-      <span className="mx-1 h-5 w-px bg-border" />
-      {([["left", AlignLeft, tx(lang, "Gauche", "Left")], ["center", AlignCenter, tx(lang, "Centrer", "Centre")], ["right", AlignRight, tx(lang, "Droite", "Right")]] as const).map(([a, Icon, l]) =>
-        <button key={a} type="button" className={cn(btn, activeCell?.s?.align === a && on)} aria-label={l} title={l} onClick={() => setStyle({ align: activeCell?.s?.align === a ? undefined : a })}><Icon className="size-4" /></button>)}
-      <button type="button" className={cn(btn, activeCell?.s?.wrap && on)} aria-label={tx(lang, "Renvoyer à la ligne", "Wrap text")} title={tx(lang, "Renvoyer à la ligne", "Wrap text")} onClick={() => toggle("wrap")}><WrapText className="size-4" /></button>
-      <span className="mx-1 h-5 w-px bg-border" />
-      <select aria-label={tx(lang, "Format des nombres", "Number format")} value={fmtValue} onChange={(e) => setStyle({ fmt: e.target.value === "general" ? undefined : e.target.value as NumFmt })} className="h-8 rounded-lg border border-border bg-background px-1.5 text-[12px]">
-        {FORMATS.map(([f, fr, en]) => <option key={f} value={f}>{lang === "fr" ? fr : en}</option>)}
-      </select>
-      <button type="button" className={btn} aria-label={tx(lang, "Moins de décimales", "Fewer decimals")} title={tx(lang, "Moins de décimales", "Fewer decimals")} onClick={() => setStyle({ dec: Math.max(0, (activeCell?.s?.dec ?? 2) - 1) })}><span className="text-[11px] font-semibold">,0</span></button>
-      <button type="button" className={btn} aria-label={tx(lang, "Plus de décimales", "More decimals")} title={tx(lang, "Plus de décimales", "More decimals")} onClick={() => setStyle({ dec: Math.min(6, (activeCell?.s?.dec ?? 0) + 1) })}><span className="text-[11px] font-semibold">,00</span></button>
-      <span className="mx-1 h-5 w-px bg-border" />
-      <button type="button" className={btn} aria-label={tx(lang, "Somme automatique", "AutoSum")} title={tx(lang, "Somme automatique", "AutoSum")} onClick={autoSum}><Sigma className="size-4" /></button>
-      <Menu label={tx(lang, "Fonctions", "Functions")} icon={<FunctionSquare className="size-4" />} wide>{(close) => FUNCTION_MENU.map((f) => <MenuItem key={f.name} onClick={() => { close(); insertFunction(f.name); }} hint={f.hint}>{lang === "fr" ? f.fr : f.en}</MenuItem>)}</Menu>
-      <Menu label={tx(lang, "Graphique", "Chart")} icon={<BarChart3 className="size-4" />}>{(close) => <>
-        <p className="px-2.5 pb-1 pt-1 text-[11px] text-muted-foreground">{tx(lang, "Sélectionnez les étiquettes et les nombres, puis :", "Select labels and numbers, then:")}</p>
-        <MenuItem icon={<BarChart3 className="size-4" />} onClick={() => { close(); addChart("bar"); }}>{tx(lang, "Histogramme", "Column chart")}</MenuItem>
-        <MenuItem icon={<LineIcon className="size-4" />} onClick={() => { close(); addChart("line"); }}>{tx(lang, "Courbes", "Line chart")}</MenuItem>
-        <MenuItem icon={<AreaIcon className="size-4" />} onClick={() => { close(); addChart("area"); }}>{tx(lang, "Aires", "Area chart")}</MenuItem>
-        <MenuItem icon={<PieIcon className="size-4" />} onClick={() => { close(); addChart("pie"); }}>{tx(lang, "Secteurs (camembert)", "Pie chart")}</MenuItem>
-      </>}</Menu>
-      <span className="mx-1 h-5 w-px bg-border" />
-      <button type="button" className={btn} aria-label={tx(lang, "Trier de A à Z", "Sort A to Z")} title={tx(lang, "Trier de A à Z (colonne active)", "Sort A to Z (active column)")} onClick={() => sort(true)}><ArrowDownAZ className="size-4" /></button>
-      <button type="button" className={btn} aria-label={tx(lang, "Trier de Z à A", "Sort Z to A")} title={tx(lang, "Trier de Z à A (colonne active)", "Sort Z to A (active column)")} onClick={() => sort(false)}><ArrowUpAZ className="size-4" /></button>
-      <Menu label={tx(lang, "Lignes et colonnes", "Rows & columns")} icon={<Rows3 className="size-4" />}>{(close) => <>
-        <MenuItem icon={<Plus className="size-4" />} onClick={() => { close(); insertRows(true); }}>{tx(lang, "Insérer une ligne au-dessus", "Insert row above")}</MenuItem>
-        <MenuItem icon={<Plus className="size-4" />} onClick={() => { close(); insertRows(false); }}>{tx(lang, "Insérer une ligne en dessous", "Insert row below")}</MenuItem>
-        <MenuItem icon={<Columns3 className="size-4" />} onClick={() => { close(); insertCols(true); }}>{tx(lang, "Insérer une colonne à gauche", "Insert column left")}</MenuItem>
-        <MenuItem icon={<Columns3 className="size-4" />} onClick={() => { close(); insertCols(false); }}>{tx(lang, "Insérer une colonne à droite", "Insert column right")}</MenuItem>
-        <MenuItem icon={<Minus className="size-4" />} onClick={() => { close(); deleteRows(); }}>{tx(lang, "Supprimer la ou les lignes", "Delete row(s)")}</MenuItem>
-        <MenuItem icon={<Minus className="size-4" />} onClick={() => { close(); deleteCols(); }}>{tx(lang, "Supprimer la ou les colonnes", "Delete column(s)")}</MenuItem>
-        <MenuItem icon={<Columns3 className="size-4" />} onClick={() => { close(); for (let c = rect.c1; c <= rect.c2; c++) autoFit(c); }}>{tx(lang, "Ajuster la largeur au contenu", "Fit column width")}</MenuItem>
-      </>}</Menu>
-      <Menu label={tx(lang, "Données", "Data")} icon={<Filter className="size-4" />}>{(close) => tier !== null && tier < 3 ? <div className="space-y-2 p-2 text-[12.5px]">
-        <p className="flex items-center gap-1.5 font-semibold"><Lock className="size-3.5" />{tx(lang, "Tableur avancé · forfait Pro", "Advanced spreadsheet · Pro plan")}</p>
-        <p className="text-muted-foreground">{tx(lang, "Filtres, mise en forme conditionnelle, listes déroulantes, fusion de cellules et tableaux croisés dynamiques sont inclus avec le forfait Pro et la formule Mensuel Pro.", "Filters, conditional formatting, dropdowns, merged cells and pivot tables come with the Pro pack and the Mensuel Pro plan.")}</p>
-        <a href="/dashboard/credits" onClick={close} className="inline-flex h-8 items-center rounded-full bg-foreground px-3.5 text-[12px] font-semibold text-background">{tx(lang, "Voir les offres", "See plans")}</a>
-      </div> : <>
-        <MenuItem icon={<Filter className="size-4" />} onClick={() => { close(); toggleFilter(); }} hint={tx(lang, "▾ dans les en-têtes", "▾ in the headers")}>{sheet.filter ? tx(lang, "Retirer le filtre", "Remove the filter") : tx(lang, "Filtrer le tableau", "Filter the table")}</MenuItem>
-        <MenuItem icon={<Paintbrush className="size-4" />} onClick={() => { close(); setDlg("cond"); }} hint={tx(lang, "Couleurs selon la valeur", "Colours by value")}>{tx(lang, "Mise en forme conditionnelle…", "Conditional formatting…")}</MenuItem>
-        <MenuItem icon={<ListChecks className="size-4" />} onClick={() => { close(); setDlg("list"); }} hint={tx(lang, "Choix dans une liste", "Pick from a list")}>{tx(lang, "Liste déroulante…", "Dropdown list…")}</MenuItem>
-        <MenuItem icon={<Merge className="size-4" />} onClick={() => { close(); toggleMerge(); }}>{tx(lang, "Fusionner / défusionner", "Merge / unmerge")}</MenuItem>
-        <MenuItem icon={<Table2 className="size-4" />} onClick={() => { close(); openPivot(false); }} hint={tx(lang, "Lignes, colonnes, valeurs", "Rows, columns, values")}>{tx(lang, "Tableau croisé dynamique…", "Pivot table…")}</MenuItem>
-        {((sheet.cond?.length ?? 0) > 0 || (sheet.lists?.length ?? 0) > 0) && <MenuItem icon={<Eraser className="size-4" />} onClick={() => { close(); editSheet((sh) => { sh.cond = []; sh.lists = []; }); }}>{tx(lang, "Effacer les règles et listes de la feuille", "Clear the sheet's rules and lists")}</MenuItem>}
-      </>}</Menu>
-      <button type="button" className={cn(btn, "w-auto gap-1.5 px-2 text-[12px] font-medium")} title={tx(lang, "Tableau croisé dynamique", "Pivot table")} onClick={() => openPivot(false)}><Table2 className="size-4" /><span className="hidden xl:inline">{tx(lang, "Tableau croisé", "Pivot table")}</span>{tier !== null && tier < 3 && <Lock className="size-3" />}</button>
-      <button type="button" className={cn(btn, sheet.grid && on)} aria-label={tx(lang, "Quadrillage", "Gridlines")} title={tx(lang, "Afficher le quadrillage", "Show gridlines")} onClick={() => editSheet((sh) => { sh.grid = !sh.grid; })}><Grid3x3 className="size-4" /></button>
-      <button type="button" className={cn(btn, sheet.freeze && on)} aria-label={tx(lang, "Figer la première ligne", "Freeze top row")} title={tx(lang, "Figer la première ligne", "Freeze top row")} onClick={() => editSheet((sh) => { sh.freeze = !sh.freeze; })}><Snowflake className="size-4" /></button>
-      <button type="button" className={btn} aria-label={tx(lang, "Effacer la mise en forme", "Clear formatting")} title={tx(lang, "Effacer la mise en forme", "Clear formatting")} onClick={clearFormats}><Eraser className="size-4" /></button>
-      {busy && <span className="ml-auto inline-flex items-center gap-2 pr-2 text-[12px] text-muted-foreground"><span className="size-3 animate-spin rounded-full border-2 border-[#1f7a5a] border-t-transparent" />{busy}</span>}
+    {/* Ribbon: Excel-like tabs (quick undo / redo on the left) */}
+    <div className="border-b border-border bg-background">
+      <div className="ribbon-scroll flex items-center gap-0.5 overflow-x-auto px-2 pt-1">
+        <button type="button" className={btn} title="Ctrl+Z" aria-label={tx(lang, "Annuler", "Undo")} onClick={undo} disabled={!past.current.length}><Undo2 className="size-4" /></button>
+        <button type="button" className={btn} title="Ctrl+Y" aria-label={tx(lang, "Rétablir", "Redo")} onClick={redo} disabled={!future.current.length}><Redo2 className="size-4" /></button>
+        <span className="mx-1 h-5 w-px shrink-0 bg-border" />
+        <div role="tablist" aria-label={tx(lang, "Onglets du ruban", "Ribbon tabs")} className="flex shrink-0 items-end gap-0.5">
+          {TABS.map(([id, fr, en]) => <button key={id} role="tab" type="button" aria-selected={tab === id} onClick={() => setTab(id)}
+            className={cn("relative h-8 shrink-0 rounded-t-lg px-3 text-[12.5px] font-medium transition", id === "file" ? "bg-[#1f7a5a] text-white hover:bg-[#196649]" : tab === id ? "text-[#1f7a5a]" : "text-muted-foreground hover:bg-secondary hover:text-foreground",
+              tab === id && id !== "file" && "after:absolute after:inset-x-2 after:bottom-0 after:h-[3px] after:rounded-full after:bg-[#1f7a5a]", tab === id && id === "file" && "ring-2 ring-[#1f7a5a]/30")}>{lang === "fr" ? fr : en}</button>)}
+        </div>
+        {busy && <span className="ml-auto inline-flex shrink-0 items-center gap-2 pr-2 text-[12px] text-muted-foreground"><span className="size-3 animate-spin rounded-full border-2 border-[#1f7a5a] border-t-transparent" />{busy}</span>}
+      </div>
+      <div className="ribbon-scroll flex items-stretch overflow-x-auto border-t border-border/70 px-1 py-0.5">
+        {tab === "file" && <>
+          <Group label={tx(lang, "Ouvrir", "Open")}>
+            <Big icon={<FileSpreadsheet className={I} />} label={tx(lang, "Excel ou CSV", "Excel or CSV")} onClick={() => fileInput.current?.click()} />
+            <Big icon={<FileUp className={I} />} label={tx(lang, "Tableaux d'un PDF", "Tables from PDF")} onClick={() => pdfInput.current?.click()} />
+            <Big icon={driveIcon} label="Google Drive" onClick={() => setDriveOpen(true)} />
+          </Group>
+          <Group label={tx(lang, "Nouveau", "New")}><Big icon={<Plus className={I} />} label={tx(lang, "Nouvelle feuille", "New sheet")} onClick={addSheetTab} /></Group>
+          <Group label={tx(lang, "Enregistrer", "Save")}><Big icon={<Save className={I} />} label={savedRef ? tx(lang, "Enregistrer", "Save") : tx(lang, "Dans un projet", "To a project")} onClick={quickSave} title="Ctrl+S" /></Group>
+          <Group label={tx(lang, "Exporter", "Export")}>
+            <Big icon={<FileSpreadsheet className={cn(I, "text-[#1f7a5a]")} />} label="Excel (.xlsx)" onClick={() => void doExportXlsx()} />
+            <Big icon={<Table2 className={I} />} label="CSV" onClick={() => exportCsv(wb, si)} />
+            <Big icon={<ExternalLink className={I} />} label="Google Sheets" onClick={() => void toGoogleSheets()} />
+          </Group>
+          <Group label={tx(lang, "Imprimer · PDF", "Print · PDF")}>
+            <Big icon={<Printer className={I} />} label={tx(lang, "Feuille active", "Active sheet")} onClick={() => printWorkbook(wb, si, orient)} />
+            <Big icon={<Printer className={I} />} label={tx(lang, "Tout le classeur", "Whole workbook")} onClick={() => printWorkbook(wb, undefined, orient)} />
+          </Group>
+          <Group label={tx(lang, "Partager", "Share")}><Big icon={<Share2 className={I} />} label={tx(lang, "Publier (lecture seule)", "Publish (read-only)")} onClick={() => setPublishOpen(true)} /></Group>
+        </>}
+
+        {tab === "home" && <>
+          <Group label={tx(lang, "Presse-papiers", "Clipboard")}>
+            <Big icon={<ClipboardPaste className={I} />} label={tx(lang, "Coller", "Paste")} onClick={() => void pasteFromClipboard()} title="Ctrl+V" />
+            <div className="flex flex-col gap-0.5">
+              <button type="button" className={cn(btn, "w-auto justify-start gap-1.5 px-2 text-[11.5px]")} onClick={() => copySel(true)} title="Ctrl+X"><Scissors className="size-3.5" />{tx(lang, "Couper", "Cut")}</button>
+              <button type="button" className={cn(btn, "w-auto justify-start gap-1.5 px-2 text-[11.5px]")} onClick={() => copySel(false)} title="Ctrl+C"><Copy className="size-3.5" />{tx(lang, "Copier", "Copy")}</button>
+            </div>
+          </Group>
+          <Group label={tx(lang, "Police", "Font")}>
+            <select aria-label={tx(lang, "Taille", "Size")} value={String(activeCell?.s?.size ?? 13)} onChange={(e) => setStyle({ size: Number(e.target.value) === 13 ? undefined : Number(e.target.value) })} className="h-8 rounded-lg border border-border bg-background px-1.5 text-[12px]">
+              {[10, 11, 12, 13, 14, 16, 18, 20, 24, 28, 32].map((n) => <option key={n} value={n}>{n}</option>)}
+            </select>
+            <button type="button" className={cn(btn, activeCell?.s?.b && on)} title="Ctrl+B" aria-label={tx(lang, "Gras", "Bold")} onClick={() => toggle("b")}><Bold className="size-4" /></button>
+            <button type="button" className={cn(btn, activeCell?.s?.i && on)} title="Ctrl+I" aria-label={tx(lang, "Italique", "Italic")} onClick={() => toggle("i")}><Italic className="size-4" /></button>
+            <button type="button" className={cn(btn, activeCell?.s?.u && on)} title="Ctrl+U" aria-label={tx(lang, "Souligné", "Underline")} onClick={() => toggle("u")}><Underline className="size-4" /></button>
+            <button type="button" className={cn(btn, activeCell?.s?.strike && on)} aria-label={tx(lang, "Barré", "Strikethrough")} title={tx(lang, "Barré", "Strikethrough")} onClick={() => toggle("strike")}><Strikethrough className="size-4" /></button>
+            <ColorMenu label={tx(lang, "Couleur du texte", "Text colour")} icon={<span className="text-[14px] font-bold leading-none">A</span>} value={activeCell?.s?.color} onPick={(c) => setStyle({ color: c })} allowNone />
+            <ColorMenu label={tx(lang, "Couleur de remplissage", "Fill colour")} icon={<PaintBucket className="size-4" />} value={activeCell?.s?.bg} onPick={(c) => setStyle({ bg: c })} allowNone />
+            <button type="button" className={cn(btn, activeCell?.s?.border && on)} aria-label={tx(lang, "Bordures", "Borders")} title={tx(lang, "Bordures", "Borders")} onClick={() => toggle("border")}><Square className="size-4" /></button>
+          </Group>
+          <Group label={tx(lang, "Alignement", "Alignment")}>
+            {([["left", AlignLeft, tx(lang, "Gauche", "Left")], ["center", AlignCenter, tx(lang, "Centrer", "Centre")], ["right", AlignRight, tx(lang, "Droite", "Right")]] as const).map(([a, Icon, l]) =>
+              <button key={a} type="button" className={cn(btn, activeCell?.s?.align === a && on)} aria-label={l} title={l} onClick={() => setStyle({ align: activeCell?.s?.align === a ? undefined : a })}><Icon className="size-4" /></button>)}
+            <button type="button" className={cn(btn, activeCell?.s?.wrap && on)} aria-label={tx(lang, "Renvoyer à la ligne", "Wrap text")} title={tx(lang, "Renvoyer à la ligne", "Wrap text")} onClick={() => toggle("wrap")}><WrapText className="size-4" /></button>
+            <Big icon={<Merge className={I} />} label={tx(lang, "Fusionner", "Merge")} lock={locked} onClick={pro(toggleMerge)} />
+          </Group>
+          <Group label={tx(lang, "Nombre", "Number")}>
+            <select aria-label={tx(lang, "Format des nombres", "Number format")} value={fmtValue} onChange={(e) => setStyle({ fmt: e.target.value === "general" ? undefined : e.target.value as NumFmt })} className="h-8 rounded-lg border border-border bg-background px-1.5 text-[12px]">
+              {FORMATS.map(([f, fr, en]) => <option key={f} value={f}>{lang === "fr" ? fr : en}</option>)}
+            </select>
+            <button type="button" className={btn} aria-label={tx(lang, "Moins de décimales", "Fewer decimals")} title={tx(lang, "Moins de décimales", "Fewer decimals")} onClick={() => setStyle({ dec: Math.max(0, (activeCell?.s?.dec ?? 2) - 1) })}><span className="text-[11px] font-semibold">,0</span></button>
+            <button type="button" className={btn} aria-label={tx(lang, "Plus de décimales", "More decimals")} title={tx(lang, "Plus de décimales", "More decimals")} onClick={() => setStyle({ dec: Math.min(6, (activeCell?.s?.dec ?? 0) + 1) })}><span className="text-[11px] font-semibold">,00</span></button>
+          </Group>
+          <Group label={tx(lang, "Styles", "Styles")}><Big icon={<Paintbrush className={I} />} label={tx(lang, "Mise en forme conditionnelle", "Conditional formatting")} lock={locked} onClick={pro(() => setDlg("cond"))} /></Group>
+          <Group label={tx(lang, "Cellules", "Cells")}>
+            <Menu big label={tx(lang, "Insérer", "Insert")} icon={<Plus className={I} />}>{(close) => <>
+              <MenuItem icon={<Plus className="size-4" />} onClick={() => { close(); insertRows(true); }}>{tx(lang, "Ligne au-dessus", "Row above")}</MenuItem>
+              <MenuItem icon={<Plus className="size-4" />} onClick={() => { close(); insertRows(false); }}>{tx(lang, "Ligne en dessous", "Row below")}</MenuItem>
+              <MenuItem icon={<Columns3 className="size-4" />} onClick={() => { close(); insertCols(true); }}>{tx(lang, "Colonne à gauche", "Column left")}</MenuItem>
+              <MenuItem icon={<Columns3 className="size-4" />} onClick={() => { close(); insertCols(false); }}>{tx(lang, "Colonne à droite", "Column right")}</MenuItem>
+              <MenuItem icon={<Plus className="size-4" />} onClick={() => { close(); addSheetTab(); }}>{tx(lang, "Nouvelle feuille", "New sheet")}</MenuItem>
+            </>}</Menu>
+            <Menu big label={tx(lang, "Supprimer", "Delete")} icon={<Minus className={I} />}>{(close) => <>
+              <MenuItem icon={<Minus className="size-4" />} onClick={() => { close(); deleteRows(); }}>{tx(lang, "Ligne(s)", "Row(s)")}</MenuItem>
+              <MenuItem icon={<Minus className="size-4" />} onClick={() => { close(); deleteCols(); }}>{tx(lang, "Colonne(s)", "Column(s)")}</MenuItem>
+            </>}</Menu>
+            <Menu big label="Format" icon={<Rows3 className={I} />}>{(close) => <>
+              <MenuItem icon={<Columns3 className="size-4" />} onClick={() => { close(); for (let c = rect.c1; c <= rect.c2; c++) autoFit(c); }}>{tx(lang, "Ajuster la largeur au contenu", "Fit column width")}</MenuItem>
+              <MenuItem icon={<Columns3 className="size-4" />} onClick={() => { close(); fitAll(); }}>{tx(lang, "Ajuster toutes les colonnes", "Fit every column")}</MenuItem>
+              <MenuItem icon={<Eraser className="size-4" />} onClick={() => { close(); clearFormats(); }}>{tx(lang, "Effacer la mise en forme", "Clear formatting")}</MenuItem>
+            </>}</Menu>
+          </Group>
+          <Group label={tx(lang, "Édition", "Editing")}>
+            <Menu big label={tx(lang, "Somme auto", "AutoSum")} icon={<Sigma className={I} />}>{sumMenu}</Menu>
+            <Menu big label={tx(lang, "Trier et filtrer", "Sort & filter")} icon={<ArrowDownAZ className={I} />}>{(close) => <>
+              <MenuItem icon={<ArrowDownAZ className="size-4" />} onClick={() => { close(); sort(true); }}>{tx(lang, "Trier de A à Z", "Sort A to Z")}</MenuItem>
+              <MenuItem icon={<ArrowUpAZ className="size-4" />} onClick={() => { close(); sort(false); }}>{tx(lang, "Trier de Z à A", "Sort Z to A")}</MenuItem>
+              <MenuItem icon={<Filter className="size-4" />} onClick={() => { close(); pro(toggleFilter)(); }} hint={locked ? tx(lang, "Forfait Pro", "Pro plan") : undefined}>{sheet.filter ? tx(lang, "Retirer le filtre", "Remove the filter") : tx(lang, "Filtrer", "Filter")}</MenuItem>
+            </>}</Menu>
+            <Big icon={<Search className={I} />} label={tx(lang, "Rechercher", "Find")} onClick={() => setFind("find")} title="Ctrl+F · Ctrl+H" />
+            <Menu big label={tx(lang, "Effacer", "Clear")} icon={<Eraser className={I} />}>{(close) => <>
+              <MenuItem icon={<Eraser className="size-4" />} onClick={() => { close(); clearContents(); }}>{tx(lang, "Le contenu", "Contents")}</MenuItem>
+              <MenuItem icon={<Eraser className="size-4" />} onClick={() => { close(); clearFormats(); }}>{tx(lang, "La mise en forme", "Formatting")}</MenuItem>
+              <MenuItem icon={<StickyNote className="size-4" />} onClick={() => { close(); clearNotes(); }}>{tx(lang, "Les notes", "Notes")}</MenuItem>
+              <MenuItem icon={<Trash2 className="size-4" />} onClick={() => { close(); clearContents(); clearFormats(); clearNotes(); }}>{tx(lang, "Tout", "All")}</MenuItem>
+            </>}</Menu>
+          </Group>
+        </>}
+
+        {tab === "insert" && <>
+          <Group label={tx(lang, "Tableaux", "Tables")}><Big icon={<Table2 className={I} />} label={tx(lang, "Tableau croisé dynamique", "Pivot table")} lock={locked} onClick={() => openPivot(false)} /></Group>
+          <Group label={tx(lang, "Graphiques (sélectionnez d'abord les données)", "Charts (select the data first)")}>
+            <Big icon={<BarChart3 className={I} />} label={tx(lang, "Histogramme", "Column")} onClick={() => addChart("bar")} />
+            <Big icon={<LineIcon className={I} />} label={tx(lang, "Courbes", "Line")} onClick={() => addChart("line")} />
+            <Big icon={<AreaIcon className={I} />} label={tx(lang, "Aires", "Area")} onClick={() => addChart("area")} />
+            <Big icon={<PieIcon className={I} />} label={tx(lang, "Secteurs", "Pie")} onClick={() => addChart("pie")} />
+          </Group>
+          <Group label={tx(lang, "Éléments", "Items")}>
+            <Big icon={<FunctionSquare className={I} />} label={tx(lang, "Fonction", "Function")} onClick={() => startEdit("=")} />
+            <Big icon={<StickyNote className={I} />} label={tx(lang, "Note", "Note")} onClick={() => void editNote()} />
+            <Big icon={<CalendarDays className={I} />} label={tx(lang, "Date du jour", "Today's date")} onClick={insertToday} />
+            <Big icon={<ListChecks className={I} />} label={tx(lang, "Liste déroulante", "Dropdown")} lock={locked} onClick={pro(() => setDlg("list"))} />
+          </Group>
+          <Group label={tx(lang, "Feuilles", "Sheets")}><Big icon={<Plus className={I} />} label={tx(lang, "Nouvelle feuille", "New sheet")} onClick={addSheetTab} /></Group>
+        </>}
+
+        {tab === "layout" && <>
+          <Group label={tx(lang, "Impression", "Printing")}>
+            <Menu big label={orient === "auto" ? tx(lang, "Orientation auto", "Auto orientation") : orient === "portrait" ? tx(lang, "Portrait", "Portrait") : tx(lang, "Paysage", "Landscape")} icon={<FileX2 className={cn(I, orient === "landscape" && "rotate-90")} />}>{(close) => <>
+              {([["auto", tx(lang, "Automatique (selon la largeur)", "Automatic (by width)")], ["portrait", tx(lang, "Portrait", "Portrait")], ["landscape", tx(lang, "Paysage", "Landscape")]] as const).map(([o, l]) => <MenuItem key={o} onClick={() => { close(); setOrient(o); }} hint={orient === o ? tx(lang, "Choisi", "Selected") : undefined}>{l}</MenuItem>)}
+            </>}</Menu>
+            <Big icon={<Printer className={I} />} label={tx(lang, "Imprimer la feuille", "Print sheet")} onClick={() => printWorkbook(wb, si, orient)} />
+            <Big icon={<Printer className={I} />} label={tx(lang, "Imprimer le classeur", "Print workbook")} onClick={() => printWorkbook(wb, undefined, orient)} />
+          </Group>
+          <Group label={tx(lang, "Feuille", "Sheet")}>
+            <Big icon={<Grid3x3 className={I} />} label={tx(lang, "Quadrillage", "Gridlines")} active={sheet.grid} onClick={() => editSheet((sh) => { sh.grid = !sh.grid; })} />
+            <Big icon={<Columns3 className={I} />} label={tx(lang, "Ajuster les colonnes", "Fit columns")} onClick={fitAll} />
+          </Group>
+        </>}
+
+        {tab === "formulas" && <>
+          <Group label={tx(lang, "Bibliothèque de fonctions", "Function library")}>
+            <Big icon={<FunctionSquare className={I} />} label={tx(lang, "Insérer une fonction", "Insert function")} onClick={() => startEdit("=")} title={tx(lang, "Tapez = dans une cellule : la liste des fonctions s'affiche", "Type = in a cell: the function list appears")} />
+            <Menu big label={tx(lang, "Somme auto", "AutoSum")} icon={<Sigma className={I} />}>{sumMenu}</Menu>
+            {categories.map((cat) => <Menu key={cat.id} big wide label={cat[lang]} icon={<FunctionSquare className={cn(I, "opacity-70")} />}>{(close) => fnList(cat.id, close)}</Menu>)}
+          </Group>
+          <Group label={tx(lang, "Vérification", "Auditing")}>
+            <Big icon={<Eye className={I} />} label={tx(lang, "Afficher les formules", "Show formulas")} active={showFormulas} onClick={() => setShowFormulas((v) => !v)} />
+            <Big icon={<AlertTriangle className={cn(I, errors.length ? "text-[#dc2626]" : "")} />} label={errors.length ? tx(lang, `Erreurs (${errors.length})`, `Errors (${errors.length})`) : tx(lang, "Vérifier les erreurs", "Check errors")} onClick={nextError} />
+          </Group>
+        </>}
+
+        {tab === "data" && <>
+          <Group label={tx(lang, "Récupérer des données", "Get data")}>
+            <Big icon={<FileSpreadsheet className={I} />} label={tx(lang, "Excel ou CSV", "Excel or CSV")} onClick={() => fileInput.current?.click()} />
+            <Big icon={<FileUp className={I} />} label={tx(lang, "PDF", "PDF")} onClick={() => pdfInput.current?.click()} />
+            <Big icon={driveIcon} label="Google Drive" onClick={() => setDriveOpen(true)} />
+          </Group>
+          <Group label={tx(lang, "Trier et filtrer", "Sort & filter")}>
+            <Big icon={<ArrowDownAZ className={I} />} label={tx(lang, "De A à Z", "A to Z")} onClick={() => sort(true)} />
+            <Big icon={<ArrowUpAZ className={I} />} label={tx(lang, "De Z à A", "Z to A")} onClick={() => sort(false)} />
+            <Big icon={<Filter className={I} />} label={sheet.filter ? tx(lang, "Retirer le filtre", "Remove filter") : tx(lang, "Filtrer", "Filter")} active={!!sheet.filter} lock={locked} onClick={pro(toggleFilter)} />
+          </Group>
+          <Group label={tx(lang, "Outils de données", "Data tools")}>
+            <Big icon={<Copy className={I} />} label={tx(lang, "Supprimer les doublons", "Remove duplicates")} onClick={removeDuplicates} />
+            <Big icon={<ListChecks className={I} />} label={tx(lang, "Liste déroulante", "Dropdown list")} lock={locked} onClick={pro(() => setDlg("list"))} />
+            <Big icon={<Paintbrush className={I} />} label={tx(lang, "Mise en forme conditionnelle", "Conditional formatting")} lock={locked} onClick={pro(() => setDlg("cond"))} />
+            {((sheet.cond?.length ?? 0) > 0 || (sheet.lists?.length ?? 0) > 0) && <Big icon={<Eraser className={I} />} label={tx(lang, "Effacer règles et listes", "Clear rules & lists")} onClick={() => editSheet((sh) => { sh.cond = []; sh.lists = []; })} />}
+          </Group>
+          <Group label={tx(lang, "Analyse", "Analysis")}>
+            <Big icon={<Table2 className={I} />} label={tx(lang, "Tableau croisé dynamique", "Pivot table")} lock={locked} onClick={() => openPivot(false)} />
+            <Big icon={<Sparkles className={I} />} label={tx(lang, "Assistant IA", "AI assistant")} active={assistant} onClick={() => setAssistant((a) => !a)} />
+          </Group>
+        </>}
+
+        {tab === "review" && <>
+          <Group label={tx(lang, "Recherche", "Search")}>
+            <Big icon={<Search className={I} />} label={tx(lang, "Rechercher", "Find")} onClick={() => setFind("find")} title="Ctrl+F" />
+            <Big icon={<RefreshCw className={I} />} label={tx(lang, "Remplacer", "Replace")} onClick={() => setFind("replace")} title="Ctrl+H" />
+          </Group>
+          <Group label={tx(lang, "Notes", "Notes")}>
+            <Big icon={<StickyNote className={I} />} label={activeCell?.n ? tx(lang, "Modifier la note", "Edit note") : tx(lang, "Nouvelle note", "New note")} onClick={() => void editNote()} />
+            <Big icon={<Trash2 className={I} />} label={tx(lang, "Supprimer les notes", "Delete notes")} onClick={clearNotes} title={tx(lang, "Notes des cellules sélectionnées", "Notes of the selected cells")} />
+          </Group>
+          <Group label={tx(lang, "Vérification", "Proofing")}>
+            <Big icon={<AlertTriangle className={cn(I, errors.length ? "text-[#dc2626]" : "")} />} label={errors.length ? tx(lang, `Erreurs (${errors.length})`, `Errors (${errors.length})`) : tx(lang, "Vérifier les erreurs", "Check errors")} onClick={nextError} />
+            <Big icon={<Info className={I} />} label={tx(lang, "Statistiques", "Statistics")} onClick={showStats} />
+          </Group>
+        </>}
+
+        {tab === "view" && <>
+          <Group label={tx(lang, "Afficher", "Show")}>
+            <Big icon={<Grid3x3 className={I} />} label={tx(lang, "Quadrillage", "Gridlines")} active={sheet.grid} onClick={() => editSheet((sh) => { sh.grid = !sh.grid; })} />
+            <Big icon={<PanelTop className={I} />} label={tx(lang, "Barre de formule", "Formula bar")} active={showBar} onClick={() => setShowBar((v) => !v)} />
+            <Big icon={<Eye className={I} />} label={tx(lang, "Formules", "Formulas")} active={showFormulas} onClick={() => setShowFormulas((v) => !v)} />
+          </Group>
+          <Group label={tx(lang, "Figer", "Freeze")}><Big icon={<Snowflake className={I} />} label={tx(lang, "Figer la 1re ligne", "Freeze top row")} active={sheet.freeze} onClick={() => editSheet((sh) => { sh.freeze = !sh.freeze; })} /></Group>
+          <Group label={tx(lang, "Fenêtre", "Window")}><Big icon={<Maximize2 className={I} />} label={tx(lang, "Plein écran", "Full screen")} onClick={toggleFullscreen} /></Group>
+        </>}
+      </div>
     </div>
 
     {/* Formula bar */}
-    <div className="relative flex items-center gap-2 border-b border-border bg-background px-2 py-1.5">
+    <div className={cn("relative flex items-center gap-2 border-b border-border bg-background px-2 py-1.5", !showBar && "hidden")}>
       <input aria-label={tx(lang, "Zone nom", "Name box")} defaultValue={rangeText(rect)} key={rangeText(rect)}
         onKeyDown={(e) => { if (e.key === "Enter") { const r = parseRange(e.currentTarget.value); if (r) { setSel({ a: { c: r.c1, r: r.r1 }, f: { c: r.c2, r: r.r2 } }); scrollInto({ c: r.c1, r: r.r1 }); gridFocus.current?.focus(); } } }}
         className="h-8 w-[92px] rounded-lg border border-border bg-background px-2 text-center font-mono text-[12px] outline-none focus:border-[#1f7a5a]" />
@@ -859,6 +1077,7 @@ export function SheetEditor({ initial, lang, onClose, saved }: { initial: Workbo
       </span>
     </div>}
     <div className="relative flex min-h-0 flex-1">
+      {find && <SheetFind lang={lang} replace={find === "replace"} onClose={() => { setFind(null); gridFocus.current?.focus(); }} onNext={findNext} onReplace={replaceOne} onReplaceAll={replaceAll} />}
       {/* Grid */}
       <div ref={gridFocus} tabIndex={0} onKeyDown={onKey} className="sheet-grid relative min-w-0 flex-1 outline-none" onContextMenu={(e) => { e.preventDefault(); const p = posFromPoint(e.clientX, e.clientY); if (p.c < rect.c1 || p.c > rect.c2 || p.r < rect.r1 || p.r > rect.r2) setSel({ a: p, f: p }); setCtx({ x: e.clientX, y: e.clientY }); }}>
         <div ref={scroller} className="absolute inset-0 overflow-auto bg-white dark:bg-zinc-900" onPointerDown={onGridDown} onPointerMove={onGridMove} onPointerUp={onGridUp}
