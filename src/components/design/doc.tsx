@@ -1,4 +1,5 @@
 import type { CSSProperties } from "react";
+import { ChartSvg, ShapeSvg, TableView, type ChartKind, type ShapeKind } from "./elements";
 import { createRoot } from "react-dom/client";
 import { flushSync } from "react-dom";
 
@@ -8,15 +9,21 @@ import { flushSync } from "react-dom";
 // reads this document.
 
 export type TextAlign = "left" | "center" | "right" | "justify";
-export type TextEl = {
+/** Shared by every element: rotation in degrees and a soft shadow (PowerPoint-like). */
+type Common = { rot?: number; shadow?: boolean };
+export type TextEl = Common & {
   id: string; type: "text"; x: number; y: number; w: number; h: number; text: string;
   font: string; size: number; bold: boolean; italic: boolean; underline: boolean; color: string; highlight: string;
   align: TextAlign; lineHeight: number; spacing: number; upper: boolean; list: "none" | "bullet" | "number";
 };
-export type ImageEl = { id: string; type: "image"; x: number; y: number; w: number; h: number; src: string; radius: number };
-export type ShapeEl = { id: string; type: "shape"; x: number; y: number; w: number; h: number; fill: string; radius: number; border: number; borderColor: string; opacity: number };
-export type DesignEl = TextEl | ImageEl | ShapeEl;
-export type DesignPageDoc = { id: string; bg: string; elements: DesignEl[] };
+export type ImageEl = Common & { id: string; type: "image"; x: number; y: number; w: number; h: number; src: string; radius: number };
+export type ShapeEl = Common & { id: string; type: "shape"; x: number; y: number; w: number; h: number; fill: string; radius: number; border: number; borderColor: string; opacity: number; kind?: ShapeKind };
+export type TableEl = Common & { id: string; type: "table"; x: number; y: number; w: number; h: number; rows: string[][]; header: boolean; fill: string; color: string; font: string; size: number; border: string };
+export type ChartEl = Common & { id: string; type: "chart"; x: number; y: number; w: number; h: number; kind: ChartKind; title: string; labels: string[]; values: number[]; color: string; ink: string; font: string };
+export type DesignEl = TextEl | ImageEl | ShapeEl | TableEl | ChartEl;
+export type Transition = "none" | "fade" | "slide" | "zoom";
+/** A page / slide; notes are the speaker notes (Diaporama, PowerPoint export), transition plays in the slide show. */
+export type DesignPageDoc = { id: string; bg: string; elements: DesignEl[]; notes?: string; transition?: Transition };
 export type DesignDoc = { w: number; h: number; pages: DesignPageDoc[] };
 
 export const uid = () => Math.random().toString(36).slice(2, 10);
@@ -111,6 +118,7 @@ export async function templateToDoc(render: (page: number) => React.ReactNode, p
 }
 
 export const textStyle = (t: TextEl): CSSProperties => ({
+  ...(t.shadow ? { textShadow: "0 2px 6px rgba(0,0,0,0.28)" } : {}),
   fontFamily: fontStack(t.font), fontSize: t.size, fontWeight: t.bold ? 700 : 400, fontStyle: t.italic ? "italic" : "normal",
   textDecoration: t.underline ? "underline" : "none", color: t.color, textAlign: t.align, lineHeight: t.lineHeight, letterSpacing: t.spacing,
   textTransform: t.upper ? "uppercase" : "none", whiteSpace: "pre-wrap", wordBreak: "break-word", margin: 0,
@@ -131,13 +139,17 @@ export function DocPage({ doc, page, selected, editing, onPointerDown, onDoubleC
   if (!p) return null;
   return <div data-doc-page style={{ position: "relative", width: doc.w, height: doc.h, background: p.bg, overflow: "hidden" }}>
     {p.elements.map((el) => {
-      const box: CSSProperties = { position: "absolute", left: el.x, top: el.y, width: el.w, ...(el.type === "text" ? { minHeight: el.h } : { height: el.h }) };
+      const box: CSSProperties = { position: "absolute", left: el.x, top: el.y, width: el.w, ...(el.type === "text" ? { minHeight: el.h } : { height: el.h }), ...(el.rot ? { transform: `rotate(${el.rot}deg)` } : {}) };
       const handlers = onPointerDown ? { onPointerDown: (e: React.PointerEvent) => onPointerDown(e, el), onDoubleClick: () => onDoubleClick?.(el) } : {};
       // In the editor, a finger drags the element instead of scrolling the page.
       const touch: CSSProperties = onPointerDown ? { touchAction: "none" } : {};
       const outline = { ...touch, ...(selected === el.id ? { outline: "2px solid #6d5bd0", outlineOffset: 2 } : {}) };
-      if (el.type === "shape") return <div key={el.id} {...handlers} style={{ ...box, ...outline, background: el.fill, borderRadius: el.radius, border: el.border ? `${el.border}px solid ${el.borderColor}` : undefined, opacity: el.opacity, boxSizing: "border-box" }} />;
-      if (el.type === "image") return <div key={el.id} {...handlers} style={{ ...box, ...outline, borderRadius: el.radius, overflow: "hidden", background: el.src ? undefined : "repeating-linear-gradient(45deg,#ececf1,#ececf1 10px,#f6f6f9 10px,#f6f6f9 20px)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+      const drop: CSSProperties = el.shadow ? { filter: "drop-shadow(0 8px 14px rgba(0,0,0,0.22))" } : {};
+      if (el.type === "shape" && el.kind && el.kind !== "rect" && el.kind !== "ellipse") return <div key={el.id} {...handlers} style={{ ...box, ...outline, ...drop }}><ShapeSvg kind={el.kind} fill={el.fill} border={el.border} borderColor={el.borderColor} opacity={el.opacity} /></div>;
+      if (el.type === "shape") return <div key={el.id} {...handlers} style={{ ...box, ...outline, ...drop, background: el.fill, borderRadius: el.kind === "ellipse" ? "50%" : el.radius, border: el.border ? `${el.border}px solid ${el.borderColor}` : undefined, opacity: el.opacity, boxSizing: "border-box" }} />;
+      if (el.type === "table") return <div key={el.id} {...handlers} style={{ ...box, ...outline, ...drop, overflow: "hidden" }}><TableView rows={el.rows} header={el.header} fill={el.fill} color={el.color} font={fontStack(el.font)} size={el.size} border={el.border} /></div>;
+      if (el.type === "chart") return <div key={el.id} {...handlers} style={{ ...box, ...outline, ...drop }}><ChartSvg kind={el.kind} labels={el.labels} values={el.values} color={el.color} ink={el.ink} font={fontStack(el.font)} w={el.w} h={el.h} title={el.title} /></div>;
+      if (el.type === "image") return <div key={el.id} {...handlers} style={{ ...box, ...outline, ...(el.shadow ? { boxShadow: "0 12px 28px -10px rgba(0,0,0,0.4)" } : {}), borderRadius: el.radius, overflow: "hidden", background: el.src ? undefined : "repeating-linear-gradient(45deg,#ececf1,#ececf1 10px,#f6f6f9 10px,#f6f6f9 20px)", display: "flex", alignItems: "center", justifyContent: "center" }}>
         {el.src ? <img src={el.src} alt="" draggable={false} style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} /> : <span style={{ fontFamily: "system-ui", fontSize: Math.max(12, Math.min(28, el.w / 10)), color: "#8b8b98" }}>Image</span>}
       </div>;
       if (editing === el.id && renderEditing) return <div key={el.id} style={box}>{renderEditing(el)}</div>;
@@ -160,6 +172,8 @@ export function resizeDoc(doc: DesignDoc, w: number, h: number): DesignDoc {
       const base = { ...e, id: uid(), w: Math.min(w, nw), h: Math.min(h, nh), x: Math.round(Math.max(0, Math.min(w - nw, cx - nw / 2))), y: Math.round(Math.max(0, Math.min(h - nh, cy - nh / 2))) };
       if (e.type === "text") return { ...base, size: Math.max(6, Math.round(e.size * k * 10) / 10), spacing: e.spacing * k } as DesignEl;
       if (e.type === "shape") return { ...base, radius: e.radius * k, border: e.border * k } as DesignEl;
+      if (e.type === "table") return { ...base, size: Math.max(6, Math.round(e.size * k * 10) / 10) } as DesignEl;
+      if (e.type === "chart") return base as DesignEl;
       return { ...base, radius: (e as ImageEl).radius * k } as DesignEl;
     }) })),
   };

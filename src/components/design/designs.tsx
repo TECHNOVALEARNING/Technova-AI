@@ -1,5 +1,7 @@
-import type { CSSProperties, ReactNode } from "react";
-import type { DesignField, DesignFormatId, FieldKind } from "@/lib/design-formats";
+import type { ReactNode } from "react";
+import type { DesignField, DesignFormatId } from "@/lib/design-formats";
+import { B, Bar, Eyebrow, H, Img, Page, f, font, lines, type Layout, type V } from "./design-kit";
+import { DECK_LAYOUTS } from "./deck-layouts";
 
 // Original TechNova design layouts, drawn in code with inline styles so the same markup renders on screen,
 // prints to PDF and fills the gallery thumbnails. Every template = one layout × one palette. The sample text
@@ -18,26 +20,6 @@ export const PALETTES: Record<string, Palette> = {
 };
 
 export { DESIGN_FONTS_HREF as FONTS_HREF } from "@/lib/design-fonts";
-
-type V = Record<string, string>;
-type Layout = { id: string; format: DesignFormatId; fr: string; en: string; pages: number; fields: DesignField[]; render: (v: V, p: Palette, page: number) => ReactNode };
-
-const f = (key: string, label: string, value: string, kind: FieldKind = "text", max = kind === "long" ? 600 : 120): DesignField => ({ key, label, kind, value, max });
-const font = (name: string) => `'${name}', system-ui, -apple-system, 'Segoe UI', Arial, sans-serif`;
-const lines = (t: string) => t.split(/\n+/).map((x) => x.trim()).filter(Boolean);
-
-/** A page at its design size; everything inside is positioned in design pixels. */
-function Page({ w, h, p, children, style }: { w: number; h: number; p: Palette; children: ReactNode; style?: CSSProperties }) {
-  return <div data-design-page style={{ width: w, height: h, position: "relative", overflow: "hidden", background: p.bg, color: p.ink, fontFamily: font(p.body), boxSizing: "border-box", ...style }}>{children}</div>;
-}
-const H = (p: Palette, size: number, extra: CSSProperties = {}): CSSProperties => ({ fontFamily: font(p.head), fontSize: size, lineHeight: 1.08, fontWeight: 700, letterSpacing: "-0.02em", margin: 0, ...extra });
-const B = (p: Palette, size: number, extra: CSSProperties = {}): CSSProperties => ({ fontFamily: font(p.body), fontSize: size, lineHeight: 1.55, margin: 0, color: p.muted, ...extra });
-const Eyebrow = ({ p, children, size = 14 }: { p: Palette; children: ReactNode; size?: number }) => <p style={{ fontFamily: font(p.body), fontSize: size, fontWeight: 600, letterSpacing: "0.16em", textTransform: "uppercase", color: p.accent, margin: 0 }}>{children}</p>;
-// data-design-image marks a picture slot: the editor turns it into an image element (empty = « Image » placeholder).
-const Img = ({ src, p, style, label = "Photo" }: { src: string; p: Palette; style: CSSProperties; label?: string }) => src
-  ? <div data-design-image={src} style={{ backgroundImage: `url("${src}")`, backgroundSize: "cover", backgroundPosition: "center", ...style }} />
-  : <div data-design-image="" style={{ background: p.soft, display: "flex", alignItems: "center", justifyContent: "center", color: p.muted, fontFamily: font(p.body), fontSize: 14, ...style }}>{label}</div>;
-const Bar = ({ p, w = 56, h = 4 }: { p: Palette; w?: number; h?: number }) => <div style={{ width: w, height: h, background: p.accent, borderRadius: h }} />;
 
 // ---------- Presentation (5 slides) ----------
 const presFieldsBase = [
@@ -489,6 +471,7 @@ const LAYOUTS: Layout[] = [
   { id: "pres-split", format: "presentation", fr: "Présentation à bandeau", en: "Banner deck", pages: 5, fields: presFields, render: presentation("split") },
   { id: "pres-photo", format: "presentation", fr: "Présentation avec photo", en: "Photo deck", pages: 5, fields: presPhotoFields, render: presentation("photo") },
   { id: "pres-editorial", format: "presentation", fr: "Présentation éditoriale", en: "Editorial deck", pages: 5, fields: presFields, render: presentation("editorial") },
+  ...DECK_LAYOUTS,
   { id: "doc-report", format: "document", fr: "Rapport", en: "Report", pages: 1, fields: reportFields, render: report },
   { id: "doc-letter", format: "document", fr: "Lettre professionnelle", en: "Business letter", pages: 1, fields: letterFields, render: letter },
   { id: "cv-sidebar", format: "cv", fr: "CV à colonne", en: "Sidebar résumé", pages: 1, fields: cvFields, render: cv("sidebar") },

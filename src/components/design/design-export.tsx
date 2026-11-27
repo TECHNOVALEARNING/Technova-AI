@@ -1,3 +1,4 @@
+import { shades } from "./elements";
 import { renderToStaticMarkup } from "react-dom/server";
 import { formatById, type DesignFormatId } from "@/lib/design-formats";
 import { DESIGN_FONTS_HREF } from "@/lib/design-fonts";
@@ -104,33 +105,55 @@ ${extras}
 const hex = (c: string) => (c.startsWith("#") ? c.slice(1).toUpperCase() : "FFFFFF");
 const inch = (n: number) => n / 96;
 
-/** Native PowerPoint file for any format: the document's text boxes, shapes and images, editable. */
+/** Native PowerPoint file for any format: the document's text boxes, shapes, images, tables and charts, editable,
+ *  with rotation, shadows and the speaker notes of every slide. */
 export async function downloadDocPptx(doc: DesignDoc, title: string) {
   const PptxGenJS = (await import("pptxgenjs")).default;
   const pptx = new PptxGenJS();
   pptx.defineLayout({ name: "TECHNOVA", width: inch(doc.w), height: inch(doc.h) });
   pptx.layout = "TECHNOVA";
   pptx.title = title;
+  // pptxgenjs changes the option objects it receives: a fresh shadow each time.
+  const shadow = () => ({ type: "outer" as const, blur: 6, offset: 3, angle: 90, color: "000000", opacity: 0.25 });
+  const kinds: Record<string, string> = { triangle: "triangle", diamond: "diamond", star: "star5", arrow: "rightArrow", chevron: "chevron", hexagon: "hexagon", bubble: "wedgeRoundRectCallout" };
   for (const page of doc.pages) {
     const s = pptx.addSlide();
     s.background = { color: hex(page.bg) };
+    if (page.notes?.trim()) s.addNotes(page.notes.trim());
     for (const el of page.elements) {
-      const pos = { x: inch(el.x), y: inch(el.y), w: inch(el.w), h: inch(el.h) };
+      const pos = { x: inch(el.x), y: inch(el.y), w: inch(el.w), h: inch(el.h), ...(el.rot ? { rotate: el.rot } : {}) };
       if (el.type === "shape") {
         if (el.fill === "transparent" && !el.border) continue;
-        s.addShape(el.radius > Math.min(el.w, el.h) / 2.2 ? pptx.ShapeType.ellipse : el.radius > 0 ? pptx.ShapeType.roundRect : pptx.ShapeType.rect, {
+        const special = el.kind && kinds[el.kind];
+        const type = special ? (pptx.ShapeType as unknown as Record<string, string>)[special]! : el.kind === "ellipse" || el.radius > Math.min(el.w, el.h) / 2.2 ? pptx.ShapeType.ellipse : el.radius > 0 ? pptx.ShapeType.roundRect : pptx.ShapeType.rect;
+        s.addShape(type as never, {
           ...pos, ...(el.fill !== "transparent" ? { fill: { color: hex(el.fill), transparency: Math.round((1 - el.opacity) * 100) } } : { fill: { type: "none" } as never }),
           line: el.border ? { color: hex(el.borderColor), width: el.border * 0.75 } : { type: "none" } as never,
-          ...(el.radius > 0 ? { rectRadius: Math.min(0.5, el.radius / Math.min(el.w, el.h)) } : {}),
+          ...(!special && el.kind !== "ellipse" && el.radius > 0 ? { rectRadius: Math.min(0.5, el.radius / Math.min(el.w, el.h)) } : {}),
+          ...(el.shadow ? { shadow: shadow() } : {}),
         });
       } else if (el.type === "image") {
-        if (el.src.startsWith("data:")) s.addImage({ ...pos, data: el.src, sizing: { type: "cover", w: pos.w, h: pos.h } });
+        if (el.src.startsWith("data:")) s.addImage({ ...pos, data: el.src, sizing: { type: "cover", w: pos.w, h: pos.h }, ...(el.shadow ? { shadow: shadow() } : {}) });
+      } else if (el.type === "table") {
+        const rows = el.rows.map((r, i) => r.map((c) => ({ text: c, options: el.header && i === 0 ? { bold: true, color: "FFFFFF", fill: { color: hex(el.fill) } } : {} })));
+        if (rows.length) s.addTable(rows, { x: pos.x, y: pos.y, w: pos.w, fontFace: el.font, fontSize: Math.max(6, el.size * 0.75), color: hex(el.color), border: { type: "solid", pt: 0.75, color: hex(el.border) }, valign: "middle", margin: 0.05 });
+      } else if (el.type === "chart") {
+        const n = Math.min(el.labels.length, el.values.length);
+        const data = [{ name: el.title || title, labels: el.labels.slice(0, n), values: el.values.slice(0, n) }];
+        const round = el.kind === "pie" || el.kind === "doughnut";
+        const type = el.kind === "line" ? pptx.ChartType.line : el.kind === "pie" ? pptx.ChartType.pie : el.kind === "doughnut" ? pptx.ChartType.doughnut : pptx.ChartType.bar;
+        s.addChart(type, data, {
+          ...pos, chartColors: round ? shades(el.color, n).map(hex) : [hex(el.color)], showValue: !round, showPercent: round, showLegend: round, legendPos: "r",
+          showTitle: !!el.title, ...(el.title ? { title: el.title, titleFontFace: el.font, titleColor: hex(el.ink) } : {}),
+          catAxisLabelColor: hex(el.ink), valAxisLabelColor: hex(el.ink), catAxisLabelFontFace: el.font, valAxisLabelFontFace: el.font, dataLabelColor: hex(el.ink),
+          valGridLine: { color: "E5E7EB", size: 0.5 }, catGridLine: { style: "none" }, ...(el.kind === "bar" ? { barDir: "col" } : {}),
+        });
       } else {
         s.addText(textLines(el).replace(/^(•|\d+\.)\s/gm, el.list === "none" ? "$&" : ""), {
           ...pos, fontFace: el.font, fontSize: Math.max(6, el.size * 0.75), bold: el.bold, italic: el.italic, ...(el.underline ? { underline: { style: "sng" as const } } : {}),
           color: hex(el.color), align: el.align, valign: "top", margin: 0, lineSpacingMultiple: el.lineHeight, charSpacing: el.spacing * 0.75,
           ...(el.highlight ? { highlight: hex(el.highlight) } : {}), ...(el.list === "bullet" ? { bullet: true } : el.list === "number" ? { bullet: { type: "number" } } : {}),
-          fit: "shrink",
+          ...(el.shadow ? { shadow: shadow() } : {}), fit: "shrink",
         });
       }
     }

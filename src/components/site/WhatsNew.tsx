@@ -7,7 +7,7 @@ type Item = { key: "design" | "sheet" | "music" | "video" | "humanize" | "audio"
 const copy: Record<SiteLang, { tag: string; title: string; sub: string; cta: string; items: Item[] }> = {
   fr: { tag: "Nouveautés", title: "Six outils prêts à l'emploi, dans le chat", sub: "Sous la zone de message, chaque bouton coloré ouvre un outil guidé : vous décrivez, TechNova crée.", cta: "Essayer",
     items: [
-      { key: "design", t: "Créativité", d: "Présentations, CV, affiches, invitations et cartes : 210 modèles à personnaliser, export PDF ou PowerPoint." },
+      { key: "design", t: "Créativité", d: "Présentations, CV, affiches, invitations et cartes : 266 modèles à personnaliser, export PDF ou PowerPoint." },
       { key: "sheet", t: "Tableur", d: "Un mini Excel dans le navigateur : formules, graphiques, 14 modèles et un assistant IA qui remplit vos tableaux." },
       { key: "music", t: "Création de musique", d: "Décrivez une ambiance ou collez vos paroles : TechNova écrit, compose et chante votre chanson." },
       { key: "video", t: "Création de vidéo", d: "Une scène, un style, une durée de 4 à 15 secondes : une vidéo prête à partager." },
@@ -16,7 +16,7 @@ const copy: Record<SiteLang, { tag: string; title: string; sub: string; cta: str
     ] },
   en: { tag: "What's new", title: "Six ready-to-use tools, right in the chat", sub: "Under the message box, every coloured button opens a guided tool: you describe, TechNova creates.", cta: "Try it",
     items: [
-      { key: "design", t: "Creativity", d: "Slides, CVs, posters, invitations and cards: 210 templates to customise, export to PDF or PowerPoint." },
+      { key: "design", t: "Creativity", d: "Slides, CVs, posters, invitations and cards: 266 templates to customise, export to PDF or PowerPoint." },
       { key: "sheet", t: "Spreadsheet", d: "A mini Excel in your browser: formulas, charts, 14 templates and an AI assistant that fills your tables." },
       { key: "music", t: "Music creation", d: "Describe a mood or paste your lyrics: TechNova writes, composes and sings your song." },
       { key: "video", t: "Video creation", d: "A scene, a style, 4 to 15 seconds: a video ready to share." },
@@ -25,7 +25,7 @@ const copy: Record<SiteLang, { tag: string; title: string; sub: string; cta: str
     ] },
   es: { tag: "Novedades", title: "Seis herramientas listas, en el chat", sub: "Bajo la zona de mensaje, cada botón de color abre una herramienta guiada: usted describe, TechNova crea.", cta: "Probar",
     items: [
-      { key: "design", t: "Creatividad", d: "Presentaciones, CV, carteles, invitaciones y tarjetas: 210 plantillas, exportación a PDF o PowerPoint." },
+      { key: "design", t: "Creatividad", d: "Presentaciones, CV, carteles, invitaciones y tarjetas: 266 plantillas, exportación a PDF o PowerPoint." },
       { key: "sheet", t: "Hoja de cálculo", d: "Un mini Excel en el navegador: fórmulas, gráficos, 14 plantillas y un asistente de IA." },
       { key: "music", t: "Creación de música", d: "Describa un ambiente o pegue su letra: TechNova escribe, compone y canta su canción." },
       { key: "video", t: "Creación de vídeo", d: "Una escena, un estilo, de 4 a 15 segundos: un vídeo listo para compartir." },
@@ -34,7 +34,7 @@ const copy: Record<SiteLang, { tag: string; title: string; sub: string; cta: str
     ] },
   pt: { tag: "Novidades", title: "Seis ferramentas prontas, no chat", sub: "Abaixo da caixa de mensagem, cada botão colorido abre uma ferramenta guiada: você descreve, a TechNova cria.", cta: "Experimentar",
     items: [
-      { key: "design", t: "Criatividade", d: "Apresentações, CVs, cartazes, convites e cartões: 210 modelos, exportação em PDF ou PowerPoint." },
+      { key: "design", t: "Criatividade", d: "Apresentações, CVs, cartazes, convites e cartões: 266 modelos, exportação em PDF ou PowerPoint." },
       { key: "sheet", t: "Planilha", d: "Um mini Excel no navegador: fórmulas, gráficos, 14 modelos e um assistente de IA." },
       { key: "music", t: "Criação de música", d: "Descreva um clima ou cole sua letra: a TechNova escreve, compõe e canta sua música." },
       { key: "video", t: "Criação de vídeo", d: "Uma cena, um estilo, de 4 a 15 segundos: um vídeo pronto para compartilhar." },

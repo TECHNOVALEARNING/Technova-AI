@@ -2,18 +2,28 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import {
   AlignCenter, AlignJustify, AlignLeft, AlignRight, ArrowDownToLine, ArrowUpToLine, Bold, CaseUpper, Circle, Copy, Heading1, Heading2, Highlighter,
   ImagePlus, Italic, LayoutTemplate, List, ListOrdered, Minus, Plus, Redo2, Smile, Square, Trash2, Type, Underline, Undo2, ChevronUp, ChevronDown, FilePlus2, Files, Pencil,
+  Play, RotateCw, Table2, BarChart3, Blend, StickyNote, AlignHorizontalJustifyStart, AlignHorizontalJustifyCenter, AlignHorizontalJustifyEnd,
+  AlignVerticalJustifyStart, AlignVerticalJustifyCenter, AlignVerticalJustifyEnd,
 } from "lucide-react";
+import { renderToStaticMarkup } from "react-dom/server";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { DESIGN_FONTS, EMOJI_GROUPS, FONT_GROUPS } from "@/lib/design-fonts";
-import { DocPage, fontStack, textStyle, uid, type DesignDoc, type DesignEl, type ImageEl, type ShapeEl, type TextEl } from "./doc";
+import { DocPage, fontStack, textStyle, uid, type ChartEl, type DesignDoc, type DesignEl, type ImageEl, type ShapeEl, type TableEl, type TextEl, type Transition } from "./doc";
+import { CHART_KINDS, SHAPE_KINDS, ShapeSvg, iconPng, type ChartKind, type ShapeKind } from "./elements";
+import { DESIGN_ICONS } from "./design-icons";
+import { ChartDialog, TableDialog } from "./ElementDialogs";
+import { SlideShow } from "./SlideShow";
 import { ProPanel, type BrandKit } from "./ProPanel";
 import type { DesignFormatId } from "@/lib/design-formats";
 
 // The free editor of TechNova Design (step « Mise en forme »): select, move and resize any element on the page
 // like Word text boxes or Canva; format text (font, size, bold, italic, underline, highlight, colour, alignment,
 // bullets, capitals, line spacing); add text, images (imported from the computer), shapes and emojis; add,
-// duplicate, reorder and delete pages; undo / redo. Keyboard: Delete, Ctrl+Z / Ctrl+Y, Ctrl+D, arrows.
+// duplicate, reorder and delete pages; undo / redo. PowerPoint-like tools: shapes of many kinds, tables, charts,
+// icons, rotation, shadows, borders, alignment on the page with snapping guides, copy / paste between slides, speaker
+// notes and transitions, and the « Diaporama » slide show. Keyboard: Delete, Ctrl+Z / Ctrl+Y, Ctrl+D, Ctrl+C / Ctrl+V,
+// arrows, F5 (slide show from the start), Maj+F5 (from this slide).
 
 type Lang = "fr" | "en";
 const tx = (lang: Lang, fr: string, en: string) => (lang === "fr" ? fr : en);
@@ -43,6 +53,10 @@ export function DesignEditor({ doc, onChange, lang, accent, ink, font, format = 
   const area = useRef<HTMLDivElement>(null);
   const [areaW, setAreaW] = useState(700); const [areaH, setAreaH] = useState(500);
   const fileInput = useRef<HTMLInputElement>(null); const replaceInput = useRef<HTMLInputElement>(null);
+  const [show, setShow] = useState<number | null>(null);
+  const [dialog, setDialog] = useState<null | "table" | "chart">(null);
+  const clip = useRef<DesignEl | null>(null);
+  const [guides, setGuides] = useState({ v: false, h: false });
   useEffect(() => {
     const el = area.current; if (!el) return;
     const ro = new ResizeObserver(() => { setAreaW(el.clientWidth); setAreaH(el.clientHeight); }); ro.observe(el);
@@ -70,7 +84,26 @@ export function DesignEditor({ doc, onChange, lang, accent, ink, font, format = 
     return { id: uid(), type: "text", x: Math.round(doc.w * 0.1), y: Math.round(doc.h * 0.4), w: Math.round(doc.w * 0.6), h: Math.round(size * 1.4), text: kind === "h1" ? tx(lang, "Votre titre", "Your title") : kind === "h2" ? tx(lang, "Sous-titre", "Subtitle") : kind === "list" ? tx(lang, "Premier point\nDeuxième point\nTroisième point", "First point\nSecond point\nThird point") : tx(lang, "Votre texte ici", "Your text here"),
       font, size: Math.max(12, size), bold: kind !== "body" && kind !== "list", italic: false, underline: false, color: ink, highlight: "", align: "left", lineHeight: kind === "h1" ? 1.1 : 1.45, spacing: 0, upper: false, list: kind === "list" ? "bullet" : "none" };
   };
-  const addShape = (kind: "rect" | "circle" | "line") => { const s = Math.round(Math.min(doc.w, doc.h) * 0.25); add({ id: uid(), type: "shape", x: Math.round(doc.w / 2 - s / 2), y: Math.round(doc.h / 2 - (kind === "line" ? 2 : s / 2)), w: kind === "line" ? s * 2 : s, h: kind === "line" ? 4 : s, fill: accent, radius: kind === "circle" ? s : kind === "line" ? 2 : 12, border: 0, borderColor: ink, opacity: 1 }); };
+  const addShape = (kind: ShapeKind | "line") => {
+    const s = Math.round(Math.min(doc.w, doc.h) * 0.25);
+    const w = kind === "line" ? s * 2 : kind === "arrow" || kind === "chevron" ? Math.round(s * 1.4) : s;
+    add({ id: uid(), type: "shape", x: Math.round(doc.w / 2 - w / 2), y: Math.round(doc.h / 2 - (kind === "line" ? 2 : s / 2)), w, h: kind === "line" ? 4 : s, fill: accent, radius: kind === "line" ? 2 : kind === "rect" ? 12 : 0, border: 0, borderColor: ink, opacity: 1, ...(kind === "line" || kind === "rect" ? {} : { kind }) });
+  };
+  const addTable = () => add({ id: uid(), type: "table", x: Math.round(doc.w * 0.1), y: Math.round(doc.h * 0.25), w: Math.round(doc.w * 0.8), h: Math.round(doc.h * 0.42), header: true, fill: accent, color: ink, font, size: Math.max(12, Math.round(doc.w / 64)), border: "#d4d4d8",
+    rows: lang === "fr" ? [["Offre", "Prix", "Délai"], ["Essentiel", "25 000 FCFA", "3 jours"], ["Standard", "60 000 FCFA", "1 semaine"], ["Premium", "120 000 FCFA", "2 semaines"]] : [["Offer", "Price", "Delay"], ["Essential", "25,000 FCFA", "3 days"], ["Standard", "60,000 FCFA", "1 week"], ["Premium", "120,000 FCFA", "2 weeks"]] });
+  const addChart = (kind: ChartKind) => add({ id: uid(), type: "chart", x: Math.round(doc.w * 0.15), y: Math.round(doc.h * 0.18), w: Math.round(doc.w * 0.7), h: Math.round(doc.h * 0.62), kind, title: tx(lang, "Ventes par trimestre", "Sales by quarter"),
+    labels: lang === "fr" ? ["T1", "T2", "T3", "T4"] : ["Q1", "Q2", "Q3", "Q4"], values: [120, 180, 150, 240], color: accent, ink, font });
+  async function addIcon(Icon: (typeof DESIGN_ICONS)[number]["Icon"]) {
+    try {
+      const src = await iconPng(renderToStaticMarkup(<Icon size={24} strokeWidth={2} />), accent);
+      const s = Math.round(Math.min(doc.w, doc.h) * 0.14);
+      add({ id: uid(), type: "image", x: Math.round((doc.w - s) / 2), y: Math.round((doc.h - s) / 2), w: s, h: s, src, radius: 0 });
+    } catch { toast.error(tx(lang, "Icône indisponible.", "Icon unavailable.")); }
+  }
+  /** Aligns the selection on the page, like PowerPoint's « Aligner ». */
+  const alignTo = (where: "left" | "center" | "right" | "top" | "middle" | "bottom") => { if (!el) return; patch(el.id, where === "left" ? { x: 0 } : where === "center" ? { x: Math.round((doc.w - el.w) / 2) } : where === "right" ? { x: doc.w - el.w } : where === "top" ? { y: 0 } : where === "middle" ? { y: Math.round((doc.h - el.h) / 2) } : { y: doc.h - el.h }); };
+  const paste = () => { const c = clip.current; if (!c) return; add({ ...(JSON.parse(JSON.stringify(c)) as DesignEl), id: uid(), x: c.x + 24, y: c.y + 24 }); clip.current = { ...c, x: c.x + 24, y: c.y + 24 }; };
+  const setTransition = (t: Transition, all: boolean) => mutate((d) => { d.pages.forEach((pg, i) => { if (all || i === page) pg.transition = t; }); });
   async function addImage(file: File | undefined, replace = false) {
     if (!file) return;
     if (!file.type.startsWith("image/")) { toast.error(tx(lang, "Choisissez une image (JPG, PNG, WebP).", "Choose an image (JPG, PNG, WebP).")); return; }
@@ -126,11 +159,17 @@ export function DesignEditor({ doc, onChange, lang, accent, ink, font, format = 
       if (!d.moved && Math.abs(dx) + Math.abs(dy) < 2) return;
       d.moved = true;
       const next = clone(d.base); const t = next.pages[page]?.elements.find((x) => x.id === d.id); if (!t) return;
-      if (d.mode === "move") { t.x = Math.round(d.x + dx); t.y = Math.round(d.y + dy); }
+      if (d.mode === "move") {
+        // Snaps to the page's centre lines and edges (PowerPoint's smart guides), shown while they hold.
+        let x = Math.round(d.x + dx), y = Math.round(d.y + dy); const snap = 7 / scale; let v = false, h = false;
+        if (Math.abs(x + t.w / 2 - next.w / 2) < snap) { x = Math.round(next.w / 2 - t.w / 2); v = true; } else if (Math.abs(x) < snap) x = 0; else if (Math.abs(x + t.w - next.w) < snap) x = next.w - t.w;
+        if (Math.abs(y + t.h / 2 - next.h / 2) < snap) { y = Math.round(next.h / 2 - t.h / 2); h = true; } else if (Math.abs(y) < snap) y = 0; else if (Math.abs(y + t.h - next.h) < snap) y = next.h - t.h;
+        t.x = x; t.y = y; setGuides((g) => (g.v === v && g.h === h ? g : { v, h }));
+      }
       else { t.w = Math.max(16, Math.round(d.w + dx)); t.h = Math.max(8, Math.round(d.h + dy)); }
       onChange(next);
     };
-    const up = () => { const d = drag.current; drag.current = null; if (d?.moved) { past.current = [...past.current.slice(-59), d.base]; future.current = []; } };
+    const up = () => { const d = drag.current; drag.current = null; setGuides({ v: false, h: false }); if (d?.moved) { past.current = [...past.current.slice(-59), d.base]; future.current = []; } };
     window.addEventListener("pointermove", move); window.addEventListener("pointerup", up);
     return () => { window.removeEventListener("pointermove", move); window.removeEventListener("pointerup", up); };
   }, [scale, page, onChange]);
@@ -143,7 +182,10 @@ export function DesignEditor({ doc, onChange, lang, accent, ink, font, format = 
       const mod = e.ctrlKey || e.metaKey;
       if (mod && e.key.toLowerCase() === "z") { e.preventDefault(); e.shiftKey ? redo() : undo(); return; }
       if (mod && e.key.toLowerCase() === "y") { e.preventDefault(); redo(); return; }
+      if (e.key === "F5") { e.preventDefault(); setShow(e.shiftKey ? page : 0); return; }
+      if (mod && e.key.toLowerCase() === "v" && clip.current) { e.preventDefault(); paste(); return; }
       if (!el) return;
+      if (mod && e.key.toLowerCase() === "c") { e.preventDefault(); clip.current = JSON.parse(JSON.stringify(el)) as DesignEl; toast.success(tx(lang, "Élément copié : Ctrl+V pour le coller, même sur une autre diapositive.", "Element copied: Ctrl+V to paste it, even on another slide.")); return; }
       if (mod && e.key.toLowerCase() === "d") { e.preventDefault(); duplicate(); return; }
       if (e.key === "Delete" || e.key === "Backspace") { e.preventDefault(); remove(); return; }
       const step = e.shiftKey ? 10 : 1;
@@ -177,11 +219,17 @@ export function DesignEditor({ doc, onChange, lang, accent, ink, font, format = 
           <input ref={fileInput} type="file" accept="image/*" className="sr-only" onChange={(e) => { void addImage(e.target.files?.[0]); e.target.value = ""; }} />
           <p className="text-[11px] text-muted-foreground">{tx(lang, "Photo, logo ou illustration depuis votre ordinateur ou votre téléphone. Pour remplir un cadre « Image », sélectionnez-le puis « Remplacer ».", "Photo, logo or illustration from your computer or phone. To fill an « Image » frame, select it then « Replace ».")}</p>
           <p className="pt-2 text-[11px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">{tx(lang, "Formes", "Shapes")}</p>
-          <div className="grid grid-cols-3 gap-2">
-            <button type="button" aria-label={tx(lang, "Rectangle", "Rectangle")} onClick={() => addShape("rect")} className="grid h-12 place-items-center rounded-xl border border-border hover:bg-secondary"><Square className="size-5" /></button>
-            <button type="button" aria-label={tx(lang, "Cercle", "Circle")} onClick={() => addShape("circle")} className="grid h-12 place-items-center rounded-xl border border-border hover:bg-secondary"><Circle className="size-5" /></button>
-            <button type="button" aria-label={tx(lang, "Ligne", "Line")} onClick={() => addShape("line")} className="grid h-12 place-items-center rounded-xl border border-border hover:bg-secondary"><Minus className="size-5" /></button>
+          <div className="grid grid-cols-5 gap-1.5">
+            <button type="button" aria-label={tx(lang, "Rectangle", "Rectangle")} title={tx(lang, "Rectangle", "Rectangle")} onClick={() => addShape("rect")} className="grid h-10 place-items-center rounded-lg border border-border hover:bg-secondary"><Square className="size-4" /></button>
+            <button type="button" aria-label={tx(lang, "Cercle", "Circle")} title={tx(lang, "Cercle", "Circle")} onClick={() => addShape("ellipse")} className="grid h-10 place-items-center rounded-lg border border-border hover:bg-secondary"><Circle className="size-4" /></button>
+            {SHAPE_KINDS.filter((k) => k.id !== "rect" && k.id !== "ellipse").map((k) => <button key={k.id} type="button" aria-label={k[lang]} title={k[lang]} onClick={() => addShape(k.id)} className="grid h-10 place-items-center rounded-lg border border-border p-2 hover:bg-secondary"><span className="size-5"><ShapeSvg kind={k.id} fill="currentColor" border={0} borderColor="none" opacity={0.85} /></span></button>)}
+            <button type="button" aria-label={tx(lang, "Ligne", "Line")} title={tx(lang, "Ligne", "Line")} onClick={() => addShape("line")} className="grid h-10 place-items-center rounded-lg border border-border hover:bg-secondary"><Minus className="size-4" /></button>
           </div>
+          <p className="pt-2 text-[11px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">{tx(lang, "Tableau et graphiques", "Table & charts")}</p>
+          <button type="button" onClick={addTable} className="flex w-full items-center gap-2 rounded-xl border border-border px-3 py-2.5 text-left text-[12.5px] hover:bg-secondary"><Table2 className="size-4" />{tx(lang, "Insérer un tableau", "Insert a table")}</button>
+          <div className="grid grid-cols-2 gap-1.5">{CHART_KINDS.map((k) => <button key={k.id} type="button" onClick={() => addChart(k.id)} className="flex items-center gap-1.5 rounded-xl border border-border px-2.5 py-2 text-left text-[12px] hover:bg-secondary"><BarChart3 className="size-3.5 shrink-0" />{k[lang]}</button>)}</div>
+          <p className="pt-2 text-[11px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">{tx(lang, "Icônes", "Icons")}</p>
+          <div className="grid grid-cols-6 gap-0.5">{DESIGN_ICONS.map(({ name, fr, Icon }) => <button key={name} type="button" title={lang === "fr" ? fr : name} aria-label={lang === "fr" ? fr : name} onClick={() => void addIcon(Icon)} className="grid size-8 place-items-center rounded-lg hover:bg-secondary" style={{ color: accent }}><Icon className="size-4" /></button>)}</div>
         </>}
         {panel === "emoji" && <>
           <p className="text-[11px] text-muted-foreground">{tx(lang, "Cliquez sur un emoji : il s'ajoute à la page, ou au texte sélectionné.", "Click an emoji: it is added to the page, or to the selected text.")}</p>
@@ -193,6 +241,18 @@ export function DesignEditor({ doc, onChange, lang, accent, ink, font, format = 
           onAddImage={(src, w, h) => add({ id: uid(), type: "image", x: Math.round((doc.w - w) / 2), y: Math.round((doc.h - h) / 2), w, h, src, radius: 0 })}
           onBrand={applyBrand} onDerive={(f) => onDerive?.(f)} />}
         {panel === "pages" && <>
+          <button type="button" onClick={() => setShow(0)} className="flex h-9 w-full items-center justify-center gap-1.5 rounded-xl bg-foreground text-[12.5px] font-semibold text-background"><Play className="size-3.5" />{tx(lang, "Diaporama (F5)", "Slide show (F5)")}</button>
+          <label className="block space-y-1 text-[11.5px] font-medium"><span className="flex items-center gap-1.5"><StickyNote className="size-3.5" />{tx(lang, `Notes du présentateur · page ${page + 1}`, `Speaker notes · page ${page + 1}`)}</span>
+            <textarea key={cur?.id} defaultValue={cur?.notes ?? ""} rows={3} placeholder={tx(lang, "Ce que vous direz pendant cette diapositive (visible dans le diaporama avec N, et dans PowerPoint)", "What you will say on this slide (shown in the slide show with N, and in PowerPoint)")}
+              onBlur={(e) => { const v = e.target.value; if (v !== (cur?.notes ?? "")) mutate((d) => { const pg = d.pages[page]; if (pg) pg.notes = v; }); }}
+              className="w-full resize-y rounded-lg border border-border bg-background px-2 py-1.5 text-[12px] font-normal outline-none focus:border-foreground/40" /></label>
+          <div className="flex items-center gap-1.5 text-[11.5px]">
+            <span className="shrink-0 font-medium">{tx(lang, "Transition", "Transition")}</span>
+            <select aria-label={tx(lang, "Transition", "Transition")} value={cur?.transition ?? "fade"} onChange={(e) => setTransition(e.target.value as Transition, false)} className="h-8 min-w-0 flex-1 rounded-lg border border-border bg-background px-1.5 text-[12px]">
+              {([["none", tx(lang, "Aucune", "None")], ["fade", tx(lang, "Fondu", "Fade")], ["slide", tx(lang, "Glissement", "Slide")], ["zoom", tx(lang, "Zoom", "Zoom")]] as const).map(([v, l]) => <option key={v} value={v}>{l}</option>)}
+            </select>
+            <button type="button" onClick={() => setTransition(cur?.transition ?? "fade", true)} className="h-8 shrink-0 rounded-lg border border-border px-2 text-[11px] hover:bg-secondary" title={tx(lang, "Appliquer à toutes les pages", "Apply to every page")}>{tx(lang, "Toutes", "All")}</button>
+          </div>
           <div className="grid grid-cols-2 gap-2">
             <button type="button" onClick={addPage} className="flex h-9 items-center justify-center gap-1 rounded-xl border border-border text-[12px] hover:bg-secondary"><FilePlus2 className="size-3.5" />{tx(lang, "Ajouter", "Add")}</button>
             <button type="button" onClick={dupPage} className="flex h-9 items-center justify-center gap-1 rounded-xl border border-border text-[12px] hover:bg-secondary"><Files className="size-3.5" />{tx(lang, "Dupliquer", "Duplicate")}</button>
@@ -217,6 +277,7 @@ export function DesignEditor({ doc, onChange, lang, accent, ink, font, format = 
       <div className="flex min-h-12 shrink-0 flex-nowrap items-center gap-1 overflow-x-auto border-b border-border bg-background px-2 py-1.5 [scrollbar-width:none] md:flex-wrap">
         <button type="button" className={btn} aria-label={tx(lang, "Annuler", "Undo")} title="Ctrl+Z" onClick={undo} disabled={!past.current.length}><Undo2 className="size-4" /></button>
         <button type="button" className={btn} aria-label={tx(lang, "Rétablir", "Redo")} title="Ctrl+Y" onClick={redo} disabled={!future.current.length}><Redo2 className="size-4" /></button>
+        <button type="button" className={cn(btn, "flex w-auto shrink-0 gap-1 px-2 text-[12px] font-semibold")} aria-label={tx(lang, "Diaporama", "Slide show")} title={tx(lang, "Diaporama depuis cette page (Maj+F5)", "Slide show from this page (Shift+F5)")} onClick={() => setShow(page)}><Play className="size-3.5" />{tx(lang, "Diaporama", "Slide show")}</button>
         <span className="mx-1 h-5 w-px bg-border" />
         {t && <>
           <button type="button" className={cn(btn, "w-auto gap-1 px-2 text-[12px] font-medium")} aria-label={tx(lang, "Écrire le texte", "Edit the text")} onClick={() => setEditing(t.id)}><Pencil className="size-3.5" />{tx(lang, "Écrire", "Edit")}</button>
@@ -239,6 +300,9 @@ export function DesignEditor({ doc, onChange, lang, accent, ink, font, format = 
           <select aria-label={tx(lang, "Interligne", "Line spacing")} value={String(t.lineHeight)} onChange={(e) => patch(t.id, { lineHeight: Number(e.target.value) })} className="h-8 rounded-lg border border-border bg-background px-1.5 text-[12px]">
             {[...new Set([1, 1.1, 1.25, 1.45, 1.6, 2, t.lineHeight])].sort((a, b) => a - b).map((v) => <option key={v} value={String(v)}>{tx(lang, "Interligne", "Spacing")} {v}</option>)}
           </select>
+          <select aria-label={tx(lang, "Espacement des lettres", "Letter spacing")} value={String(t.spacing)} onChange={(e) => patch(t.id, { spacing: Number(e.target.value) })} className="h-8 rounded-lg border border-border bg-background px-1.5 text-[12px]">
+            {[...new Set([-1, 0, 0.5, 1, 2, 4, 8, t.spacing])].sort((a, b) => a - b).map((v) => <option key={v} value={String(v)}>{tx(lang, "Lettres", "Letters")} {v}</option>)}
+          </select>
           <button type="button" className={btn} aria-label="Emoji" onClick={() => setPanel("emoji")}><Smile className="size-4" /></button>
         </>}
         {el?.type === "image" && <>
@@ -247,11 +311,37 @@ export function DesignEditor({ doc, onChange, lang, accent, ink, font, format = 
           <label className="flex items-center gap-1.5 px-2 text-[12px]">{tx(lang, "Arrondi", "Rounding")}<input type="range" min={0} max={Math.round(Math.min(el.w, el.h) / 2)} value={el.radius} onChange={(e) => patch(el.id, { radius: Number(e.target.value) })} /></label>
         </>}
         {el?.type === "shape" && <>
-          <label className={cn(btn, "relative w-auto cursor-pointer gap-1.5 px-2 text-[12px]")}><span className="size-4 rounded border border-border" style={{ background: el.fill }} />{tx(lang, "Couleur", "Colour")}<input type="color" value={el.fill.startsWith("#") ? el.fill : "#ffffff"} onChange={(e) => patch(el.id, { fill: e.target.value })} className="absolute inset-0 cursor-pointer opacity-0" /></label>
-          <label className="flex items-center gap-1.5 px-2 text-[12px]">{tx(lang, "Arrondi", "Rounding")}<input type="range" min={0} max={Math.round(Math.min(el.w, el.h) / 2)} value={el.radius} onChange={(e) => patch(el.id, { radius: Number(e.target.value) })} /></label>
+          <label className={cn(btn, "relative flex w-auto shrink-0 cursor-pointer gap-1.5 px-2 text-[12px]")}><span className="size-4 rounded border border-border" style={{ background: el.fill }} />{tx(lang, "Couleur", "Colour")}<input type="color" value={el.fill.startsWith("#") ? el.fill : "#ffffff"} onChange={(e) => patch(el.id, { fill: e.target.value })} className="absolute inset-0 cursor-pointer opacity-0" /></label>
+          {(!el.kind || el.kind === "rect") && <label className="flex items-center gap-1.5 px-2 text-[12px]">{tx(lang, "Arrondi", "Rounding")}<input type="range" min={0} max={Math.round(Math.min(el.w, el.h) / 2)} value={el.radius} onChange={(e) => patch(el.id, { radius: Number(e.target.value) })} /></label>}
           <label className="flex items-center gap-1.5 px-2 text-[12px]">{tx(lang, "Opacité", "Opacity")}<input type="range" min={10} max={100} value={Math.round(el.opacity * 100)} onChange={(e) => patch(el.id, { opacity: Number(e.target.value) / 100 })} /></label>
+          <select aria-label={tx(lang, "Forme", "Shape")} value={el.kind ?? (el.radius >= Math.min(el.w, el.h) / 2.2 ? "ellipse" : "rect")} onChange={(e) => patch(el.id, { kind: e.target.value })} className="h-8 rounded-lg border border-border bg-background px-1.5 text-[12px]">
+            {SHAPE_KINDS.map((k) => <option key={k.id} value={k.id}>{k[lang]}</option>)}
+          </select>
+          <select aria-label={tx(lang, "Contour", "Outline")} value={String(el.border)} onChange={(e) => patch(el.id, { border: Number(e.target.value) })} className="h-8 rounded-lg border border-border bg-background px-1.5 text-[12px]">
+            {[0, 1, 2, 4, 6, 10].map((v) => <option key={v} value={String(v)}>{v ? `${tx(lang, "Contour", "Outline")} ${v} px` : tx(lang, "Sans contour", "No outline")}</option>)}
+          </select>
+          {el.border > 0 && <label className={cn(btn, "relative cursor-pointer")} title={tx(lang, "Couleur du contour", "Outline colour")}><span className="size-4 rounded-full border-2" style={{ borderColor: el.borderColor }} /><input type="color" value={el.borderColor.startsWith("#") ? el.borderColor : "#000000"} onChange={(e) => patch(el.id, { borderColor: e.target.value })} className="absolute inset-0 cursor-pointer opacity-0" aria-label={tx(lang, "Couleur du contour", "Outline colour")} /></label>}
+        </>}
+        {el?.type === "table" && <>
+          <button type="button" onClick={() => setDialog("table")} className="inline-flex h-8 items-center gap-1.5 rounded-lg bg-foreground px-3 text-[12.5px] font-semibold text-background"><Table2 className="size-4" />{tx(lang, "Modifier le tableau", "Edit the table")}</button>
+          <button type="button" aria-pressed={el.header} className={cn(btn, "flex w-auto shrink-0 px-2 text-[12px]", el.header && on)} onClick={() => patch(el.id, { header: !el.header })}>{tx(lang, "En-tête", "Header")}</button>
+          <label className={cn(btn, "relative flex w-auto shrink-0 cursor-pointer gap-1.5 px-2 text-[12px]")}><span className="size-4 rounded border border-border" style={{ background: el.fill }} />{tx(lang, "Couleur", "Colour")}<input type="color" value={el.fill.startsWith("#") ? el.fill : "#2563eb"} onChange={(e) => patch(el.id, { fill: e.target.value })} className="absolute inset-0 cursor-pointer opacity-0" /></label>
+          <button type="button" className={btn} aria-label={tx(lang, "Texte plus petit", "Smaller text")} onClick={() => patch(el.id, { size: Math.max(8, el.size - 1) })}><Minus className="size-3.5" /></button>
+          <span className="w-7 text-center text-[12px] tabular-nums">{Math.round(el.size)}</span>
+          <button type="button" className={btn} aria-label={tx(lang, "Texte plus grand", "Bigger text")} onClick={() => patch(el.id, { size: Math.min(48, el.size + 1) })}><Plus className="size-3.5" /></button>
+        </>}
+        {el?.type === "chart" && <>
+          <button type="button" onClick={() => setDialog("chart")} className="inline-flex h-8 items-center gap-1.5 rounded-lg bg-foreground px-3 text-[12.5px] font-semibold text-background"><BarChart3 className="size-4" />{tx(lang, "Modifier les données", "Edit data")}</button>
+          <select aria-label={tx(lang, "Type de graphique", "Chart type")} value={el.kind} onChange={(e) => patch(el.id, { kind: e.target.value })} className="h-8 rounded-lg border border-border bg-background px-1.5 text-[12px]">{CHART_KINDS.map((k) => <option key={k.id} value={k.id}>{k[lang]}</option>)}</select>
+          <label className={cn(btn, "relative flex w-auto shrink-0 cursor-pointer gap-1.5 px-2 text-[12px]")}><span className="size-4 rounded border border-border" style={{ background: el.color }} />{tx(lang, "Couleur", "Colour")}<input type="color" value={el.color.startsWith("#") ? el.color : "#2563eb"} onChange={(e) => patch(el.id, { color: e.target.value })} className="absolute inset-0 cursor-pointer opacity-0" /></label>
         </>}
         {el && <>
+          <span className="mx-1 h-5 w-px bg-border" />
+          <label className="flex items-center gap-1 text-[12px]" title={tx(lang, "Rotation (degrés)", "Rotation (degrees)")}><RotateCw className="size-3.5" /><input aria-label={tx(lang, "Rotation", "Rotation")} type="number" min={-180} max={180} value={Math.round(el.rot ?? 0)} onChange={(e) => patch(el.id, { rot: Math.max(-180, Math.min(180, Number(e.target.value) || 0)) })} className="h-8 w-14 rounded-lg border border-border bg-background px-1 text-center text-[12px]" />°</label>
+          <button type="button" aria-pressed={!!el.shadow} className={cn(btn, el.shadow && on)} aria-label={tx(lang, "Ombre", "Shadow")} title={tx(lang, "Ombre", "Shadow")} onClick={() => patch(el.id, { shadow: !el.shadow })}><Blend className="size-4" /></button>
+          {([["left", AlignHorizontalJustifyStart, tx(lang, "Aligner à gauche de la page", "Align to page left")], ["center", AlignHorizontalJustifyCenter, tx(lang, "Centrer horizontalement", "Centre horizontally")], ["right", AlignHorizontalJustifyEnd, tx(lang, "Aligner à droite de la page", "Align to page right")],
+            ["top", AlignVerticalJustifyStart, tx(lang, "Aligner en haut", "Align to top")], ["middle", AlignVerticalJustifyCenter, tx(lang, "Centrer verticalement", "Centre vertically")], ["bottom", AlignVerticalJustifyEnd, tx(lang, "Aligner en bas", "Align to bottom")]] as const)
+            .map(([w, Icon, l]) => <button key={w} type="button" className={btn} aria-label={l} title={l} onClick={() => alignTo(w)}><Icon className="size-4" /></button>)}
           <span className="mx-1 h-5 w-px bg-border" />
           <button type="button" className={btn} aria-label={tx(lang, "Premier plan", "Bring to front")} title={tx(lang, "Premier plan", "Bring to front")} onClick={() => layer("front")}><ArrowUpToLine className="size-4" /></button>
           <button type="button" className={btn} aria-label={tx(lang, "Arrière-plan", "Send to back")} title={tx(lang, "Arrière-plan", "Send to back")} onClick={() => layer("back")}><ArrowDownToLine className="size-4" /></button>
@@ -259,7 +349,7 @@ export function DesignEditor({ doc, onChange, lang, accent, ink, font, format = 
           <button type="button" className={cn(btn, "text-destructive")} aria-label={tx(lang, "Supprimer", "Delete")} title={tx(lang, "Supprimer (Suppr)", "Delete (Del)")} onClick={remove}><Trash2 className="size-4" /></button>
         </>}
         {!el && <>
-          <label className={cn(btn, "relative w-auto cursor-pointer gap-1.5 px-2 text-[12px]")}><LayoutTemplate className="size-4" />{tx(lang, "Fond de page", "Page background")}<span className="size-4 rounded border border-border" style={{ background: cur?.bg }} /><input type="color" value={cur?.bg.startsWith("#") ? cur.bg : "#ffffff"} onChange={(e) => mutate((d) => { const p = d.pages[page]; if (p) p.bg = e.target.value; })} className="absolute inset-0 cursor-pointer opacity-0" /></label>
+          <label className={cn(btn, "relative flex w-auto shrink-0 cursor-pointer gap-1.5 px-2 text-[12px]")}><LayoutTemplate className="size-4" />{tx(lang, "Fond de page", "Page background")}<span className="size-4 rounded border border-border" style={{ background: cur?.bg }} /><input type="color" value={cur?.bg.startsWith("#") ? cur.bg : "#ffffff"} onChange={(e) => mutate((d) => { const p = d.pages[page]; if (p) p.bg = e.target.value; })} className="absolute inset-0 cursor-pointer opacity-0" /></label>
           <span className="text-[11.5px] text-muted-foreground max-md:hidden">{tx(lang, "Cliquez sur un élément pour le modifier, double-cliquez sur un texte pour l'écrire, glissez pour le déplacer, tirez le coin pour le redimensionner.", "Click an element to change it, double-click a text to type, drag to move, pull the corner to resize.")}</span>
         </>}
       </div>
@@ -268,17 +358,22 @@ export function DesignEditor({ doc, onChange, lang, accent, ink, font, format = 
           <div style={{ width: doc.w, height: doc.h, transform: `scale(${scale})`, transformOrigin: "top left" }}>
             <DocPage doc={doc} page={page} selected={sel} editing={editing}
               onPointerDown={(e, x) => startDrag(e, x, "move")}
-              onDoubleClick={(x) => { if (x.type === "text") { setSel(x.id); setEditing(x.id); } else if (x.type === "image") { setSel(x.id); replaceInput.current?.click(); } }}
+              onDoubleClick={(x) => { if (x.type === "text") { setSel(x.id); setEditing(x.id); } else if (x.type === "image") { setSel(x.id); replaceInput.current?.click(); } else if (x.type === "table" || x.type === "chart") { setSel(x.id); setDialog(x.type); } }}
               renderEditing={(x) => <textarea autoFocus defaultValue={x.text} onPointerDown={(e) => e.stopPropagation()}
                 onBlur={(e) => { const v = e.target.value; setEditing(null); if (v !== x.text) patch(x.id, { text: v }); }}
                 onKeyDown={(e) => { if (e.key === "Escape") (e.target as HTMLTextAreaElement).blur(); }}
                 style={{ ...textStyle(x), width: "100%", minHeight: x.h, height: "auto", background: "rgba(109,91,208,0.06)", border: "none", outline: "2px solid #6d5bd0", resize: "none", padding: 0, overflow: "hidden", fieldSizing: "content" } as React.CSSProperties} />} />
           </div>
+          {guides.v && <div aria-hidden className="pointer-events-none absolute inset-y-0 w-px bg-[#e11d48]" style={{ left: (doc.w / 2) * scale }} />}
+          {guides.h && <div aria-hidden className="pointer-events-none absolute inset-x-0 h-px bg-[#e11d48]" style={{ top: (doc.h / 2) * scale }} />}
           {el && editing !== el.id && <div aria-hidden onPointerDown={(e) => startDrag(e, el, "resize")} title={tx(lang, "Redimensionner", "Resize")}
             style={{ position: "absolute", left: (el.x + el.w) * scale - 7, top: (el.y + el.h) * scale - 7, width: 14, height: 14, borderRadius: 4, background: "#fff", border: "2px solid #6d5bd0", cursor: "nwse-resize", touchAction: "none" }} />}
         </div>
         <span className="pointer-events-none absolute bottom-2 right-3 text-[11px] text-muted-foreground">{tx(lang, "Page", "Page")} {page + 1} / {doc.pages.length} · {Math.round(scale * 100)} %</span>
       </div>
     </div>
+    {el?.type === "table" && <TableDialog open={dialog === "table"} lang={lang} rows={(el as TableEl).rows} onClose={() => setDialog(null)} onSave={(rows) => patch(el.id, { rows })} />}
+    {el?.type === "chart" && <ChartDialog open={dialog === "chart"} lang={lang} kind={(el as ChartEl).kind} title={(el as ChartEl).title} labels={(el as ChartEl).labels} values={(el as ChartEl).values} onClose={() => setDialog(null)} onSave={(v) => patch(el.id, v)} />}
+    {show !== null && <SlideShow doc={doc} start={show} lang={lang} onClose={() => setShow(null)} />}
   </div>;
 }
