@@ -442,9 +442,10 @@ function ChatComposer({
     if (!raw) return;
     try {
       const draft = JSON.parse(raw) as { mode?: string; text?: string };
-      if (draft.mode === "create") choice.chooseMode("create");
+      // The workspace restores its saved mode in an effect that runs after this one: choose Créer again just after.
+      if (draft.mode === "create") { choice.chooseMode("create"); window.setTimeout(() => choice.chooseMode("create"), 0); }
       const el = textareaRef.current;
-      if (el && typeof draft.text === "string") { setTextareaValue(el, draft.text); el.focus(); el.setSelectionRange(0, 0); }
+      if (el && typeof draft.text === "string") { setTextareaValue(el, draft.text); el.focus(); el.setSelectionRange(draft.text.length, draft.text.length); }
     } catch { /* malformed draft: ignore */ }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -982,6 +983,8 @@ export function ThreadPage({ threadId }: { threadId: string }) {
         const lastBuild = [...(rows ?? [])].reverse().flatMap((r) => (Array.isArray(r.parts) ? (r.parts as Array<{ type?: string; data?: StudioData }>) : []))
           .find((p) => p.type === "data-studio" && p.data?.kind === "build")?.data;
         if (lastBuild?.kind === "build") setArtifact(lastBuild.build);
+        // A conversation opened from Templates starts with the template alone: show it right away.
+        if (lastBuild?.kind === "build" && (rows ?? []).length === 1) setShowArtifact(true);
         const runningId = (rows ?? []).find((r) => (Array.isArray(r.parts) ? (r.parts as Array<{ type?: string; data?: StudioData }>) : []).some((p) => p.type === "data-studio" && p.data?.kind === "build" && p.data.jobStatus === "running" && !p.data.build.done))?.sdk_id;
         if (runningId) {
           setShowArtifact(true);

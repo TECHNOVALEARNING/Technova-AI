@@ -35,6 +35,7 @@ const T = {
     publicNeedsRights: "Une ressource publique doit autoriser la redistribution.", save: "Enregistrer", cancel: "Annuler", saved: "Ressource enregistrée", error: "Action impossible. Réessayez.",
     delConfirm: "Supprimer cette ressource ?", remixOf: "Remix d'une ressource",
     open: "Ouvrir", preview: "Aperçu", code: "Code", desktop: "Ordinateur", mobile: "Mobile", copy: "Copier", copiedCode: "Code copié", usePrompt: "Utiliser dans le chat",
+    adapt: "Adapte ce modèle à mon activité (nom, ce que je vends, à qui, couleurs souhaitées) : ", loaded: "Modèle chargé depuis les Templates", useError: "Impossible d'ouvrir ce modèle dans le Studio. Réessayez.", noContent: "Ce modèle n'est pas disponible avec votre forfait.", codeOf: "Code de la ressource, à réutiliser et adapter :",
     brief: (title: string, desc: string, cat: string) => `Crée un site pour mon activité en t'inspirant de la ressource « ${title} » (${cat}) des Templates TechNova : ${desc}\nReprends son niveau de finition, sa structure, sa typographie et sa palette, adaptés à mon activité.\nMon activité : `,
   },
   en: {
@@ -51,6 +52,7 @@ const T = {
     publicNeedsRights: "A public resource must allow redistribution.", save: "Save", cancel: "Cancel", saved: "Resource saved", error: "Action failed. Try again.",
     delConfirm: "Delete this resource?", remixOf: "Remix of a resource",
     open: "Open", preview: "Preview", code: "Code", desktop: "Desktop", mobile: "Mobile", copy: "Copy", copiedCode: "Code copied", usePrompt: "Use in chat",
+    adapt: "Adapt this template to my business (name, what I sell, to whom, preferred colours): ", loaded: "Template loaded from Templates", useError: "Could not open this template in the Studio. Try again.", noContent: "This template is not available with your plan.", codeOf: "Code of the resource, to reuse and adapt:",
     brief: (title: string, desc: string, cat: string) => `Build a website for my business inspired by the "${title}" resource (${cat}) from the TechNova Templates: ${desc}\nKeep its level of polish, structure, typography and palette, adapted to my business.\nMy business: `,
   },
 };
@@ -93,7 +95,7 @@ function TextThumb({ item }: { item: Item }) {
 }
 
 export function RegistryPage() {
-  const { lang } = useDashboard(); const c = T[lang]; const navigate = useNavigate();
+  const { lang, reload } = useDashboard(); const c = T[lang]; const navigate = useNavigate();
   const [items, setItems] = useState<Item[]>([]); const [favs, setFavs] = useState<Set<string>>(new Set());
   const [uid, setUid] = useState(""); const [q, setQ] = useState(""); const [tab, setTab] = useState<string>("all");
   const [open, setOpen] = useState<Item | null>(null); const [creating, setCreating] = useState(false);
@@ -159,11 +161,27 @@ export function RegistryPage() {
     if (error || !data) { toast.error(c.noRemix); return; }
     toast.success(c.remixed); setOpen(null); setTab("mine"); await load();
   }
-  /** Prompts go to the composer as they are; designs become a brief that names the reference. */
-  function useInStudio(i: Item) {
-    const text = i.category === "prompt" || i.category === "workflow" ? i.content.slice(0, 8000)
-      : c.brief(i.title, i.description, c.cats[i.category as keyof typeof c.cats]);
-    try { sessionStorage.setItem(DESIGN_DRAFT_KEY, JSON.stringify({ mode: i.category === "prompt" || i.category === "workflow" ? "chat" : "create", text })); } catch { /* storage blocked */ }
+  /** Prompts go to the chat as they are. An HTML template opens a new conversation that already holds it as a
+      finished Studio project: the next Créer message is a change to that project, so the Studio adapts the
+      template's real code (edit flow, base files). Other code is sent with the brief. */
+  async function useInStudio(i: Item) {
+    const draft = (mode: "chat" | "create", text: string) => { try { sessionStorage.setItem(DESIGN_DRAFT_KEY, JSON.stringify({ mode, text })); } catch { /* storage blocked */ } };
+    if (i.category === "prompt" || i.category === "workflow") { draft("chat", i.content.slice(0, 8000)); void navigate({ to: "/dashboard/chat" }); return; }
+    if (!i.content.trim()) { toast.error(c.noContent); return; }
+    if (isPage(i)) {
+      const { data: thread, error } = await supabase.from("chat_threads").insert({ title: `${c.cats[i.category as keyof typeof c.cats]} · ${i.title}`.slice(0, 65) }).select("id").single();
+      if (error || !thread) { toast.error(c.useError); return; }
+      const project = { kind: "build", request: `${c.loaded} : « ${i.title} » — ${i.description}`.slice(0, 2000),
+        build: { steps: [{ title: c.loaded, detail: `${i.title} · ${i.author}`, done: true }], files: [{ path: "index.html", content: i.content, done: true }], sql: "", done: true }, jobStatus: "done" };
+      const { error: msgError } = await supabase.from("chat_messages").insert({ thread_id: thread.id, sdk_id: crypto.randomUUID(), role: "assistant", parts: [{ type: "data-studio", data: project }] as never });
+      if (msgError) { await supabase.from("chat_threads").delete().eq("id", thread.id); toast.error(c.useError); return; }
+      draft("create", c.adapt);
+      await reload();
+      setOpen(null);
+      void navigate({ to: "/dashboard/chat/$threadId", params: { threadId: thread.id } });
+      return;
+    }
+    draft("create", `${c.brief(i.title, i.description, c.cats[i.category as keyof typeof c.cats])}\n\n${c.codeOf}\n\`\`\`${i.file_ext}\n${i.content.slice(0, 12000)}\n\`\`\``);
     void navigate({ to: "/dashboard/chat" });
   }
   async function remove(i: Item) {
@@ -211,7 +229,7 @@ export function RegistryPage() {
       </div>
     </article>)}</div>}
 
-    {open && <Modal label={open.title} onClose={() => setOpen(null)} className="max-w-6xl p-0 sm:p-0"><Detail item={open} c={c} uid={uid} onUse={() => useInStudio(open)} onDownload={() => void download(open)} onRemix={() => void remix(open)} onShare={() => share(open)} onRemove={() => void remove(open)} /></Modal>}
+    {open && <Modal label={open.title} onClose={() => setOpen(null)} className="max-w-6xl p-0 sm:p-0"><Detail item={open} c={c} uid={uid} onUse={() => void useInStudio(open)} onDownload={() => void download(open)} onRemix={() => void remix(open)} onShare={() => share(open)} onRemove={() => void remove(open)} /></Modal>}
 
     {creating && <Modal label={c.newTitle} onClose={() => setCreating(false)}><CreateForm c={c} uid={uid} onDone={async () => { setCreating(false); setTab("mine"); await load(); }} /></Modal>}
   </div>;
